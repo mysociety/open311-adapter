@@ -6,6 +6,9 @@ use Test::MockTime ':all';
 
 use JSON;
 
+use Module::Loaded;
+BEGIN { mark_as_loaded('DBD::Oracle') }
+
 use t::open311::endpoint::Endpoint_Warwick;
 
 my $endpoint = t::open311::endpoint::Endpoint_Warwick->new;
@@ -18,183 +21,12 @@ subtest "GET Service List" => sub {
 <?xml version="1.0" encoding="utf-8"?>
 <services>
   <service>
-    <description>Bridges</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>BR</service_code>
-    <service_name>Bridges</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Carriageway Defect</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>CD</service_code>
-    <service_name>Carriageway Defect</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Roads/Highways</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>CD</service_code>
-    <service_name>Roads/Highways</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Drainage</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>DR</service_code>
-    <service_name>Drainage</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Debris/Spillage</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>DS</service_code>
-    <service_name>Debris/Spillage</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Fences</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>FE</service_code>
-    <service_name>Fences</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Pavements</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>F D</service_code>
-    <service_name>Pavements</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Gully &amp; Catchpits</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>GC</service_code>
-    <service_name>Gully &amp; Catchpits</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Ice/Snow</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>IS</service_code>
-    <service_name>Ice/Snow</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Mud &amp; Debris</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>MD</service_code>
-    <service_name>Mud &amp; Debris</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Manhole</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>MH</service_code>
-    <service_name>Manhole</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Oil Spillage</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>OS</service_code>
-    <service_name>Oil Spillage</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Other</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>OT</service_code>
-    <service_name>Other</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
     <description>Pothole</description>
     <group>highways</group>
     <keywords></keywords>
     <metadata>true</metadata>
     <service_code>PO</service_code>
     <service_name>Pothole</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Property Damage</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>PD</service_code>
-    <service_name>Property Damage</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Road Marking</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>RM</service_code>
-    <service_name>Road Marking</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Road traffic signs</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>SN</service_code>
-    <service_name>Road traffic signs</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Traffic</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>SP</service_code>
-    <service_name>Traffic</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Utilities</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>UT</service_code>
-    <service_name>Utilities</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Vegetation</description>
-    <group>highways</group>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>VG</service_code>
-    <service_name>Vegetation</service_name>
     <type>realtime</type>
   </service>
 </services>
@@ -232,18 +64,19 @@ subtest "POST OK" => sub {
           ':ce_y' => '100',
           ':ce_x' => '100',
           ':ce_work_phone' => '',
-          ':ce_contact_type' => 'ENQUIRER',
+          ':ce_contact_type' => 'PU',
           ':ce_source' => 'FMS',
           ':ce_doc_reference' => '1001',
           ':ce_enquiry_type' => 'PO',
           ':ce_email' => '',
           ':ce_description' => '',
           ':ce_location' => '22 Acacia Avenue',
-          ':ce_incident_datetime' => '2014-01-01T12:00:00Z',
-          ':ce_class' => 'SERV',
+          ':ce_incident_datetime' => '2014-01-01 12:00',
+          ':ce_class' => 'N/A',
+          ':ce_cpr_id' => 5,
           ':ce_compl_user_type' => 'USER',
           ':ce_status_code' => 'RE',
-          ':ce_cat' => 'REQS',
+          ':ce_cat' => 'DEF',
           ':ce_forename' => 'BOB'
         }, 
         'bindings as expected';
@@ -275,11 +108,11 @@ SELECT * FROM (
         SELECT
             row_id,
             service_request_id,
-            to_char(updated_timedate, 'YYYY-MM-DD HH24:MI:SS'),
+            to_char(updated_timedate, 'YYYY-MM-DD HH24:MI'),
             status,
             description
         FROM higatlas.fms_update
-        WHERE updated_timedate >= to_date(2013-12-31 12:00:00, YYYY-MM-DD HH24:MI:SS) AND (status='OPEN' OR status='CLOSED')
+        WHERE updated_timedate >= to_date(2013-12-31 12:00, YYYY-MM-DD HH24:MI) AND (status='OPEN' OR status='CLOSED')
         ORDER BY updated_timedate DESC) WHERE ROWNUM <= 1000
 SQL
 
