@@ -274,6 +274,11 @@ You may extend this in a subclass, or with a role.
 sub dispatch_request {
     my $self = shift;
 
+    sub (/**) {
+        my ($self) = @_;
+        $self->format_response('');
+    },
+
     sub (.*) {
         my ($self, $ext) = @_;
         $self->format_response($ext);
