@@ -76,7 +76,7 @@ sub service {
 
     my ($self, $service_code, $args) = @_;
 
-    return first { $_->service_code eq $service_code } $self->services;
+    return first { $_->service_code eq $service_code } $self->services($args);
 }
 
 sub post_service_request {
@@ -331,7 +331,7 @@ sub GET_Service_List_output_schema {
 }
 
 sub GET_Service_List {
-    my ($self, @args) = @_;
+    my ($self, $args) = @_;
 
     my @services = map {
         my $service = $_;
@@ -341,7 +341,7 @@ sub GET_Service_List {
             map { $_ => $service->$_ } 
                 qw/ service_name service_code description type group /,
         }
-    } $self->services;
+    } $self->services($args);
     return {
         services => \@services,
     };
@@ -420,7 +420,7 @@ sub POST_Service_Request_input_schema {
         };
     }
 
-    my $service = $self->service($service_code)
+    my $service = $self->service($service_code, $args)
         or return; # we can't fetch service, so signal error TODO
 
     my %attributes = ( required => {}, optional => {} );
@@ -477,7 +477,7 @@ sub POST_Service_Request_output_schema {
     my ($self, $args) = @_;
 
     my $service_code = $args->{service_code};
-    my $service = $self->service($service_code);
+    my $service = $self->service($service_code, $args);
 
     my %return_schema = (
         ($service->type eq 'realtime') ? ( service_request_id => $self->get_identifier_type('service_request_id') ) : (),
@@ -510,7 +510,7 @@ sub POST_Service_Request {
 
     # TODO pass this through instead of calculating again?
     my $service_code = $args->{service_code};
-    my $service = $self->service($service_code);
+    my $service = $self->service($service_code, $args);
 
     for my $k (keys %$args) {
         if ($k =~ /^attribute\[(\w+)\]$/) {
@@ -604,15 +604,7 @@ sub GET_Service_Request_input_schema {
         type => '//seq',
         contents => [
             $self->get_identifier_type('service_request_id'),
-            {
-                type => '//rec',
-                required => {
-                    $self->get_jurisdiction_id_required_clause,
-                },
-                optional => {
-                    $self->get_jurisdiction_id_optional_clause,
-                }
-            }
+            $self->get_jurisdiction_id_validation,
         ],
     };
 }

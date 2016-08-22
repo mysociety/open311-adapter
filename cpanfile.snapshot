@@ -1189,6 +1189,13 @@ DISTRIBUTIONS
       Encode 2.10
       Exporter 5.57
       ExtUtils::MakeMaker 6.30
+  IO-SessionData-1.03
+    pathname: P/PH/PHRED/IO-SessionData-1.03.tar.gz
+    provides:
+      IO::SessionData 1.03
+      IO::SessionSet undef
+    requirements:
+      ExtUtils::MakeMaker 0
   IO-Socket-IP-0.38
     pathname: P/PE/PEVANS/IO-Socket-IP-0.38.tar.gz
     provides:
@@ -1197,6 +1204,22 @@ DISTRIBUTIONS
       IO::Socket 0
       Socket 1.97
       Test::More 0.88
+  IO-Socket-SSL-2.037
+    pathname: S/SU/SULLR/IO-Socket-SSL-2.037.tar.gz
+    provides:
+      IO::Socket::SSL 2.037
+      IO::Socket::SSL::Intercept 2.014
+      IO::Socket::SSL::OCSP_Cache 2.037
+      IO::Socket::SSL::OCSP_Resolver 2.037
+      IO::Socket::SSL::PublicSuffix undef
+      IO::Socket::SSL::SSL_Context 2.037
+      IO::Socket::SSL::SSL_HANDLE 2.037
+      IO::Socket::SSL::Session_Cache 2.037
+      IO::Socket::SSL::Utils 2.014
+    requirements:
+      ExtUtils::MakeMaker 0
+      Net::SSLeay 1.46
+      Scalar::Util 0
   JSON-2.90
     pathname: M/MA/MAKAMAKA/JSON-2.90.tar.gz
     provides:
@@ -1246,6 +1269,18 @@ DISTRIBUTIONS
       LWP::Protocol 0
       Module::Build::Tiny 0.034
       parent 0
+      perl 5.008001
+  LWP-Protocol-https-6.06
+    pathname: M/MS/MSCHILLI/LWP-Protocol-https-6.06.tar.gz
+    provides:
+      LWP::Protocol::https 6.06
+      LWP::Protocol::https::Socket 6.06
+    requirements:
+      ExtUtils::MakeMaker 0
+      IO::Socket::SSL 1.54
+      LWP::UserAgent 6.06
+      Mozilla::CA 20110101
+      Net::HTTPS 6
       perl 5.008001
   Lexical-SealRequireHints-0.010
     pathname: Z/ZE/ZEFRAM/Lexical-SealRequireHints-0.010.tar.gz
@@ -1360,6 +1395,22 @@ DISTRIBUTIONS
       Try::Tiny 0
       strict 0
       warnings 0
+  Module-Pluggable-5.2
+    pathname: S/SI/SIMONW/Module-Pluggable-5.2.tar.gz
+    provides:
+      Devel::InnerPackage 0.4
+      Module::Pluggable 5.2
+      Module::Pluggable::Object 5.2
+    requirements:
+      Exporter 5.57
+      ExtUtils::MakeMaker 0
+      File::Basename 0
+      File::Find 0
+      File::Spec 3.00
+      File::Spec::Functions 0
+      if 0
+      perl 5.00503
+      strict 0
   Module-Runtime-0.014
     pathname: Z/ZE/ZEFRAM/Module-Runtime-0.014.tar.gz
     provides:
@@ -1416,6 +1467,14 @@ DISTRIBUTIONS
       Module::Runtime 0
       Moo 1.003000
       Role::Tiny 0
+  Mozilla-CA-20160104
+    pathname: A/AB/ABH/Mozilla-CA-20160104.tar.gz
+    provides:
+      Mozilla::CA 20160104
+    requirements:
+      ExtUtils::MakeMaker 0
+      Test 0
+      perl 5.006
   Net-HTTP-6.09
     pathname: E/ET/ETHER/Net-HTTP-6.09.tar.gz
     provides:
@@ -1431,6 +1490,16 @@ DISTRIBUTIONS
       IO::Uncompress::Gunzip 0
       URI 0
       perl 5.006002
+  Net-SSLeay-1.78
+    pathname: M/MI/MIKEM/Net-SSLeay-1.78.tar.gz
+    provides:
+      Net::SSLeay 1.78
+      Net::SSLeay::Handle 0.61
+    requirements:
+      ExtUtils::MakeMaker 6.36
+      MIME::Base64 0
+      Test::More 0.60_01
+      perl 5.005
   Number-Compare-0.03
     pathname: R/RC/RCLAMP/Number-Compare-0.03.tar.gz
     provides:
@@ -1687,6 +1756,106 @@ DISTRIBUTIONS
     requirements:
       Exporter 5.57
       perl 5.006
+  SOAP-Lite-1.20
+    pathname: P/PH/PHRED/SOAP-Lite-1.20.tar.gz
+    provides:
+      Apache::SOAP 1.17
+      My::Chat undef
+      My::Examples undef
+      My::Parameters undef
+      My::PersistentIterator undef
+      My::PingPong undef
+      My::SessionIterator undef
+      SOAP 1.20
+      SOAP::Apache undef
+      SOAP::Client 1.20
+      SOAP::Cloneable 1.20
+      SOAP::Constants 1.17
+      SOAP::Custom::XML::Data 1.20
+      SOAP::Custom::XML::Deserializer 1.20
+      SOAP::Data 1.20
+      SOAP::Deserializer 1.20
+      SOAP::Fault 1.20
+      SOAP::Header 1.20
+      SOAP::Lite 1.20
+      SOAP::Lite::COM 1.20
+      SOAP::Lite::Deserializer::XMLSchema1999 undef
+      SOAP::Lite::Deserializer::XMLSchema2001 undef
+      SOAP::Lite::Deserializer::XMLSchemaSOAP1_1 undef
+      SOAP::Lite::Deserializer::XMLSchemaSOAP1_2 undef
+      SOAP::Lite::Packager undef
+      SOAP::Lite::Packager::DIME undef
+      SOAP::Lite::Packager::MIME undef
+      SOAP::Lite::Utils undef
+      SOAP::Packager 1.17
+      SOAP::Packager::DIME 1.17
+      SOAP::Packager::MIME 1.17
+      SOAP::Parser 1.20
+      SOAP::SOM 1.20
+      SOAP::Schema 1.20
+      SOAP::Schema::Deserializer 1.20
+      SOAP::Schema::WSDL 1.20
+      SOAP::Serializer 1.20
+      SOAP::Server 1.20
+      SOAP::Server::Object 1.20
+      SOAP::Server::Parameters 1.20
+      SOAP::Test 1.17
+      SOAP::Test::Server 1.17
+      SOAP::Trace 1.20
+      SOAP::Transport 1.20
+      SOAP::Transport::HTTP 1.17
+      SOAP::Transport::HTTP::Apache 1.17
+      SOAP::Transport::HTTP::CGI 1.17
+      SOAP::Transport::HTTP::Client 1.17
+      SOAP::Transport::HTTP::Daemon 1.17
+      SOAP::Transport::HTTP::Daemon::ForkAfterProcessing undef
+      SOAP::Transport::HTTP::Daemon::ForkOnAccept undef
+      SOAP::Transport::HTTP::FCGI 1.17
+      SOAP::Transport::HTTP::Server 1.17
+      SOAP::Transport::IO 1.17
+      SOAP::Transport::IO::Server 1.17
+      SOAP::Transport::LOCAL 1.17
+      SOAP::Transport::LOCAL::Client 1.17
+      SOAP::Transport::LOOPBACK undef
+      SOAP::Transport::LOOPBACK::Client undef
+      SOAP::Transport::MAILTO 1.17
+      SOAP::Transport::MAILTO::Client 1.17
+      SOAP::Transport::POP3 1.17
+      SOAP::Transport::POP3::Server 1.17
+      SOAP::Transport::TCP 1.17
+      SOAP::Transport::TCP::Client 1.17
+      SOAP::Transport::TCP::Server 1.17
+      SOAP::Utils 1.20
+      SOAP::XMLSchema1999::Serializer 1.20
+      SOAP::XMLSchema2001::Serializer 1.20
+      SOAP::XMLSchema::Serializer 1.20
+      SOAP::XMLSchemaApacheSOAP::Deserializer 1.20
+      URI::tcp 1.17
+    requirements:
+      Class::Inspector 0
+      Compress::Zlib 0
+      ExtUtils::MakeMaker 0
+      IO::SessionData 1.03
+      IO::Socket::SSL 0
+      LWP::Protocol::https 0
+      LWP::UserAgent 0
+      MIME::Base64 0
+      Scalar::Util 0
+      Task::Weaken 0
+      URI 0
+      XML::Parser 2.23
+      constant 0
+      perl 5.006000
+  SUPER-1.20141117
+    pathname: C/CH/CHROMATIC/SUPER-1.20141117.tar.gz
+    provides:
+      SUPER 1.20141117
+    requirements:
+      ExtUtils::MakeMaker 0
+      Scalar::Util 1.20
+      Sub::Identify 0.03
+      Test::Simple 0.61
+      perl v5.6.2
   Scalar-List-Utils-1.45
     pathname: P/PE/PEVANS/Scalar-List-Utils-1.45.tar.gz
     provides:
@@ -1785,6 +1954,16 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 6.30
       Sub::Exporter::Progressive 0
+  Task-Weaken-1.04
+    pathname: A/AD/ADAMK/Task-Weaken-1.04.tar.gz
+    provides:
+      Task::Weaken 1.04
+    requirements:
+      ExtUtils::MakeMaker 6.42
+      File::Spec 0.80
+      Scalar::Util 1.14
+      Test::More 0.42
+      perl 5.005
   Test-Exception-0.43
     pathname: E/EX/EXODIST/Test-Exception-0.43.tar.gz
     provides:
@@ -1875,6 +2054,17 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       Test::Builder 0.12
       Test::Builder::Tester 1.04
+  Test-MockModule-0.11
+    pathname: G/GF/GFRANKS/Test-MockModule-0.11.tar.gz
+    provides:
+      Test::MockModule 0.11
+    requirements:
+      Carp 0
+      Module::Build 0.38
+      SUPER 0
+      Scalar::Util 0
+      Test::More 0.45
+      perl 5.006
   Test-MockTime-0.15
     pathname: D/DD/DDICK/Test-MockTime-0.15.tar.gz
     provides:
