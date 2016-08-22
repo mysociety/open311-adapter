@@ -34,11 +34,13 @@ has keywords => (
 has group => (
     is => 'ro',
     isa => Str,
+    default => '',
 );
 
 has type => (
     is => 'ro',
     isa => Enum[qw/ realtime batch blackbox /],
+    default => 'realtime',
 );
 
 has attributes => (

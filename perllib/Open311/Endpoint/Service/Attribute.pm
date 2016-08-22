@@ -37,6 +37,7 @@ has required => (
 has datatype_description => (
     is => 'ro',
     isa => Str,
+    default => '',
 );
 
 # A description of the attribute field with instructions for the user to find
