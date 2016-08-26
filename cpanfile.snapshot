@@ -2372,10 +2372,10 @@ DISTRIBUTIONS
       XML::SAX 0.15
       XML::SAX::Expat 0
       perl 5.008
-  XSLoader-0.22
-    pathname: S/SA/SAPER/XSLoader-0.22.tar.gz
+  XSLoader-0.24
+    pathname: S/SA/SAPER/XSLoader-0.24.tar.gz
     provides:
-      XSLoader undef
+      XSLoader 0.24
     requirements:
       ExtUtils::MakeMaker 0
       Test::More 0.47
