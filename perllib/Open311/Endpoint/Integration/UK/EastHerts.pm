@@ -2,9 +2,11 @@ package Open311::Endpoint::Integration::UK::EastHerts;
 
 use Moo;
 extends 'Open311::Endpoint';
+with 'Open311::Endpoint::Role::mySociety';
 
 use Open311::Endpoint::Service::EastHerts;
 use Open311::Endpoint::Service::Attribute;
+use Open311::Endpoint::Service::Request::Update;
 
 #use SOAP::Lite;
 use SOAP::Lite +trace => [ qw/method debug/ ];
@@ -53,6 +55,29 @@ sub post_service_request {
     );
 
     return $request;
+}
+
+sub post_service_request_update {
+    my ($self, $args) = @_;
+
+    my $integ = Integrations::EastHerts::Highways->on_fault(sub { my($soap, $res) = @_; die ref $res ? $res->faultstring : $soap->transport->status, "\n"; });
+
+    my $request_id = $args->{service_request_id};
+
+    $integ->AddCallerToDefect($request_id, {
+        GivenName => $args->{first_name},
+        FamilyName => $args->{last_name},
+        Email => $args->{email},
+        # No telephone number provided
+        ID => $args->{update_id},
+        description => $args->{description},
+        # XXX What about status?
+    });
+
+    return Open311::Endpoint::Service::Request::Update->new(
+        status => lc $args->{status},
+        update_id => $args->{update_id},
+    );
 }
 
 sub services {
@@ -184,4 +209,25 @@ sub SOAP::Serializer::as_AddDefectStructure {
         },
     ));
     return [$name, {'xsi:type' => 'ro:AddDefectStructure', %$attr}, $elem];
+}
+
+sub SOAP::Serializer::as_CallerStructure {
+    my ($self, $value, $name, $type, $attr) = @_;
+
+    my $elem = \SOAP::Data->value( make_soap_structure(
+        Name => {
+            # PersonNameTitle
+            PersonGivenName => $value->{GivenName},
+            PersonFamilyName => $value->{FamilyName},
+        },
+        ContactDetails => {
+            Email => $value->{Email},
+            TelephoneNumber => $value->{TelephoneNumber},
+        },
+        ExternalReference => $value->{ID},
+        RecordedBy => 'FixMyStreet',
+        AdditionalDetails => $value->{description},
+        SourceCode => 'FMS', # Appears to be truncated to 5 chars?
+    ));
+    return [$name, {'xsi:type' => 'ro:CallerStructure', %$attr}, $elem];
 }

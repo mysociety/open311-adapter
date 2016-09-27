@@ -2,6 +2,7 @@ use strict;
 use warnings;
 
 use Test::More;
+use Test::LongString;
 use Test::MockModule;
 
 use JSON::MaybeXS;
@@ -13,6 +14,12 @@ $open311->mock(AddDefect => sub {
     is $args->{SubItemCode}, 'DP';
     is $args->{DefectCode}, 'OTS';
     return 1001;
+});
+$open311->mock(AddCallerToDefect => sub {
+    my ($cls, $request_id, $args) = @_;
+    is $request_id, 1001;
+    is $args->{ID}, 123;
+    is $args->{description}, "Update here";
 });
 
 use Open311::Endpoint::Integration::UK::EastHerts;
@@ -160,6 +167,34 @@ subtest "POST OK" => sub {
         [ {
             "service_request_id" => 1001
         } ], 'correct json returned';
+};
+
+subtest 'POST update' => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.xml',
+        api_key => 'test',
+        service_request_id => 1001,
+        update_id => 123,
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => 'Update here',
+        status => 'OPEN',
+        updated_datetime => '2016-09-01T15:00:00Z',
+        media_url => 'http://example.org/',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+my $expected = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_request_updates>
+  <request_update>
+    <update_id>123</update_id>
+  </request_update>
+</service_request_updates>
+XML
+
+    is_string $res->content, $expected, 'xml string ok'
+    or diag $res->content;
 };
 
 done_testing;
