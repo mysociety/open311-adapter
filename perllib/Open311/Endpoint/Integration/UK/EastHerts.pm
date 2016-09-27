@@ -22,10 +22,6 @@ sub post_service_request {
 
     my $integ = Integrations::EastHerts::Highways->on_fault(sub { my($soap, $res) = @_; die ref $res ? $res->faultstring : $soap->transport->status, "\n"; });
 
-    if ($args->{media_url}) {
-        $args->{description} .= "\n\nPhoto: " . $args->{media_url};
-    }
-
     if ($args->{address_string}) {
         $args->{description} .= "\n\nLocation query entered: " . $args->{address_string};
     }
@@ -40,7 +36,7 @@ sub post_service_request {
     my $new_id = $integ->AddDefect({
         Easting => $attributes->{easting},
         Northing => $attributes->{northing},
-        Location => $args->{description},
+        description => $args->{description},
         ItemCode => $item_code,
         SubItemCode => $subitem_code,
         DefectCode => $defect_code,
@@ -49,6 +45,7 @@ sub post_service_request {
         Email => $args->{email},
         TelephoneNumber => $args->{phone},
         ID => $attributes->{fixmystreet_id},
+        photo => $args->{media_url},
     });
 
     my $request = $self->new_request(
@@ -145,10 +142,18 @@ sub SOAP::Serializer::as_StringArray {
 sub SOAP::Serializer::as_AddDefectStructure {
     my ($self, $value, $name, $type, $attr) = @_;
 
+    my %hyperlinks;
+    if ($value->{photo}) {
+        $hyperlinks{Hyperlinks} = [
+            'HyperlinkStructure',
+            { URL => $value->{photo}, Description => "Report photo" },
+        ];
+    }
+
     my $elem = \SOAP::Data->value( make_soap_structure(
         StreetID => '005366',  # default
         # UniqueStreetReferenceNumber => '',
-        Location => $value->{Location},
+        Location => $value->{description},
         Coordinates => [
             'CoordinateStructure',
             { Easting => $value->{Easting}, Northing => $value->{Northing} },
@@ -162,6 +167,7 @@ sub SOAP::Serializer::as_AddDefectStructure {
         # Length => 0,
         # Width => 0,
         # Depth => 0,
+        %hyperlinks,
         Caller => {
             Name => {
                 # PersonNameTitle
