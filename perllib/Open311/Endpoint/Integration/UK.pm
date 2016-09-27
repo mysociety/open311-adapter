@@ -2,6 +2,7 @@ package Open311::Endpoint::Integration::UK;
 
 use Moo;
 extends 'Open311::Endpoint';
+with 'Open311::Endpoint::Role::mySociety';
 
 use Types::Standard ':all';
 use Module::Pluggable
@@ -48,6 +49,12 @@ sub post_service_request {
     my ($self, $service, $args) = @_;
     return $self->_call('post_service_request', $args->{jurisdiction_id},
         $service, $args);
+}
+
+sub post_service_request_update {
+    my ($self, $args) = @_;
+    return $self->_call('post_service_request_update', $args->{jurisdiction_id},
+        $args);
 }
 
 __PACKAGE__->run_if_script;
