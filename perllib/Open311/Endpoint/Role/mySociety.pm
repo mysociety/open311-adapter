@@ -35,6 +35,8 @@ L<Open311::Endpoint::Service::Request::mySociety> objects.
 use Moo::Role;
 no warnings 'illegalproto';
 
+use Open311::Endpoint::Schema;
+
 use Open311::Endpoint::Service::Request::mySociety;
 has '+request_class' => (
     is => 'ro',
@@ -52,7 +54,7 @@ around dispatch_request => sub {
             $self->call_api( GET_Service_Request_Updates => $args );
         },
 
-        sub (POST + /servicerequestupdates + ?*) {
+        sub (POST + /servicerequestupdates + %*) {
             my ($self, $args) = @_;
             $self->call_api( POST_Service_Request_Update => $args );
         },
@@ -101,6 +103,69 @@ sub GET_Service_Request_Updates {
     $self->format_updates(@updates);
 }
 
+sub POST_Service_Request_Update_input_schema {
+    my $self = shift;
+    return {
+        type => '//rec',
+        required => {
+            $self->get_jurisdiction_id_required_clause,
+            api_key => $self->get_identifier_type('api_key'),
+            service_request_id => $self->get_identifier_type('service_request_id'),
+            update_id => $self->get_identifier_type('update_id'),
+            status => Open311::Endpoint::Schema->enum('//str', 'OPEN', 'CLOSED'),
+            updated_datetime => '/open311/datetime',
+            description => '//str',
+        },
+        optional => {
+            $self->get_jurisdiction_id_optional_clause,
+            email => '//str',
+            last_name => '//str',
+            first_name => '//str',
+            title => '//str',
+            media_url => '//str',
+            account_id => '//str',
+        }
+    };
+}
+
+sub POST_Service_Request_Update_output_schema {
+    my $self = shift;
+    return {
+        type => '//rec',
+        required => {
+            service_request_updates => {
+                type => '//arr',
+                contents => {
+                    type => '//rec',
+                    required => {
+                        update_id => $self->get_identifier_type('update_id')
+                    },
+                    optional => {
+                        account_id => '//str',
+                    },
+                },
+            },
+        },
+    };
+}
+
+sub POST_Service_Request_Update {
+    my ($self, $args) = @_;
+
+    my $service_request_update = $self->post_service_request_update( $args );
+
+    return {
+        service_request_updates => [
+            map {
+                +{
+                    update_id => $_->update_id,
+                    $_->has_account_id ? ( account_id => $_->account_id ) : (),
+                }
+            } $service_request_update,
+        ],
+    };
+}
+
 sub format_updates {
     my ($self, @updates) = @_;
     return {
@@ -137,6 +202,11 @@ sub format_updates {
 sub get_service_request_updates {
     my ($self, $args) = @_;
     die "abstract method get_service_request_updates not overridden";
+}
+
+sub post_service_request_update {
+    my ($self, $args) = @_;
+    die "abstract method post_service_request_update not overridden";
 }
 
 sub learn_additional_types {

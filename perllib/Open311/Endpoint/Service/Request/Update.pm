@@ -14,6 +14,12 @@ sub BUILDARGS {
     return \%args;
 }
 
+has account_id => (
+    is => 'ro',
+    isa => Maybe[Str],
+    predicate => 1,
+);
+
 has update_id => (
     is => 'ro',
     isa => Maybe[Str],
