@@ -64,13 +64,18 @@ sub post_service_request_update {
 
     my $request_id = $args->{service_request_id};
 
+    my $description = $args->{description};
+    if ($args->{media_url}) {
+        $description .= "\n\n[ This update contains a photo, see: " . $args->{media_url} . " ]";
+    }
+
     $integ->AddCallerToDefect($request_id, {
         GivenName => $args->{first_name},
         FamilyName => $args->{last_name},
         Email => $args->{email},
         # No telephone number provided
         ID => $args->{update_id},
-        description => $args->{description},
+        description => $description,
         # XXX What about status?
     });
 

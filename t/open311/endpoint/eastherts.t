@@ -19,7 +19,7 @@ $open311->mock(AddCallerToDefect => sub {
     my ($cls, $request_id, $args) = @_;
     is $request_id, 1001;
     is $args->{ID}, 123;
-    is $args->{description}, "Update here";
+    is $args->{description}, "Update here\n\n[ This update contains a photo, see: http://example.org/ ]";
 });
 
 use Open311::Endpoint::Integration::UK::EastHerts;
