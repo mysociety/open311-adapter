@@ -7,12 +7,18 @@ use Test::MockModule;
 
 use JSON::MaybeXS;
 
+my ($IC, $SIC, $DC);
+
 my $open311 = Test::MockModule->new('Integrations::EastHerts::Highways');
 $open311->mock(AddDefect => sub {
     my ($cls, $args) = @_;
-    is $args->{ItemCode}, 'CS';
-    is $args->{SubItemCode}, 'DP';
-    is $args->{DefectCode}, 'OTS';
+    is $args->{ItemCode}, $IC;
+    is $args->{SubItemCode}, $SIC;
+    is $args->{DefectCode}, $DC;
+    like $args->{description}, qr/This is the details/;
+    if ($args->{DefectCode} eq 'AVE') {
+        like $args->{description}, qr/Ford Focus/;
+    }
     return 1001;
 });
 $open311->mock(AddCallerToDefect => sub {
@@ -146,7 +152,61 @@ XML
         or diag $res->content;
 };
 
+subtest "GET Service List Description" => sub {
+    my $res = $endpoint->run_test_request( GET => '/services/SC_E_AVE.xml' );
+    ok $res->is_success, 'xml success';
+    my $expected = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_definition>
+  <attributes>
+    <attribute>
+      <code>easting</code>
+      <datatype>number</datatype>
+      <datatype_description></datatype_description>
+      <description>easting</description>
+      <order>1</order>
+      <required>true</required>
+      <variable>false</variable>
+    </attribute>
+    <attribute>
+      <code>northing</code>
+      <datatype>number</datatype>
+      <datatype_description></datatype_description>
+      <description>northing</description>
+      <order>2</order>
+      <required>true</required>
+      <variable>false</variable>
+    </attribute>
+    <attribute>
+      <code>fixmystreet_id</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>external system ID</description>
+      <order>3</order>
+      <required>true</required>
+      <variable>false</variable>
+    </attribute>
+    <attribute>
+      <code>car_details</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>Registration and make</description>
+      <order>4</order>
+      <required>true</required>
+      <variable>true</variable>
+    </attribute>
+  </attributes>
+  <service_code>SC_E_AVE</service_code>
+</service_definition>
+XML
+    is $res->content, $expected
+        or diag $res->content;
+};
+
 subtest "POST OK" => sub {
+    $IC = 'CS';
+    $SIC = 'DP';
+    $DC = 'OTS';
     my $res = $endpoint->run_test_request( 
         POST => '/requests.json', 
         api_key => 'test',
@@ -159,6 +219,33 @@ subtest "POST OK" => sub {
         'attribute[easting]' => 100,
         'attribute[northing]' => 100,
         'attribute[fixmystreet_id]' => 1001,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => 1001
+        } ], 'correct json returned';
+};
+
+subtest "POST Abandoned Vehicles OK" => sub {
+    $IC = 'SC';
+    $SIC = 'E';
+    $DC = 'AVE';
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'SC_E_AVE',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[easting]' => 100,
+        'attribute[northing]' => 100,
+        'attribute[fixmystreet_id]' => 1001,
+        'attribute[car_details]' => "M4 GIC, red Ford Focus",
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;

@@ -29,6 +29,10 @@ sub post_service_request {
     }
 
     my $attributes = $args->{attributes};
+    if ($attributes->{car_details}) {
+        $args->{description} .= "\n\nRegistration and make: " . $attributes->{car_details};
+    }
+
     my $code = $service->service_code;
     if ($attributes->{code}) {
         $code = $attributes->{code};
@@ -127,6 +131,14 @@ sub services {
             description => $name,
         );
         my $service = Open311::Endpoint::Service::EastHerts->new(%service);
+        if ($name eq 'Abandoned vehicles') {
+            push @{$service->attributes}, Open311::Endpoint::Service::Attribute->new(
+                code => 'car_details',
+                description => 'Registration and make',
+                datatype => 'string',
+                required => 1,
+            );
+        }
         if ($attrdesc) {
             push @{$service->attributes}, Open311::Endpoint::Service::Attribute->new(
                 code => 'code',
