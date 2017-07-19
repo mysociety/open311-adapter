@@ -2,4 +2,5 @@
 
 set -e
 DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd | sed -e 's/\/bin$//' )"
+cd $DIR
 $DIR/vendor/bin/carton install --deployment
