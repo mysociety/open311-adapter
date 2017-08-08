@@ -23,6 +23,7 @@ requires 'namespace::autoclean';
 requires 'Path::Tiny';
 requires 'Scalar::Util';
 requires 'SOAP::Lite';
+requires 'Starman';
 requires 'Types::Standard';
 requires 'XML::Simple';
 requires 'Web::Simple';
