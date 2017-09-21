@@ -7,6 +7,7 @@ requires 'Class::Unload';
 requires 'IO::Socket::SSL', '2.056';
 
 # Application
+requires 'Cache::Memcached';
 requires 'Carp';
 requires 'Data::Dumper';
 requires 'Data::Rx';

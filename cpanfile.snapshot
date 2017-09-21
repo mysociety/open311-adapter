@@ -35,6 +35,17 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       parent 0
       perl 5.008001
+  Cache-Memcached-1.30
+    pathname: D/DO/DORMANDO/Cache-Memcached-1.30.tar.gz
+    provides:
+      Cache::Memcached 1.30
+      Cache::Memcached::GetParser undef
+    requirements:
+      Encode 0
+      ExtUtils::MakeMaker 0
+      Storable 0
+      String::CRC32 0
+      Time::HiRes 0
   CPAN-Meta-2.150010
     pathname: D/DA/DAGOLDEN/CPAN-Meta-2.150010.tar.gz
     provides:
@@ -1964,6 +1975,12 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 6.30
       IO::File 1.14
+  String-CRC32-1.6
+    pathname: L/LE/LEEJO/String-CRC32-1.6.tar.gz
+    provides:
+      String::CRC32 1.6
+    requirements:
+      ExtUtils::MakeMaker 0
   Sub-Exporter-0.987
     pathname: R/RJ/RJBS/Sub-Exporter-0.987.tar.gz
     provides:
