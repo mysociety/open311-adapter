@@ -4,7 +4,7 @@ use Moo;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 
-use Open311::Endpoint::Service::EastHerts;
+use Open311::Endpoint::Service::UKCouncil;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::Update;
 
@@ -130,7 +130,7 @@ sub services {
             service_code => $code,
             description => $name,
         );
-        my $service = Open311::Endpoint::Service::EastHerts->new(%service);
+        my $service = Open311::Endpoint::Service::UKCouncil->new(%service);
         if ($name eq 'Abandoned vehicles') {
             push @{$service->attributes}, Open311::Endpoint::Service::Attribute->new(
                 code => 'car_details',

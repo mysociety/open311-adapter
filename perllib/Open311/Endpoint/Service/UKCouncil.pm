@@ -1,4 +1,4 @@
-package Open311::Endpoint::Service::EastHerts;
+package Open311::Endpoint::Service::UKCouncil;
 use Moo;
 extends 'Open311::Endpoint::Service';
 use Open311::Endpoint::Service::Attribute;
