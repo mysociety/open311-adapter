@@ -1,5 +1,5 @@
 # setenv script
-requires 'List::MoreUtils';
+requires 'List::MoreUtils', '>= 0.425';
 requires 'local::lib';
 requires 'Class::Unload';
 
@@ -9,7 +9,7 @@ requires 'Data::Dumper';
 requires 'Data::Rx';
 requires 'DateTime';
 requires 'DateTime::Format::Oracle';
-requires 'DateTime::Format::W3CDTF';
+requires 'DateTime::Format::W3CDTF', '>= 0.07';
 # requires 'DBD::Oracle';
 requires 'DBI';
 requires 'Encode';
