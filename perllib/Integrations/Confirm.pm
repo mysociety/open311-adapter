@@ -2,6 +2,7 @@ package Integrations::Confirm;
 
 use SOAP::Lite;
 use Exporter;
+use DateTime::Format::W3CDTF;
 use Carp ();
 use Moo;
 use Cache::Memcached;
@@ -27,6 +28,11 @@ has enquiry_method_code  => (
 has point_of_contact_code  => (
     is => 'ro',
     default => ''
+);
+
+has server_timezone  => (
+    is => 'ro',
+    default => 'UTC'
 );
 
 has memcache_namespace  => (
@@ -245,6 +251,72 @@ sub NewEnquiry {
     my $external_id = $response->{OperationResponse}->{NewEnquiryResponse}->{Enquiry}->{EnquiryNumber};
 
     return $external_id;
+}
+
+
+sub EnquiryUpdate {
+    my ($self, $args) = @_;
+
+    my $updated = $args->{updated_datetime};
+    my $w3c = DateTime::Format::W3CDTF->new;
+    my $updated_time = $w3c->parse_datetime( $updated );
+    $updated_time->set_time_zone($self->server_timezone);
+    $updated = $w3c->format_datetime($updated_time);
+
+    my %enq = (
+        EnquiryNumber => $args->{service_request_id},
+        LogEffectiveTime => $updated, # NB this seems to be ignored?
+        StatusLogNotes => substr($args->{description}, 0, 2000),
+    );
+
+    $enq{EnquiryStatusCode} = $args->{status_code} if $args->{status_code};
+
+    my @elements = map {
+        my $value = SOAP::Utils::encode_data($enq{$_});
+        SOAP::Data->name($_ => $value)->type("")
+    } keys %enq;
+
+    my $operation = \SOAP::Data->value(
+        SOAP::Data->name('EnquiryUpdate' => \SOAP::Data->value(
+            @elements
+        ))
+    );
+
+    my $response = $self->perform_request($operation);
+    return $response;
+}
+
+sub GetEnquiryStatusChanges {
+    my ($self, $start, $end) = @_;
+
+    # The Confirm server seems to ignore timezone hints in the datetime
+    # string, so we need to convert whatever $start/$end we've been given
+    # into (Confirm) local time.
+    my $w3c = DateTime::Format::W3CDTF->new;
+    my $start_time = $w3c->parse_datetime( $start );
+    $start_time->set_time_zone($self->server_timezone);
+    $start = $w3c->format_datetime($start_time);
+
+    my $end_time = $w3c->parse_datetime( $end );
+    $end_time->set_time_zone($self->server_timezone);
+    $end = $w3c->format_datetime($end_time);
+
+    $start = SOAP::Utils::encode_data($start);
+    $end = SOAP::Utils::encode_data($end);
+
+    my $operation = \SOAP::Data->value(
+        SOAP::Data->name('GetEnquiryStatusChanges' => \SOAP::Data->value(
+            SOAP::Data->name('LoggedTimeFrom' => $start)->type(""),
+            SOAP::Data->name('LoggedTimeTo' => $end)->type(""),
+        ))
+    );
+
+    my $response = $self->perform_request($operation);
+
+    my $status_changes = $response->{OperationResponse}->{GetEnquiryStatusChangesResponse};
+    my $enquiries = $status_changes ? $status_changes->{UpdatedEnquiry} : [];
+    $enquiries = [ $enquiries ] if (ref($enquiries) eq 'HASH');
+    return $enquiries;
 }
 
 1;
