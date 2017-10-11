@@ -51,6 +51,24 @@ sub post_service_request {
         $service, $args);
 }
 
+sub get_service_requests {
+    my ($self, $args) = @_;
+    return $self->_call('get_service_requests', $args->{jurisdiction_id},
+        $args);
+}
+
+sub get_service_request {
+    my ($self, $service_request_id, $args) = @_;
+    return $self->_call('get_service_request', $args->{jurisdiction_id},
+        $service_request_id, $args);
+}
+
+sub get_service_request_updates {
+    my ($self, $args) = @_;
+    return $self->_call('get_service_request_updates', $args->{jurisdiction_id},
+        $args);
+}
+
 sub post_service_request_update {
     my ($self, $args) = @_;
     return $self->_call('post_service_request_update', $args->{jurisdiction_id},
