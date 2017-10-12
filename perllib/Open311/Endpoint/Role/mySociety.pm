@@ -112,7 +112,7 @@ sub POST_Service_Request_Update_input_schema {
             api_key => $self->get_identifier_type('api_key'),
             service_request_id => $self->get_identifier_type('service_request_id'),
             update_id => $self->get_identifier_type('update_id'),
-            status => Open311::Endpoint::Schema->enum('//str', 'OPEN', 'CLOSED'),
+            status => '/open311/status_extended_upper',
             updated_datetime => '/open311/datetime',
             description => '//str',
         },
@@ -220,13 +220,41 @@ sub post_service_request_update {
 
 sub learn_additional_types {
     my ($self, $schema) = @_;
+    $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/status_extended',
+        Open311::Endpoint::Schema->enum('//str',
+            'open',
+            'closed',
+            'fixed',
+            'in_progress',
+            'action_scheduled',
+            'investigating',
+            'duplicate',
+            'not_councils_responsibility',
+            'no_further_action',
+            'internal_referral',
+        )
+    );
+    $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/status_extended_upper',
+        Open311::Endpoint::Schema->enum('//str',
+            'OPEN',
+            'CLOSED',
+            'FIXED',
+            'IN_PROGRESS',
+            'ACTION_SCHEDULED',
+            'INVESTIGATING',
+            'DUPLICATE',
+            'NOT_COUNCILS_RESPONSIBILITY',
+            'NO_FURTHER_ACTION',
+            'INTERNAL_REFERRAL',
+        )
+    );
     $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/service_request_update',
         {
             type => '//rec',
             required => {
                 service_request_id => $self->get_identifier_type('service_request_id'),
                 update_id => $self->get_identifier_type('update_id'),
-                status => '/open311/status',
+                status => '/open311/status_extended',
                 updated_datetime => '/open311/datetime',
                 description => '//str',
                 media_url => '//str',
