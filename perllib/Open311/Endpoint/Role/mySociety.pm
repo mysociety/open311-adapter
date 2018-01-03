@@ -119,6 +119,7 @@ sub POST_Service_Request_Update_input_schema {
         optional => {
             $self->get_jurisdiction_id_optional_clause,
             email => '//str',
+            phone => '//str',
             last_name => '//str',
             first_name => '//str',
             title => '//str',

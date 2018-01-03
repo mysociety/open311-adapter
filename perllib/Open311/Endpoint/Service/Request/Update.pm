@@ -54,6 +54,12 @@ has media_url => (
     default => sub { '' },
 );
 
+has phone => (
+    is => 'ro',
+    isa => Str,
+    default => sub { '' },
+);
+
 has updated_datetime => (
     is => 'ro',
     isa => InstanceOf['DateTime'],
