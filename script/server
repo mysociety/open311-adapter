@@ -3,5 +3,5 @@
 set -e
 cd "$(dirname "$0")/.."
 
-./bin/run --server Starman --workers 2 perllib/Open311/Endpoint/Integration/UK.pm
-
+export OPEN_ADAPTER_PORT=${OPEN_ADAPTER_PORT=5000}
+./bin/run --port $OPEN_ADAPTER_PORT --server Starman --workers 2 perllib/Open311/Endpoint/Integration/UK.pm
