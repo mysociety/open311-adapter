@@ -4,7 +4,7 @@ use Moo;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 
-use Open311::Endpoint::Service::UKCouncil;
+use Open311::Endpoint::Service::UKCouncil::Confirm;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 
@@ -113,6 +113,21 @@ has reverse_status_mapping => (
 );
 
 
+=head2 service_class
+
+Subclasses can override this to provide their own custom Service class, e.g.
+if they want to have extra attributes on all services. By default we use the
+UKCouncil::Confirm class which requests the FMS title/description in separate
+attributes, as well as any asset information from the map.
+
+=cut
+
+has service_class  => (
+    is => 'ro',
+    default => 'Open311::Endpoint::Service::UKCouncil::Confirm'
+);
+
+
 =head2 publish_service_update_text
 
 This flag controls whether to include the text from enquiry
@@ -129,6 +144,25 @@ has publish_service_update_text => (
 );
 
 
+=head2 service_assigned_officers
+
+Confirm has the ability to assign 'action officers' to enquiries, but doesn't
+have the nous to assign different defaults for each service/subject code.
+Subclasses can override this attribute to specificy the correct office code
+to assign for new enquiries. The list of valid codes can be found with the
+GetAllActionOfficers call to the Confirm SOAP endpoint.
+This attribute should be a hashref mapping Open311 service codes to the
+Confirm OfficerCode to assign to each. Not all service codes have to be
+specified, only those you wish to override the default officer for.
+
+=cut
+
+has service_assigned_officers => (
+    is => 'ro',
+    default => sub { {} }
+);
+
+
 =head2 attribute_descriptions
 
 Some Confirm attribute names can be quite opaque and not very helpful for the
@@ -142,6 +176,47 @@ has attribute_descriptions => (
 );
 
 
+sub process_service_request_args {
+    my $self = shift;
+    my $args = shift;
+
+    if ($args->{address_string}) {
+        $args->{description} .= "\n\nLocation query entered: " . $args->{address_string};
+    }
+
+    # The Service::UKCouncil::Confirm class requests several metadata attributes
+    # which we need to bump up from the attributes hashref to the $args passed
+    # to Integrations::Confirm->NewEnquiry
+    foreach (qw/report_url site_code central_asset_id description/) {
+        if (defined $args->{attributes}->{$_}) {
+            $args->{$_} = $args->{attributes}->{$_};
+            delete $args->{attributes}->{$_};
+        }
+    }
+
+    if (my $assigned_officer = $self->service_assigned_officers->{$args->{service_code}}) {
+        $args->{assigned_officer} = $assigned_officer;
+    }
+
+    # Open311 doesn't support a 'title' field for service requests, so FMS
+    # concatenates the report title and description together in the description
+    # field. We want to put the title/description in different fields in
+    # Confirm, so they're sent as individual Open311 attributes which we
+    # put directly in $args so NewEnquiry can do the right thing.
+    $args->{location} = $args->{attributes}->{title};
+    delete $args->{attributes}->{title};
+
+    # Any asset information is appended to the Confirm location field, if
+    # present, as Confirm doesn't have a specific way of allowing us to
+    # identify assets that we've come across yet.
+    if ( defined $args->{attributes}->{asset_details} ) {
+        $args->{location} .= "\nAsset information:\n" . $args->{attributes}->{asset_details};
+        delete $args->{attributes}->{asset_details};
+    }
+
+    return $args;
+}
+
 sub get_integration {
     my $self = shift;
     return $self->integration_class->on_fault(sub { my($soap, $res) = @_; die ref $res ? $res->faultstring : $soap->transport->status, "\n"; });
@@ -153,9 +228,7 @@ sub post_service_request {
 
     my $integ = $self->get_integration;
 
-    if ($args->{address_string}) {
-        $args->{description} .= "\n\nLocation query entered: " . $args->{address_string};
-    }
+    $args = $self->process_service_request_args($args);
 
     my $new_id = $integ->NewEnquiry($service, $args);
 
@@ -290,7 +363,7 @@ sub services {
                 description => $name,
                 group => $group,
             );
-            my $o311_service = Open311::Endpoint::Service::UKCouncil->new(%service);
+            my $o311_service = $self->service_class->new(%service);
             for (@{$services{$code}->{attribs}}) {
                 push @{$o311_service->attributes}, $_;
             }

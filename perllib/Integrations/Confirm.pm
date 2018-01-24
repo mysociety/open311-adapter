@@ -195,6 +195,19 @@ sub NewEnquiry {
         ContactEmail => $args->{email},
         ContactPhone => $args->{phone},
     );
+    if ($args->{location}) {
+        $enq{EnquiryLocation} = substr($args->{location}, 0, 2000);
+    }
+    if ($args->{assigned_officer}) {
+        $enq{AssignedOfficerCode} = $args->{assigned_officer};
+    }
+    if ($args->{site_code}) {
+        $enq{SiteCode} = $args->{site_code};
+    }
+    if ($args->{central_asset_id}) {
+        $enq{CentralAssetId} = $args->{central_asset_id};
+    }
+
 
     my @elements = map {
         my $value = SOAP::Utils::encode_data($enq{$_});
@@ -233,6 +246,14 @@ sub NewEnquiry {
                 SOAP::Data->name('DocumentLocation' => SOAP::Utils::encode_data($photo_url))->type(""),
             ));
         }
+    }
+
+    if ($args->{report_url}) {
+        my $notes = "View report on FixMyStreet.";
+        push @elements, SOAP::Data->name('EnquiryDocument' => \SOAP::Data->value(
+            SOAP::Data->name('DocumentNotes' => SOAP::Utils::encode_data($notes))->type(""),
+            SOAP::Data->name('DocumentLocation' => SOAP::Utils::encode_data($args->{report_url}))->type(""),
+        ));
     }
 
 
