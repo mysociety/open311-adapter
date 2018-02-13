@@ -558,6 +558,7 @@ sub GET_Service_Requests_input_schema {
         },
         optional => {
             $self->get_jurisdiction_id_optional_clause,,
+            api_key => $self->get_identifier_type('api_key'),
             service_request_id => {
                 type => '/open311/comma',
                 contents => $self->get_identifier_type('service_request_id'),
