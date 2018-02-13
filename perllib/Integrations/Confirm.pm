@@ -153,6 +153,9 @@ sub perform_request {
 sub GetEnquiries {
     my $self = shift;
 
+    # avoid errors if called with no enquiries to fetch
+    return () unless @_;
+
     my @operations = map {
         \SOAP::Data->name('GetEnquiry' => \SOAP::Data->value(
             SOAP::Data->name('EnquiryNumber' => SOAP::Utils::encode_data($_))->type("")

@@ -1,12 +1,14 @@
 package Open311::Endpoint::Integration::Confirm;
 
 use Moo;
+use DateTime::Format::Strptime;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 
 use Open311::Endpoint::Service::UKCouncil::Confirm;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::Update::mySociety;
+use Open311::Endpoint::Service::Request::ExtendedStatus;
 
 use SOAP::Lite; # +trace => [ qw/method debug/ ];
 
@@ -175,6 +177,10 @@ has attribute_descriptions => (
     default => sub { {} }
 );
 
+has service_request_content => (
+    is => 'ro',
+    default => '/open311/service_request_extended'
+);
 
 sub process_service_request_args {
     my $self = shift;
@@ -216,6 +222,11 @@ sub process_service_request_args {
 
     return $args;
 }
+
+has '+request_class' => (
+    is => 'ro',
+    default => 'Open311::Endpoint::Service::Request::ExtendedStatus',
+);
 
 sub get_integration {
     my $self = shift;
@@ -380,6 +391,61 @@ sub get_service_request {
     return Open311::Endpoint::Service::Request->new();
 }
 
+
+sub get_service_requests {
+    my ($self, $args) = @_;
+
+    my $parser = new DateTime::Format::Strptime(pattern => '%Y-%m-%dT%H:%M:%S');
+
+    my $integ = $self->get_integration;
+    my $updated_enquiries = $integ->GetEnquiryStatusChanges(
+        $args->{start_date},
+        $args->{end_date}
+    );
+    my @enquiry_ids = map {
+        $_->{EnquiryNumber}
+    } @$updated_enquiries;
+
+    # no sense doing all the other calls if we don't have
+    # anything to fetch
+    return () unless @enquiry_ids;
+
+    my @services = $self->services;
+    my %services = map {
+        $_->{service_code} => $_
+    } @services;
+
+    my @enquiries = $integ->GetEnquiries(@enquiry_ids);
+
+    my @requests;
+    for my $enquiry ( @enquiries ) {
+        my $code = $enquiry->{ServiceCode} . "_" . $enquiry->{SubjectCode};
+        my $service = $services{$code};
+
+        unless ($service) {
+            warn "no service for service code $code\n";
+            next;
+        }
+
+        my $logtime = $parser->parse_datetime($enquiry->{LogEffectiveTime});
+        $logtime->set_time_zone($integ->server_timezone);
+        my $request = $self->new_request(
+            service => $service,
+            service_request_id => $enquiry->{EnquiryNumber},
+            description => $enquiry->{EnquiryDescription},
+            address => $enquiry->{EnquiryLocation} || '',
+            requested_datetime => $logtime,
+            updated_datetime => $logtime,
+            # NB: these are EPSG:27700 easting/northing
+            latlong => [ $enquiry->{EnquiryY}, $enquiry->{EnquiryX} ],
+            status => $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}},
+        );
+
+        push @requests, $request;
+    }
+
+    return @requests;
+}
 
 sub _parse_attributes {
     my ($self, $response) = @_;
