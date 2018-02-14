@@ -103,8 +103,8 @@ sub long { shift->latlong->[1] }
 
 has media_url => (
     is => 'ro',
-    isa => Str,
-    default => sub { '' },
+    isa => ArrayRef[ Str ],
+    default => sub { [] },
 );
 
 1;

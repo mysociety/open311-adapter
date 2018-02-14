@@ -50,8 +50,8 @@ has description => (
 
 has media_url => (
     is => 'ro',
-    isa => Str,
-    default => sub { '' },
+    isa => ArrayRef[ Str ],
+    default => sub { [] },
 );
 
 has phone => (

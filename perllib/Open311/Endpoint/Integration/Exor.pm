@@ -232,10 +232,10 @@ sub post_service_request {
     my ($self, $service, $args) = @_;
     die "No such service" unless $service;
 
-    if ($args->{media_url}) {
+    if ($args->{media_url}->[0]) {
         # don't put URL for full images into the database (because they're too big to see on a Blackberry)
-        $args->{media_url} =~ s/\.full(\.jpe?g)$/$1/;
-        $args->{description} .= $self->strip( "\n\n") . 'Photo: ' . $args->{media_url};
+        $args->{media_url}->[0] =~ s/\.full(\.jpe?g)$/$1/;
+        $args->{description} .= $self->strip( "\n\n") . 'Photo: ' . $args->{media_url}->[0];
     }
     my $attributes = $args->{attributes};
     my $location = $attributes->{closest_address};
@@ -303,7 +303,7 @@ sub post_service_request {
         updated_datetime => DateTime->now(),
         address => $args->{address_string} // '',
         address_id => $args->{address_id} // '',
-        media_url => $args->{media_url} // '',
+        media_url => $args->{media_url} // [],
         zipcode => $args->{zipcode} // '',
         attributes => $attributes,
 

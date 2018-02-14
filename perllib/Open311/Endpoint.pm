@@ -294,7 +294,7 @@ sub dispatch_request {
         $self->call_api( GET_Service_Definition => $service_id, $args );
     },
 
-    sub (POST + /requests + %*) {
+    sub (POST + /requests + %:@media_url~&*) {
         my ($self, $args) = @_;
         $self->call_api( POST_Service_Request => $args );
     },
@@ -459,7 +459,7 @@ sub POST_Service_Request_input_schema {
                 last_name => '//str',
                 phone => '//str',
                 description => '//str',
-                media_url => '//str',
+                media_url => { type => '//arr', contents => '//str' },
                 %{ $attributes{optional} || {}},
                 (map %$_, @address_options),
                 $self->get_jurisdiction_id_optional_clause,
@@ -653,8 +653,16 @@ sub format_service_requests {
                             zipcode
                             lat
                             long
-                            media_url
                             / 
+                    ),
+                    (
+                        map {
+                            my $value = $request->$_->[0];
+                            $_ => $value || '';
+                        }
+                        qw/
+                            media_url
+                            /
                     ),
                     (
                         map {

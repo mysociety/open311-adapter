@@ -54,7 +54,7 @@ around dispatch_request => sub {
             $self->call_api( GET_Service_Request_Updates => $args );
         },
 
-        sub (POST + /servicerequestupdates + %*) {
+        sub (POST + /servicerequestupdates + %:@media_url~&*) {
             my ($self, $args) = @_;
             $self->call_api( POST_Service_Request_Update => $args );
         },
@@ -123,7 +123,7 @@ sub POST_Service_Request_Update_input_schema {
             last_name => '//str',
             first_name => '//str',
             title => '//str',
-            media_url => '//str',
+            media_url => { type => '//arr', contents => '//str' },
             account_id => '//str',
         }
     };
@@ -183,8 +183,16 @@ sub format_updates {
                             service_request_id
                             status
                             description
-                            media_url
                             / 
+                    ),
+                    (
+                        map {
+                            my $value = $update->$_->[0];
+                            $_ => $value || '';
+                        }
+                        qw/
+                            media_url
+                            /
                     ),
                     (
                         map {

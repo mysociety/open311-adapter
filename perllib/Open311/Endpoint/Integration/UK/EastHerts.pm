@@ -51,7 +51,7 @@ sub post_service_request {
         Email => $args->{email},
         TelephoneNumber => $args->{phone},
         ID => $attributes->{fixmystreet_id},
-        photo => $args->{media_url},
+        photo => $args->{media_url}->[0] || '',
     });
 
     my $request = $self->new_request(
@@ -69,8 +69,8 @@ sub post_service_request_update {
     my $request_id = $args->{service_request_id};
 
     my $description = $args->{description};
-    if ($args->{media_url}) {
-        $description .= "\n\n[ This update contains a photo, see: " . $args->{media_url} . " ]";
+    if ($args->{media_url}->[0]) {
+        $description .= "\n\n[ This update contains a photo, see: " . $args->{media_url}->[0] . " ]";
     }
 
     $integ->AddCallerToDefect($request_id, {
