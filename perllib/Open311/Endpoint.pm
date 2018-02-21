@@ -381,10 +381,14 @@ sub GET_Service_Definition {
             attributes => [
                 map {
                     my $attribute = $_;
+                    my %optional = $attribute->automated ?
+                        ( automated => $attribute->automated ) :
+                        ();
                     {
                         order => ++$order,
                         variable => $self->format_boolean( $attribute->variable ),
                         required => $self->format_boolean( $attribute->required ),
+                        %optional,
                         $attribute->has_values ? (
                             values => [
                                 map { 

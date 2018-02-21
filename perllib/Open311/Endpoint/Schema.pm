@@ -126,6 +126,7 @@ has schema => (
                         type => '//arr',
                         contents => '/open311/value',
                     },
+                    automated => $self->enum( '//str', qw[ server_set hidden_field ] ),
                 },
             }
         );

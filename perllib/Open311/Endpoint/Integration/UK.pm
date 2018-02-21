@@ -45,6 +45,11 @@ sub services {
     return $self->_call('services', $args->{jurisdiction_id}, $args);
 }
 
+sub service {
+    my ($self, $service_id, $args) = @_;
+    return $self->_call('service', $args->{jurisdiction_id}, $service_id, $args);
+}
+
 sub post_service_request {
     my ($self, $service, $args) = @_;
     return $self->_call('post_service_request', $args->{jurisdiction_id},
