@@ -261,6 +261,32 @@ sub learn_additional_types {
             },
         }
     );
+    $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/service_request_extended',
+        {
+            type => '//rec',
+            required => {
+                service_request_id => $self->get_identifier_type('service_request_id'),
+                status => '/open311/status_extended',
+                service_name => '//str',
+                service_code => $self->get_identifier_type('service_code'),
+                requested_datetime => '/open311/datetime',
+                updated_datetime => '/open311/datetime',
+                address => '//str',
+                address_id => '//str',
+                zipcode => '//str',
+                lat => '//num',
+                long => '//num',
+                media_url => '//str',
+            },
+            optional => {
+                title => '//str',
+                request => '//str',
+                description => '//str',
+                agency_responsible => '//str',
+                service_notice => '//str',
+            },
+        }
+    );
 }
 
 1;

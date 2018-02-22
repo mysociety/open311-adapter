@@ -102,6 +102,11 @@ sub requires_jurisdiction_ids {
     return shift->has_multiple_jurisdiction_ids;
 }
 
+sub service_request_content {
+    '/open311/service_request';
+}
+
+
 sub check_jurisdiction_id {
     my ($self, $jurisdiction_id) = @_;
 
@@ -572,13 +577,13 @@ sub GET_Service_Requests_input_schema {
 }
 
 sub GET_Service_Requests_output_schema {
-    my $self = shift;
+    my ($self, $args) = @_;
     return {
         type => '//rec',
         required => {
             service_requests => {
                 type => '//arr',
-                contents => '/open311/service_request',
+                contents => $self->service_request_content($args),
             },
         },
     };

@@ -89,6 +89,17 @@ sub _send_request {
     return $content;
 }
 
+sub get_requests {
+    my $self = shift;
+
+    return $self->get($self->requests_endpoint . '?all');
+}
+
+sub get_request {
+    my ($self, $id) = @_;
+
+    return $self->get($self->requests_endpoint . '?id=' . $id);
+}
 
 sub post_request {
     my ($self, $service, $args) = @_;

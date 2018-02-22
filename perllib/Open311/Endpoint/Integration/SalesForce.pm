@@ -5,6 +5,7 @@ extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 
 use Open311::Endpoint::Service::UKCouncil::Rutland;
+use Open311::Endpoint::Service::Request::SalesForce;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 
@@ -12,6 +13,11 @@ use Integrations::SalesForce;
 
 use Digest::MD5 qw(md5_hex);
 use DateTime::Format::Strptime;
+
+has service_request_content => (
+    is => 'ro',
+    default => '/open311/service_request_extended'
+);
 
 sub parse_datetime {
     my ($self, $time) = @_;
@@ -108,6 +114,48 @@ sub get_service_request_updates {
         );
     }
     return @updates;
+}
+
+sub get_service_requests {
+    my ($self, $args) = @_;
+
+    my $integ = $self->get_integration;
+
+    my $requests = $integ->get_requests();
+
+    my $w3c = DateTime::Format::W3CDTF->new;
+    my @updates = ();
+
+    for my $request (@$requests) {
+        next unless
+            $request->{lat__c} and
+            $request->{long__c} and
+            $request->{Status__c} and
+            $request->{Service_Area__c};
+
+        my $update_time = $self->parse_datetime($request->{LastModifiedDate});
+        my $request_time = $self->parse_datetime($request->{requested_datetime__c});
+        my $service = $self->service( $request->{Service_Area__c} );
+        push @updates, Open311::Endpoint::Service::Request::SalesForce->new(
+            service => $service,
+            status => $self->reverse_status_mapping($request->{Status__c}),
+            service_request_id => $request->{Id},
+            title => $request->{title__c},
+            description => $request->{detail__c},
+            updated_datetime => $update_time,
+            requested_datetime => $request_time,
+            latlong => [ $request->{lat__c}, $request->{long__c}],
+        );
+    }
+    return @updates;
+}
+
+sub get_service_request {
+    my ($self, $id) = @_;
+
+    my $response = $self->get_integration->GetEnquiry($id);
+
+    return Open311::Endpoint::Service::Request->new();
 }
 
 sub services {
