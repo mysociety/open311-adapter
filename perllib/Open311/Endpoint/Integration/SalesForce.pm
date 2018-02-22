@@ -13,6 +13,24 @@ use Integrations::SalesForce;
 use Digest::MD5 qw(md5_hex);
 use DateTime::Format::Strptime;
 
+sub parse_datetime {
+    my ($self, $time) = @_;
+
+    # salesforce times can look like
+    # 2017-11-27T20:30:11.837838+00:00
+    # or
+    # 2017-11-27T20:30:11.837+0000
+    # so unify them to
+    # 2017-11-27T20:30:11+0000
+    $time =~ s/\.\d+\+(\d\d):?(\d\d)$/+$1$2/;
+
+    my $strp = new DateTime::Format::Strptime(
+        pattern => '%Y-%m-%dT%H:%M:%S%z',
+    );
+
+    return $strp->parse_datetime($time);
+}
+
 sub reverse_status_mapping {}
 
 sub get_integration {
@@ -49,6 +67,47 @@ sub post_service_request_update {
         status => lc $args->{status},
         update_id => $update_id,
     );
+}
+
+sub get_service_request_updates {
+    my ($self, $args) = @_;
+
+    my $integ = $self->get_integration;
+
+    my $updates = $integ->get_updates();
+
+    my @updates = ();
+
+    # given we don't have an update time set a default of 20 seconds in the
+    # past or the end date. The -20 seconds is because FMS checks that comments
+    # aren't in the future WRT when it made the request so the -20 gets round
+    # that.
+    my $update_time = DateTime->now->add( seconds => -20 );
+    if ($args->{end_date}) {
+        my $w3c = DateTime::Format::W3CDTF->new;
+        my $update_time = $w3c->parse_datetime($args->{end_date});
+    }
+    for my $update (@$updates) {
+        my $request_id = $update->{id};
+        my $comment = $update->{Comments};
+        my $digest;
+        if (not defined $comment) {
+            $comment = '';
+            $digest = md5_hex($update->{Status} . '_' . $update_time);
+        } else {
+            $digest = md5_hex($comment);
+        }
+
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
+            status => $self->reverse_status_mapping($update->{Status}),
+            # no update ids available so fake one
+            update_id => $request_id . '_' . $digest,
+            service_request_id => $request_id,
+            description => $comment,
+            updated_datetime => $update_time,
+        );
+    }
+    return @updates;
 }
 
 sub services {

@@ -155,6 +155,11 @@ sub post_update {
     return $response->[0]->{Id} || undef;
 }
 
+sub get_updates {
+    my $self = shift;
+    return $self->get($self->updates_endpoint . '?updates');
+}
+
 sub get_services {
     my ($self, $args) = @_;
 

@@ -82,6 +82,11 @@ my %responses = (
         "Update_FixMyStreet__c": false,
         "Status__c": "Investigating"
     }]',
+    'GET /services/apexrest/FixMyStreetUpdatesupdates' => '[{
+        "Status": "Investigating",
+        "id": "a086E000001gcVRQAY",
+        "Comments": "this is a comment"
+    }]',
     'GET /services/apexrest/FixMyStreetInfosummary' => '{
         "title": "Summary Categories",
         "CategoryInformation": [
@@ -397,6 +402,111 @@ subtest "create update" => sub {
     is_deeply decode_json($res->content),
     [ {
         update_id => 'a086E000001gcVRQAY_3ea202675a83afdc4d6394e0df372561'
+    } ], 'correct json returned';
+};
+
+subtest "check fetch updates" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=rutland',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'investigating',
+        service_request_id => 'a086E000001gcVRQAY',
+        description => 'this is a comment',
+        updated_datetime => '2014-01-01T11:59:40Z',
+        update_id => 'a086E000001gcVRQAY_493f65e04e987557bd46ad0cc5454b50',
+        media_url => '',
+    } ], 'correct json returned';
+};
+
+subtest "check fetch update with no comment" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    $responses{'GET /services/apexrest/FixMyStreetUpdatesupdates'} = 
+      '[{
+        "Status": "Investigating",
+        "id": "a086E000001gcVRQAY",
+        "Comments": null
+    }]';
+
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=rutland',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'investigating',
+        service_request_id => 'a086E000001gcVRQAY',
+        description => '',
+        updated_datetime => '2014-01-01T11:59:40Z',
+        update_id => 'a086E000001gcVRQAY_72c29e579cc9080a6215b4b2631048b0',
+        media_url => '',
+    } ], 'correct json returned';
+};
+
+subtest "check fetch update with unicode comment" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    use Encode;
+    $responses{'GET /services/apexrest/FixMyStreetUpdatesupdates'} = '[{
+        "Status": "Investigating",
+        "id": "a086E000001gcVRQAY",
+        "Comments": "This has ünicöde in"
+    }]';
+
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=rutland',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply JSON->new->utf8->decode($res->content),
+    [ {
+        status => 'investigating',
+        service_request_id => 'a086E000001gcVRQAY',
+        description => 'This has ünicöde in',
+        updated_datetime => '2014-01-01T11:59:40Z',
+        update_id => 'a086E000001gcVRQAY_d29ca6e6e819a627d2d6e1d64373946e',
+        media_url => '',
+    } ], 'correct json returned';
+};
+
+subtest "check fetch update with not responsible status" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    use Encode;
+    $responses{'GET /services/apexrest/FixMyStreetUpdatesupdates'} = '[{
+        "Status": "Not Responsible",
+        "id": "a086E000001gcVRQAY",
+        "Comments": "not responsible status"
+    }]';
+
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=rutland',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply JSON->new->decode($res->content),
+    [ {
+        status => 'not_councils_responsibility',
+        service_request_id => 'a086E000001gcVRQAY',
+        description => 'not responsible status',
+        updated_datetime => '2014-01-01T11:59:40Z',
+        update_id => 'a086E000001gcVRQAY_99fcd129382318ba4d2c2f5aa133e7dc',
+        media_url => '',
     } ], 'correct json returned';
 };
 
