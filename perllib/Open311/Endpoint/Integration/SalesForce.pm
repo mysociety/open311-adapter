@@ -35,6 +35,22 @@ sub post_service_request {
     return $request;
 }
 
+sub post_service_request_update {
+    my ($self, $args) = @_;
+
+    my $response = $self->get_integration->post_update($args);
+
+    return undef unless $response;
+
+    my $digest = md5_hex($args->{description});
+    my $update_id = $response . '_' . $digest;
+
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        status => lc $args->{status},
+        update_id => $update_id,
+    );
+}
+
 sub services {
     my ($self, $args) = @_;
 

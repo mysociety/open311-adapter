@@ -26,6 +26,11 @@ has 'services_endpoint' => (
     default => sub { shift->endpoint_url . 'FixMyStreetInfo' }
 );
 
+has 'updates_endpoint' => (
+    is => 'ro',
+    default => sub { shift->endpoint_url . 'FixMyStreetUpdates' }
+);
+
 has 'get_headers' => (
     is => 'ro',
     default => sub {
@@ -132,6 +137,22 @@ sub post_request {
     my $response = $self->post($self->requests_endpoint, encode_json($data));
 
     return $response->[0]->{Id};
+}
+
+sub post_update {
+    my ($self, $args) = @_;
+
+    my $data = [ {
+        status__c => $args->{status},
+        id => $args->{service_request_id},
+        #update_comments_id__c => $args->{description},
+        update_comments__c => $args->{description},
+    } ];
+
+    my $json = encode_json($data);
+    my $response = $self->post($self->requests_endpoint, encode_json($data));
+
+    return $response->[0]->{Id} || undef;
 }
 
 sub get_services {

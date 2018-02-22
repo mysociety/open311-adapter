@@ -51,6 +51,37 @@ my $endpoint = Open311::Endpoint::Integration::UK->new;
 
 my %responses = (
     'new_report' => '[{ "Id": "12345" }]',
+    'new_update' => '[{
+        "attributes": {
+            "type": "FixMyStreet__c",
+            "url": "/services/data/v42.0/sobjects/FixMyStreet__c/a086E000001gcVRQAY"
+        },
+        "Id": "a086E000001gcVRQAY",
+        "OwnerId": "0056E000001rzDCQAY",
+        "IsDeleted": false,
+        "Name": "FMS-RCC-00043",
+        "RecordTypeId": "0126E0000000qWaQAI",
+        "CreatedDate": "2017-12-18T15:48:05.000+0000",
+        "CreatedById": "0056E000001rzDCQAY",
+        "LastModifiedDate": "2018-02-08T14:54:57.000+0000",
+        "LastModifiedById": "0050Y000001zMXrQAM",
+        "SystemModstamp": "2018-02-08T14:54:57.000+0000",
+        "LastViewedDate": "2018-02-08T14:54:57.000+0000",
+        "LastReferencedDate": "2018-02-08T14:54:57.000+0000",
+        "Description__c": "Car has been left on corner",
+        "detail__c": "Car has been left on corner",
+        "interface_used__c": "Web interface",
+        "lat__c": 52.669102,
+        "long__c": -0.723561,
+        "requestor_name__c": "A User",
+        "service_request_id__c": 12345,
+        "title__c": "Car",
+        "agency_responsible__c": "A Council",
+        "Service_Area__c": "a096E000007pbwkQAA",
+        "Extends_Additional_Information__c": "zzzz",
+        "Update_FixMyStreet__c": false,
+        "Status__c": "Investigating"
+    }]',
     'GET /services/apexrest/FixMyStreetInfosummary' => '{
         "title": "Summary Categories",
         "CategoryInformation": [
@@ -113,7 +144,11 @@ $integration->mock('_get_response', sub {
     my $content = '[]';
     if ( $key eq 'POST /services/apexrest/FixMyStreet' ) {
         push @sent, $req->content;
-        $content = $responses{new_report};
+        if ( $req->content =~ /This is an update/ ) {
+            $content = $responses{new_update};
+        } else {
+            $content = $responses{new_report};
+        }
     } else {
         $content = $responses{$key};
     }
@@ -330,6 +365,39 @@ subtest "create problem with multiple photos" => sub {
             "service_request_id" => 12345
         } ], 'correct json returned';
 
+};
+
+subtest "create update" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'rutland',
+        api_key => 'test',
+        service_request_id => "a086E000001gcVRQAY",
+        updated_datetime => "2014-01-01T12:00:00Z",
+        update_id => 1234,
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'This is an update',
+        status => 'INVESTIGATING',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($sent),
+    [{
+        id => "a086E000001gcVRQAY",
+        update_comments__c => "This is an update",
+        status__c => "INVESTIGATING"
+    }], 'correct json sent';
+
+    is_deeply decode_json($res->content),
+    [ {
+        update_id => 'a086E000001gcVRQAY_3ea202675a83afdc4d6394e0df372561'
+    } ], 'correct json returned';
 };
 
 subtest "check fetch service description" => sub {
