@@ -2,3 +2,10 @@ Rutland:
   endpoint: ''
   credentials: ''
 
+CONFIRM:
+    BANES:
+        url: ''
+        username: ''
+        password: ''
+        tenant_id: ''
+
