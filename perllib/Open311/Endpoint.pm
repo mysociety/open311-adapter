@@ -6,6 +6,7 @@ Open311::Endpoint - a generic Open311 endpoint implementation
 
 =cut
 
+use Encode qw(encode_utf8);
 use Web::Simple;
 
 use JSON::MaybeXS;
@@ -231,7 +232,7 @@ has spark => (
 has json => (
     is => 'lazy',
     default => sub {
-        JSON->new->pretty->allow_blessed->convert_blessed;
+        JSON->new->utf8->pretty->allow_blessed->convert_blessed;
     },
 );
 
@@ -795,9 +796,9 @@ sub format_response {
                 $status,
                 [ 'Content-Type' => 'text/xml' ],
                 [ qq(<?xml version="1.0" encoding="utf-8"?>\n),
-                  $self->xml->XMLout( 
+                  encode_utf8($self->xml->XMLout(
                     $self->spark->process_for_xml( $data )
-                )],
+                ))],
             ];
         }
         else {
