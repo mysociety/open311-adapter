@@ -1225,17 +1225,17 @@ DISTRIBUTIONS
       IO::Socket 0
       Socket 1.97
       Test::More 0.88
-  IO-Socket-SSL-2.037
-    pathname: S/SU/SULLR/IO-Socket-SSL-2.037.tar.gz
+  IO-Socket-SSL-2.056
+    pathname: S/SU/SULLR/IO-Socket-SSL-2.056.tar.gz
     provides:
-      IO::Socket::SSL 2.037
-      IO::Socket::SSL::Intercept 2.014
-      IO::Socket::SSL::OCSP_Cache 2.037
-      IO::Socket::SSL::OCSP_Resolver 2.037
+      IO::Socket::SSL 2.056
+      IO::Socket::SSL::Intercept 2.056
+      IO::Socket::SSL::OCSP_Cache 2.056
+      IO::Socket::SSL::OCSP_Resolver 2.056
       IO::Socket::SSL::PublicSuffix undef
-      IO::Socket::SSL::SSL_Context 2.037
-      IO::Socket::SSL::SSL_HANDLE 2.037
-      IO::Socket::SSL::Session_Cache 2.037
+      IO::Socket::SSL::SSL_Context 2.056
+      IO::Socket::SSL::SSL_HANDLE 2.056
+      IO::Socket::SSL::Session_Cache 2.056
       IO::Socket::SSL::Utils 2.014
     requirements:
       ExtUtils::MakeMaker 0

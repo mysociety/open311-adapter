@@ -3,6 +3,9 @@ requires 'List::MoreUtils', '>= 0.425';
 requires 'local::lib';
 requires 'Class::Unload';
 
+# Manual upgrades
+requires 'IO::Socket::SSL', '2.056';
+
 # Application
 requires 'Carp';
 requires 'Data::Dumper';
