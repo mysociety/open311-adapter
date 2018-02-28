@@ -20,6 +20,21 @@ sub get_integration {
     return $self->integration_class->new;
 }
 
+sub post_service_request {
+    my ($self, $service, $args) = @_;
+    die "No such service" unless $service;
+
+    my $integ = $self->get_integration;
+
+    my $new_id = $integ->post_request($service, $args);
+
+    my $request = $self->new_request(
+        service_request_id => $new_id,
+    );
+
+    return $request;
+}
+
 sub services {
     my ($self, $args) = @_;
 

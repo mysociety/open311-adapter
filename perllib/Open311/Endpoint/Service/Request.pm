@@ -107,4 +107,10 @@ has media_url => (
     default => sub { [] },
 );
 
+has optional_fields => (
+    is => 'ro',
+    isa => ArrayRef[ Str ],
+    default => sub { [] },
+);
+
 1;

@@ -694,6 +694,13 @@ sub format_service_requests {
                             service_notice
                             /
                     ),
+                    (
+                        map {
+                            my $value = $request->$_;
+                            $value ? ( $_ => $value ) : (),
+                        }
+                        @{ $request->optional_fields }
+                    ),
                 }
             } @service_requests,
         ],
