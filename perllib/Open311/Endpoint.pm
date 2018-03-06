@@ -102,6 +102,11 @@ sub requires_jurisdiction_ids {
     return shift->has_multiple_jurisdiction_ids;
 }
 
+sub service_request_content {
+    '/open311/service_request';
+}
+
+
 sub check_jurisdiction_id {
     my ($self, $jurisdiction_id) = @_;
 
@@ -381,10 +386,14 @@ sub GET_Service_Definition {
             attributes => [
                 map {
                     my $attribute = $_;
+                    my %optional = $attribute->automated ?
+                        ( automated => $attribute->automated ) :
+                        ();
                     {
                         order => ++$order,
                         variable => $self->format_boolean( $attribute->variable ),
                         required => $self->format_boolean( $attribute->required ),
+                        %optional,
                         $attribute->has_values ? (
                             values => [
                                 map { 
@@ -568,13 +577,13 @@ sub GET_Service_Requests_input_schema {
 }
 
 sub GET_Service_Requests_output_schema {
-    my $self = shift;
+    my ($self, $args) = @_;
     return {
         type => '//rec',
         required => {
             service_requests => {
                 type => '//arr',
-                contents => '/open311/service_request',
+                contents => $self->service_request_content($args),
             },
         },
     };
@@ -689,6 +698,13 @@ sub format_service_requests {
                             agency_responsible
                             service_notice
                             /
+                    ),
+                    (
+                        map {
+                            my $value = $request->$_;
+                            $value ? ( $_ => $value ) : (),
+                        }
+                        @{ $request->optional_fields }
                     ),
                 }
             } @service_requests,

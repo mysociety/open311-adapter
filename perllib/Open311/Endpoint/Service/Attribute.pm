@@ -47,6 +47,12 @@ has description => (
     isa => Str,
 );
 
+# indicates an attribute that should not be show to the user
+has automated => (
+    is => 'ro',
+    isa => Enum[qw/ server_set hidden_field /],
+);
+
 # NB: we don't model the "Order" field here, as that's really for the Service
 # object to return
 
