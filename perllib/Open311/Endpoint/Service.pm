@@ -44,14 +44,15 @@ has type => (
 );
 
 has attributes => (
-    is => 'ro',
+    is => 'lazy',
     isa => ArrayRef[ InstanceOf['Open311::Endpoint::Service::Attribute'] ],
-    default => sub { [] },
     handles_via => 'Array',
     handles => {
         has_attributes => 'count',
         get_attributes => 'elements',
     }
 );
+
+sub _build_attributes { [] }
 
 1;

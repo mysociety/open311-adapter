@@ -3,9 +3,8 @@ use Moo;
 extends 'Open311::Endpoint::Service';
 use Open311::Endpoint::Service::Attribute;
 
-has '+attributes' => (
-    is => 'ro',
-    default => sub { [
+sub _build_attributes {
+    return [
         Open311::Endpoint::Service::Attribute->new(
             code => 'easting',
             variable => 0, # set by server
@@ -27,7 +26,7 @@ has '+attributes' => (
             required => 1,
             description => 'external system ID',
         ),
-    ] },
-);
+    ];
+}
 
 1;
