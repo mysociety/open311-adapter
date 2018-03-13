@@ -10,6 +10,7 @@ sub _build_attributes {
             variable => 0, # set by server
             datatype => 'number',
             required => 1,
+            automated => 'server_set',
             description => 'easting',
         ),
         Open311::Endpoint::Service::Attribute->new(
@@ -17,6 +18,7 @@ sub _build_attributes {
             variable => 0, # set by server
             datatype => 'number',
             required => 1,
+            automated => 'server_set',
             description => 'northing',
         ),
         Open311::Endpoint::Service::Attribute->new(
@@ -24,6 +26,7 @@ sub _build_attributes {
             variable => 0, # set by server
             datatype => 'string',
             required => 1,
+            automated => 'server_set',
             description => 'external system ID',
         ),
     ];
