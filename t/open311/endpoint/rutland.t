@@ -82,7 +82,7 @@ my %responses = (
         "Update_FixMyStreet__c": false,
         "Status__c": "Investigating"
     }]',
-    'GET /services/apexrest/FixMyStreetall' => '[{
+    'GET FixMyStreet all' => '[{
 				"attributes": {
             "type": "FixMyStreet__c",
             "url": "/services/data/v41.0/sobjects/FixMyStreet__c/a086E000001gnM6QAI"
@@ -118,12 +118,12 @@ my %responses = (
         "Update_FixMyStreet__c": false
 
     }]',
-    'GET /services/apexrest/FixMyStreetUpdatesupdates' => '[{
+    'GET FixMyStreetUpdates updates' => '[{
         "Status": "Investigating",
         "id": "a086E000001gcVRQAY",
         "Comments": "this is a comment"
     }]',
-    'GET /services/apexrest/FixMyStreetInfosummary' => '{
+    'GET FixMyStreetInfo summary' => '{
         "title": "Summary Categories",
         "CategoryInformation": [
             {
@@ -138,7 +138,7 @@ my %responses = (
             }
         ]
     }',
-    'GET /services/apexrest/FixMyStreetInfoid=POT' => '{
+    'GET FixMyStreetInfo id=POT' => '{
         "title": "POT",
         "fieldInformation": [
             {
@@ -150,7 +150,7 @@ my %responses = (
             }
         ]
     }',
-    'GET /services/apexrest/FixMyStreetInfoid=a096E000007pbxWQAQ' => '{
+    'GET FixMyStreetInfo id=a096E000007pbxWQAQ' => '{
         "title": "POT",
         "fieldInformation": [
             {
@@ -162,7 +162,7 @@ my %responses = (
             }
         ]
     }',
-    'GET /services/apexrest/FixMyStreetInfoid=RC_08' => '{
+    'GET FixMyStreetInfo id=RC_08' => '{
         "title": "RC08",
         "fieldInformation": [
             {
@@ -181,9 +181,10 @@ my @sent;
 my $integration = Test::MockModule->new('Integrations::SalesForce::Rutland');
 $integration->mock('_get_response', sub {
     my ($self, $req) = @_;
-    my $key = sprintf '%s %s%s', $req->method, $req->uri->path, $req->uri->query || '';
+    (my $path = $req->uri->path) =~ s{.*/}{};
+    my $key = sprintf '%s %s %s', $req->method, $path, $req->uri->query || '';
     my $content = '[]';
-    if ( $key eq 'POST /services/apexrest/FixMyStreet' ) {
+    if ( $key eq 'POST FixMyStreet ' ) {
         push @sent, $req->content;
         if ( $req->content =~ /This is an update/ ) {
             $content = $responses{new_update};
@@ -439,7 +440,7 @@ subtest "check fetch problem" => sub {
 
 subtest "check fetch problem with not responsible status" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
-    $responses{'GET /services/apexrest/FixMyStreetall'} = '[{
+    $responses{'GET FixMyStreet all'} = '[{
         "attributes": {
             "type": "FixMyStreet__c",
             "url": "/services/data/v41.0/sobjects/FixMyStreet__c/a086E000001gnM6QAI"
@@ -558,7 +559,7 @@ subtest "check fetch updates" => sub {
 
 subtest "check fetch update with no comment" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
-    $responses{'GET /services/apexrest/FixMyStreetUpdatesupdates'} = 
+    $responses{'GET FixMyStreetUpdates updates'} =
       '[{
         "Status": "Investigating",
         "id": "a086E000001gcVRQAY",
@@ -587,7 +588,7 @@ subtest "check fetch update with no comment" => sub {
 subtest "check fetch update with unicode comment" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     use Encode;
-    $responses{'GET /services/apexrest/FixMyStreetUpdatesupdates'} = '[{
+    $responses{'GET FixMyStreetUpdates updates'} = '[{
         "Status": "Investigating",
         "id": "a086E000001gcVRQAY",
         "Comments": "This has ünicöde in"
@@ -615,7 +616,7 @@ subtest "check fetch update with unicode comment" => sub {
 subtest "check fetch update with not responsible status" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     use Encode;
-    $responses{'GET /services/apexrest/FixMyStreetUpdatesupdates'} = '[{
+    $responses{'GET FixMyStreetUpdates updates'} = '[{
         "Status": "Not Responsible",
         "id": "a086E000001gcVRQAY",
         "Comments": "not responsible status"

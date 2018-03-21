@@ -160,6 +160,7 @@ subtest "GET Service List Description" => sub {
 <service_definition>
   <attributes>
     <attribute>
+      <automated>server_set</automated>
       <code>easting</code>
       <datatype>number</datatype>
       <datatype_description></datatype_description>
@@ -169,6 +170,7 @@ subtest "GET Service List Description" => sub {
       <variable>false</variable>
     </attribute>
     <attribute>
+      <automated>server_set</automated>
       <code>northing</code>
       <datatype>number</datatype>
       <datatype_description></datatype_description>
@@ -178,6 +180,7 @@ subtest "GET Service List Description" => sub {
       <variable>false</variable>
     </attribute>
     <attribute>
+      <automated>server_set</automated>
       <code>fixmystreet_id</code>
       <datatype>string</datatype>
       <datatype_description></datatype_description>
