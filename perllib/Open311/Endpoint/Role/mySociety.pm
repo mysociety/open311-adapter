@@ -183,7 +183,15 @@ sub format_updates {
                             service_request_id
                             status
                             description
-                            / 
+                            /
+                    ),
+                    (
+                        map {
+                            ($update->can($_) && $update->$_ )? ($_ => $update->$_) : (),
+                        }
+                        qw/
+                            external_status_code
+                            /
                     ),
                     (
                         map {
@@ -258,6 +266,9 @@ sub learn_additional_types {
                 updated_datetime => '/open311/datetime',
                 description => '//str',
                 media_url => '//str',
+            },
+            optional => {
+                external_status_code => '//str',
             },
         }
     );
