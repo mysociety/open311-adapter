@@ -324,6 +324,7 @@ sub get_service_request_updates {
                 service_request_id => $enquiry_id,
                 description => $description,
                 updated_datetime => $ts,
+                external_status_code => $status_log->{EnquiryStatusCode},
             );
         }
     }

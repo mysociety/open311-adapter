@@ -21,5 +21,10 @@ has status => (
     ],
 );
 
+has external_status_code => (
+    is => 'ro',
+    isa => Maybe[Str],
+);
+
 
 1;
