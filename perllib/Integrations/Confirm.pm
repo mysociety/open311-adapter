@@ -10,34 +10,41 @@ use Cache::Memcached;
 use vars qw(@ISA);
 @ISA = qw(Exporter SOAP::Lite);
 
-sub endpoint_url { die "abstract method endpoint_url not overridden" }
+sub endpoint_url { $_[0]->config->{endpoint_url} }
 
-sub credentials { die "abstract method credentials not overridden" }
+sub credentials {
+    my $config = $_[0]->config;
+    return (
+        $config->{username},
+        $config->{password},
+        $config->{tenant_id}
+    );
+}
 
 # If the Confirm endpoint requires a particular EnquiryMethodCode for NewEnquiry
 # requests, override this in the subclass. Valid values can be found by calling
 # the GetCustomerLookup method on the endpoint.
-has enquiry_method_code  => (
-    is => 'ro',
-    default => ''
+has 'enquiry_method_code' => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{enquiry_method_code} }
 );
 
 # Similar to enquiry_method_code, if the Confirm endpoint requires a particular
 # PointOfContactCode for NewEnquiry requests, override this in the subclass.
 # Valid values can be found by calling the GetCustomerLookup method on the endpoint.
-has point_of_contact_code  => (
-    is => 'ro',
-    default => ''
+has 'point_of_contact_code' => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{point_of_contact_code} }
 );
 
-has server_timezone  => (
-    is => 'ro',
-    default => 'UTC'
+has 'server_timezone' => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{server_timezone} }
 );
 
 has memcache_namespace  => (
-    is => 'ro',
-    default => 'confirm'
+    is => 'lazy',
+    default => sub { $_[0]->config_filename }
 );
 
 has memcache => (

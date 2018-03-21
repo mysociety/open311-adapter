@@ -4,13 +4,27 @@ use Moo;
 use DateTime::Format::Strptime;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
+with 'Open311::Endpoint::Role::ConfigFile';
 
 use Open311::Endpoint::Service::UKCouncil::Confirm;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 use Open311::Endpoint::Service::Request::ExtendedStatus;
 
+use Path::Tiny;
 use SOAP::Lite; # +trace => [ qw/method debug/ ];
+
+
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    die unless $args{jurisdiction_id}; # Must have one by here
+    $args{config_file} = path(__FILE__)->parent(5)->realpath->child("conf/council-$args{jurisdiction_id}.yml")->stringify;
+    return $class->$orig(%args);
+};
+
+has jurisdiction_id => (
+    is => 'ro',
+);
 
 
 =head2 service_whitelist
