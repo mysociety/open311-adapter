@@ -22,6 +22,7 @@ install:
   - .travis/install
 before_script:
   - cp conf/general.yml-example conf/general.yml
+  - cp conf/council-banes_confirm.yml-example conf/council-banes_confirm.yml
 script:
   - script/test
 after_script:

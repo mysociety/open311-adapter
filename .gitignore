@@ -5,3 +5,5 @@ local
 /conf/general.yml.deployed
 /conf/httpd.conf
 /conf/httpd.conf.deployed
+/conf/council-*
+!/conf/council-*.example
