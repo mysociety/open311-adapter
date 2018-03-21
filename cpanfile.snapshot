@@ -2478,31 +2478,12 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       Test::More 0.47
-  YAML-1.18
-    pathname: T/TI/TINITA/YAML-1.18.tar.gz
+  YAML-LibYAML-0.69
+    pathname: T/TI/TINITA/YAML-LibYAML-0.69.tar.gz
     provides:
-      YAML 1.18
-      YAML::Any 1.18
-      YAML::Dumper undef
-      YAML::Dumper::Base undef
-      YAML::Error undef
-      YAML::Loader undef
-      YAML::Loader::Base undef
-      YAML::Marshall undef
-      YAML::Mo undef
-      YAML::Node undef
-      YAML::Tag undef
-      YAML::Type::blessed undef
-      YAML::Type::code undef
-      YAML::Type::glob undef
-      YAML::Type::ref undef
-      YAML::Type::regexp undef
-      YAML::Type::undef undef
-      YAML::Types undef
-      YAML::Warning undef
-      yaml_mapping undef
-      yaml_scalar undef
-      yaml_sequence undef
+      YAML::LibYAML 0.69
+      YAML::XS 0.69
+      YAML::XS::LibYAML undef
     requirements:
       ExtUtils::MakeMaker 0
       perl 5.008001

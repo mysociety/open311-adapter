@@ -1,7 +1,7 @@
 package Role::Config;
 
 use Path::Tiny;
-use YAML;
+use YAML::XS qw(LoadFile);
 use Moo::Role;
 
 has config_file => (
@@ -20,7 +20,7 @@ has config => (
 
 sub _build_config {
     my $self = shift;
-    my $conf = YAML::LoadFile($self->config_file);
+    my $conf = LoadFile($self->config_file);
     return $conf;
 }
 

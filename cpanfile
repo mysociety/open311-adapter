@@ -31,7 +31,7 @@ requires 'Starman';
 requires 'Types::Standard';
 requires 'XML::Simple';
 requires 'Web::Simple';
-requires 'YAML';
+requires 'YAML::XS';
 
 # Modules used by the test suite
 requires 'LWP::Protocol::PSGI';

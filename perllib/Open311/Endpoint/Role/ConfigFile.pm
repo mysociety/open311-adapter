@@ -2,7 +2,7 @@ package Open311::Endpoint::Role::ConfigFile;
 use Moo::Role;
 use Path::Tiny 'path';
 use Carp 'croak';
-use YAML ();
+use YAML::XS qw(LoadFile);
 use Types::Standard qw( Maybe Str );
 
 has config_file => (
@@ -19,7 +19,7 @@ around BUILDARGS => sub {
         my $cfg = path($config_file);
         croak "$config_file is not a file" unless $cfg->is_file;
 
-        my $config = YAML::LoadFile($cfg) or croak "Couldn't load config from $config_file";
+        my $config = LoadFile($cfg) or croak "Couldn't load config from $config_file";
         return $class->$next(%$config, %args);
     }
     else {
