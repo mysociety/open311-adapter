@@ -156,4 +156,8 @@ has '+ignored_attribute_options' => (
     / ] }
 );
 
+has '+default_site_code' => (
+    default => '99999999'
+);
+
 1;
