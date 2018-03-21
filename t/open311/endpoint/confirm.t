@@ -256,6 +256,7 @@ my $expected = <<XML;
 <service_request_updates>
   <request_update>
     <description></description>
+    <external_status_code>INP</external_status_code>
     <media_url></media_url>
     <service_request_id>2001</service_request_id>
     <status>in_progress</status>
@@ -264,6 +265,7 @@ my $expected = <<XML;
   </request_update>
   <request_update>
     <description></description>
+    <external_status_code>DUP</external_status_code>
     <media_url></media_url>
     <service_request_id>2002</service_request_id>
     <status>duplicate</status>
