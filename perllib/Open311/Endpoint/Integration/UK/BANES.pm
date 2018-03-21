@@ -55,7 +55,8 @@ has '+service_whitelist' => (
         "Flooding & Drainage" => {
             NM_BD => 1, # Blocked drain (doesn't seem to exist on Confirm yet)
             NM_RG => 1, # Blocked gully
-            NM_FL => 1,  # Flooding
+            NM_FL => "Property Flooding", # Flooding
+            NM_RF => "Road & Pavement Flooding", # Flooding
         },
         "Hazard or Obstruction on Highway" => {
             NM_ARH => "Objects in the road", # Articles on the Highway
