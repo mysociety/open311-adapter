@@ -212,7 +212,7 @@ sub process_service_request_args {
 
     # Some Confirm installations should have enquiries matched against a
     # default SiteCode if it wasn't specified from FMS.
-    if (!defined $args->{site_code} && $self->default_site_code) {
+    if (!$args->{site_code} && $self->default_site_code) {
         $args->{site_code} = $self->default_site_code;
     }
 
