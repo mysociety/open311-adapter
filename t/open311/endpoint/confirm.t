@@ -39,7 +39,10 @@ $open311->mock(perform_request => sub {
     }
     $op = $op->value;
     if ($op->name eq 'NewEnquiry') {
-        # Check contents of req here
+        # Check more contents of req here
+        foreach (${$op->value}->value) {
+            is $_->value, 999999 if $_->name eq 'SiteCode';
+        }
         return { OperationResponse => { NewEnquiryResponse => { Enquiry => { EnquiryNumber => 2001 } } } };
     } elsif ($op->name eq 'EnquiryUpdate') {
         # Check contents of req here
