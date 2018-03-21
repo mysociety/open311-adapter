@@ -182,6 +182,12 @@ has service_request_content => (
     default => '/open311/service_request_extended'
 );
 
+has default_site_code => (
+    is => 'ro',
+    default => ''
+);
+
+
 sub process_service_request_args {
     my $self = shift;
     my $args = shift;
@@ -202,6 +208,12 @@ sub process_service_request_args {
 
     if (my $assigned_officer = $self->service_assigned_officers->{$args->{service_code}}) {
         $args->{assigned_officer} = $assigned_officer;
+    }
+
+    # Some Confirm installations should have enquiries matched against a
+    # default SiteCode if it wasn't specified from FMS.
+    if (!defined $args->{site_code} && $self->default_site_code) {
+        $args->{site_code} = $self->default_site_code;
     }
 
     # Open311 doesn't support a 'title' field for service requests, so FMS
