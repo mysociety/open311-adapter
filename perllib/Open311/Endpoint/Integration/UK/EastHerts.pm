@@ -9,7 +9,7 @@ use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::Update;
 
 #use SOAP::Lite;
-use SOAP::Lite +trace => [ qw/method debug/ ];
+use SOAP::Lite; # +trace => [ qw/method debug/ ];
 
 use Integrations::EastHerts::Highways;
 

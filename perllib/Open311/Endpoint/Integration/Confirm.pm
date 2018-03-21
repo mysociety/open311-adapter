@@ -8,7 +8,7 @@ use Open311::Endpoint::Service::UKCouncil::Confirm;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 
-use SOAP::Lite +trace => [ qw/method debug/ ];
+use SOAP::Lite; # +trace => [ qw/method debug/ ];
 
 
 =head2 service_whitelist
@@ -302,7 +302,6 @@ sub get_service_request_updates {
             );
         }
     }
-    # print Dumper($enquiries);
     return @updates;
 }
 
