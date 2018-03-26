@@ -74,6 +74,10 @@ sub schema_definition {
     my $self = shift;
 
     my @values = map +{ type => '//str', value => $_ }, $self->get_values;
+    # FMS will send a blank string for optional singlevaluelist attributes where
+    # the user didn't make a selection. Make sure this is allowed by the schema.
+    push(@values, { type => '//str', value => '' }) unless $self->required;
+
     my %schema_types = (
         string => '//str',
         number => '//num',
