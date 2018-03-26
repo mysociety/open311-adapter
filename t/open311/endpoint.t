@@ -192,6 +192,8 @@ subtest "POST Service Request validation" => sub {
     ok ! $res->is_success, 'bad attribute';
 };
 
+my $id = 0;
+
 subtest "POST Service Request valid test" => sub {
 
     set_fixed_time('2014-01-01T12:00:00Z');
@@ -211,7 +213,7 @@ subtest "POST Service Request valid test" => sub {
     is_deeply decode_json($res->content),
         [ {
             "service_notice" => "This is a test service",
-            "service_request_id" => 0
+            "service_request_id" => $id++
         } ], 'correct json returned';
 
     set_fixed_time('2014-02-01T12:00:00Z');
@@ -234,10 +236,32 @@ subtest "POST Service Request valid test" => sub {
 <service_requests>
   <request>
     <service_notice>This is a test service</service_notice>
-    <service_request_id>1</service_request_id>
+    <service_request_id>$id</service_request_id>
   </request>
 </service_requests>
 CONTENT
+    $id++;
+};
+
+subtest "POST Service Request with optional singlevaluelist" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'POT',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        'attribute[depth]' => 100,
+        'attribute[shape]' => '', # Nothing picked
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_notice" => "This is a test service",
+            "service_request_id" => $id++
+        } ], 'correct json returned';
 };
 
 subtest "GET Service Requests" => sub {
@@ -248,34 +272,27 @@ subtest "GET Service Requests" => sub {
     my $xml = <<CONTENT;
 <?xml version="1.0" encoding="utf-8"?>
 <service_requests>
+CONTENT
+    for my $i (0..$id-1) {
+        my $month = $i==0 ? 1 : 2;
+        $xml .= <<CONTENT;
   <request>
     <address>22 Acacia Avenue</address>
     <address_id></address_id>
     <lat>0</lat>
     <long>0</long>
     <media_url></media_url>
-    <requested_datetime>2014-01-01T12:00:00Z</requested_datetime>
+    <requested_datetime>2014-0$month-01T12:00:00Z</requested_datetime>
     <service_code>POT</service_code>
     <service_name>Pothole Repairs</service_name>
-    <service_request_id>0</service_request_id>
+    <service_request_id>$i</service_request_id>
     <status>open</status>
-    <updated_datetime>2014-01-01T12:00:00Z</updated_datetime>
+    <updated_datetime>2014-0$month-01T12:00:00Z</updated_datetime>
     <zipcode></zipcode>
   </request>
-  <request>
-    <address>22 Acacia Avenue</address>
-    <address_id></address_id>
-    <lat>0</lat>
-    <long>0</long>
-    <media_url></media_url>
-    <requested_datetime>2014-02-01T12:00:00Z</requested_datetime>
-    <service_code>POT</service_code>
-    <service_name>Pothole Repairs</service_name>
-    <service_request_id>1</service_request_id>
-    <status>open</status>
-    <updated_datetime>2014-02-01T12:00:00Z</updated_datetime>
-    <zipcode></zipcode>
-  </request>
+CONTENT
+    }
+    $xml .= <<CONTENT;
 </service_requests>
 CONTENT
 

@@ -192,6 +192,7 @@ sub NewEnquiry {
 
     my ($service_code, $subject_code) = split /_/, $args->{service_code};
     my %service_types = map { $_->code => $_->datatype } @{ $service->attributes };
+    my %attributes_required = map { $_->code => $_->required } @{ $service->attributes };
 
     my %enq = (
         EnquiryNumber => 1,
@@ -227,6 +228,12 @@ sub NewEnquiry {
     for my $code (keys %{ $args->{attributes} }) {
         next if grep {$code eq $_} ('easting', 'northing', 'fixmystreet_id');
         my $value = substr($args->{attributes}->{$code}, 0, 2000);
+
+        # FMS will send a blank string if the user didn't make a selection in a
+        # non-required singlevaluelist. In that case sending the blank string
+        # to Confirm results in an error, so just skip over it.
+        next if (!$value && $service_types{$code} eq 'singlevaluelist' && !$attributes_required{$code});
+
         my $tag = $service_types{$code} eq 'singlevaluelist' ? 'EnqAttribValueCode' : 'EnqAttribStringValue';
         push @elements, SOAP::Data->name('EnquiryAttribute' => \SOAP::Data->value(
             SOAP::Data->name('EnqAttribTypeCode' => SOAP::Utils::encode_data($code))->type(""),
