@@ -2,9 +2,3 @@ Rutland:
   endpoint: ''
   credentials: ''
 
-CONFIRM:
-    Buckinghamshire:
-        url: ''
-        username: ''
-        password: ''
-        tenant_id: ''
