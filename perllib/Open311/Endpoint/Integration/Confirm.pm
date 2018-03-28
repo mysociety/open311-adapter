@@ -230,7 +230,9 @@ sub process_service_request_args {
     # present, as Confirm doesn't have a specific way of allowing us to
     # identify assets that we've come across yet.
     if ( defined $args->{attributes}->{asset_details} ) {
-        $args->{location} .= "\nAsset information:\n" . $args->{attributes}->{asset_details};
+        if ( $args->{attributes}->{asset_details} ) {
+            $args->{location} .= "\nAsset information:\n" . $args->{attributes}->{asset_details};
+        }
         delete $args->{attributes}->{asset_details};
     }
 
