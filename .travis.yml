@@ -20,9 +20,12 @@ sudo: false
 
 install:
   - .travis/install
+  - 'if [ "$TRAVIS_PERL_VERSION" = "5.24" ]; then cpanm --quiet --notest Devel::Cover::Report::Codecov; fi'
 before_script:
   - cp conf/general.yml-example conf/general.yml
+  - 'if [ "$TRAVIS_PERL_VERSION" = "5.24" ]; then export HARNESS_PERL_SWITCHES="-MDevel::Cover=+ignore,local/lib/perl5,^t"; fi'
 script:
   - script/test
 after_script:
   - .travis/after_script
+  - 'if [ "$TRAVIS_PERL_VERSION" = "5.24" ]; then cover --report codecov; fi'
