@@ -1,0 +1,11 @@
+endpoint_url: "http://example.org/endpoint"
+username: "username"
+password: "pw"
+tenant_id: "123"
+server_timezone: Europe/London
+service_whitelist:
+  Flooding & Drainage:
+    ABC_DEF: Flooding
+reverse_status_mapping:
+  DUP: duplicate
+  INP: in_progress

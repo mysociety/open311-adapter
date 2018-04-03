@@ -18,7 +18,7 @@ use SOAP::Lite; # +trace => [ qw/method debug/ ];
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
     die unless $args{jurisdiction_id}; # Must have one by here
-    $args{config_file} = path(__FILE__)->parent(5)->realpath->child("conf/council-$args{jurisdiction_id}.yml")->stringify;
+    $args{config_file} //= path(__FILE__)->parent(5)->realpath->child("conf/council-$args{jurisdiction_id}.yml")->stringify;
     return $class->$orig(%args);
 };
 
