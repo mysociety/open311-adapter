@@ -3,4 +3,4 @@
 set -e
 cd "$(dirname "$0")/.."
 
-prove -Ilocal/lib/perl5 -Iperllib -r t/*
+prove -Ilocal/lib/perl5 -Iperllib -r $@
