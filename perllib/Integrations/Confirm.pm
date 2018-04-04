@@ -169,10 +169,19 @@ sub GetEnquiries {
         ))
     } @_;
 
-    my $responses = $self->perform_request(@operations)->{OperationResponse};
-    $responses = [ $responses ] if (ref($responses) eq 'HASH'); # in case only one response came back
+    # Confirm can be very slow to return results for calls containing lots
+    # of GetEnquiry operations, and in some cases can hit the 300 second timeout
+    # on their end. We work around this by breaking the operations into smaller
+    # batches and requesting a few at a time.
+    my @enquiries = ();
+    my $batch_size = 10;
+    while ( my @batch = splice @operations, 0, $batch_size ) {
+        my $responses = $self->perform_request(@batch)->{OperationResponse};
+        $responses = [ $responses ] if (ref($responses) eq 'HASH'); # in case only one response came back
+        push @enquiries, map { $_->{GetEnquiryResponse}->{Enquiry} } @$responses;
+    }
 
-    return map { $_->{GetEnquiryResponse}->{Enquiry} } @$responses;
+    return @enquiries;
 }
 
 sub GetEnquiryLookups {
