@@ -450,10 +450,18 @@ sub get_service_requests {
     for my $enquiry ( @enquiries ) {
         my $code = $enquiry->{ServiceCode} . "_" . $enquiry->{SubjectCode};
         my $service = $services{$code};
+        my $status = $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}};
 
         unless ($service) {
             warn "no service for service code $code\n";
             next;
+        }
+
+        unless ($status) {
+            # Default to 'open' if the status doesn't appear in the reverse mapping,
+            # which is the same as we do for service request updates.
+            warn "no reverse mapping for for status code $enquiry->{EnquiryStatusCode} (Enquiry $enquiry->{EnquiryNumber})\n";
+            $status = 'open';
         }
 
         unless (defined $enquiry->{EnquiryY} && defined $enquiry->{EnquiryX}) {
@@ -472,7 +480,7 @@ sub get_service_requests {
             updated_datetime => $logtime,
             # NB: these are EPSG:27700 easting/northing
             latlong => [ $enquiry->{EnquiryY}, $enquiry->{EnquiryX} ],
-            status => $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}},
+            status => $status,
         );
 
         push @requests, $request;
