@@ -456,6 +456,11 @@ sub get_service_requests {
             next;
         }
 
+        unless (defined $enquiry->{EnquiryY} && defined $enquiry->{EnquiryX}) {
+            warn "no easting/northing for Enquiry $enquiry->{EnquiryNumber}\n";
+            next;
+        }
+
         my $logtime = $parser->parse_datetime($enquiry->{LogEffectiveTime});
         $logtime->set_time_zone($integ->server_timezone);
         my $request = $self->new_request(
