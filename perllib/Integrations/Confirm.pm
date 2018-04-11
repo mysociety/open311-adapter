@@ -154,7 +154,10 @@ sub perform_request {
         @operations
     ));
 
-    return $self->ProcessOperationsRequest($request);
+    my $response = $self->ProcessOperationsRequest($request);
+    die $response->{Fault}->{Reason} if $response->{Fault};
+
+    return $response;
 }
 
 sub GetEnquiries {
@@ -291,10 +294,6 @@ sub NewEnquiry {
 
     my $response = $self->perform_request($operation);
 
-    if ($response->{Fault}) {
-            die "NewEnquiry failed: " . $response->{Fault}->{Reason};
-    }
-
     my $external_id = $response->{OperationResponse}->{NewEnquiryResponse}->{Enquiry}->{EnquiryNumber};
 
     return $external_id;
@@ -329,8 +328,7 @@ sub EnquiryUpdate {
         ))
     );
 
-    my $response = $self->perform_request($operation);
-    return $response;
+    return $self->perform_request($operation);
 }
 
 sub GetEnquiryStatusChanges {
