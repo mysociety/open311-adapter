@@ -1,7 +1,7 @@
 package Open311::Endpoint::Integration::Confirm;
 
 use Moo;
-use DateTime::Format::Strptime;
+use DateTime::Format::W3CDTF;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 with 'Open311::Endpoint::Role::ConfigFile';
@@ -201,6 +201,26 @@ has default_site_code => (
     default => ''
 );
 
+=head2 cutoff_enquiry_date
+
+A date before which you never want to return
+enquiries from a get_service_requests call.
+
+=cut
+
+my $w3c = DateTime::Format::W3CDTF->new;
+
+has cutoff_enquiry_date => (
+    is => 'ro',
+    coerce => sub { $w3c->parse_datetime($_[0]) },
+);
+
+
+has date_parser => (
+    is => 'ro',
+    default => sub { $w3c },
+);
+
 
 sub process_service_request_args {
     my $self = shift;
@@ -312,7 +332,6 @@ sub get_service_request_updates {
         $args->{end_date}
     );
 
-    my $w3c = DateTime::Format::W3CDTF->new;
     my @updates = ();
 
     for my $enquiry (@$enquiries) {
@@ -321,7 +340,7 @@ sub get_service_request_updates {
         for my $status_log (@$status_logs) {
             my $enquiry_id = $enquiry->{EnquiryNumber};
             my $update_id = $enquiry_id . "_" . $status_log->{EnquiryLogNumber};
-            my $ts = $w3c->parse_datetime($status_log->{LogEffectiveTime});
+            my $ts = $self->date_parser->parse_datetime($status_log->{LogEffectiveTime});
             $ts->set_time_zone($integ->server_timezone);
             my $description = $self->publish_service_update_text ?
                 ($status_log->{StatusLogNotes} || "") :
@@ -424,8 +443,6 @@ sub get_service_request {
 sub get_service_requests {
     my ($self, $args) = @_;
 
-    my $parser = new DateTime::Format::Strptime(pattern => '%Y-%m-%dT%H:%M:%S');
-
     my $integ = $self->get_integration;
     my $updated_enquiries = $integ->GetEnquiryStatusChanges(
         $args->{start_date},
@@ -469,8 +486,10 @@ sub get_service_requests {
             next;
         }
 
-        my $logtime = $parser->parse_datetime($enquiry->{LogEffectiveTime});
+        my $logtime = $self->date_parser->parse_datetime($enquiry->{LogEffectiveTime});
         $logtime->set_time_zone($integ->server_timezone);
+        next if $self->cutoff_enquiry_date && $logtime < $self->cutoff_enquiry_date;
+
         my $request = $self->new_request(
             service => $service,
             service_request_id => $enquiry->{EnquiryNumber},
