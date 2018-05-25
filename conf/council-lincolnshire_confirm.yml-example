@@ -1,0 +1,14 @@
+endpoint_url: ""
+username: ""
+password: ""
+tenant_id: ""
+enquiry_method_code: ""
+point_of_contact_code: ""
+server_timezone: ""
+ignored_attributes: []
+service_whitelist: {}
+forward_status_mapping: {}
+reverse_status_mapping: {}
+attribute_descriptions: {}
+ignored_attribute_options: []
+default_site_code: ""
