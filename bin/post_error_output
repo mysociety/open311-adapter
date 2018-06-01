@@ -1,0 +1,46 @@
+#!/usr/bin/env perl
+
+=pod
+
+This script takes an argument which is a text file containing the post
+details from our cron error emails and converts that back into a post
+request. It then posts this to the default locally running dev server's
+create post URL and prints out the response.
+
+=cut
+
+use strict;
+use warnings;
+use File::Slurp;
+use LWP::UserAgent;
+use HTTP::Request::Common qw(POST);
+use Data::Printer;
+
+my (%params, $current_param);
+
+my $file = shift;
+
+die "Please provide a filename\n" unless $file;
+
+my @lines = read_file($file);
+
+foreach my $line (@lines) {
+    my ($param, $data) = ($line =~ /^([^:]*): (.*)/);
+    $param = undef
+        if $param && ( $param eq 'detail' || $param eq 'url' || $param =~ /^Nearest/);
+
+    if (!$param && $current_param ) {
+        $params{$current_param} .= $line;
+    } elsif ( $param ) {
+        chomp($data);
+        $current_param = $param;
+        $params{$param} = $data;
+    }
+}
+
+my $req = POST 'http://localhost:5000/requests.json', \%params;
+
+my $ua = LWP::UserAgent->new();
+my $res = $ua->request( $req );
+
+print $res->content;
