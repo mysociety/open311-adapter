@@ -138,12 +138,13 @@ sub ProcessOperationsRequest {
 
 sub perform_request {
     my $self = shift;
-
-    my ($username, $password, $tenant) = $self->credentials;
+    my $opts = ref $_[-1] eq 'HASH' ? pop : {};
 
     my @operations = map {
         SOAP::Data->name('Operation' => $_)
     } @_;
+
+    my ($username, $password, $tenant) = $self->credentials;
 
     my $request = SOAP::Data->name('Request' => \SOAP::Data->value(
         SOAP::Data->name('Authentication' => \SOAP::Data->value(
@@ -155,7 +156,7 @@ sub perform_request {
     ));
 
     my $response = $self->ProcessOperationsRequest($request);
-    die $response->{Fault}->{Reason} if $response->{Fault};
+    die $response->{Fault}->{Reason} if ($response->{Fault} && !$opts->{return_on_fault});
 
     return $response;
 }
@@ -322,18 +323,37 @@ sub EnquiryUpdate {
 
     $enq{EnquiryStatusCode} = $args->{status_code} if $args->{status_code};
 
-    my @elements = map {
-        my $value = SOAP::Utils::encode_data($enq{$_});
-        SOAP::Data->name($_ => $value)->type("")
-    } keys %enq;
+    my $response = $self->perform_request($self->operation_for_update(\%enq), { return_on_fault => 1});
 
-    my $operation = \SOAP::Data->value(
+    return $response unless $response->{Fault};
+
+    # Confirm rejects an update if it appears to be older than any existing
+    # updates on an enquiry.
+    # In this case, we resubmit the update using the current timestamp instead
+    # of the updated_datetime value received over Open311.
+    # To ensure this doesn't cause unexpected status changes within Confirm
+    # we don't set the EnquiryStatusCode in this resubmission.
+    my $reason = $response->{Fault}->{Reason};
+    die $reason unless $reason =~ /Logged Date [\d\/:\s]+ must be greater than the Effective Date/;
+
+    delete $enq{EnquiryStatusCode} if $enq{EnquiryStatusCode};
+    delete $enq{LoggedTime} if $enq{LoggedTime};
+    return $self->perform_request($self->operation_for_update(\%enq));
+}
+
+sub operation_for_update {
+    my ($self, $enq) = @_;
+
+    my @elements = map {
+        my $value = SOAP::Utils::encode_data($enq->{$_});
+        SOAP::Data->name($_ => $value)->type("")
+    } keys %$enq;
+
+    return \SOAP::Data->value(
         SOAP::Data->name('EnquiryUpdate' => \SOAP::Data->value(
             @elements
         ))
     );
-
-    return $self->perform_request($operation);
 }
 
 sub GetEnquiryStatusChanges {

@@ -46,6 +46,14 @@ $open311->mock(perform_request => sub {
         return { OperationResponse => { NewEnquiryResponse => { Enquiry => { EnquiryNumber => 2001 } } } };
     } elsif ($op->name eq 'EnquiryUpdate') {
         # Check contents of req here
+        my %req = map { $_->name => $_->value } ${$op->value}->value;
+        if ($req{EnquiryNumber} eq '1002') {
+            if ($req{LoggedTime}) {
+                return { Fault => { Reason => 'Validate enquiry update.1002.Logged Date 04/06/2018 15:33:28 must be greater than the Effective Date of current status log' } };
+            } else {
+                return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 1002, EnquiryLogNumber => 111 } } } };
+            }
+        }
         return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 2001, EnquiryLogNumber => 2 } } } };
     } elsif ($op->name eq 'GetEnquiryStatusChanges') {
         return { OperationResponse => { GetEnquiryStatusChangesResponse => { UpdatedEnquiry => [
@@ -237,6 +245,34 @@ my $expected = <<XML;
 <service_request_updates>
   <request_update>
     <update_id>2001_2</update_id>
+  </request_update>
+</service_request_updates>
+XML
+
+    is_string $res->content, $expected, 'xml string ok'
+    or diag $res->content;
+};
+
+subtest 'POST update with invalid LoggedTime' => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.xml',
+        api_key => 'test',
+        service_request_id => 1002,
+        update_id => 123,
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => 'Update here',
+        status => 'OPEN',
+        updated_datetime => '2016-09-01T15:00:00Z',
+        media_url => 'http://example.org/',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+my $expected = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_request_updates>
+  <request_update>
+    <update_id>1002_111</update_id>
   </request_update>
 </service_request_updates>
 XML
