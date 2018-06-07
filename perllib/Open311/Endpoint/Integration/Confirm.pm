@@ -66,6 +66,67 @@ has service_whitelist => (
     default => sub { die "Attribute Confirm::service_whitelist not overridden"; }
 );
 
+=head2 wrapped_services
+
+Some Confirm installations are configured in a manner that encodes metadata
+about enquiries in the subject code, instead of an attribute. For example,
+rather than having a single "Pothole" category with a
+"What size is the pothole?" => [ "small", "large" ] attribute, it may have two
+individual subjects: "Small pothole" & "Large pothole". This presents a
+problem if we want to display a user-friendly hierarchy of categories to a user
+on FMS, as despite using groups the category lists may be very long.
+
+This wrapped_services hashref allows us to present multiple Confirm subjects as
+a single Open311 service (category), and the choice between the multiple wrapped
+subjects is shown as a singlevaluelist attribute on the Open311 service.
+
+Continuing the above example, let's say we want to present our two Confirm
+subjects ('Small pothole', with code 'RD_PHS'; and 'Large pothole' with code
+'RD_PHL') as a single 'Pothole' Open311 service. In the config YAML file, we'd
+include the following 'wrapped_services' key:
+
+  "wrapped_services": {
+    "POTHOLES": {
+      "group": "Road Defects",
+      "name": "Pothole",
+      "wraps": [
+        "HM_PHS",
+        "HM_PHL",
+      ]
+    },
+  }
+
+A single Open311 service called "Pothole" would be published at /services.xml
+with a singlevaluelist attribute called "_wrapped_service_code" with two
+options, one for each of the HM_PHS & HM_PHL subjects. Because these wrapped
+services may have their own attributes, these will be merged together and
+included on the Pothole service.
+
+If a Confirm subject should be presented as its own Open311 category,
+use the "passthrough" attribute rather than a "wraps" of length 1, e.g.:
+
+  "wrapped_services": {
+    "ST_STP4": {
+      "passthrough": 1,
+      "group": "Bridges and safety barriers",
+    },
+  }
+
+The subject name as defined in service_whitelist will be used for the category
+name.
+
+Some caveats to note:
+
+ - If wrapped_services is defined, *only* services from the definition will be
+   published.
+ - Services to be wrapped must be present in service_whitelist.
+
+=cut
+
+has wrapped_services => (
+    is => 'ro',
+    default => sub { undef }
+);
 
 =head2 ignored_attributes
 
@@ -428,6 +489,9 @@ sub services {
             push @services, $o311_service;
         }
     }
+
+    @services = $self->_wrap_services(@services) if defined $self->wrapped_services;
+
     return @services;
 }
 
@@ -547,5 +611,59 @@ sub _parse_attributes {
 
     return \%attributes;
 }
+
+sub _wrap_services {
+    my $self = shift;
+    my @original_services = @_;
+
+    my %original_services = map { $_->service_code => $_ } @original_services;
+    my %service_attributes = map { $_->service_code => $_->attributes } @original_services;
+
+    my @services = ();
+    for my $code (keys %{$self->wrapped_services}) {
+        if ($self->wrapped_services->{$code}->{passthrough}) {
+            my $original_service = $original_services{$code};
+            $original_service->group($self->wrapped_services->{$code}->{group} || $original_service->group);
+            push @services, $original_service;
+            next;
+        }
+
+        my %wrapped_services = map { $_ => $original_services{$_}->service_name } @{ $self->wrapped_services->{$code}->{wraps} };
+
+        my $desc = $self->wrapped_services->{$code}->{description} || "What is the issue?";
+        my %attributes = (
+            "_wrapped_service_code" => Open311::Endpoint::Service::Attribute->new(
+                code => "_wrapped_service_code",
+                description => $desc,
+                datatype => "singlevaluelist",
+                required => 1,
+                values => \%wrapped_services,
+            ),
+        );
+
+        # The wrapped services may have their own attributes, so merge
+        # them all together (stripping duplicates) and include them in
+        # the wrapping service.
+        for my $wrapped_service ( map { $original_services{$_} } @{ $self->wrapped_services->{$code}->{wraps} }) {
+            %attributes = (
+                %attributes,
+                map { $_->code => $_ } @{ $wrapped_service->attributes },
+            );
+        }
+
+        my %service = (
+            service_name => $self->wrapped_services->{$code}->{name},
+            service_code => $code,
+            description => $self->wrapped_services->{$code}->{name},
+            group => $self->wrapped_services->{$code}->{group},
+            attributes => [ values %attributes ],
+        );
+        my $o311_service = $self->service_class->new(%service);
+        push @services, $o311_service;
+    }
+
+    return @services;
+}
+
 
 1;
