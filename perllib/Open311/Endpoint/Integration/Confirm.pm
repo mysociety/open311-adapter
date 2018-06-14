@@ -335,6 +335,13 @@ sub post_service_request {
 
     my $integ = $self->get_integration;
 
+    if ($args->{attributes}->{_wrapped_service_code}) {
+        my ($wrapped_service) = grep { $_->service_code eq $args->{attributes}->{_wrapped_service_code} } $self->_services;
+        die "No such wrapped service" unless $wrapped_service;
+        $service = $wrapped_service;
+        delete $args->{attributes}->{_wrapped_service_code};
+    }
+
     $args = $self->process_service_request_args($args);
 
     my $new_id = $integ->NewEnquiry($service, $args);
@@ -412,8 +419,15 @@ sub get_service_request_updates {
     return @updates;
 }
 
-
 sub services {
+    my $self = shift;
+    my @services = $self->_services;
+
+    @services = $self->_wrap_services(@services) if defined $self->wrapped_services;
+    return @services;
+}
+
+sub _services {
     my $self = shift;
 
     my $integ = $self->get_integration;
@@ -476,8 +490,6 @@ sub services {
             push @services, $o311_service;
         }
     }
-
-    @services = $self->_wrap_services(@services) if defined $self->wrapped_services;
 
     return @services;
 }
