@@ -203,7 +203,7 @@ sub GetEnquiryLookups {
 sub NewEnquiry {
     my ($self, $service, $args) = @_;
 
-    my ($service_code, $subject_code) = split /_/, $args->{service_code};
+    my ($service_code, $subject_code) = split /_/, $service->service_code;
     my %service_types = map { $_->code => $_->datatype } @{ $service->attributes };
     my %attributes_required = map { $_->code => $_->required } @{ $service->attributes };
 
