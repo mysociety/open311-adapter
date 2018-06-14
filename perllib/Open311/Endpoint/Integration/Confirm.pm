@@ -157,6 +157,20 @@ has ignored_attribute_options => (
 );
 
 
+=head2 attribute_overrides
+
+Allows individual attributes' initialisers to be overridden.
+Useful for, e.g. making Confirm mandatory fields not required by Open311,
+setting the 'automated' field etc.
+
+=cut
+
+has attribute_overrides => (
+    is => 'ro',
+    default => sub { {} }
+);
+
+
 =head2 forward_status_mapping
 
 Maps Open311 service request status codes to Confirm enquiry status codes.
@@ -612,13 +626,20 @@ sub _parse_attributes {
 
         # printf "\n\nXXXXXXXX $code\n\n\n" if $type eq 'singlevaluelist';
 
+        my %optional = ();
+        if (defined $self->attribute_overrides->{$code}) {
+            %optional = %{ $self->attribute_overrides->{$code} };
+        }
+
         $attributes{$code} = Open311::Endpoint::Service::Attribute->new(
             code => $code,
             description => $desc,
             datatype => $type,
             required => $required,
             values => \%values,
+            %optional,
         );
+
     }
 
     return \%attributes;
