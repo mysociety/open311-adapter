@@ -91,36 +91,11 @@ sub post_service_request_update {
 
 sub services {
     my @services = (
-        [ 'Abandoned vehicles', 'SC_E_AVE' ],
+        [ 'Abandoned vehicles', 'EF_E_AVE' ],
         [ 'Dog Bin overflow', 'P_C_DBE' ],
-        [ 'Dog fouling', 'SC_RS_DOG' ],
-        [ 'Drugs Paraphernalia', 'ZZZDRUGS', 'Type', {
-            CS_DP_ILS => 'Illegal Smoking',
-            CS_DP_MED => 'Medicine Containers',
-            CS_DP_OTS => 'Other substances (eg glue)',
-            CS_DP_PHI => 'Phials or small bottles',
-            CS_DP_SYR => 'Syringes & needles',
-        } ],
-        [ 'Litter', 'ZZZLITTER', 'Location', {
-            SC_C_FSL => 'Footpath/Street',
-            P_C_LPR => 'Parks & Open spaces',
-        } ],
-        [ 'Litter Bin overflow', 'ZZZLITTERBIN', 'Location', {
-            SC_C_LBE => 'Footpath/Street',
-            P_C_LBE => 'Parks & Open spaces',
-        } ],
-        [ 'Flyposting', 'SC_RS_FLP' ],
-        [ 'Flytipping', 'SC_RS_FLY' ],
-        [ 'Graffiti', 'ZZZGRAFFITI', 'Type', {
-            SC_RS_GNO => 'non offensive',
-            SC_RS_GRO => 'offensive',
-        } ],
+        [ 'Litter in Parks & Open spaces', 'P_C_LPR' ],
+        [ 'Litter Bin overflow in Parks & Open spaces', 'P_C_LBE' ],
         [ 'Grass Cutting', 'P_C_GNC' ],
-        [ 'Public toilets', 'SC_C_TOI' ],
-        [ 'Street cleaning', 'ZZZSTREETCLEANING', 'Type', {
-            SC_C_FSD => 'debris/mud',
-            SC_C_FSL => 'litter'
-        } ],
     );
 
     return map {
