@@ -190,6 +190,16 @@ subtest "GET Service List Description" => sub {
       <required>false</required>
       <variable>true</variable>
     </attribute>
+    <attribute>
+      <automated>server_set</automated>
+      <code>closest_address</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>Closest address</description>
+      <order>10</order>
+      <required>false</required>
+      <variable>true</variable>
+    </attribute>
   </attributes>
   <service_code>ABC_DEF</service_code>
 </service_definition>

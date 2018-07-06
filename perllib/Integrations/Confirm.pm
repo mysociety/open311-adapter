@@ -244,7 +244,7 @@ sub NewEnquiry {
     } keys %enq;
 
     for my $code (keys %{ $args->{attributes} }) {
-        next if grep {$code eq $_} ('easting', 'northing', 'fixmystreet_id');
+        next if grep {$code eq $_} ('easting', 'northing', 'fixmystreet_id', 'closest_address');
         my $value = substr($args->{attributes}->{$code}, 0, 2000);
 
         # FMS will send a blank string if the user didn't make a selection in a
