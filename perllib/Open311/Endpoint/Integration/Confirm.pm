@@ -559,7 +559,7 @@ sub get_service_requests {
         my $service = $services{$code};
         my $status = $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}};
 
-        unless ($service) {
+        unless ($service || ($service = $self->_find_wrapping_service($code, \@services))) {
             warn "no service for service code $code\n";
             next;
         }
@@ -596,6 +596,31 @@ sub get_service_requests {
     }
 
     return @requests;
+}
+
+=head2 _find_wrapping_service
+
+For Confirm integrations that are using wrapped services, this method is used to
+find the Open311 Service that wraps a given service/subject code from Confirm.
+This is needed so we can fetch enquiries from Confirm and give them the correct
+Open311 service code.
+
+NB this only finds the first matching Service that wraps the code.
+
+=cut
+
+sub _find_wrapping_service {
+    my ($self, $code, $services) = @_;
+
+    return unless defined $self->wrapped_services;
+
+    for my $service (@$services) {
+        return $service if $code eq $service->service_code;
+        my @attributes = @{ $service->attributes };
+        my ($wrapped_codes) = grep { $_->code eq '_wrapped_service_code' } @attributes;
+        next unless $wrapped_codes;
+        return $service if grep { $_ eq $code } keys %{ $wrapped_codes->values };
+    }
 }
 
 sub _parse_attributes {
