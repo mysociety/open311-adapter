@@ -57,8 +57,9 @@ $open311->mock(perform_request => sub {
         return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 2001, EnquiryLogNumber => 2 } } } };
     } elsif ($op->name eq 'GetEnquiryStatusChanges') {
         return { OperationResponse => { GetEnquiryStatusChangesResponse => { UpdatedEnquiry => [
-            { EnquiryNumber => 2001, EnquiryStatusLog => [ { EnquiryLogNumber => 3, LogEffectiveTime => '2018-03-01T12:00:00Z', EnquiryStatusCode => 'INP' } ] },
-            { EnquiryNumber => 2002, EnquiryStatusLog => [ { EnquiryLogNumber => 1, LogEffectiveTime => '2018-03-01T13:00:00Z', EnquiryStatusCode => 'DUP' } ] },
+            { EnquiryNumber => 2001, EnquiryStatusLog => [ { EnquiryLogNumber => 3, LogEffectiveTime => '2018-03-01T12:00:00Z', LoggedTime => '2018-03-01T12:00:00Z', EnquiryStatusCode => 'INP' } ] },
+            { EnquiryNumber => 2002, EnquiryStatusLog => [ { EnquiryLogNumber => 1, LogEffectiveTime => '2018-03-01T13:00:00Z', LoggedTime => '2018-03-01T13:00:00Z', EnquiryStatusCode => 'INP' } ] },
+            { EnquiryNumber => 2002, EnquiryStatusLog => [ { EnquiryLogNumber => 2, LogEffectiveTime => '2018-01-17T12:34:56Z', LoggedTime => '2018-03-01T13:30:00Z', EnquiryStatusCode => 'DUP' } ] },
         ] } } };
     }
     return {};
@@ -301,12 +302,21 @@ my $expected = <<XML;
   </request_update>
   <request_update>
     <description></description>
+    <external_status_code>INP</external_status_code>
+    <media_url></media_url>
+    <service_request_id>2002</service_request_id>
+    <status>in_progress</status>
+    <update_id>2002_1</update_id>
+    <updated_datetime>2018-03-01T13:00:00+00:00</updated_datetime>
+  </request_update>
+  <request_update>
+    <description></description>
     <external_status_code>DUP</external_status_code>
     <media_url></media_url>
     <service_request_id>2002</service_request_id>
     <status>duplicate</status>
-    <update_id>2002_1</update_id>
-    <updated_datetime>2018-03-01T13:00:00+00:00</updated_datetime>
+    <update_id>2002_2</update_id>
+    <updated_datetime>2018-03-01T13:30:00+00:00</updated_datetime>
   </request_update>
 </service_request_updates>
 XML
