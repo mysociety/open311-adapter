@@ -227,6 +227,9 @@ sub NewEnquiry {
     if ($args->{location}) {
         $enq{EnquiryLocation} = substr($args->{location}, 0, 2000);
     }
+    if ($args->{notes}) {
+        $enq{StatusLogNotes} = substr($args->{notes}, 0, 2000);
+    }
     if ($args->{assigned_officer}) {
         $enq{AssignedOfficerCode} = $args->{assigned_officer};
     }
