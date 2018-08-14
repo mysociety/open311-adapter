@@ -203,7 +203,7 @@ sub GetEnquiryLookups {
 sub NewEnquiry {
     my ($self, $service, $args) = @_;
 
-    my ($service_code, $subject_code) = split /_/, $args->{service_code};
+    my ($service_code, $subject_code) = split /_/, $service->service_code;
     my %service_types = map { $_->code => $_->datatype } @{ $service->attributes };
     my %attributes_required = map { $_->code => $_->required } @{ $service->attributes };
 
@@ -227,6 +227,9 @@ sub NewEnquiry {
     if ($args->{location}) {
         $enq{EnquiryLocation} = substr($args->{location}, 0, 2000);
     }
+    if ($args->{notes}) {
+        $enq{StatusLogNotes} = substr($args->{notes}, 0, 2000);
+    }
     if ($args->{assigned_officer}) {
         $enq{AssignedOfficerCode} = $args->{assigned_officer};
     }
@@ -244,7 +247,7 @@ sub NewEnquiry {
     } keys %enq;
 
     for my $code (keys %{ $args->{attributes} }) {
-        next if grep {$code eq $_} ('easting', 'northing', 'fixmystreet_id');
+        next if grep {$code eq $_} ('easting', 'northing', 'fixmystreet_id', 'closest_address');
         my $value = substr($args->{attributes}->{$code}, 0, 2000);
 
         # FMS will send a blank string if the user didn't make a selection in a

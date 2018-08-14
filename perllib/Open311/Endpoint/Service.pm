@@ -32,7 +32,7 @@ has keywords => (
 );
 
 has group => (
-    is => 'ro',
+    is => 'rw',
     isa => Str,
     default => '',
 );

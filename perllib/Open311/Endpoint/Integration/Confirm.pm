@@ -66,6 +66,67 @@ has service_whitelist => (
     default => sub { die "Attribute Confirm::service_whitelist not overridden"; }
 );
 
+=head2 wrapped_services
+
+Some Confirm installations are configured in a manner that encodes metadata
+about enquiries in the subject code, instead of an attribute. For example,
+rather than having a single "Pothole" category with a
+"What size is the pothole?" => [ "small", "large" ] attribute, it may have two
+individual subjects: "Small pothole" & "Large pothole". This presents a
+problem if we want to display a user-friendly hierarchy of categories to a user
+on FMS, as despite using groups the category lists may be very long.
+
+This wrapped_services hashref allows us to present multiple Confirm subjects as
+a single Open311 service (category), and the choice between the multiple wrapped
+subjects is shown as a singlevaluelist attribute on the Open311 service.
+
+Continuing the above example, let's say we want to present our two Confirm
+subjects ('Small pothole', with code 'RD_PHS'; and 'Large pothole' with code
+'RD_PHL') as a single 'Pothole' Open311 service. In the config YAML file, we'd
+include the following 'wrapped_services' key:
+
+  "wrapped_services": {
+    "POTHOLES": {
+      "group": "Road Defects",
+      "name": "Pothole",
+      "wraps": [
+        "HM_PHS",
+        "HM_PHL",
+      ]
+    },
+  }
+
+A single Open311 service called "Pothole" would be published at /services.xml
+with a singlevaluelist attribute called "_wrapped_service_code" with two
+options, one for each of the HM_PHS & HM_PHL subjects. Because these wrapped
+services may have their own attributes, these will be merged together and
+included on the Pothole service.
+
+If a Confirm subject should be presented as its own Open311 category,
+use the "passthrough" attribute rather than a "wraps" of length 1, e.g.:
+
+  "wrapped_services": {
+    "ST_STP4": {
+      "passthrough": 1,
+      "group": "Bridges and safety barriers",
+    },
+  }
+
+The subject name as defined in service_whitelist will be used for the category
+name.
+
+Some caveats to note:
+
+ - If wrapped_services is defined, *only* services from the definition will be
+   published.
+ - Services to be wrapped must be present in service_whitelist.
+
+=cut
+
+has wrapped_services => (
+    is => 'ro',
+    default => sub { undef }
+);
 
 =head2 ignored_attributes
 
@@ -93,6 +154,20 @@ This attribute should be an arrayref of Confirm attribute option codes to ignore
 has ignored_attribute_options => (
     is => 'ro',
     default => sub { [] }
+);
+
+
+=head2 attribute_overrides
+
+Allows individual attributes' initialisers to be overridden.
+Useful for, e.g. making Confirm mandatory fields not required by Open311,
+setting the 'automated' field etc.
+
+=cut
+
+has attribute_overrides => (
+    is => 'ro',
+    default => sub { {} }
 );
 
 
@@ -287,6 +362,13 @@ sub post_service_request {
 
     my $integ = $self->get_integration;
 
+    if ($args->{attributes}->{_wrapped_service_code}) {
+        my ($wrapped_service) = grep { $_->service_code eq $args->{attributes}->{_wrapped_service_code} } $self->_services;
+        die "No such wrapped service" unless $wrapped_service;
+        $service = $wrapped_service;
+        delete $args->{attributes}->{_wrapped_service_code};
+    }
+
     $args = $self->process_service_request_args($args);
 
     my $new_id = $integ->NewEnquiry($service, $args);
@@ -364,8 +446,15 @@ sub get_service_request_updates {
     return @updates;
 }
 
-
 sub services {
+    my $self = shift;
+    my @services = $self->_services;
+
+    @services = $self->_wrap_services(@services) if defined $self->wrapped_services;
+    return @services;
+}
+
+sub _services {
     my $self = shift;
 
     my $integ = $self->get_integration;
@@ -428,6 +517,7 @@ sub services {
             push @services, $o311_service;
         }
     }
+
     return @services;
 }
 
@@ -469,7 +559,7 @@ sub get_service_requests {
         my $service = $services{$code};
         my $status = $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}};
 
-        unless ($service) {
+        unless ($service || ($service = $self->_find_wrapping_service($code, \@services))) {
             warn "no service for service code $code\n";
             next;
         }
@@ -508,6 +598,31 @@ sub get_service_requests {
     return @requests;
 }
 
+=head2 _find_wrapping_service
+
+For Confirm integrations that are using wrapped services, this method is used to
+find the Open311 Service that wraps a given service/subject code from Confirm.
+This is needed so we can fetch enquiries from Confirm and give them the correct
+Open311 service code.
+
+NB this only finds the first matching Service that wraps the code.
+
+=cut
+
+sub _find_wrapping_service {
+    my ($self, $code, $services) = @_;
+
+    return unless defined $self->wrapped_services;
+
+    for my $service (@$services) {
+        return $service if $code eq $service->service_code;
+        my @attributes = @{ $service->attributes };
+        my ($wrapped_codes) = grep { $_->code eq '_wrapped_service_code' } @attributes;
+        next unless $wrapped_codes;
+        return $service if grep { $_ eq $code } keys %{ $wrapped_codes->values };
+    }
+}
+
 sub _parse_attributes {
     my ($self, $response) = @_;
 
@@ -536,16 +651,77 @@ sub _parse_attributes {
 
         # printf "\n\nXXXXXXXX $code\n\n\n" if $type eq 'singlevaluelist';
 
+        my %optional = ();
+        if (defined $self->attribute_overrides->{$code}) {
+            %optional = %{ $self->attribute_overrides->{$code} };
+        }
+
         $attributes{$code} = Open311::Endpoint::Service::Attribute->new(
             code => $code,
             description => $desc,
             datatype => $type,
             required => $required,
             values => \%values,
+            %optional,
         );
+
     }
 
     return \%attributes;
 }
+
+sub _wrap_services {
+    my $self = shift;
+    my @original_services = @_;
+
+    my %original_services = map { $_->service_code => $_ } @original_services;
+    my %service_attributes = map { $_->service_code => $_->attributes } @original_services;
+
+    my @services = ();
+    for my $code (keys %{$self->wrapped_services}) {
+        if ($self->wrapped_services->{$code}->{passthrough}) {
+            my $original_service = $original_services{$code};
+            $original_service->group($self->wrapped_services->{$code}->{group} || $original_service->group);
+            push @services, $original_service;
+            next;
+        }
+
+        my %wrapped_services = map { $_ => $original_services{$_}->service_name } @{ $self->wrapped_services->{$code}->{wraps} };
+
+        my $desc = $self->wrapped_services->{$code}->{description} || "What is the issue?";
+        my %attributes = (
+            "_wrapped_service_code" => Open311::Endpoint::Service::Attribute->new(
+                code => "_wrapped_service_code",
+                description => $desc,
+                datatype => "singlevaluelist",
+                required => 1,
+                values => \%wrapped_services,
+            ),
+        );
+
+        # The wrapped services may have their own attributes, so merge
+        # them all together (stripping duplicates) and include them in
+        # the wrapping service.
+        for my $wrapped_service ( map { $original_services{$_} } @{ $self->wrapped_services->{$code}->{wraps} }) {
+            %attributes = (
+                %attributes,
+                map { $_->code => $_ } @{ $wrapped_service->attributes },
+            );
+        }
+
+        my %service = (
+            service_name => $self->wrapped_services->{$code}->{name},
+            service_code => $code,
+            description => $self->wrapped_services->{$code}->{name},
+            group => $self->wrapped_services->{$code}->{group},
+            attributes => [ values %attributes ],
+        );
+        my $o311_service = $self->service_class->new(%service);
+        push @services, $o311_service;
+    }
+
+    return @services;
+}
+
 
 1;
