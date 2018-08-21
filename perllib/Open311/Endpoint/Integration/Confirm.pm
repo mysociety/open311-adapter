@@ -576,7 +576,7 @@ sub get_service_requests {
             next;
         }
 
-        my $logtime = $self->date_parser->parse_datetime($enquiry->{LogEffectiveTime});
+        my $logtime = $self->date_parser->parse_datetime($enquiry->{EnquiryLogTime});
         $logtime->set_time_zone($integ->server_timezone);
         next if $self->cutoff_enquiry_date && $logtime < $self->cutoff_enquiry_date;
 
