@@ -576,17 +576,20 @@ sub get_service_requests {
             next;
         }
 
-        my $logtime = $self->date_parser->parse_datetime($enquiry->{EnquiryLogTime});
-        $logtime->set_time_zone($integ->server_timezone);
-        next if $self->cutoff_enquiry_date && $logtime < $self->cutoff_enquiry_date;
+        my $createdtime = $self->date_parser->parse_datetime($enquiry->{EnquiryLogTime});
+        $createdtime->set_time_zone($integ->server_timezone);
+        next if $self->cutoff_enquiry_date && $createdtime < $self->cutoff_enquiry_date;
+
+        my $updatedtime = $self->date_parser->parse_datetime($enquiry->{LogEffectiveTime});
+        $updatedtime->set_time_zone($integ->server_timezone);
 
         my $request = $self->new_request(
             service => $service,
             service_request_id => $enquiry->{EnquiryNumber},
             description => $enquiry->{EnquiryDescription},
             address => $enquiry->{EnquiryLocation} || '',
-            requested_datetime => $logtime,
-            updated_datetime => $logtime,
+            requested_datetime => $createdtime,
+            updated_datetime => $updatedtime,
             # NB: these are EPSG:27700 easting/northing
             latlong => [ $enquiry->{EnquiryY}, $enquiry->{EnquiryX} ],
             status => $status,
