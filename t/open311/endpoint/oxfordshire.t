@@ -51,6 +51,15 @@ use Integrations::WDM;
 my $endpoint = Open311::Endpoint::Integration::UK->new;
 
 my %responses = (
+    'SOAP UpdateWdmEnquiry' => '
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <UpdateWdmEnquiryResponse xmlns="http://www.wdm.co.uk/remedy/">
+              <UpdateWdmEnquiryResult>OK</UpdateWdmEnquiryResult>
+            </UpdateWdmEnquiryResponse>
+          </soap:Body>
+        </soap:Envelope>
+    ',
     'SOAP CreateEnquiry' => '
         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
           <soap:Body>
@@ -453,6 +462,50 @@ subtest "fetch multiple updates" => sub {
     ], 'correct json returned';
 };
 
+subtest "post update" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'oxfordshire',
+        api_key => 'test',
+        service_request_id => "wdm1234",
+        updated_datetime => "2014-01-01T12:00:00Z",
+        update_id => 1234,
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'This is an update',
+        status => 'INVESTIGATING',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+
+    is $sent->{content},
+    '<wdmupdateenquiry>
+  <comments>This is an update</comments>
+  <customer_details>
+    <name>
+      <email>test@example.com</email>
+      <firstname>Bob</firstname>
+      <lastname>Mould</lastname>
+      <telephone_number></telephone_number>
+    </name>
+  </customer_details>
+  <enquiry_reference>wdm1234</enquiry_reference>
+  <enquiry_time>2014-01-01 12:00:00</enquiry_time>
+</wdmupdateenquiry>
+',
+    'correct xml sent';
+
+    is_deeply decode_json($res->content),
+    [ {
+        update_id => '1234',
+    } ], 'correct json returned';
+};
 
 sub _generate_request_xml {
     my $args = shift;

@@ -118,6 +118,43 @@ sub post_request {
     }
 }
 
+sub post_update {
+    my ($self, $args) = @_;
+
+    my $time = $self->format_datetime( $self->parse_w3c_datetime( $args->{updated_datetime} ) );
+
+    my $data = {
+        wdmupdateenquiry => {
+            enquiry_reference => $args->{service_request_id},
+            enquiry_time => $time,
+            comments => $args->{description},
+            customer_details => {
+                name => {
+                    firstname => $args->{first_name},
+                    lastname => $args->{last_name},
+                    email => $args->{email},
+                    telephone_number => $args->{phone} || '',
+                },
+            }
+        }
+    };
+    my $response = $self->soap_post($self->updates_endpoint, 'UpdateWdmEnquiry', 'xDoc', $self->_create_xml_string($data));
+
+    my $resp_text = $response->valueof('//UpdateWdmEnquiryResponse/UpdateWdmEnquiryResult');
+    if ($resp_text eq 'OK') {
+        return {
+            status => $args->{status},
+            # XXX I am not sure this is correct
+            # and is also a temp fix because we don't get back the
+            # external update id from WDM
+            update_id => $args->{update_id},
+            update_time => $self->parse_w3c_datetime( $args->{updated_datetime} ),
+        };
+    } else {
+        die $resp_text;
+    }
+}
+
 sub get_updates {
     my ($self, $args) = @_;
 
