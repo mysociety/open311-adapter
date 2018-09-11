@@ -60,6 +60,36 @@ my %responses = (
           </soap:Body>
         </soap:Envelope>
     ',
+    'SOAP GetWdmUpdates' => '
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+             <GetWdmUpdatesResponse xmlns="http://www.wdm.co.uk/remedy/">
+                 <GetWdmUpdatesResult>
+                 <NewDataSet>
+                 <wdmupdate>
+                        <UpdateID>101</UpdateID>
+                        <ENQUIRY_UID>123</ENQUIRY_UID>
+                        <ENQUIRY_REFERENCE>ENQ123</ENQUIRY_REFERENCE>
+                        <UPDATE_TIME>2018-07-05T16:03:13+01:00</UPDATE_TIME>
+                        <EXTERNAL_SYSTEM_REFERENCE>1234</EXTERNAL_SYSTEM_REFERENCE>
+                        <STATUS>fixed</STATUS>
+                        <COMMENTS>Pothole has been filled</COMMENTS>
+                 </wdmupdate>
+                 <wdmupdate>
+                        <UpdateID>102</UpdateID>
+                        <ENQUIRY_UID>456</ENQUIRY_UID>
+                        <ENQUIRY_REFERENCE>ENQ456</ENQUIRY_REFERENCE>
+                        <UPDATE_TIME>2018-07-05T16:03:13+01:00</UPDATE_TIME>
+                        <EXTERNAL_SYSTEM_REFERENCE>1456</EXTERNAL_SYSTEM_REFERENCE>
+                        <STATUS>Fixed</STATUS>
+                        <COMMENTS>Pothole has been filled</COMMENTS>
+                 </wdmupdate>
+                 </NewDataSet>
+                 </GetWdmUpdatesResult>
+            </GetWdmUpdatesResponse>
+          </soap:Body>
+        </soap:Envelope>
+    ',
 );
 
 my @sent;
@@ -313,6 +343,114 @@ subtest "create problem with multiple photos" => sub {
         [ {
             "service_request_id" => 1
         } ], 'correct json returned';
+};
+
+subtest "fetch blank updates" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $current_reponse = $responses{'SOAP GetWdmUpdates'};
+    $responses{'SOAP GetWdmUpdates'} = '
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+             <GetWdmUpdatesResponse xmlns="http://www.wdm.co.uk/remedy/">
+                 <GetWdmUpdatesResult><NewDataSet><wdmupdate></wdmupdate></NewDataSet></GetWdmUpdatesResult>
+            </GetWdmUpdatesResponse>
+          </soap:Body>
+        </soap:Envelope>
+    ';
+
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=oxfordshire&start_date=2018-02-01T12:00:00Z&end_date=2018-02-02T12:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is $sent->{content},
+    '<?xml version="1.0" encoding="UTF-8"?><soap:Envelope soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><soap:Body><GetWdmUpdates><startDate xsi:type="xsd:string">2018-02-01 12:00:00</startDate><endDate xsi:type="xsd:string">2018-02-02 12:00:00</endDate></GetWdmUpdates></soap:Body></soap:Envelope>';
+
+    is_deeply decode_json($res->content), [], 'correct json returned';
+
+    $responses{'SOAP GetWdmUpdates'} = $current_reponse;
+};
+
+subtest "fetch single update" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $current_reponse = $responses{'SOAP GetWdmUpdates'};
+    $responses{'SOAP GetWdmUpdates'} = '
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+             <GetWdmUpdatesResponse xmlns="http://www.wdm.co.uk/remedy/">
+             <GetWdmUpdatesResult>
+             <NewDataSet>
+             <wdmupdate>
+                <UpdateID>101</UpdateID>
+                <ENQUIRY_UID>123</ENQUIRY_UID>
+                <ENQUIRY_REFERENCE>ENQ123</ENQUIRY_REFERENCE>
+                <UPDATE_TIME>2018-07-05T16:03:13.334+01:00</UPDATE_TIME>
+                <EXTERNAL_SYSTEM_REFERENCE>1234</EXTERNAL_SYSTEM_REFERENCE>
+                <STATUS>fixed</STATUS>
+                <COMMENTS>Pothole has been filled</COMMENTS>
+            </wdmupdate>
+            </NewDataSet>
+            </GetWdmUpdatesResult>
+            </GetWdmUpdatesResponse>
+          </soap:Body>
+        </soap:Envelope>
+        ';
+
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=oxfordshire&start_date=2018-02-01T12:00:00Z&end_date=2018-02-02T12:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'fixed',
+        service_request_id => '1234',
+        description => 'Pothole has been filled',
+        updated_datetime => '2018-07-05T16:03:13+01:00',
+        update_id => '101',
+        customer_reference => 'ENQ123',
+        media_url => '',
+    } ], 'correct json returned';
+
+    $responses{'SOAP GetWdmUpdates'} = $current_reponse;
+};
+
+subtest "fetch multiple updates" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=oxfordshire&start_date=2018-02-01T12:00:00Z&end_date=2018-02-02T12:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'fixed',
+        service_request_id => '1234',
+        customer_reference => 'ENQ123',
+        description => 'Pothole has been filled',
+        updated_datetime => '2018-07-05T16:03:13+01:00',
+        update_id => '101',
+        media_url => '',
+    },
+    {
+        status => 'fixed',
+        service_request_id => '1456',
+        customer_reference => 'ENQ456',
+        description => 'Pothole has been filled',
+        updated_datetime => '2018-07-05T16:03:13+01:00',
+        update_id => '102',
+        media_url => '',
+    }
+    ], 'correct json returned';
 };
 
 

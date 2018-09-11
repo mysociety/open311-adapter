@@ -191,6 +191,7 @@ sub format_updates {
                         }
                         qw/
                             external_status_code
+                            customer_reference
                             /
                     ),
                     (
@@ -269,6 +270,7 @@ sub learn_additional_types {
             },
             optional => {
                 external_status_code => '//str',
+                customer_reference => '//str',
             },
         }
     );
