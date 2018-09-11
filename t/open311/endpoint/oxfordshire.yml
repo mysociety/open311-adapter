@@ -1,0 +1,10 @@
+{
+    "endpoint_url": "http://localhost/",
+    "mappings": {
+      "POT": {
+        "category": "POT_category",
+        "type": "POT_type",
+        "detail": "POT_detail"
+      }
+    }
+}
