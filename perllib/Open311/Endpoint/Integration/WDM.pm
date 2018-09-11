@@ -53,6 +53,25 @@ sub post_service_request {
     return $request;
 }
 
+sub post_service_request_update {
+    my ($self, $args) = @_;
+
+    my $status = lc $args->{status};
+
+    if ($status) {
+        $args->{status} = $status;
+    }
+
+    my $response = $self->get_integration->post_update($args);
+
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        status => lc $args->{status},
+        service_request_id => $args->{service_request_id},
+        update_id => $response->{update_id},
+        updated_datetime => $response->{update_time},
+    );
+}
+
 sub get_service_request_updates {
     my ($self, $args) = @_;
     my $updates = $self->get_integration->get_updates({ start_date => $args->{start_date}, end_date => $args->{end_date} });
