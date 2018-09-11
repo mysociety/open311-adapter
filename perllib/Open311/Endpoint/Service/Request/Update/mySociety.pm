@@ -26,5 +26,10 @@ has external_status_code => (
     isa => Maybe[Str],
 );
 
+has customer_reference => (
+    is => 'ro',
+    isa => Maybe[Str],
+);
+
 
 1;

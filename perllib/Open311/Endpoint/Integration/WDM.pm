@@ -31,6 +31,17 @@ sub get_integration {
     return $self->integration_class->new;
 }
 
+
+sub parse_w3c_datetime {
+    my ($self, $dt_string) = @_;
+
+    $dt_string =~ s/\.\d+//;
+    my $w3c = DateTime::Format::W3CDTF->new;
+    my $dt = $w3c->parse_datetime($dt_string);
+
+    return $dt;
+}
+
 sub post_service_request {
     my ($self, $service, $args) = @_;
     my $new_id = $self->get_integration->post_request($service, $args);
@@ -41,6 +52,33 @@ sub post_service_request {
 
     return $request;
 }
+
+sub get_service_request_updates {
+    my ($self, $args) = @_;
+    my $updates = $self->get_integration->get_updates({ start_date => $args->{start_date}, end_date => $args->{end_date} });
+
+    my @updates;
+
+    for my $update ( @$updates ) {
+        my $service_request_id = $update->{EXTERNAL_SYSTEM_REFERENCE};
+        $service_request_id =~ s/\s*$//;
+        # ignore non FMS references
+        next unless $service_request_id =~ /^\d+$/;
+        my $customer_reference = $update->{ENQUIRY_REFERENCE};
+        $customer_reference =~ s/\s*$//;
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
+            status => lc $update->{STATUS},
+            update_id => $update->{UpdateID},
+            service_request_id => $service_request_id,
+            customer_reference => $customer_reference,
+            description => $update->{COMMENTS},
+            updated_datetime => $self->parse_w3c_datetime($update->{UPDATE_TIME}),
+        );
+    }
+
+    return @updates;
+}
+
 
 
 sub service {

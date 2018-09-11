@@ -31,6 +31,11 @@ has 'requests_endpoint' => (
     default => 'requests.xml',
 );
 
+has 'updates_endpoint' => (
+    is => 'ro',
+    default => 'updates.xml',
+);
+
 has service_request_content => (
     is => 'ro',
     default => '/open311/service_request_extended'
@@ -44,6 +49,15 @@ sub format_datetime {
     );
 
     return $fmt->format_datetime($dt)
+}
+
+sub parse_w3c_datetime {
+    my ($self, $dt_string) = @_;
+
+    my $w3c = DateTime::Format::W3CDTF->new;
+    my $dt = $w3c->parse_datetime($dt_string);
+
+    return $dt;
 }
 
 sub post_request {
@@ -102,6 +116,27 @@ sub post_request {
     } else {
         die $resp_text;
     }
+}
+
+sub get_updates {
+    my ($self, $args) = @_;
+
+    my $start_date = $self->format_datetime( $self->parse_w3c_datetime( $args->{start_date} ) );
+    my $end_date = $self->format_datetime( $self->parse_w3c_datetime( $args->{end_date} ) );
+    my $data = [
+        SOAP::Data->name('startDate' => $start_date),
+        SOAP::Data->name('endDate' => $end_date),
+    ];
+    my $response = $self->_soap_call($self->updates_endpoint, 'GetWdmUpdates', $data);
+
+    my $xml = $response->valueof('//GetWdmUpdatesResponse/GetWdmUpdatesResult/NewDataSet');
+    return [] if $xml->{wdmupdate} eq "";
+    my $updates = $xml->{wdmupdate};
+
+    # a single updates returns a hashref not an array
+    $updates = [ $updates ] unless ref $updates eq 'ARRAY';
+
+    return $updates;
 }
 
 
