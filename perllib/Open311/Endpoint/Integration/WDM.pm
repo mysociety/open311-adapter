@@ -85,8 +85,10 @@ sub get_service_request_updates {
         next unless $service_request_id =~ /^\d+$/;
         my $customer_reference = $update->{ENQUIRY_REFERENCE};
         $customer_reference =~ s/\s*$//;
+        my $status = lc $update->{STATUS};
+        $status =~ s/ /_/g;
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
-            status => lc $update->{STATUS},
+            status => $status,
             update_id => $update->{UpdateID},
             service_request_id => $service_request_id,
             customer_reference => $customer_reference,
