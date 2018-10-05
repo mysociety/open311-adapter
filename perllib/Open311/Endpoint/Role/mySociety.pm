@@ -241,6 +241,7 @@ sub learn_additional_types {
             'not_councils_responsibility',
             'no_further_action',
             'internal_referral',
+            'reopen',
         )
     );
     $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/status_extended_upper',
@@ -255,6 +256,7 @@ sub learn_additional_types {
             'NOT_COUNCILS_RESPONSIBILITY',
             'NO_FURTHER_ACTION',
             'INTERNAL_REFERRAL',
+            'REOPEN',
         )
     );
     $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/service_request_update',

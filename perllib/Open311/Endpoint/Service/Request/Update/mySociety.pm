@@ -18,6 +18,7 @@ has status => (
         'not_councils_responsibility',
         'no_further_action',
         'internal_referral',
+        'reopen',
     ],
 );
 
