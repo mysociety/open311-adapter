@@ -26,6 +26,7 @@ before_script:
   - cp conf/council-banes_confirm.yml-example conf/council-banes_confirm.yml
   - cp conf/council-buckinghamshire_confirm.yml-example conf/council-buckinghamshire_confirm.yml
   - cp conf/council-hounslow_confirm.yml-example conf/council-hounslow_confirm.yml
+  - cp conf/council-essex_confirm.yml-example conf/council-essex_confirm.yml
   - cp conf/council-lincolnshire_confirm.yml-example conf/council-lincolnshire_confirm.yml
   - cp conf/council-northamptonshire_alloy.yml-example conf/council-northamptonshire_alloy.yml
   - 'if [ "$TRAVIS_PERL_VERSION" = "5.24" ]; then export HARNESS_PERL_SWITCHES="-MDevel::Cover=+ignore,local/lib/perl5,^t"; fi'
