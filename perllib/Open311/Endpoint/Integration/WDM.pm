@@ -87,7 +87,8 @@ sub get_service_request_updates {
         $customer_reference =~ s/\s*$//;
         my $status = lc $update->{STATUS};
         $status =~ s/ /_/g;
-        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
+
+        my %args = (
             status => $status,
             update_id => $update->{UpdateID},
             service_request_id => $service_request_id,
@@ -95,6 +96,15 @@ sub get_service_request_updates {
             description => $update->{COMMENTS},
             updated_datetime => $self->parse_w3c_datetime($update->{UPDATE_TIME}),
         );
+
+        # This is an OCC specific fix for some confusion in handling old
+        # Exor enquiry numbers
+        if ( $customer_reference !~ /^ENQ/ ) {
+            delete $args{customer_reference};
+            $args{service_request_id} = $customer_reference;
+        }
+
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
 
     return @updates;

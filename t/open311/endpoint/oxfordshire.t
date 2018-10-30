@@ -509,6 +509,52 @@ subtest "fetch multiple updates" => sub {
     ], 'correct json returned';
 };
 
+subtest "fetch non ENQ update" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $current_reponse = $responses{'SOAP GetWdmUpdates'};
+    $responses{'SOAP GetWdmUpdates'} = '
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+             <GetWdmUpdatesResponse xmlns="http://www.wdm.co.uk/remedy/">
+             <GetWdmUpdatesResult>
+             <NewDataSet>
+             <wdmupdate>
+                <UpdateID>101</UpdateID>
+                <ENQUIRY_UID>123</ENQUIRY_UID>
+                <ENQUIRY_REFERENCE>123567</ENQUIRY_REFERENCE>
+                <UPDATE_TIME>2018-07-05T16:03:13.334+01:00</UPDATE_TIME>
+                <EXTERNAL_SYSTEM_REFERENCE>1234</EXTERNAL_SYSTEM_REFERENCE>
+                <STATUS>fixed</STATUS>
+                <COMMENTS>Pothole has been filled</COMMENTS>
+            </wdmupdate>
+            </NewDataSet>
+            </GetWdmUpdatesResult>
+            </GetWdmUpdatesResponse>
+          </soap:Body>
+        </soap:Envelope>
+        ';
+
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=oxfordshire&start_date=2018-02-01T12:00:00Z&end_date=2018-02-02T12:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'fixed',
+        service_request_id => '123567',
+        description => 'Pothole has been filled',
+        updated_datetime => '2018-07-05T16:03:13+01:00',
+        update_id => '101',
+        media_url => '',
+    } ], 'correct json returned';
+
+    $responses{'SOAP GetWdmUpdates'} = $current_reponse;
+};
+
 subtest "post update" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
 
