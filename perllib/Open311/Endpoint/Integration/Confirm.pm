@@ -580,7 +580,7 @@ sub get_service_requests {
         $createdtime->set_time_zone($integ->server_timezone);
         next if $self->cutoff_enquiry_date && $createdtime < $self->cutoff_enquiry_date;
 
-        my $updatedtime = $self->date_parser->parse_datetime($enquiry->{LogEffectiveTime});
+        my $updatedtime = $self->date_parser->parse_datetime($enquiry->{LoggedTime});
         $updatedtime->set_time_zone($integ->server_timezone);
 
         my $request = $self->new_request(
