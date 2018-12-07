@@ -11,6 +11,7 @@ use Open311::Endpoint::Service::Request::Update::mySociety;
 
 use Integrations::SalesForce;
 
+use Encode qw(encode_utf8);
 use Digest::MD5 qw(md5_hex);
 use DateTime::Format::Strptime;
 
@@ -66,7 +67,8 @@ sub post_service_request_update {
 
     return undef unless $response;
 
-    my $digest = md5_hex($args->{description});
+    # md5 doesn't cope with unicode so need to turn to bytes
+    my $digest = md5_hex(encode_utf8($args->{description}));
     my $update_id = $response . '_' . $digest;
 
     return Open311::Endpoint::Service::Request::Update::mySociety->new(

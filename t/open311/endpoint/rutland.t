@@ -3,6 +3,7 @@ package Mock::Response;
 use Moo;
 use Encode;
 use Types::Standard ':all';
+use utf8;
 
 has content => (
     is => 'ro',
@@ -533,6 +534,39 @@ subtest "create update" => sub {
     is_deeply decode_json($res->content),
     [ {
         update_id => 'a086E000001gcVRQAY_3ea202675a83afdc4d6394e0df372561'
+    } ], 'correct json returned';
+};
+
+subtest "create update with unicode" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'rutland',
+        api_key => 'test',
+        service_request_id => "a086E000001gcVRQAY",
+        updated_datetime => "2014-01-01T12:00:00Z",
+        update_id => 1234,
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'This is an update with ★ unicode in.😀',
+        status => 'INVESTIGATING',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($sent),
+    [{
+        id => "a086E000001gcVRQAY",
+        update_comments__c => "This is an update with ★ unicode in.😀",
+        status__c => "INVESTIGATING"
+    }], 'correct json sent';
+
+    is_deeply decode_json($res->content),
+    [ {
+        update_id => 'a086E000001gcVRQAY_e0b6d55c5e711c47fe6782d0fa38aee2'
     } ], 'correct json returned';
 };
 
