@@ -7,10 +7,17 @@ has config_filename => ( is => 'ro', default => 'dummy' );
 sub _build_config_file { path(__FILE__)->sibling("confirm.yml")->stringify }
 
 package Open311::Endpoint::Integration::UK::Dummy;
+use Path::Tiny;
 use Moo;
 extends 'Open311::Endpoint::Integration::Confirm';
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{jurisdiction_id} = 'dummy';
+    $args{config_file} = path(__FILE__)->sibling("confirm.yml")->stringify;
+    return $class->$orig(%args);
+};
 has integration_class => (is => 'ro', default => 'Integrations::Confirm::Dummy');
-
+sub jurisdiction_id { return 'dummy'; }
 
 package main;
 
@@ -24,6 +31,8 @@ use Test::MockModule;
 use JSON::MaybeXS;
 use Path::Tiny;
 
+use Open311::Endpoint::Integration::UK;
+
 my ($IC, $SIC, $DC);
 
 my $open311 = Test::MockModule->new('Integrations::Confirm');
@@ -36,6 +45,10 @@ $open311->mock(perform_request => sub {
                 { ServiceCode => 'ABC', ServiceName => 'Graffiti', EnquirySubject => [ { SubjectCode => "DEF" } ] }
             ] } }
         };
+    } elsif ( $op->name && $op->name eq 'GetEnquiry' ) {
+        return { OperationResponse => { GetEnquiryResponse => { Enquiry => {
+            ServiceCode => 'ABC', SubjectCode => 'DEF', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z'
+        } } } };
     }
     $op = $op->value;
     if ($op->name eq 'NewEnquiry') {
@@ -329,6 +342,40 @@ my $expected = <<XML;
     <updated_datetime>2018-03-01T13:30:00+00:00</updated_datetime>
   </request_update>
 </service_request_updates>
+XML
+
+    is_string $res->content, $expected, 'xml string ok'
+    or diag $res->content;
+};
+
+# need to use this otherwise we get errors in GET_Service_Requests_output_schema
+$endpoint = Open311::Endpoint::Integration::UK->new;
+
+subtest 'GET reports' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.xml?jurisdiction_id=dummy&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+my $expected = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_requests>
+  <request>
+    <address></address>
+    <address_id></address_id>
+    <description>this is a report from confirm</description>
+    <lat>100</lat>
+    <long>100</long>
+    <media_url></media_url>
+    <requested_datetime>2018-04-17T13:34:56+01:00</requested_datetime>
+    <service_code>ABC_DEF</service_code>
+    <service_name>Flooding</service_name>
+    <service_request_id>2003</service_request_id>
+    <status>in_progress</status>
+    <updated_datetime>2018-04-17T13:34:56+01:00</updated_datetime>
+    <zipcode></zipcode>
+  </request>
+</service_requests>
 XML
 
     is_string $res->content, $expected, 'xml string ok'
