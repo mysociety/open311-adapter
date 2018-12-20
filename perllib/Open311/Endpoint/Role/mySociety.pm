@@ -299,6 +299,7 @@ sub learn_additional_types {
                 description => '//str',
                 agency_responsible => '//str',
                 service_notice => '//str',
+                non_public => '//str',
             },
         }
     );

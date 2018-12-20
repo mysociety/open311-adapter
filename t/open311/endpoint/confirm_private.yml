@@ -1,0 +1,14 @@
+endpoint_url: "http://example.org/endpoint"
+username: "username"
+password: "pw"
+tenant_id: "123"
+server_timezone: Europe/London
+default_site_code: 999999
+service_whitelist:
+  Flooding & Drainage:
+    ABC_DEF: Flooding
+reverse_status_mapping:
+  DUP: duplicate
+  INP: in_progress
+cutoff_enquiry_date: 2018-04-12T12:00:00
+fetch_reports_private: 1

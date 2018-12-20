@@ -19,6 +19,19 @@ around BUILDARGS => sub {
 has integration_class => (is => 'ro', default => 'Integrations::Confirm::Dummy');
 sub jurisdiction_id { return 'dummy'; }
 
+package Open311::Endpoint::Integration::UK::DummyPrivate;
+use Path::Tiny;
+use Moo;
+extends 'Open311::Endpoint::Integration::Confirm';
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{jurisdiction_id} = 'dummy_private';
+    $args{config_file} = path(__FILE__)->sibling("confirm_private.yml")->stringify;
+    return $class->$orig(%args);
+};
+has integration_class => (is => 'ro', default => 'Integrations::Confirm::Dummy');
+sub jurisdiction_id { return 'dummy_private'; }
+
 package main;
 
 use strict;
@@ -382,4 +395,35 @@ XML
     or diag $res->content;
 };
 
+subtest 'GET reports - private' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.xml?jurisdiction_id=dummy_private&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+my $expected = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_requests>
+  <request>
+    <address></address>
+    <address_id></address_id>
+    <description>this is a report from confirm</description>
+    <lat>100</lat>
+    <long>100</long>
+    <media_url></media_url>
+    <non_public>1</non_public>
+    <requested_datetime>2018-04-17T13:34:56+01:00</requested_datetime>
+    <service_code>ABC_DEF</service_code>
+    <service_name>Flooding</service_name>
+    <service_request_id>2003</service_request_id>
+    <status>in_progress</status>
+    <updated_datetime>2018-04-17T13:34:56+01:00</updated_datetime>
+    <zipcode></zipcode>
+  </request>
+</service_requests>
+XML
+
+    is_string $res->content, $expected, 'xml string ok'
+    or diag $res->content;
+};
 done_testing;

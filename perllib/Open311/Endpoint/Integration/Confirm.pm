@@ -9,7 +9,7 @@ with 'Open311::Endpoint::Role::ConfigFile';
 use Open311::Endpoint::Service::UKCouncil::Confirm;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::Update::mySociety;
-use Open311::Endpoint::Service::Request::ExtendedStatus;
+use Open311::Endpoint::Service::Request::CanBeNonPublic;
 
 use Path::Tiny;
 use SOAP::Lite; # +trace => [ qw/method debug/ ];
@@ -290,6 +290,11 @@ has cutoff_enquiry_date => (
     coerce => sub { $w3c->parse_datetime($_[0]) },
 );
 
+has fetch_reports_private => (
+    is => 'ro',
+    default => 0,
+);
+
 
 has date_parser => (
     is => 'ro',
@@ -348,7 +353,7 @@ sub process_service_request_args {
 
 has '+request_class' => (
     is => 'ro',
-    default => 'Open311::Endpoint::Service::Request::ExtendedStatus',
+    default => 'Open311::Endpoint::Service::Request::CanBeNonPublic',
 );
 
 sub get_integration {
@@ -583,7 +588,7 @@ sub get_service_requests {
         my $updatedtime = $self->date_parser->parse_datetime($enquiry->{LoggedTime});
         $updatedtime->set_time_zone($integ->server_timezone);
 
-        my $request = $self->new_request(
+        my %args = (
             service => $service,
             service_request_id => $enquiry->{EnquiryNumber},
             description => $enquiry->{EnquiryDescription},
@@ -594,6 +599,12 @@ sub get_service_requests {
             latlong => [ $enquiry->{EnquiryY}, $enquiry->{EnquiryX} ],
             status => $status,
         );
+
+        if ( $self->fetch_reports_private ) {
+            $args{non_public} = 1;
+        }
+
+        my $request = $self->new_request( %args );
 
         push @requests, $request;
     }
