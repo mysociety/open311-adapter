@@ -84,7 +84,7 @@ my %responses = (
         "Status__c": "Investigating"
     }]',
     'GET FixMyStreet all' => '[{
-				"attributes": {
+            "attributes": {
             "type": "FixMyStreet__c",
             "url": "/services/data/v41.0/sobjects/FixMyStreet__c/a086E000001gnM6QAI"
         },
@@ -175,6 +175,10 @@ my %responses = (
             }
         ]
     }',
+    'GET FixMyStreetInfo id=RC_09' => '[{
+        "errorCode": "111",
+        "message": "This is an error"
+    }]',
 );
 
 my @sent;
@@ -196,7 +200,13 @@ $integration->mock('_get_response', sub {
         $content = $responses{$key};
     }
 
-    return Mock::Response->new( content => $content );
+
+    my $result = decode_json(encode_utf8($content));
+    if ( ref $result eq 'ARRAY' && $result->[0]->{errorCode} ) {
+        return Mock::Response->new( is_success => 0, code => 500, content => $content );
+    } else {
+        return Mock::Response->new( content => $content );
+    }
 });
 
 subtest "create basic problem" => sub {
@@ -704,6 +714,24 @@ subtest "check fetch service description" => sub {
         description => "Street Furniture"
     } ], 'correct json returned';
 };
+
+subtest "check fetch failing request" => sub {
+    my $res = $endpoint->run_test_request(
+      GET => '/services/RC_09.json?jurisdiction_id=rutland',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_server_error, 'request errors'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        code => 500,
+        description => 'Error fetching from SalesForce: This is an error (111)
+',
+    } ];
+};
+
 
 subtest "check fetch service metadata" => sub {
     my $res = $endpoint->run_test_request(

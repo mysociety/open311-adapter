@@ -75,14 +75,16 @@ sub _send_request {
 
     unless ($response->code == 200) {
         my $message = $response->message;
+        my $code = $response->code;
         if (ref $content eq 'ARRAY' and $content->[0]->{errorCode}) {
             $message = $content->[0]->{message};
+            $code = $content->[0]->{errorCode};
         }
 
         die sprintf(
-            'Error fetching from SalesForce: %s (%d)',
+            "Error fetching from SalesForce: %s (%d)\n",
             $message,
-            $response->code
+            $code
         );
     }
 
