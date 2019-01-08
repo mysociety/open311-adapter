@@ -32,6 +32,7 @@ requires 'Types::Standard';
 requires 'XML::Simple';
 requires 'Web::Simple';
 requires 'YAML::XS';
+requires 'Log::Dispatch';
 
 # Modules used by the test suite
 requires 'LWP::Protocol::PSGI';

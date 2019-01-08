@@ -902,6 +902,34 @@ DISTRIBUTIONS
       Encode::Alias 0
       ExtUtils::MakeMaker 0
       perl 5.008
+  Eval-Closure-0.14
+    pathname: D/DO/DOY/Eval-Closure-0.14.tar.gz
+    provides:
+      Eval::Closure 0.14
+    requirements:
+      Carp 0
+      Exporter 0
+      ExtUtils::MakeMaker 0
+      Scalar::Util 0
+      constant 0
+      overload 0
+      strict 0
+      warnings 0
+  Exception-Class-1.44
+    pathname: D/DR/DROLSKY/Exception-Class-1.44.tar.gz
+    provides:
+      Exception::Class 1.44
+      Exception::Class::Base 1.44
+    requirements:
+      Class::Data::Inheritable 0.02
+      Devel::StackTrace 2.00
+      ExtUtils::MakeMaker 0
+      Scalar::Util 0
+      base 0
+      overload 0
+      perl 5.008001
+      strict 0
+      warnings 0
   Exporter-Tiny-0.042
     pathname: T/TO/TOBYINK/Exporter-Tiny-0.042.tar.gz
     provides:
@@ -1347,6 +1375,60 @@ DISTRIBUTIONS
       IPC::Cmd 0
       XSLoader 0.22
       base 0
+  Log-Dispatch-2.68
+    pathname: D/DR/DROLSKY/Log-Dispatch-2.68.tar.gz
+    provides:
+      Log::Dispatch 2.68
+      Log::Dispatch::ApacheLog 2.68
+      Log::Dispatch::Base 2.68
+      Log::Dispatch::Code 2.68
+      Log::Dispatch::Email 2.68
+      Log::Dispatch::Email::MIMELite 2.68
+      Log::Dispatch::Email::MailSend 2.68
+      Log::Dispatch::Email::MailSender 2.68
+      Log::Dispatch::Email::MailSendmail 2.68
+      Log::Dispatch::File 2.68
+      Log::Dispatch::File::Locked 2.68
+      Log::Dispatch::Handle 2.68
+      Log::Dispatch::Null 2.68
+      Log::Dispatch::Output 2.68
+      Log::Dispatch::Screen 2.68
+      Log::Dispatch::Syslog 2.68
+      Log::Dispatch::Types 2.68
+      Log::Dispatch::Vars 2.68
+    requirements:
+      Carp 0
+      Devel::GlobalDestruction 0
+      Dist::CheckConflicts 0.02
+      Encode 0
+      Exporter 0
+      ExtUtils::MakeMaker 0
+      Fcntl 0
+      IO::Handle 0
+      Module::Runtime 0
+      Params::ValidationCompiler 0
+      Scalar::Util 0
+      Specio 0.32
+      Specio::Declare 0
+      Specio::Exporter 0
+      Specio::Library::Builtins 0
+      Specio::Library::Numeric 0
+      Specio::Library::String 0
+      Sys::Syslog 0.28
+      Try::Tiny 0
+      base 0
+      namespace::autoclean 0
+      parent 0
+      perl 5.006
+      strict 0
+      warnings 0
+  MRO-Compat-0.13
+    pathname: H/HA/HAARG/MRO-Compat-0.13.tar.gz
+    provides:
+      MRO::Compat 0.13
+    requirements:
+      ExtUtils::MakeMaker 0
+      perl 5.006
   Module-Build-0.4220
     pathname: L/LE/LEONT/Module-Build-0.4220.tar.gz
     provides:
@@ -1696,6 +1778,24 @@ DISTRIBUTIONS
       strict 0
       vars 0
       warnings 0
+  Params-ValidationCompiler-0.30
+    pathname: D/DR/DROLSKY/Params-ValidationCompiler-0.30.tar.gz
+    provides:
+      Params::ValidationCompiler 0.30
+      Params::ValidationCompiler::Compiler 0.30
+      Params::ValidationCompiler::Exceptions 0.30
+    requirements:
+      B 0
+      Carp 0
+      Eval::Closure 0
+      Exception::Class 0
+      Exporter 0
+      ExtUtils::MakeMaker 0
+      List::Util 1.29
+      Scalar::Util 0
+      overload 0
+      strict 0
+      warnings 0
   Path-Tiny-0.096
     pathname: D/DA/DAGOLDEN/Path-Tiny-0.096.tar.gz
     provides:
@@ -1942,11 +2042,78 @@ DISTRIBUTIONS
     pathname: P/PE/PEVANS/Socket-2.024.tar.gz
     provides:
       Socket 2.024
+  Specio-0.43
+    pathname: D/DR/DROLSKY/Specio-0.43.tar.gz
+    provides:
+      Specio 0.43
+      Specio::Coercion 0.43
+      Specio::Constraint::AnyCan 0.43
+      Specio::Constraint::AnyDoes 0.43
+      Specio::Constraint::AnyIsa 0.43
+      Specio::Constraint::Enum 0.43
+      Specio::Constraint::Intersection 0.43
+      Specio::Constraint::ObjectCan 0.43
+      Specio::Constraint::ObjectDoes 0.43
+      Specio::Constraint::ObjectIsa 0.43
+      Specio::Constraint::Parameterizable 0.43
+      Specio::Constraint::Parameterized 0.43
+      Specio::Constraint::Role::CanType 0.43
+      Specio::Constraint::Role::DoesType 0.43
+      Specio::Constraint::Role::Interface 0.43
+      Specio::Constraint::Role::IsaType 0.43
+      Specio::Constraint::Simple 0.43
+      Specio::Constraint::Structurable 0.43
+      Specio::Constraint::Structured 0.43
+      Specio::Constraint::Union 0.43
+      Specio::Declare 0.43
+      Specio::DeclaredAt 0.43
+      Specio::Exception 0.43
+      Specio::Exporter 0.43
+      Specio::Helpers 0.43
+      Specio::Library::Builtins 0.43
+      Specio::Library::Numeric 0.43
+      Specio::Library::Perl 0.43
+      Specio::Library::String 0.43
+      Specio::Library::Structured 0.43
+      Specio::Library::Structured::Dict 0.43
+      Specio::Library::Structured::Map 0.43
+      Specio::Library::Structured::Tuple 0.43
+      Specio::OO 0.43
+      Specio::PartialDump 0.43
+      Specio::Registry 0.43
+      Specio::Role::Inlinable 0.43
+      Specio::Subs 0.43
+      Specio::TypeChecks 0.43
+      Test::Specio 0.43
     requirements:
       ExtUtils::CBuilder 0
       ExtUtils::Constant 0.23
+      B 0
+      Carp 0
+      Devel::StackTrace 0
+      Eval::Closure 0
+      Exporter 0
       ExtUtils::MakeMaker 0
       perl 5.006001
+      IO::File 0
+      List::Util 1.33
+      MRO::Compat 0
+      Module::Runtime 0
+      Role::Tiny 1.003003
+      Role::Tiny::With 0
+      Scalar::Util 0
+      Storable 0
+      Sub::Quote 0
+      Test::Fatal 0
+      Test::More 0.96
+      Try::Tiny 0
+      overload 0
+      parent 0
+      perl 5.008
+      re 0
+      strict 0
+      version 0.83
+      warnings 0
   Starman-0.4014
     pathname: M/MI/MIYAGAWA/Starman-0.4014.tar.gz
     provides:
