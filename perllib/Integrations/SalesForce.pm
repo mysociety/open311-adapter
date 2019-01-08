@@ -4,6 +4,8 @@ use Moo;
 use HTTP::Request;
 use LWP::UserAgent;
 
+with 'Role::Logger';
+
 use JSON::MaybeXS;
 
 has 'endpoint_url' => (
@@ -70,7 +72,13 @@ sub _get_response {
 sub _send_request {
     my ($self, $req) = @_;
 
+    $self->logger->debug($req->url);
+    $self->logger->debug($req->content);
+
     my $response = $self->_get_response($req);
+
+    $self->logger->debug($response->content);
+
     my $content = decode_json($response->content);
 
     unless ($response->code == 200) {
