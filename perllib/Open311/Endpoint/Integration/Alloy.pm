@@ -47,15 +47,25 @@ has service_class  => (
 sub services {
     my $self = shift;
 
-    my $source_types = $self->alloy->get_source_types();
+    my $sources = $self->alloy->get_sources();
     my @services = ();
-    for my $source_type (@$source_types) {
+    for my $source (@$sources) {
+
         my %service = (
-            description => $source_type->{description},
-            service_name => $source_type->{description},
-            service_code => $source_type->{sourceTypeId},
+            description => $source->{description},
+            service_name => $source->{description},
+            service_code => $source->{source_id},
         );
-        push @services, $self->service_class->new(%service);
+        my $o311_service = $self->service_class->new(%service);
+        for my $attrib (@{$source->{attributes}}) {
+            push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(
+                code => $attrib->{id},
+                description => $attrib->{description},
+                datatype => $attrib->{datatype},
+                required => $attrib->{required},
+            );
+        }
+        push @services, $o311_service;
     }
     return @services;
 }
