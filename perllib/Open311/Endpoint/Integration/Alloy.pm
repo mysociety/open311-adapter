@@ -6,6 +6,9 @@ extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 with 'Open311::Endpoint::Role::ConfigFile';
 
+use Open311::Endpoint::Service::UKCouncil::Alloy;
+use Open311::Endpoint::Service::Attribute;
+
 use Path::Tiny;
 
 
@@ -25,6 +28,22 @@ has alloy => (
     default => sub { $_[0]->integration_class->new }
 );
 
+=head2 service_class
+
+Subclasses can override this to provide their own custom Service class, e.g.
+if they want to have extra attributes on all services. We use the
+UKCouncil::Alloy class which requests the asset's resource ID as a
+separate attribute, so we can attach the defect to the appropriate asset
+in Alloy.
+
+=cut
+
+has service_class  => (
+    is => 'ro',
+    default => 'Open311::Endpoint::Service::UKCouncil::Alloy'
+);
+
+
 sub services {
     my $self = shift;
 
@@ -32,7 +51,7 @@ sub services {
     my @services = ();
     for my $source_type (@$source_types) {
         my %service = (
-            description_name => $source_type->{description},
+            description => $source_type->{description},
             service_name => $source_type->{description},
             service_code => $source_type->{sourceTypeId},
         );
