@@ -70,10 +70,34 @@ sub get_source_for_source_type_id {
     return @$sources[0] if @$sources;
 }
 
-sub get_parent_attribute_id {
+sub get_valuetype_mapping {
     my $self = shift;
 
-    return 0;
+    my $mapping = {
+        BOOLEAN => "number", # 0/1?
+        STRING => "text", # or maybe string?
+        OPTION => "singlevaluelist",
+        DATETIME => "datetime",
+        DATE => "datetime", # this and TIME are obviously not perfect
+        TIME => "datetime",
+        INTEGER => "number",
+        FLOAT => "number",
+        GEOMETRY => "string", # err. Probably GeoJSON?
+        IRG_REF => "string", # err. This is an item lookup
+    };
+    my $valuetypes = $self->api_call("reference/value-type");
+    my %mapping = map { $_->{valueTypeId} => $mapping->{$_->{code}} } @$valuetypes;
+    return \%mapping;
+}
+
+sub get_parent_attribute_id {
+    my $self = shift;
+    my $source_type_id = shift;
+
+    my $linked_source_types = $self->api_call("source-type/$source_type_id/linked-source-types", { irgConfigCode => $self->config->{irg_config_code} });
+
+    # TODO: What if there's more than one? What's the correct behaviour if there's none?
+    return @$linked_source_types[0]->{attributeId} if @$linked_source_types;
 }
 
 sub get_sources {
@@ -84,6 +108,7 @@ sub get_sources {
     my $sources = $self->memcache->get($key);
     unless ($sources) {
         $sources = [];
+        my $type_mapping = $self->get_valuetype_mapping();
         my $source_types = $self->get_source_types();
         for my $source_type (@$source_types) {
             my $alloy_source = $self->get_source_for_source_type_id($source_type->{sourceTypeId});
@@ -98,11 +123,22 @@ sub get_sources {
             my @attributes = ();
             my $source_type_attributes = $source_type->{attributes};
             for my $source_attribute (@$source_type_attributes) {
+                my $datatype = $type_mapping->{$source_attribute->{valueTypeId}} || "string";
+                my %values = ();
+                if ($datatype eq 'singlevaluelist' && $source_attribute->{attributeOptionTypeId}) {
+                    # Fetch all the options for this attribute from the API
+                    my $options = $self->api_call("attribute-option-type/$source_attribute->{attributeOptionTypeId}")->{optionList};
+                    for my $option (@$options) {
+                        $values{$option->{optionId}} = $option->{optionDescription};
+                    }
+                }
+
                 push @attributes, {
                     description => $source_attribute->{description},
                     id => $source_attribute->{attributeId},
                     required => $source_attribute->{required},
-                    datatype => "string", # XXX fix this
+                    datatype => $datatype,
+                    values => \%values,
                 };
             }
             $source->{attributes} = \@attributes;
