@@ -63,6 +63,7 @@ sub services {
                 description => $attrib->{description},
                 datatype => $attrib->{datatype},
                 required => $attrib->{required},
+                values => $attrib->{values},
             );
         }
         push @services, $o311_service;
