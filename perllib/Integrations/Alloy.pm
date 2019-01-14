@@ -11,10 +11,6 @@ use Encode qw(encode_utf8);
 use JSON::MaybeXS qw(encode_json decode_json);
 
 
-sub api_url { $_[0]->config->{api_url} }
-
-sub api_key { $_[0]->config->{api_key} }
-
 has memcache_namespace  => (
     is => 'lazy',
     default => sub { $_[0]->config_filename }
@@ -39,11 +35,11 @@ sub api_call {
     my $ua = LWP::UserAgent->new(
         agent => "FixMyStreet/open311-adapter",
         default_headers => HTTP::Headers->new(
-            apiKey => $self->api_key
+            apiKey => $self->config->{api_key}
         )
     );
     my $method = $body ? 'POST' : 'GET';
-    my $uri = URI->new( $self->api_url . $call );
+    my $uri = URI->new( $self->config->{api_url} . $call );
     $uri->query_form(%$params);
     my $request = HTTP::Request->new($method, $uri);
     if ($body) {
