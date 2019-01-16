@@ -149,9 +149,12 @@ sub get_sources {
             # them and output a different service for each.
             my $parent_attributes = $self->get_parent_attributes($source_type->{sourceTypeId});
             for my $parent_attribute (@$parent_attributes) {
+                # TODO: linkedSourceTypeId and attributeSourceTypeId always seem to be the same
+                # in the linked-source-types API call, but check which is right.
+                my $attribute_source_type = $self->api_call("source-type/$parent_attribute->{linkedSourceTypeId}");
                 push @$sources, {
                     %$source,
-                    description => $parent_attribute->{attributeCode},
+                    description => $attribute_source_type->{description},
                     parent_attribute_id => $parent_attribute->{attributeId},
                 };
             }

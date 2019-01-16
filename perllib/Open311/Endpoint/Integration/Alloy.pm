@@ -54,7 +54,7 @@ sub services {
         my %service = (
             description => $source->{description},
             service_name => $source->{description},
-            service_code => $source->{source_id},
+            service_code => $source->{source_id} . "_" . $source->{parent_attribute_id},
         );
         my $o311_service = $self->service_class->new(%service);
         for my $attrib (@{$source->{attributes}}) {
