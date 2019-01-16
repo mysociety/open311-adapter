@@ -57,7 +57,9 @@ sub api_call {
 sub get_source_types {
     my $self = shift;
 
-    return $self->api_call("source-type", { propertyName => $self->config->{source_type_property_name} })->{sourceTypes};
+    my %whitelist = map { $_ => 1} @{ $self->config->{source_type_id_whitelist} };
+    my $source_types = $self->api_call("source-type", { propertyName => $self->config->{source_type_property_name} })->{sourceTypes};
+    return grep { $whitelist{$_->{sourceTypeId}} } @$source_types;
 }
 
 sub get_source_for_source_type_id {
@@ -90,14 +92,12 @@ sub get_valuetype_mapping {
     return \%mapping;
 }
 
-sub get_parent_attribute_id {
+sub get_parent_attributes {
     my $self = shift;
     my $source_type_id = shift;
 
-    my $linked_source_types = $self->api_call("source-type/$source_type_id/linked-source-types", { irgConfigCode => $self->config->{irg_config_code} });
-
-    # TODO: What if there's more than one? What's the correct behaviour if there's none?
-    return @$linked_source_types[0]->{attributeId} if @$linked_source_types;
+    # TODO: What's the correct behaviour if there's none?
+    return $self->api_call("source-type/$source_type_id/linked-source-types", { irgConfigCode => $self->config->{irg_config_code} });
 }
 
 sub get_sources {
@@ -109,15 +109,14 @@ sub get_sources {
     unless ($sources) {
         $sources = [];
         my $type_mapping = $self->get_valuetype_mapping();
-        my $source_types = $self->get_source_types();
-        for my $source_type (@$source_types) {
+        my @source_types = $self->get_source_types();
+        for my $source_type (@source_types) {
             my $alloy_source = $self->get_source_for_source_type_id($source_type->{sourceTypeId});
 
             my $source = {
                 source_type_id => $source_type->{sourceTypeId},
                 description => $source_type->{description},
                 source_id => $alloy_source->{sourceId},
-                parent_attribute_id => $self->get_parent_attribute_id($source_type->{sourceTypeId}),
             };
 
             my @attributes = ();
@@ -143,7 +142,21 @@ sub get_sources {
             }
             $source->{attributes} = \@attributes;
 
-            push @{$sources}, $source;
+            # It seems that a single source type (design) may have multiple different
+            # assets associated with it - e.g. carriageway, street lights, bollards etc.
+            # These are all in the "linked sourcetypes" API call.
+            # We want an individual category on FMS for each, so fetch
+            # them and output a different service for each.
+            my $parent_attributes = $self->get_parent_attributes($source_type->{sourceTypeId});
+            for my $parent_attribute (@$parent_attributes) {
+                push @$sources, {
+                    %$source,
+                    description => $parent_attribute->{attributeCode},
+                    parent_attribute_id => $parent_attribute->{attributeId},
+                };
+            }
+
+
         }
         $self->memcache->set($key, $sources, $expiry);
     }
