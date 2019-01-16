@@ -9,7 +9,6 @@ sub _build_attributes {
 
     my @attributes = (
         @{ $self->SUPER::_build_attributes() },
-
         Open311::Endpoint::Service::Attribute->new(
             code => "report_url",
             description => "Report URL",

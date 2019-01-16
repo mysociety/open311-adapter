@@ -2,4 +2,8 @@
   "api_key": "",
   "api_url": "https://alloy-api.yotta.co.uk/api/",
   "source_type_property_name": "",
+  "source_type_id_whitelist": [
+      1234,
+    ],
+    "irg_config_code": "",
 }
