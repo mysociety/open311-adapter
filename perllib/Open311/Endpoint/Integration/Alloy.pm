@@ -207,6 +207,14 @@ sub process_attributes {
         %$remapped,
     };
 
+    # Set the creation time for this resource to the current timestamp.
+    # TODO: Should this take the 'confirmed' field from FMS?
+    if ( $self->config->{created_datetime_attribute_id} ) {
+        my $now = DateTime->now();
+        my $created_time = DateTime::Format::W3CDTF->new->format_datetime($now);
+        $attributes->{$self->config->{created_datetime_attribute_id}} = $created_time;
+    }
+
     return $attributes;
 }
 
