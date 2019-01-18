@@ -42,6 +42,13 @@
 
     # Sets "TEAM" to "Highways"
     "54321": "Highways",
-  }
+  },
+
+  # When a new inspection resource is POSTed to Alloy, we use
+  # one of the attributes of the returned JSON object as the external
+  # ID on FMS. This config key indicates which one to use.
+  # This is Northamptonshire specific right now
+  # (see E::I::UK:Northamptonshire::service_request_id_for_resource)
+  "inspection_id_attribute": "",
 
 }
