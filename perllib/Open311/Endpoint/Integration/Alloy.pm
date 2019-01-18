@@ -134,10 +134,6 @@ sub post_service_request {
     # post it up
     my $response = $self->alloy->api_call("resource", undef, $resource);
 
-    if ($response->{errorCode}) {
-        die "Couldn't create Resource in Alloy: [$response->{errorCode} $response->{errorCodeString}] $response->{debugErrorMessage}";
-    }
-
     # get the Alloy inspection reference
     my $alloy_ref = $response->{resourceId};
 
