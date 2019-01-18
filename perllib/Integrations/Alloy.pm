@@ -132,10 +132,13 @@ sub get_sources {
                     }
                 }
 
+                next unless $source_attribute->{isRequired};
+
                 push @attributes, {
                     description => $source_attribute->{description},
+                    name => $source_attribute->{name},
                     id => $source_attribute->{attributeId},
-                    required => $source_attribute->{required},
+                    required => $source_attribute->{isRequired},
                     datatype => $datatype,
                     values => \%values,
                 };
