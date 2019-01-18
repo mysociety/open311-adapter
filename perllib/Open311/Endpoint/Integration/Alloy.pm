@@ -58,12 +58,18 @@ sub services {
         );
         my $o311_service = $self->service_class->new(%service);
         for my $attrib (@{$source->{attributes}}) {
+            my %overrides = ();
+            if (defined $self->config->{attribute_overrides}->{$attrib->{name}}) {
+                %overrides = %{ $self->config->{attribute_overrides}->{$attrib->{name}} };
+            }
+
             push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(
                 code => $attrib->{id},
                 description => $attrib->{description},
                 datatype => $attrib->{datatype},
                 required => $attrib->{required},
                 values => $attrib->{values},
+                %overrides,
             );
         }
         push @services, $o311_service;
