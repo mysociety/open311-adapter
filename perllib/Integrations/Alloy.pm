@@ -7,6 +7,7 @@ use LWP::UserAgent;
 use HTTP::Headers;
 use HTTP::Request;
 use URI;
+use Try::Tiny;
 use Encode qw(encode_utf8);
 use JSON::MaybeXS qw(encode_json decode_json);
 
@@ -48,13 +49,14 @@ sub api_call {
     }
     my $response = $ua->request($request);
     if ($response->is_success) {
-        my $json_response = decode_json($response->content);
-        if ($json_response->{errorCode}) {
-            die "Alloy API call failed: [$json_response->{errorCode} $json_response->{errorCodeString}] $json_response->{debugErrorMessage}";
-        }
-        return $json_response;
+        return decode_json($response->content);
     } else {
-        die $response->content;
+        try {
+            my $json_response = decode_json($response->content);
+            die "Alloy API call failed: [$json_response->{errorCode} $json_response->{errorCodeString}] $json_response->{debugErrorMessage}";
+        } catch {
+            die $response->content;
+        };
     }
 }
 
