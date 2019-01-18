@@ -110,10 +110,7 @@ sub post_service_request {
         # TODO: convert from EPSG:3246 to EPSG:900913 :(
         geoJson => {
             type => "Point",
-            coordinates => [
-                $args->{long},
-                $args->{lat}
-            ],
+            coordinates => $self->reproject_coordinates($args->{long}, $args->{lat}),
         }
     };
     $resource->{attributes} = $self->process_attributes($source, $args);
@@ -167,6 +164,19 @@ sub process_attributes {
     };
 
     return $attributes;
+}
+
+sub reproject_coordinates {
+    my ($self, $lon, $lat) = @_;
+
+    my $point = $self->alloy->api_call("projection/point", {
+        x => $lon,
+        y => $lat,
+        srcCode => "4326",
+        dstCode => "900913",
+    });
+
+    return [ $point->{x}, $point->{y} ];
 }
 
 1;
