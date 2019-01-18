@@ -13,8 +13,6 @@ use Open311::Endpoint::Service::Request::CanBeNonPublic;
 
 use Path::Tiny;
 
-use Data::Dumper;
-
 
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
@@ -35,6 +33,11 @@ has '+request_class' => (
 has alloy => (
     is => 'lazy',
     default => sub { $_[0]->integration_class->new }
+);
+
+has config => (
+    is => 'lazy',
+    default => sub { $_[0]->alloy->config }
 );
 
 =head2 service_class
@@ -95,9 +98,6 @@ sub post_service_request {
     my $sources = $self->alloy->get_sources();
     my $source = first { $self->service_code_for_source($_) eq $service->service_code } @$sources;
 
-    printf STDERR Dumper($args);
-    printf STDERR Dumper($source);
-
     # extract attribute values
     my $resource_id = $args->{attributes}->{asset_resource_id} + 0;
     my $resource = {
@@ -106,6 +106,8 @@ sub post_service_request {
         parents => {
             "$source->{parent_attribute_id}" => [ $resource_id ],
         },
+        # generate the geometry
+        # TODO: convert from EPSG:3246 to EPSG:900913 :(
         geoJson => {
             type => "Point",
             coordinates => [
@@ -114,10 +116,7 @@ sub post_service_request {
             ],
         }
     };
-    foreach (qw/report_url fixmystreet_id northing easting asset_resource_id title description/) {
-        delete $args->{attributes}->{$_};
-    }
-    $resource->{attributes} = $args->{attributes};
+    $resource->{attributes} = $self->process_attributes($source, $args);
 
 
     # figure out the default values for attributes which
@@ -127,7 +126,6 @@ sub post_service_request {
 
     # upload any photos and get their resource IDs, set attachment attribute IDs (?)
 
-    # generate the geometry
 
     # set the parent attribute value to the resource ID
 
@@ -148,6 +146,27 @@ sub service_code_for_source {
     my ($self, $source) = @_;
 
     return $source->{source_id} . "_" . $source->{parent_attribute_id};
+}
+
+sub process_attributes {
+    my ($self, $source, $args) = @_;
+
+    my $attributes = { %{ $args->{attributes} } };
+    my $defaults = $self->config->{attribute_defaults};
+
+    foreach (qw/report_url fixmystreet_id northing easting asset_resource_id title description/) {
+        delete $attributes->{$_};
+    }
+
+    # TODO: Right now this applies defaults regardless of the source type
+    # This is OK whilst we have a single design, but we might need to
+    # have source-type-specific defaults when multiple designs are in use.
+    $attributes = {
+        %$attributes,
+        %$defaults
+    };
+
+    return $attributes;
 }
 
 1;
