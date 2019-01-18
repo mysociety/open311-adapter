@@ -59,6 +59,10 @@ has service_class  => (
 sub services {
     my $self = shift;
 
+    my $request_to_resource_attribute_mapping = $self->config->{request_to_resource_attribute_mapping};
+    my %remapped_resource_attributes = map { $_ => 1 } values %$request_to_resource_attribute_mapping;
+    my %ignored_attributes = map { $_ => 1 } @{ $self->config->{ignored_attributes} };
+
     my $sources = $self->alloy->get_sources();
     my @services = ();
     for my $source (@$sources) {
@@ -75,11 +79,12 @@ sub services {
                 %overrides = %{ $self->config->{service_attribute_overrides}->{$attrib->{id}} };
             }
 
-            # TODO: Should Alloy attributes from config's
-            # request_to_resource_attribute_mapping and resource_attribute_defaults
-            # be automatically marked as not required & server_set?
-            # Or should they not be included in the Open311 service at all, as
-            # we never expect FMS to send them?
+            # If this attribute has a default provided by the config (resource_attribute_defaults)
+            # or will be remapped from an attribute defined in Service::UKCouncil::Alloy
+            # (request_to_resource_attribute_mapping) then we don't need to include it
+            # in the Open311 service we send to FMS.
+            next if $self->config->{resource_attribute_defaults}->{$attrib->{id}} ||
+                $remapped_resource_attributes{$attrib->{id}} || $ignored_attributes{$attrib->{id}};
 
             push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(
                 code => $attrib->{id},
@@ -143,6 +148,8 @@ sub post_service_request {
     # attributes (apply defaults, calculate values) as required.
     # This may be overridden by a subclass for council-specific things.
     $resource->{attributes} = $self->process_attributes($source, $args);
+
+    # TODO: Set the caller attribute so Alloy knows the reporter's name & email
 
     # post it up
     my $response = $self->alloy->api_call("resource", undef, $resource);
