@@ -184,7 +184,7 @@ sub process_attributes {
     my $attributes = { %{ $args->{attributes} } };
 
     # We don't want to send all the received Open311 attributes to Alloy
-    foreach (qw/report_url fixmystreet_id northing easting asset_resource_id title description/) {
+    foreach (qw/report_url fixmystreet_id northing easting asset_resource_id title description category/) {
         delete $attributes->{$_};
     }
 
