@@ -71,8 +71,8 @@ sub services {
         my $o311_service = $self->service_class->new(%service);
         for my $attrib (@{$source->{attributes}}) {
             my %overrides = ();
-            if (defined $self->config->{attribute_overrides}->{$attrib->{name}}) {
-                %overrides = %{ $self->config->{attribute_overrides}->{$attrib->{name}} };
+            if (defined $self->config->{service_attribute_overrides}->{$attrib->{name}}) {
+                %overrides = %{ $self->config->{service_attribute_overrides}->{$attrib->{name}} };
             }
 
             push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(
@@ -152,7 +152,7 @@ sub process_attributes {
     my ($self, $source, $args) = @_;
 
     my $attributes = { %{ $args->{attributes} } };
-    my $defaults = $self->config->{attribute_defaults};
+    my $defaults = $self->config->{resource_attribute_defaults};
 
     foreach (qw/report_url fixmystreet_id northing easting asset_resource_id title description/) {
         delete $attributes->{$_};
