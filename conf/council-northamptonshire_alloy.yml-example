@@ -11,14 +11,15 @@
   # Allows Open311 service attribute parameters to be overridden,
   # e.g. to make specific attributes required, or not required,
   # server_set to be set etc.
-  # Keys correspond to the attribute's code, and the contents of the
+  # Keys correspond to the service attribute's code (i.e. the Alloy attribute
+  # id), and the contents of the
   # hash will be merged into the Attribute->new call.
   # This example shows how we'd make easting/northings hidden in the FMS UI
   "service_attribute_overrides": {
-    "EASTING": {
+    "11223344": { # EASTING
       "automated": "server_set",
     },
-    "NORTHING": {
+    "11223345": { # NORTHING
       "automated": "server_set",
     },
   },
@@ -50,5 +51,19 @@
   # This is Northamptonshire specific right now
   # (see E::I::UK:Northamptonshire::service_request_id_for_resource)
   "inspection_id_attribute": "",
+
+  # open311-adapter asks FMS for the problem title and description
+  # in attributes as defined in O::E::Service::UKCouncil::Alloy,
+  # which should be sent to Alloy in specific attribute fields
+  # in the resource. Rather than let the FMS cobrand's open311_config
+  # method put these values in the attributes, which would require
+  # FMS to know about specific Alloy attribute IDs, handle this mapping
+  # on this end.
+  # NB: This will override any resource_attribute_defaults if present.
+  # TODO: These currently apply to all source types/designs.
+  "request_to_resource_attribute_mapping": {
+    "title": 1234567, # summary
+    "description": 1234568, # explanation
+  },
 
 }
