@@ -98,45 +98,64 @@ sub post_service_request {
     my $sources = $self->alloy->get_sources();
     my $source = first { $self->service_code_for_source($_) eq $service->service_code } @$sources;
 
+    # TODO: upload any photos and get their resource IDs, set attachment attribute IDs (?)
+
     # extract attribute values
     my $resource_id = $args->{attributes}->{asset_resource_id} + 0;
     my $resource = {
+        # This is seemingly fine to omit, inspections created via the
+        # Alloy web UI don't include it anyway.
         networkReference => undef,
+
+        # This appears to be shared amongst all asset types for now,
+        # as everything is based off one design.
         sourceId => $source->{source_id},
+
+        # This is how we link this inspection to a particular asset.
+        # The parent_attribute_id tells Alloy what kind of asset we're
+        # linking to, and the resource_id is the specific asset.
+        # It's a list so perhaps an inspection can be linked to many
+        # assets, and maybe even many different asset types, but for
+        # now one is fine.
         parents => {
             "$source->{parent_attribute_id}" => [ $resource_id ],
         },
-        # generate the geometry
-        # TODO: convert from EPSG:3246 to EPSG:900913 :(
+
+        # No way to include the SRS in the GeoJSON, sadly, so
+        # requires another API call to reproject. Beats making
+        # open311-adapter geospatially aware, anyway :)
         geoJson => {
             type => "Point",
             coordinates => $self->reproject_coordinates($args->{long}, $args->{lat}),
         }
     };
+
+    # The Open311 attributes received from FMS may not include all the
+    # the attributes we need to fully describe the Alloy resource,
+    # and indeed these may change on a per-source or per-council basis.
+    # Call out to process_attributes which can manipulate the resource
+    # attributes (apply defaults, calculate values) as required.
+    # This may be overridden by a subclass for council-specific things.
     $resource->{attributes} = $self->process_attributes($source, $args);
-
-
-    # figure out the default values for attributes which
-    # FMS hasn't sent
-    # some will be hardcoded defaults (source etc)
-    # others computed (easting, northing, category, reported datetime etc)
-
-    # upload any photos and get their resource IDs, set attachment attribute IDs (?)
-
-
-    # set the parent attribute value to the resource ID
 
     # post it up
     my $response = $self->alloy->api_call("resource", undef, $resource);
 
-    # get the Alloy inspection reference
-    my $alloy_ref = $response->{resourceId};
-
     # create a new Request and return it
     return $self->new_request(
-        service_request_id => $alloy_ref
+        service_request_id => $self->service_request_id_for_resource($response)
     );
 
+}
+
+sub service_request_id_for_resource {
+    my ($self, $resource) = @_;
+
+    # get the Alloy inspection reference
+    # This may be overridden by subclasses depending on the council's workflow.
+    # This default behaviour just uses the resource ID which will always
+    # be present.
+    return $resource->{resourceId};
 }
 
 sub service_code_for_source {
