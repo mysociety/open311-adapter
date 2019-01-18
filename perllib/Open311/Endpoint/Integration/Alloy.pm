@@ -71,9 +71,15 @@ sub services {
         my $o311_service = $self->service_class->new(%service);
         for my $attrib (@{$source->{attributes}}) {
             my %overrides = ();
-            if (defined $self->config->{service_attribute_overrides}->{$attrib->{name}}) {
-                %overrides = %{ $self->config->{service_attribute_overrides}->{$attrib->{name}} };
+            if (defined $self->config->{service_attribute_overrides}->{$attrib->{id}}) {
+                %overrides = %{ $self->config->{service_attribute_overrides}->{$attrib->{id}} };
             }
+
+            # TODO: Should Alloy attributes from config's
+            # request_to_resource_attribute_mapping and resource_attribute_defaults
+            # be automatically marked as not required & server_set?
+            # Or should they not be included in the Open311 service at all, as
+            # we never expect FMS to send them?
 
             push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(
                 code => $attrib->{id},
@@ -167,9 +173,10 @@ sub service_code_for_source {
 sub process_attributes {
     my ($self, $source, $args) = @_;
 
+    # Make a clone of the received attributes so we can munge them around
     my $attributes = { %{ $args->{attributes} } };
-    my $defaults = $self->config->{resource_attribute_defaults};
 
+    # We don't want to send all the received Open311 attributes to Alloy
     foreach (qw/report_url fixmystreet_id northing easting asset_resource_id title description/) {
         delete $attributes->{$_};
     }
@@ -177,9 +184,20 @@ sub process_attributes {
     # TODO: Right now this applies defaults regardless of the source type
     # This is OK whilst we have a single design, but we might need to
     # have source-type-specific defaults when multiple designs are in use.
+    my $defaults = $self->config->{resource_attribute_defaults} || {};
+
+    # Some of the Open311 service attributes need remapping to Alloy resource
+    # attributes according to the config...
+    my $remapping = $self->config->{request_to_resource_attribute_mapping} || {};
+    my $remapped = {};
+    for my $key ( keys %$remapping ) {
+        $remapped->{$remapping->{$key}} = $args->{attributes}->{$key};
+    }
+
     $attributes = {
         %$attributes,
-        %$defaults
+        %$defaults,
+        %$remapped,
     };
 
     return $attributes;
