@@ -3,7 +3,45 @@
   "api_url": "https://alloy-api.yotta.co.uk/api/",
   "source_type_property_name": "",
   "source_type_id_whitelist": [
-      1234,
+    1234,
+  ],
+
+  "irg_config_code": "",
+
+  # Allows Open311 service attribute parameters to be overridden,
+  # e.g. to make specific attributes required, or not required,
+  # server_set to be set etc.
+  # Keys correspond to the attribute's code, and the contents of the
+  # hash will be merged into the Attribute->new call.
+  # This example shows how we'd make easting/northings hidden in the FMS UI
+  "service_attribute_overrides": {
+    "EASTING": {
+      "automated": "server_set",
+    },
+    "NORTHING": {
+      "automated": "server_set",
+    },
+  },
+
+  # When POSTing new resources to Alloy, certain attributes may need
+  # to be hardcoded and not based on anything we've received from FMS
+  # in the service request. This config key will be merged into the
+  # "attributes" key in the JSON that gets posted to /api/resource.
+  # NB this will currently be sent for all resources regardless of
+  # design/source type.
+  # This example shows how we set a simple string attribute, as well as
+  # an attribute that requires a JSON object
+  "resource_attribute_defaults": {
+    # This sets "STATUS" to "Pending"
+    "12345": [
+      {
+        "command": "add",
+        "resourceId": 1
+      }
     ],
-    "irg_config_code": "",
+
+    # Sets "TEAM" to "Highways"
+    "54321": "Highways",
+  }
+
 }
