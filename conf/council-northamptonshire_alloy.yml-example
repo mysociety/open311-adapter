@@ -66,4 +66,30 @@
     "description": 1234568, # explanation
   },
 
+  # When a new inspection resource is POSTed to Alloy, we use
+  # one of the attributes of the returned JSON object as the external
+  # ID on FMS. This config key indicates which one to use.
+  # This is Northamptonshire specific right now
+  # (see E::I::UK:Northamptonshire::service_request_id_for_resource)
+  "inspection_id_attribute": "",
+
+  # There are some Alloy resource attributes which we never want to include
+  # in our Open311 services - they may be irrelevant, or have values
+  # calculated at the time the resource is POSTed to Alloy.
+  # List these Alloy attribute IDs here.
+  "ignored_attributes": [
+    0987655, # Reported DateTime - current time is used
+  ],
+
+
+  # Alloy doesn't seem to natively have a way to indicate the time
+  # that a resource was created, and instead stores the report datetime
+  # in a resource attribute. This attribute varies by council, so
+  # specify it here so the code can fill it in when creating a new
+  # resource. This timestamp is in ISO 8601 format, hooray.
+  # NB this can be omitted to disable this behaviour, but if present here
+  # it should also be included in ignored_attributes above.
+  # TODO: don't require this to be in ignored_attributes
+  "created_datetime_attribute_id": 0987655,
+
 }
