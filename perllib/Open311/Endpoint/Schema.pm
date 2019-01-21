@@ -73,7 +73,7 @@ has schema => (
         $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/example/identifier',
             {
                 type => '/open311/regex',
-                pattern => qr{^ \w+ $}ax,
+                pattern => qr{^ [\w\-_]+ $}ax,
                 message => "found value isn't a valid identifier",
             });
 
