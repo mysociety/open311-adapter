@@ -31,5 +31,81 @@ sub service_request_id_for_resource {
     return $attribute->{value};
 }
 
+sub process_attributes {
+    my ($self, $source, $args) = @_;
+
+    my $attributes = $self->SUPER::process_attributes($source, $args);
+
+    # The way the reporter's contact information gets included with a
+    # inspection is Northamptonshire-specific, so it's handled here.
+    # Their Alloy set up attaches a "Contact" resource to the
+    # inspection resource via the "caller" attribute.
+
+    # Take the contact info from the service request and find/create
+    # a matching contact
+    my $contact_resource_id = $self->_find_or_create_contact($args);
+
+
+    # Attach the caller to the inspection attributes
+
+
+    return $attributes;
+
+}
+
+sub _find_or_create_contact {
+    my ($self, $args) = @_;
+
+    if (my $contact = $self->_find_contact($args->{email})) {
+        return $contact->{resourceId};
+    } else {
+        return $self->_create_contact($args)->{resourceId};
+    }
+}
+
+sub _find_contact {
+    my ($self, $email) = @_;
+
+    my $entity_code = $self->config->{contact}->{search_entity_code};
+    my $attribute_code = $self->config->{contact}->{search_attribute_code};
+
+    my $results = $self->alloy->api_call("search/resource", undef, {
+        aqsNode => {
+            type => "SEARCH",
+            properties => {
+                entityType => "SOURCE_TYPE",
+                entityCode => $entity_code
+            },
+            children => [
+                {
+                    type => "EQUALS",
+                    children => [
+                        {
+                            type => "ATTRIBUTE",
+                            properties => {
+                                attributeCode => $attribute_code
+                            }
+                        },
+                        {
+                            type => "STRING",
+                            properties => {
+                                value => [
+                                    $email
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    });
+
+    return undef unless $results->{totalHits};
+    return $results->{results}[0]->{result};
+}
+
+sub _create_contact {
+    
+}
 
 1;
