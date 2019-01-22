@@ -20,6 +20,7 @@ has config => (
 
 sub _build_config {
     my $self = shift;
+    local $YAML::XS::Boolean = "JSON::PP";
     my $conf = LoadFile($self->config_file);
     return $conf;
 }
