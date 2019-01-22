@@ -92,4 +92,55 @@
   # TODO: don't require this to be in ignored_attributes
   "created_datetime_attribute_id": 0987655,
 
+  # Northamptonshire-specific configuration for finding/creating Contact
+  # resources which are attached to Inspections.
+  "contact": {
+    # When searching for a Contact, tell the search engine what kind of
+    # resource we're looking for
+    "search_entity_code": "",
+
+    # The attribute to match against when searching for a Contact
+    "search_attribute_code": "",
+
+    # If we have to create a new Contact resource, the source type to
+    # create it under.
+    "source_id": 123456,
+
+    # When creating new Contact resources there are some attribute values
+    # which are the same every time
+    "attribute_defaults": {
+        # Has the contact accepted storage of their details? Must be true.
+        "138947123": true,
+
+        # Alloy logs which user created this Contact and ticked the
+        # acceptance tickbox above.
+        # We could get the resourceId of our own Alloy user from
+        # the API each time, but it doesn't change so seems fine to include
+        # here in the config, and save an API call.
+        "3128132098": [
+            {
+                "command": "add",
+                "resourceId": 187123789
+            }
+        ]
+    },
+
+    # This is the id of the attribute which stores the datetime
+    # when the user accepted storage of their contact details.
+    # We *could* use a hardcoded value for this, but might as well
+    # use the current datetime so there's an indicator of when a user's
+    # details were added to the system.
+    "acceptance_datetime_attribute": 3089472340897,
+
+    # Controls how the fields map from the incoming open311 service
+    # request params to the Alloy Contact attribute fields.
+    "attribute_mapping": {
+      "first_name": 13089132490,
+      "last_name": 324583129,
+      "phone": 345089345,
+      "email": 3546098345,
+    }
+  }
+
+
 }
