@@ -3,6 +3,7 @@ package Open311::Endpoint::Integration::Alloy;
 use Moo;
 use List::Util 'first';
 use DateTime::Format::W3CDTF;
+use LWP::UserAgent;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 with 'Open311::Endpoint::Role::ConfigFile';
@@ -149,8 +150,6 @@ sub post_service_request {
     # This may be overridden by a subclass for council-specific things.
     $resource->{attributes} = $self->process_attributes($source, $args);
 
-    # TODO: Set the caller attribute so Alloy knows the reporter's name & email
-
     # post it up
     my $response = $self->alloy->api_call("resource", undef, $resource);
 
@@ -215,6 +214,13 @@ sub process_attributes {
         $attributes->{$self->config->{created_datetime_attribute_id}} = $created_time;
     }
 
+
+    # Upload any photos to Alloy and link them to the new resource
+    # via the appropriate attribute
+    if ( $self->config->{resource_attachment_attribute_id} && $args->{media_url}) {
+        $attributes->{$self->config->{resource_attachment_attribute_id}} = $self->upload_attachments($args);
+    }
+
     return $attributes;
 }
 
@@ -229,6 +235,48 @@ sub reproject_coordinates {
     });
 
     return [ $point->{x}, $point->{y} ];
+}
+
+sub upload_attachments {
+    my ($self, $args) = @_;
+
+    # grab the URLs and download its content
+    # TODO: multiple photo support - open311 attributes?
+    my $media_urls = [ $args->{media_url} ];
+
+    # Grab each photo from FMS
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+    my @photos = map {
+        $ua->get($_);
+    } @$media_urls;
+
+    # TODO: check that the FMS datestamped folder exists
+    # For now just stick it in whatever folder ID we have in the config
+    my $folder_id = $self->config->{attachment_folder_id};
+
+    # upload the file to the folder, with a FMS-related name
+    my @resource_ids = map {
+        # The request to upload the file needs to be multipart/form-data
+        # with a folderId of the containing folder and the name of the
+        # file being uploaded. It also needs a file upload, which api_call
+        # can't currently handle - it needs to be reworked to accept a
+        # 4th param for a file and craft the request accordingly.
+        # (something like https://stackoverflow.com/questions/26063748)
+
+        # TODO: broken
+        $self->api_call("file", {
+            folderId => $folder_id,
+            name => $_->filename
+        }, $_->content)->{resourceId};
+    } @photos;
+
+    # return a list of the form
+    my @commands = map { {
+        command => "add",
+        resourceId => $_,
+    } } @resource_ids;
+
+    return \@commands;
 }
 
 1;
