@@ -48,7 +48,7 @@ sub api_call {
     if ($body) {
         $request->content_type('application/json; charset=UTF-8');
         $request->content(encode_utf8(encode_json($body)));
-        $self->logger->debug($uri);
+        $self->logger->debug($call);
         $self->logger->debug(encode_json($body));
     }
     my $response = $ua->request($request);
