@@ -113,6 +113,9 @@ sub _create_contact {
         %{ $self->config->{contact}->{attribute_defaults} }
     };
 
+    # phone cannot be null;
+    $args->{phone} ||= '';
+
     my $remapping = $self->config->{contact}->{attribute_mapping} || {};
     for my $key ( keys %$remapping ) {
         $attributes->{$remapping->{$key}} = $args->{$key};
