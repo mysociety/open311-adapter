@@ -48,6 +48,8 @@ sub process_attributes {
 
     # Attach the caller to the inspection attributes
     # TODO The caller attribute isn't present in the design yet...! XXX
+    #
+    $attributes->{$self->config->{contact}->{attribute_id}} = $contact_resource_id;
 
     return $attributes;
 
@@ -116,9 +118,10 @@ sub _create_contact {
         $attributes->{$remapping->{$key}} = $args->{$key};
     }
 
-    my $now = DateTime->now();
-    my $created_time = DateTime::Format::W3CDTF->new->format_datetime($now);
-    $attributes->{$self->config->{contact}->{acceptance_datetime_attribute}} = $created_time;
+    # do not think this is needed now
+    #my $now = DateTime->now();
+    #my $created_time = DateTime::Format::W3CDTF->new->format_datetime($now);
+    #$attributes->{$self->config->{contact}->{acceptance_datetime_attribute}} = $created_time;
 
     my $contact = {
         sourceId => $self->config->{contact}->{source_id},
