@@ -2,3 +2,5 @@ Rutland:
   endpoint: ''
   credentials: ''
 
+min_log_level: 'error'
+logfile: '/path/to/logfile'
