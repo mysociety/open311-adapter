@@ -11,6 +11,8 @@ use Try::Tiny;
 use Encode qw(encode_utf8);
 use JSON::MaybeXS qw(encode_json decode_json);
 
+with 'Role::Logger';
+
 
 has memcache_namespace  => (
     is => 'lazy',
@@ -46,6 +48,8 @@ sub api_call {
     if ($body) {
         $request->content_type('application/json; charset=UTF-8');
         $request->content(encode_utf8(encode_json($body)));
+        $self->logger->debug($uri);
+        $self->logger->debug(encode_json($body));
     }
     my $response = $ua->request($request);
     if ($response->is_success) {
