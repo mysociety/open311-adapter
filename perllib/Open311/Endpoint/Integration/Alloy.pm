@@ -113,7 +113,9 @@ sub post_service_request {
     # TODO: upload any photos and get their resource IDs, set attachment attribute IDs (?)
 
     # extract attribute values
-    my $resource_id = $args->{attributes}->{asset_resource_id} + 0;
+    my $resource_id = $args->{attributes}->{asset_resource_id};
+    $resource_id =~ s/^\d+\.(\d+)$/$1/; # strip the unecessary layer id
+    $resource_id += 0;
     my $resource = {
         # This is seemingly fine to omit, inspections created via the
         # Alloy web UI don't include it anyway.
