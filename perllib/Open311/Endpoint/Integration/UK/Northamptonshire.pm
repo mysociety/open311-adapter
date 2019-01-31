@@ -50,7 +50,10 @@ sub process_attributes {
     # Attach the caller to the inspection attributes
     # TODO The caller attribute isn't present in the design yet...! XXX
     #
-    $attributes->{$self->config->{contact}->{attribute_id}} = $contact_resource_id;
+    $attributes->{$self->config->{contact}->{attribute_id}} = [{
+        resourceId => $contact_resource_id,
+        command => 'add'
+    }];
 
     return $attributes;
 
