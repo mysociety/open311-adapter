@@ -4,6 +4,7 @@ use Moo;
 extends 'Open311::Endpoint::Integration::Alloy';
 
 use List::Util 'first';
+use JSON::MaybeXS;
 
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
@@ -109,8 +110,20 @@ sub _find_contact {
 sub _create_contact {
     my ($self, $args) = @_;
 
+    # For true/false values we have to use the JSON()->true/false otherwise
+    # when we convert to JSON later we get 1/0 which then fails the validation
+    # at the Alloy end
+    # NB: have to use 'true'/'false' strings in the YAML for this to work. If we
+    # use true/false then it gets passed in as something that gets converted to 1/0
+    #
+    # we could possibly use local $YAML::XS::Boolean = "JSON::PP" in the Config module
+    # to get round all this but not sure if that would break something else.
     my $attributes = {
-        %{ $self->config->{contact}->{attribute_defaults} }
+        map {
+            $_ => $self->config->{contact}->{attribute_defaults}->{$_} =~ /^(true|false)$/
+                ? JSON()->$1
+                : $self->config->{contact}->{attribute_defaults}->{$_}
+        } keys %{ $self->config->{contact}->{attribute_defaults} }
     };
 
     # phone cannot be null;
