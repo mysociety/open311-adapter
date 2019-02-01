@@ -162,6 +162,74 @@ sub post_service_request {
 
 }
 
+sub get_service_request_updates {
+    my ($self, $args) = @_;
+
+    my $updates = $self->alloy->api_call('search/resource-fetch', undef, {
+        aqsNode => {
+            type => "FETCH",
+            properties => {
+                entityType => "SOURCE_TYPE_PROPERTY_VALUE",
+                entityCode => "INSPECTION_STANDARD INSPECTION_STANDARD"
+            },
+            children => [
+                {
+                    type => "GREATER_THAN",
+                    children => [
+                        {
+                            type => "RESOURCE_PROPERTY",
+                            properties => {
+                                resourcePropertyName => "lastEditDate"
+                            }
+                        },
+                        {
+                            type => "DATE",
+                            properties => {
+                                value => [
+                                    $args->{start_date}
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    })->{results};
+    #{ start_date => $args->{start_date}, end_date => $args->{end_date} });
+
+    my @updates;
+
+    for my $update (@$updates) {
+
+        my $status = 'open';
+        my $description = '';
+        my @attributes = @{$update->{values}};
+        for my $att (@attributes) {
+            # these might be specific to each design so will probably need
+            # some config
+            if ($att->{attributeId} == 1000594) {
+                $description = $att->{value};
+            }
+            # status
+            if ($att->{attributeId} == 1000604) {
+                $description .= ', status: ' . $att->{value};
+            }
+        }
+
+        my %args = (
+            status => $status,
+            update_id => $update->{version}->{resourceSystemVersionId},
+            service_request_id => $update->{resourceId},
+            description => $description,
+            updated_datetime => DateTime::Format::W3CDTF->new->parse_datetime( $update->{version}->{startDate})->truncate( to => 'second' ),
+        );
+
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
+    }
+
+    return @updates;
+}
+
 sub service_request_id_for_resource {
     my ($self, $resource) = @_;
 
