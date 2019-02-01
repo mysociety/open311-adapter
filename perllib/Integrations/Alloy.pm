@@ -53,8 +53,12 @@ sub api_call {
     }
     my $response = $ua->request($request);
     if ($response->is_success) {
+        $self->logger->debug($response->content) if $body;
         return decode_json($response->content);
     } else {
+        $self->logger->debug($call);
+        $self->logger->debug(encode_json($body)) if $body;
+        $self->logger->debug($response->content);
         try {
             my $json_response = decode_json($response->content);
             die "Alloy API call failed: [$json_response->{errorCode} $json_response->{errorCodeString}] $json_response->{debugErrorMessage}";
