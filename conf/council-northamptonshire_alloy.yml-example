@@ -8,6 +8,38 @@
 
   "irg_config_code": "",
 
+  "asset_layer_lookup": {
+    "Structures": 1009815,
+    "Bus Stop": 1009853,
+    "Carriageway": 1009847,
+    "Ped. Guardrail": 1009836,
+    "Bridge": 1009848,
+    "Gate": 1009829,
+    "Obstructions": 1009835,
+    "Waymarker Post": 1009814,
+    "Stile": 1009825,
+    "Traffic Calming": 1009824,
+    "Signs": 1009817,
+    # "TL Junction": ???
+    # "Tree": 1009822 OR 1009809 OR 1010132
+    "Grit Bin": 1009831
+  },
+
+  # List of categories/subcategories
+  "service_whitelist": {
+    "Highway Bridges": {
+      "Damaged/Unsafe": "Structures"
+    },
+    "Bus Stops": {
+      "Shelter Damaged": "Bus Stop",
+      "Sign/Pole Damaged": "Bus Stop"
+    },
+    "Drain Covers": {
+      "Loose / Raised / Sunken": "Carriageway",
+      "Broken / Missing": "Carriageway"
+    }
+  },
+
   # Allows Open311 service attribute parameters to be overridden,
   # e.g. to make specific attributes required, or not required,
   # server_set to be set etc.

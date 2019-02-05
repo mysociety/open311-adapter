@@ -57,6 +57,11 @@ has service_class  => (
 );
 
 
+has service_whitelist => (
+    is => 'ro',
+    default => sub { die "Attribute Alloy::service_whitelist not overridden"; }
+);
+
 sub services {
     my $self = shift;
 
@@ -65,39 +70,46 @@ sub services {
     my %ignored_attributes = map { $_ => 1 } @{ $self->config->{ignored_attributes} };
 
     my $sources = $self->alloy->get_sources();
-    my @services = ();
-    for my $source (@$sources) {
+    my $source = $sources->[0]; # XXX Only one for now!
 
-        my %service = (
-            description => $source->{description},
-            service_name => $source->{description},
-            service_code => $self->service_code_for_source($source),
-        );
-        my $o311_service = $self->service_class->new(%service);
-        for my $attrib (@{$source->{attributes}}) {
-            my %overrides = ();
-            if (defined $self->config->{service_attribute_overrides}->{$attrib->{id}}) {
-                %overrides = %{ $self->config->{service_attribute_overrides}->{$attrib->{id}} };
+    my @services = ();
+    for my $group (keys %{ $self->service_whitelist }) {
+        my $whitelist = $self->service_whitelist->{$group};
+        for my $subcategory (keys %{ $whitelist }) {
+            my $name = $subcategory;
+            my $code = $group . '_' . $name; # XXX What should it be...
+            my %service = (
+                service_name => $name,
+                description => $name,
+                service_code => $code,
+                group => $group,
+            );
+            my $o311_service = $self->service_class->new(%service);
+
+            for my $attrib (@{$source->{attributes}}) {
+                my $overrides = $self->config->{service_attribute_overrides}{$attrib->{id}} || {};
+
+                # If this attribute has a default provided by the config (resource_attribute_defaults)
+                # or will be remapped from an attribute defined in Service::UKCouncil::Alloy
+                # (request_to_resource_attribute_mapping) then we don't need to include it
+                # in the Open311 service we send to FMS.
+                next if $self->config->{resource_attribute_defaults}->{$attrib->{id}} ||
+                    $remapped_resource_attributes{$attrib->{id}} || $ignored_attributes{$attrib->{id}};
+
+                push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(
+                    code => $attrib->{id},
+                    description => $attrib->{description},
+                    datatype => $attrib->{datatype},
+                    required => $attrib->{required},
+                    values => $attrib->{values},
+                    %$overrides,
+                );
             }
 
-            # If this attribute has a default provided by the config (resource_attribute_defaults)
-            # or will be remapped from an attribute defined in Service::UKCouncil::Alloy
-            # (request_to_resource_attribute_mapping) then we don't need to include it
-            # in the Open311 service we send to FMS.
-            next if $self->config->{resource_attribute_defaults}->{$attrib->{id}} ||
-                $remapped_resource_attributes{$attrib->{id}} || $ignored_attributes{$attrib->{id}};
-
-            push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(
-                code => $attrib->{id},
-                description => $attrib->{description},
-                datatype => $attrib->{datatype},
-                required => $attrib->{required},
-                values => $attrib->{values},
-                %overrides,
-            );
+            push @services, $o311_service;
         }
-        push @services, $o311_service;
     }
+
     return @services;
 }
 
