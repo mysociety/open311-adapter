@@ -165,12 +165,90 @@ sub post_service_request {
 sub get_service_request_updates {
     my ($self, $args) = @_;
 
-    my $updates = $self->alloy->api_call('search/resource-fetch', undef, {
+    # updates to inspections
+    my $updates = $self->fetch_updated_resources($self->config->{inspection_resource_name}, $args->{start_date});
+
+    my @updates;
+
+    for my $update (@$updates) {
+        my $status = 'open';
+        my $description = '';
+        my @attributes = @{$update->{values}};
+        for my $att (@attributes) {
+            # these might be specific to each design so will probably need
+            # some config
+            if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{description}) {
+                $description = $att->{value};
+            }
+            # status
+            if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{status}) {
+                $description .= ', status: ' . $att->{value}->{values}[0]->{resourceId};
+                $status = $self->inspection_status($att->{value}->{values}[0]->{resourceId});
+            }
+        }
+
+        my %args = (
+            status => $status,
+            update_id => $update->{version}->{resourceSystemVersionId},
+            service_request_id => $update->{resourceId},
+            description => $description,
+            updated_datetime => DateTime::Format::W3CDTF->new->parse_datetime( $update->{version}->{startDate})->truncate( to => 'second' ),
+        );
+
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
+    }
+
+    $updates = $self->fetch_updated_resources($self->config->{defect_resource_name}, $args->{start_date});
+    for my $update (@$updates) {
+        my $status = 'open';
+        my $description = '';
+        my @attributes = @{$update->{values}};
+        for my $att (@attributes) {
+            # these might be specific to each design so will probably need
+            # some config
+            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{description}) {
+                $description = $att->{value};
+            }
+            # status
+            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{status}) {
+                $description .= ', status: ' . $att->{value};
+                $status = $self->defect_status($att->{value});
+            }
+        }
+
+        my $service_request_id = $update->{resourceId};
+        my $parents = $self->alloy->api_call('resource/' . $update->{resourceId} . '/parents')->{details}->{parents};
+
+        for my $parent (@$parents) {
+            next unless $parent->{actualParentSourceTypeId} == '1001181'; # request for service
+
+            $description .= "orig_id: $service_request_id";
+            $service_request_id = $parent->{parentResId};
+        }
+
+        my %args = (
+            status => $status,
+            update_id => $update->{version}->{resourceSystemVersionId},
+            service_request_id => $service_request_id,
+            description => $description,
+            updated_datetime => DateTime::Format::W3CDTF->new->parse_datetime( $update->{version}->{startDate})->truncate( to => 'second' ),
+        );
+
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
+    }
+
+    return @updates;
+}
+
+sub fetch_updated_resources {
+    my ($self, $code, $start_date) = @_;
+
+    return $self->alloy->api_call('search/resource-fetch', undef, {
         aqsNode => {
             type => "FETCH",
             properties => {
                 entityType => "SOURCE_TYPE_PROPERTY_VALUE",
-                entityCode => "INSPECTION_STANDARD INSPECTION_STANDARD"
+                entityCode => $code
             },
             children => [
                 {
@@ -186,7 +264,7 @@ sub get_service_request_updates {
                             type => "DATE",
                             properties => {
                                 value => [
-                                    $args->{start_date}
+                                    $start_date
                                 ]
                             }
                         }
@@ -195,39 +273,18 @@ sub get_service_request_updates {
             ]
         }
     })->{results};
-    #{ start_date => $args->{start_date}, end_date => $args->{end_date} });
+}
 
-    my @updates;
+sub inspection_status {
+    my ($self, $status) = @_;
 
-    for my $update (@$updates) {
+    return $self->config->{inspection_status_mapping}->{$status} || 'open';
+}
 
-        my $status = 'open';
-        my $description = '';
-        my @attributes = @{$update->{values}};
-        for my $att (@attributes) {
-            # these might be specific to each design so will probably need
-            # some config
-            if ($att->{attributeId} == 1000594) {
-                $description = $att->{value};
-            }
-            # status
-            if ($att->{attributeId} == 1000604) {
-                $description .= ', status: ' . $att->{value};
-            }
-        }
+sub defect_status {
+    my ($self, $status) = @_;
 
-        my %args = (
-            status => $status,
-            update_id => $update->{version}->{resourceSystemVersionId},
-            service_request_id => $update->{resourceId},
-            description => $description,
-            updated_datetime => DateTime::Format::W3CDTF->new->parse_datetime( $update->{version}->{startDate})->truncate( to => 'second' ),
-        );
-
-        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
-    }
-
-    return @updates;
+    return $self->config->{defect_status_mapping}->{$status} || 'open';
 }
 
 sub service_request_id_for_resource {
