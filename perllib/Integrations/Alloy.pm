@@ -136,6 +136,8 @@ sub get_sources {
             my @attributes = ();
             my $source_type_attributes = $source_type->{attributes};
             for my $source_attribute (@$source_type_attributes) {
+                next unless $source_attribute->{isRequired};
+
                 my $datatype = $type_mapping->{$source_attribute->{valueTypeId}} || "string";
                 my %values = ();
                 if ($datatype eq 'singlevaluelist' && $source_attribute->{attributeOptionTypeId}) {
@@ -145,8 +147,6 @@ sub get_sources {
                         $values{$option->{optionId}} = $option->{optionDescription};
                     }
                 }
-
-                next unless $source_attribute->{isRequired};
 
                 push @attributes, {
                     description => $source_attribute->{description},
@@ -158,27 +158,31 @@ sub get_sources {
                 };
             }
             $source->{attributes} = \@attributes;
-
-            # It seems that a single source type (design) may have multiple different
-            # assets associated with it - e.g. carriageway, street lights, bollards etc.
-            # These are all in the "linked sourcetypes" API call.
-            # We want an individual category on FMS for each, so fetch
-            # them and output a different service for each.
-            my $parent_attributes = $self->get_parent_attributes($source_type->{sourceTypeId});
-            for my $parent_attribute (@$parent_attributes) {
-                # TODO: linkedSourceTypeId and attributeSourceTypeId always seem to be the same
-                # in the linked-source-types API call, but check which is right.
-                my $attribute_source_type = $self->api_call("source-type/$parent_attribute->{linkedSourceTypeId}");
-                push @$sources, {
-                    %$source,
-                    description => $attribute_source_type->{description},
-                    parent_attribute_id => $parent_attribute->{attributeId},
-                };
-            }
-
-
+            push @$sources, $source;
         }
         $self->memcache->set($key, $sources, $expiry);
+    }
+    return $sources;
+}
+
+sub asset_types {
+    my ($self, $source_type_id) = @_;
+
+    # It seems that a single source type (design) may have multiple different
+    # assets associated with it - e.g. carriageway, street lights, bollards etc.
+    # These are all in the "linked sourcetypes" API call.
+    # We want an individual category on FMS for each, so fetch
+    # them and output a different service for each.
+    my $parent_attributes = $self->get_parent_attributes($source_type_id);
+    my $sources;
+    for my $parent_attribute (@$parent_attributes) {
+        # TODO: linkedSourceTypeId and attributeSourceTypeId always seem to be the same
+        # in the linked-source-types API call, but check which is right.
+        my $attribute_source_type = $self->api_call("source-type/$parent_attribute->{linkedSourceTypeId}");
+        push @$sources, {
+            description => $attribute_source_type->{description},
+            parent_attribute_id => $parent_attribute->{attributeId},
+        };
     }
     return $sources;
 }

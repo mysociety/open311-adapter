@@ -98,6 +98,12 @@ DISTRIBUTIONS
       perl 5.008001
       strict 0
       warnings 0
+  Class-Data-Inheritable-0.08
+    pathname: T/TM/TMTM/Class-Data-Inheritable-0.08.tar.gz
+    provides:
+      Class::Data::Inheritable 0.08
+    requirements:
+      ExtUtils::MakeMaker 0
   Class-Factory-Util-1.7
     pathname: D/DR/DROLSKY/Class-Factory-Util-1.7.tar.gz
     provides:
