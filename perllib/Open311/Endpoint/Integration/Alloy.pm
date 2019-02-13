@@ -120,7 +120,7 @@ sub post_service_request {
     # Get the service code from the args/whatever
     # get the appropriate source type
     my $sources = $self->alloy->get_sources();
-    my $source = first { $self->service_code_for_source($_) eq $service->service_code } @$sources;
+    my $source = $sources->[0]; # we only have one source at the moment
 
     # TODO: upload any photos and get their resource IDs, set attachment attribute IDs (?)
 
@@ -128,6 +128,11 @@ sub post_service_request {
     my $resource_id = $args->{attributes}->{asset_resource_id};
     $resource_id =~ s/^\d+\.(\d+)$/$1/; # strip the unecessary layer id
     $resource_id += 0;
+
+    # get the attribute id for the parents so alloy checks in the right place for the asset id
+    my ( $group, $category ) = split('_', $service->service_code);
+    my $parent_attribute_id = $self->config->{service_whitelist}->{$group}->{$category};
+
     my $resource = {
         # This is seemingly fine to omit, inspections created via the
         # Alloy web UI don't include it anyway.
@@ -144,7 +149,7 @@ sub post_service_request {
         # assets, and maybe even many different asset types, but for
         # now one is fine.
         parents => {
-            "$source->{parent_attribute_id}" => [ $resource_id ],
+            $parent_attribute_id => [ $resource_id ],
         },
 
         # No way to include the SRS in the GeoJSON, sadly, so
