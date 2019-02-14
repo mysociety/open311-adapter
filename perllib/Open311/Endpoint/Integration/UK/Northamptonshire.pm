@@ -46,6 +46,9 @@ sub process_attributes {
     # a matching contact
     my $contact_resource_id = $self->_find_or_create_contact($args);
 
+    # For category we use the group and not the category
+    my ( $group, $category ) = split('_', $service->service_code);
+    $attributes->{$self->config->{request_to_resource_attribute_mapping}->{category}} = $group;
 
     # Attach the caller to the inspection attributes
     # TODO The caller attribute isn't present in the design yet...! XXX
