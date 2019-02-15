@@ -47,7 +47,7 @@ sub process_attributes {
     my $contact_resource_id = $self->_find_or_create_contact($args);
 
     # For category we use the group and not the category
-    my ( $group, $category ) = split('_', $args->{category});
+    my ( $group, $category ) = split('_', $args->{service_code});
     $attributes->{$self->config->{request_to_resource_attribute_mapping}->{category}} = $group;
 
     # Attach the caller to the inspection attributes
