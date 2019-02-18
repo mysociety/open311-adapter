@@ -194,12 +194,9 @@ sub get_service_request_updates {
         for my $att (@attributes) {
             # these might be specific to each design so will probably need
             # some config
-            if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{description}) {
-                $description = $att->{value};
-            }
+
             # status
             if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{status}) {
-                $description .= ', status: ' . $att->{value}->{values}[0]->{resourceId};
                 $status = $self->inspection_status($att->{value}->{values}[0]->{resourceId});
             }
         }
@@ -228,7 +225,6 @@ sub get_service_request_updates {
             }
             # status
             if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{status}) {
-                $description .= ', status: ' . $att->{value};
                 $status = $self->defect_status($att->{value});
             }
         }
@@ -239,7 +235,6 @@ sub get_service_request_updates {
         for my $parent (@$parents) {
             next unless $parent->{actualParentSourceTypeId} == '1001181'; # request for service
 
-            $description .= "orig_id: $service_request_id";
             $service_request_id = $parent->{parentResId};
         }
 
