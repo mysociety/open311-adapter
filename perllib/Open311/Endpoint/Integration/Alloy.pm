@@ -189,6 +189,7 @@ sub get_service_request_updates {
 
     for my $update (@$updates) {
         my $status = 'open';
+        my $reason_for_closure = '';
         my $description = '';
         my @attributes = @{$update->{values}};
         for my $att (@attributes) {
@@ -199,10 +200,16 @@ sub get_service_request_updates {
             if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{status}) {
                 $status = $self->inspection_status($att->{value}->{values}[0]->{resourceId});
             }
+
+            # reason for closure
+            if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{reason_for_closure}) {
+                $reason_for_closure = $att->{value}->{values}[0] ? $att->{value}->{values}[0]->{resourceId} : '' ;
+            }
         }
 
         my %args = (
             status => $status,
+            external_status_code => $reason_for_closure,
             update_id => $update->{version}->{resourceSystemVersionId},
             service_request_id => $update->{resourceId},
             description => $description,
