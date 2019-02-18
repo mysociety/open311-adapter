@@ -239,8 +239,9 @@ sub get_service_request_updates {
         my $service_request_id = $update->{resourceId};
         my $parents = $self->alloy->api_call('resource/' . $update->{resourceId} . '/parents')->{details}->{parents};
 
+        # if it has a parent that is an enquiry add the updates to that
         for my $parent (@$parents) {
-            next unless $parent->{actualParentSourceTypeId} == '1001181'; # request for service
+            next unless $parent->{actualParentSourceTypeId} == $self->config->{defect_inspection_parent_id}; # request for service
 
             $service_request_id = $parent->{parentResId};
         }
