@@ -205,6 +205,10 @@ sub get_service_request_updates {
             if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{reason_for_closure}) {
                 $reason_for_closure = $att->{value}->{values}[0] ? $att->{value}->{values}[0]->{resourceId} : '' ;
             }
+
+            if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{inspector_comments}) {
+                $description = $att->{value};
+            }
         }
 
         my %args = (
