@@ -211,6 +211,10 @@ sub get_service_request_updates {
             }
         }
 
+        if ($reason_for_closure) {
+            $status = $self->get_status_with_closure($status, $reason_for_closure);
+        }
+
         my %args = (
             status => $status,
             external_status_code => $reason_for_closure,
@@ -303,6 +307,14 @@ sub inspection_status {
     my ($self, $status) = @_;
 
     return $self->config->{inspection_status_mapping}->{$status} || 'open';
+}
+
+sub get_status_with_closure {
+    my ($self, $status, $reason_for_closure) = @_;
+
+    return $status unless $status eq 'closed';
+
+    return $self->config->{inspection_closure_mapping}->{$reason_for_closure} || $status;
 }
 
 sub defect_status {
