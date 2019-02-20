@@ -421,7 +421,7 @@ sub upload_attachments {
 
     # grab the URLs and download its content
     # TODO: multiple photo support - open311 attributes?
-    my $media_urls = [ $args->{media_url} ];
+    my $media_urls = $args->{media_url};
 
     # Grab each photo from FMS
     my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
@@ -443,10 +443,10 @@ sub upload_attachments {
         # (something like https://stackoverflow.com/questions/26063748)
 
         # TODO: broken
-        $self->api_call("file", {
-            folderId => $folder_id,
-            name => $_->filename
-        }, $_->content)->{resourceId};
+        $self->alloy->api_call("file", {
+            'model.folderId' => $folder_id,
+            'model.name' => $_->filename
+        }, $_->content, 1)->{resourceId};
     } @photos;
 
     # return a list of the form

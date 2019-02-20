@@ -6,6 +6,7 @@ use Cache::Memcached;
 use LWP::UserAgent;
 use HTTP::Headers;
 use HTTP::Request;
+use HTTP::Request::Common;
 use URI;
 use Try::Tiny;
 use Encode qw(encode_utf8);
@@ -33,7 +34,7 @@ has memcache => (
 );
 
 sub api_call {
-    my ($self, $call, $params, $body) = @_;
+    my ($self, $call, $params, $body, $is_file) = @_;
 
     my $ua = LWP::UserAgent->new(
         agent => "FixMyStreet/open311-adapter",
@@ -45,7 +46,13 @@ sub api_call {
     my $uri = URI->new( $self->config->{api_url} . $call );
     $uri->query_form(%$params);
     my $request = HTTP::Request->new($method, $uri);
-    if ($body) {
+    if ($is_file) {
+        $request = HTTP::Request::Common::POST(
+            $uri,
+            Content_Type => 'form-data',
+            Content => [ file => [undef, $params->{'model.name'}, Content => $body] ]
+        );
+    } elsif ($body) {
         $request->content_type('application/json; charset=UTF-8');
         $request->content(encode_utf8(encode_json($body)));
         $self->logger->debug($call);
@@ -57,7 +64,7 @@ sub api_call {
         return decode_json($response->content);
     } else {
         $self->logger->debug($call);
-        $self->logger->debug(encode_json($body)) if $body;
+        $self->logger->debug($body) if $body;
         $self->logger->debug($response->content);
         try {
             my $json_response = decode_json($response->content);
