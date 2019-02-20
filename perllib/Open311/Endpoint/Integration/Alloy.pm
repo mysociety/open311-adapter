@@ -215,13 +215,15 @@ sub get_service_request_updates {
             $status = $self->get_status_with_closure($status, $reason_for_closure);
         }
 
+        my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
+
         my %args = (
             status => $status,
             external_status_code => $reason_for_closure,
             update_id => $update->{version}->{resourceSystemVersionId},
             service_request_id => $update->{resourceId},
             description => $description,
-            updated_datetime => DateTime::Format::W3CDTF->new->parse_datetime( $update->{version}->{startDate})->truncate( to => 'second' ),
+            updated_datetime => DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' ),
         );
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
@@ -254,12 +256,14 @@ sub get_service_request_updates {
             $service_request_id = $parent->{parentResId};
         }
 
+        my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
+
         my %args = (
             status => $status,
             update_id => $update->{version}->{resourceSystemVersionId},
             service_request_id => $service_request_id,
             description => $description,
-            updated_datetime => DateTime::Format::W3CDTF->new->parse_datetime( $update->{version}->{startDate})->truncate( to => 'second' ),
+            updated_datetime => DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' ),
         );
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
@@ -331,6 +335,18 @@ sub service_request_id_for_resource {
     # This default behaviour just uses the resource ID which will always
     # be present.
     return $resource->{resourceId};
+}
+
+sub get_time_for_version {
+    my ($self, $resource_id, $version_id) = @_;
+
+    my $versions = $self->alloy->api_call("resource/$resource_id/versions");
+
+    for my $version ( @$versions ) {
+        if ($version->{currentSystemVersionId} eq $version_id) {
+            return $version->{startDate};
+        }
+    }
 }
 
 sub service_code_for_source {
