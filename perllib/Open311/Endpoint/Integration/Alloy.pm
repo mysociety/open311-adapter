@@ -129,9 +129,21 @@ sub post_service_request {
     $resource_id =~ s/^\d+\.(\d+)$/$1/; # strip the unecessary layer id
     $resource_id += 0;
 
-    # get the attribute id for the parents so alloy checks in the right place for the asset id
     my ( $group, $category ) = split('_', $service->service_code);
-    my $parent_attribute_id = $self->config->{service_whitelist}->{$group}->{$category};
+
+    # get the attribute id for the parents so alloy checks in the right place for the asset id
+    my $resource_type = $self->alloy->api_call("resource/$resource_id")->{sourceTypeId};
+    my $parent_attributes = $self->alloy->get_parent_attributes($resource_type);
+    my $parent_attribute_id;
+    for my $attribute ( @$parent_attributes ) {
+        if ( $attribute->{linkedSourceTypeId} eq $source->{source_type_id} ) {
+            $parent_attribute_id = $attribute->{attributeId};
+            last;
+        }
+    }
+
+    die "no parent attribute id found for asset $resource_id with type $resource_type ($source->{source_type_id})"
+        unless $parent_attribute_id;
 
     my $resource = {
         # This is seemingly fine to omit, inspections created via the
