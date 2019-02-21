@@ -237,9 +237,12 @@ sub get_service_request_updates {
         for my $att (@attributes) {
             # these might be specific to each design so will probably need
             # some config
-            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{description}) {
-                $description = $att->{value};
-            }
+            # TODO: check if we are pulling back in description. It's a mandatory field in Alloy
+            # so I suspect we should not be.
+            #if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{description}) {
+                #$description = $att->{value};
+            #}
+
             # status
             if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{status}) {
                 $status = $self->defect_status($att->{value});
