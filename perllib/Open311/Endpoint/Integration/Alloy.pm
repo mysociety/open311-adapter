@@ -106,6 +106,15 @@ sub services {
                 );
             }
 
+            if ( $self->config->{emergency_text} && $self->service_whitelist->{$group}->{$subcategory}->{emergency} == 1 ) {
+                push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(
+                    code => 'emergency',
+                    variable => 0,
+                    description => $self->config->{emergency_text},
+                    datatype => 'text',
+                );
+            }
+
             push @services, $o311_service;
         }
     }
