@@ -131,6 +131,9 @@ sub post_service_request {
     my $sources = $self->alloy->get_sources();
     my $source = $sources->[0]; # we only have one source at the moment
 
+    # this is a display only thing for the website
+    delete $args->{attributes}->{emergency};
+
     # TODO: upload any photos and get their resource IDs, set attachment attribute IDs (?)
 
     # extract attribute values
