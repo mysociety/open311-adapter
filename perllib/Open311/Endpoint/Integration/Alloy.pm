@@ -208,7 +208,12 @@ sub get_service_request_updates {
 
     my @updates;
 
+    my $sources = $self->alloy->get_sources();
+    my $source = $sources->[0]; # XXX Only one for now!
+
     for my $update (@$updates) {
+        # we only want updates to RFS inspections
+        next unless $update->{sourceTypeId} eq $source->{sourceTypeId};
         my $status = 'open';
         my $reason_for_closure = '';
         my $description = '';
