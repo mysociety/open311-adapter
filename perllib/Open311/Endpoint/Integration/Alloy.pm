@@ -216,7 +216,7 @@ sub get_service_request_updates {
 
     for my $update (@$updates) {
         # we only want updates to RFS inspections
-        next unless $update->{sourceTypeId} eq $source->{sourceTypeId};
+        next unless $update->{sourceTypeId} eq $source->{source_type_id};
         my $status = 'open';
         my $reason_for_closure = '';
         my $description = '';
