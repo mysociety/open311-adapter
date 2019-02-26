@@ -262,6 +262,7 @@ sub get_service_request_updates {
     for my $update (@$updates) {
         my $status = 'open';
         my $description = '';
+        my $fms_id = '';
         my @attributes = @{$update->{values}};
         for my $att (@attributes) {
             # these might be specific to each design so will probably need
@@ -276,6 +277,10 @@ sub get_service_request_updates {
             if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{status}) {
                 $status = $self->defect_status($att->{value});
             }
+
+            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{fixmystreet_id}) {
+                $fms_id = $att->{value};
+            }
         }
 
         my $service_request_id = $update->{resourceId};
@@ -286,6 +291,7 @@ sub get_service_request_updates {
             next unless $parent->{actualParentSourceTypeId} == $self->config->{defect_inspection_parent_id}; # request for service
 
             $service_request_id = $parent->{parentResId};
+            $fms_id = undef;
         }
 
         my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
@@ -297,6 +303,8 @@ sub get_service_request_updates {
             description => $description,
             updated_datetime => DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' ),
         );
+
+        $args{fixmystreet_id} = $fms_id if $fms_id;
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
