@@ -1,0 +1,52 @@
+[
+  {
+    "code": "BOOLEAN",
+    "description": "Yes/No",
+    "valueTypeId": 1
+  },
+  {
+    "code": "STRING",
+    "description": "Text",
+    "valueTypeId": 2
+  },
+  {
+    "code": "OPTION",
+    "description": "Option List",
+    "valueTypeId": 3
+  },
+  {
+    "code": "DATE",
+    "description": "Date",
+    "valueTypeId": 4
+  },
+  {
+    "code": "TIME",
+    "description": "Time",
+    "valueTypeId": 5
+  },
+  {
+    "code": "DATETIME",
+    "description": "Date and Time",
+    "valueTypeId": 6
+  },
+  {
+    "code": "INTEGER",
+    "description": "Number",
+    "valueTypeId": 7
+  },
+  {
+    "code": "FLOAT",
+    "description": "Decimal",
+    "valueTypeId": 8
+  },
+  {
+    "code": "GEOMETRY",
+    "description": "Geometry",
+    "valueTypeId": 9
+  },
+  {
+    "code": "IRG_REF",
+    "description": "Item Lookup",
+    "valueTypeId": 10
+  }
+]
