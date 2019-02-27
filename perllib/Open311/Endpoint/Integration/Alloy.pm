@@ -187,6 +187,8 @@ sub post_service_request {
         $resource->{parents} = {
             $parent_attribute_id => [ $resource_id ],
         };
+    } else {
+        $resource->{parents} = {};
     }
 
     # The Open311 attributes received from FMS may not include all the

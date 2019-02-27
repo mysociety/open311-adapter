@@ -267,6 +267,7 @@ subtest "create problem with no resource_id" => sub {
         type => "Point"
     },
     networkReference => undef,
+    parents => {},
     sourceId => 2590
     }
     , 'correct json sent';
