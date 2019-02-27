@@ -134,29 +134,30 @@ sub post_service_request {
     # this is a display only thing for the website
     delete $args->{attributes}->{emergency};
 
-    # TODO: upload any photos and get their resource IDs, set attachment attribute IDs (?)
-
     # extract attribute values
     my $resource_id = $args->{attributes}->{asset_resource_id};
     $resource_id =~ s/^\d+\.(\d+)$/$1/; # strip the unecessary layer id
     $resource_id += 0;
 
-    my ( $group, $category ) = split('_', $service->service_code);
 
-    # get the attribute id for the parents so alloy checks in the right place for the asset id
-    my $resource_type = $self->alloy->api_call("resource/$resource_id")->{sourceTypeId};
-    my $parent_attributes = $self->alloy->get_parent_attributes($resource_type);
     my $parent_attribute_id;
-    for my $attribute ( @$parent_attributes ) {
-        if ( $attribute->{linkedSourceTypeId} eq $source->{source_type_id} ) {
-            $parent_attribute_id = $attribute->{attributeId};
-            last;
+
+    if ( $resource_id ) {
+        # get the attribute id for the parents so alloy checks in the right place for the asset id
+        my $resource_type = $self->alloy->api_call("resource/$resource_id")->{sourceTypeId};
+        my $parent_attributes = $self->alloy->get_parent_attributes($resource_type);
+        for my $attribute ( @$parent_attributes ) {
+            if ( $attribute->{linkedSourceTypeId} eq $source->{source_type_id} ) {
+                $parent_attribute_id = $attribute->{attributeId};
+                last;
+            }
         }
+
+        die "no parent attribute id found for asset $resource_id with type $resource_type ($source->{source_type_id})"
+            unless $parent_attribute_id;
     }
 
-    die "no parent attribute id found for asset $resource_id with type $resource_type ($source->{source_type_id})"
-        unless $parent_attribute_id;
-
+    my ( $group, $category ) = split('_', $service->service_code);
     my $resource = {
         # This is seemingly fine to omit, inspections created via the
         # Alloy web UI don't include it anyway.
@@ -166,15 +167,6 @@ sub post_service_request {
         # as everything is based off one design.
         sourceId => $source->{source_id},
 
-        # This is how we link this inspection to a particular asset.
-        # The parent_attribute_id tells Alloy what kind of asset we're
-        # linking to, and the resource_id is the specific asset.
-        # It's a list so perhaps an inspection can be linked to many
-        # assets, and maybe even many different asset types, but for
-        # now one is fine.
-        parents => {
-            $parent_attribute_id => [ $resource_id ],
-        },
 
         # No way to include the SRS in the GeoJSON, sadly, so
         # requires another API call to reproject. Beats making
@@ -184,6 +176,18 @@ sub post_service_request {
             coordinates => $self->reproject_coordinates($args->{long}, $args->{lat}),
         }
     };
+
+    if ( $parent_attribute_id ) {
+        # This is how we link this inspection to a particular asset.
+        # The parent_attribute_id tells Alloy what kind of asset we're
+        # linking to, and the resource_id is the specific asset.
+        # It's a list so perhaps an inspection can be linked to many
+        # assets, and maybe even many different asset types, but for
+        # now one is fine.
+        $resource->{parents} = {
+            $parent_attribute_id => [ $resource_id ],
+        };
+    }
 
     # The Open311 attributes received from FMS may not include all the
     # the attributes we need to fully describe the Alloy resource,

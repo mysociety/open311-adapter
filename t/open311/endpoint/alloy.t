@@ -207,6 +207,77 @@ subtest "create basic problem" => sub {
 
 };
 
+subtest "create problem with no resource_id" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request( 
+        POST => '/requests.json', 
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        service_code => 'Kerbs_Missing',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        'attribute[description]' => 'description',
+        'attribute[title]' => '1',
+        'attribute[report_url]' => 'http://localhost/1',
+        'attribute[asset_resource_id]' => '',
+        'attribute[easting]' => 1,
+        'attribute[northing]' => 2,
+        'attribute[category]' => 'Kerbs',
+        'attribute[fixmystreet_id]' => 1,
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+
+    is_deeply $sent,
+    {
+    attributes =>         {
+        1001546 => [
+            {
+                command => "add",
+                resourceId => 1
+            }
+        ],
+        1001825 => [
+            {
+                command => "add",
+                resourceId => 708823
+            }
+        ],
+        1009855 => 1,
+        1009856 => "FixMyStreet",
+        1009857 => "Request for Service",
+        1009858 => "Kerbs",
+        1009859 => 1,
+        1009860 => "description",
+        1009861 => "2014-01-01T12:00:00Z"
+    },
+    geoJson => {
+        coordinates => [
+            1,
+            2
+        ],
+        type => "Point"
+    },
+    networkReference => undef,
+    sourceId => 2590
+    }
+    , 'correct json sent';
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => 12345
+        } ], 'correct json returned';
+
+};
+
 subtest "check fetch updates" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
