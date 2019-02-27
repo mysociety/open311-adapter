@@ -50,6 +50,7 @@ around BUILDARGS => sub {
 };
 has integration_class => (is => 'ro', default => 'Integrations::Alloy::Dummy');
 sub jurisdiction_id { return 'dummy'; }
+has service_request_content => (is => 'ro', default => '/open311/service_request_extended');
 
 package main;
 
@@ -91,8 +92,13 @@ $integration->mock('api_call', sub {
             $content = '{ "resourceId": 12345 }';
         } elsif ( $call eq 'search/resource-fetch' ) {
             my $type = $body->{aqsNode}->{properties}->{entityCode};
+            my $time = $body->{aqsNode}->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
             if ( $type =~ /DEFECT/ ) {
-                $content = path(__FILE__)->sibling('json/alloy/defect_search.json')->slurp;
+                if ( $time =~ /2019-01-02/ ) {
+                    $content = path(__FILE__)->sibling('json/alloy/defect_search_all.json')->slurp;
+                } else {
+                    $content = path(__FILE__)->sibling('json/alloy/defect_search.json')->slurp;
+                }
             } else {
                 $content = path(__FILE__)->sibling('json/alloy/inspect_search.json')->slurp;
             }
@@ -282,7 +288,7 @@ subtest "create problem with no resource_id" => sub {
 subtest "check fetch updates" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
-      GET => '/servicerequestupdates.json?jurisdiction_id=dummy',
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z',
     );
 
     my $sent = pop @sent;
@@ -307,6 +313,64 @@ subtest "check fetch updates" => sub {
         media_url => '',
         fixmystreet_id => '10034',
     } ], 'correct json returned';
+};
+
+subtest "check fetch problem" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [{
+      updated_datetime => "2014-01-01T12:00:00Z",
+      service_code => "Grit Bin - damaged/replacement",
+      requested_datetime => "2019-02-19T11:26:26Z",
+      long => 1,
+      address => "",
+      status => "investigating",
+      media_url => "",
+      zipcode => "",
+      description => "test",
+      service_request_id => 4947504,
+      lat => 2,
+      address_id => "",
+      service_name => "Grit Bin - damaged/replacement"
+   },
+   {
+      long => 1,
+      requested_datetime => "2019-02-19T11:29:16Z",
+      service_code => "Shelter Damaged",
+      updated_datetime => "2014-01-01T12:00:00Z",
+      service_name => "Shelter Damaged",
+      address_id => "",
+      lat => 2,
+      description => "test",
+      service_request_id => 4947505,
+      zipcode => "",
+      media_url => "",
+      status => "investigating",
+      address => ""
+   },
+   {
+      address_id => "",
+      lat => 2,
+      service_request_id => 4947597,
+      description => "fill",
+      service_name => "Grit Bin - empty/refill",
+      status => "fixed",
+      media_url => "",
+      address => "",
+      zipcode => "",
+      requested_datetime => "2019-02-21T14:44:53Z",
+      long => 1,
+      updated_datetime => "2014-01-01T12:00:00Z",
+      service_code => "Grit Bin - empty/refill"
+   }], "correct json returned";
 };
 
 

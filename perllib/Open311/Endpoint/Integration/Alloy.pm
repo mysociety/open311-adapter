@@ -318,6 +318,75 @@ sub get_service_request_updates {
     return @updates;
 }
 
+sub get_service_requests {
+    my ($self, $args) = @_;
+
+    my $requests = $self->fetch_updated_resources($self->config->{defect_resource_name}, $args->{start_date});
+    my @requests;
+    for my $request (@$requests) {
+        my %args;
+
+        my $has_enquiry_parent = 0;
+        my $parents = $self->alloy->api_call('resource/' . $request->{resourceId} . '/parents')->{details}->{parents};
+        for my $parent (@$parents) {
+            next unless $parent->{actualParentSourceTypeId} == $self->config->{defect_inspection_parent_id}; # request for service
+
+            $has_enquiry_parent = 1;
+        }
+
+        next if $has_enquiry_parent;
+
+        my $category = $self->get_defect_category( $request );
+        unless ($category) {
+            warn "No category found for defect $request->{resourceId}, source type $request->{sourceTypeId} in " . $self->jurisdiction_id . "\n";
+            next;
+        }
+
+        my $geometry = $request->{geometry}->{featureGeom}->{geometry};
+        if ( $geometry->{type} eq 'Point') {
+            $args{latlong} = $self->deproject_coordinates($geometry->{coordinates}[0], $geometry->{coordinates}[1]);
+        } elsif ( $geometry->{type} eq 'LineString') {
+            my @points = @{ $geometry->{coordinates} };
+            my $half = int( @points / 2 );
+            $args{latlong} = $self->deproject_coordinates($points[$half]->[0], $points[$half]->[1]);
+        } else {
+            warn "Defect $request->{resourceId}: don't know how to handle geometry: $geometry->{type}\n";
+            next;
+        }
+
+        my $has_fixmystreet_id;
+        my @attributes = @{$request->{values}};
+        for my $att (@attributes) {
+
+            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{description}) {
+                $args{description}= $att->{value};
+            }
+            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{status}) {
+                $args{status} = $self->defect_status($att->{value});
+            }
+
+            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{fixmystreet_id}) {
+                $has_fixmystreet_id = 1 if $att->{value};
+            }
+        }
+
+        next if $has_fixmystreet_id;
+
+        my $service = Open311::Endpoint::Service->new(
+            service_name => $category,
+            service_code => $category,
+        );
+        $args{title} = $request->{title};
+        $args{service} = $service;
+        $args{service_request_id} = $request->{resourceId};
+        $args{requested_datetime} = DateTime::Format::W3CDTF->new->parse_datetime( $request->{version}->{startDate})->truncate( to => 'second' );
+
+        push @requests, Open311::Endpoint::Service::Request::ExtendedStatus->new( %args );
+    }
+
+    return @requests;
+}
+
 sub fetch_updated_resources {
     my ($self, $code, $start_date) = @_;
 
@@ -395,10 +464,28 @@ sub get_time_for_version {
     }
 }
 
-sub service_code_for_source {
-    my ($self, $source) = @_;
+sub get_defect_category {
+    my ($self, $defect) = @_;
+    my $mapping = $self->config->{defect_sourcetype_category_mapping}->{ $defect->{sourceTypeId} };
 
-    return $source->{source_id} . "_" . $source->{parent_attribute_id};
+    my $category = $mapping->{default};
+
+    if ( $mapping->{types} ) {
+        my @attributes = @{$defect->{values}};
+        my $type;
+
+        for my $att (@attributes) {
+            if ($att->{attributeCode} =~ /DEFECT_TYPE/ ) {
+                $type = $att->{value}->{values}->[0]->{resourceId};
+            }
+        }
+
+        warn "$type, $defect->{sourceTypeId}\n";
+
+        $category = $mapping->{types}->{$type} if $mapping->{types}->{$type};
+    }
+
+    return $category;
 }
 
 sub process_attributes {
@@ -460,6 +547,19 @@ sub reproject_coordinates {
     });
 
     return [ $point->{x}, $point->{y} ];
+}
+
+sub deproject_coordinates {
+    my ($self, $lon, $lat) = @_;
+
+    my $point = $self->alloy->api_call("projection/point", {
+        x => $lon,
+        y => $lat,
+        dstCode => "4326",
+        srcCode => "900913",
+    });
+
+    return [ $point->{y}, $point->{x} ];
 }
 
 sub upload_attachments {

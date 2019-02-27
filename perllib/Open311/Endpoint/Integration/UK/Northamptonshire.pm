@@ -19,6 +19,11 @@ has integration_class => (
     default => 'Integrations::Alloy::Northamptonshire'
 );
 
+has service_request_content => (
+    is => 'ro',
+    default => '/open311/service_request_extended'
+);
+
 sub process_attributes {
     my ($self, $source, $args) = @_;
 
