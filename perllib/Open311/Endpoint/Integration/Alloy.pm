@@ -135,10 +135,9 @@ sub post_service_request {
     delete $args->{attributes}->{emergency};
 
     # extract attribute values
-    my $resource_id = $args->{attributes}->{asset_resource_id};
+    my $resource_id = $args->{attributes}->{asset_resource_id} || 0;
     $resource_id =~ s/^\d+\.(\d+)$/$1/; # strip the unecessary layer id
     $resource_id += 0;
-
 
     my $parent_attribute_id;
 
