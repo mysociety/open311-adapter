@@ -1,0 +1,41 @@
+endpoint_url: ''
+username: FMS
+
+# For each category:
+#   name: The display name for the category
+#   group: Optional category group
+#   parameters: dictionary of default parameters to use
+#   questions: list of { code, description, values* } dictionaries of extra attribute questions
+#   logic: list of { rules, output } dictionaries where:
+#     rules is to be passed to YAML::Logic (all attribute answers in $attr)
+#     output is dictionary of values to update if the rules pass
+
+category_mapping:
+  categoryA:
+    name: "Category A"
+    parameters:
+      ServiceCode: Code
+      RequestType: Type
+      AnalysisCode1: Code
+      AnalysisCode2: Code
+    questions:
+      - code: reportType
+        description: What is the report regarding?
+        values: [ ThingA, ThingB, ThingC ]
+    logic:
+      - rules:
+          - $attr.reportType
+          - ThingA
+        output:
+          Priority: P1
+  categoryB:
+    name: "Category B"
+    parameters:
+      ServiceCode: Code
+      RequestType: Type
+      AnalysisCode1: Code
+      AnalysisCode2: Code
+
+nsgref_to_action:
+  ref: A1
+  ref2: B3

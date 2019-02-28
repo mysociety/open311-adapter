@@ -125,6 +125,9 @@ sub POST_Service_Request_Update_input_schema {
             title => '//str',
             media_url => { type => '//arr', contents => '//str' },
             account_id => '//str',
+            service_request_id_ext => '//num',
+            public_anonymity_required => Open311::Endpoint::Schema->enum('//str', 'TRUE', 'FALSE'),
+            service_code => $self->get_identifier_type('service_code'),
         }
     };
 }
