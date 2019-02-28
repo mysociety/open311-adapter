@@ -11,10 +11,9 @@ create post URL and prints out the response.
 
 use strict;
 use warnings;
-use File::Slurp;
+use Path::Tiny;
 use LWP::UserAgent;
 use HTTP::Request::Common qw(POST);
-use Data::Printer;
 
 my (%params, $current_param);
 
@@ -22,7 +21,7 @@ my $file = shift;
 
 die "Please provide a filename\n" unless $file;
 
-my @lines = read_file($file);
+my @lines = path($file)->lines_utf8;
 
 foreach my $line (@lines) {
     my ($param, $data) = ($line =~ /^([^:]*): (.*)/);
