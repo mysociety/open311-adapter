@@ -3,4 +3,4 @@ Rutland:
   credentials: ''
 
 min_log_level: 'error'
-logfile: '/path/to/logfile'
+logfile: ''
