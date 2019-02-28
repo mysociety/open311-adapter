@@ -7,6 +7,8 @@ extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 with 'Open311::Endpoint::Role::ConfigFile';
 
+with 'Role::Logger';
+
 use Open311::Endpoint::Service::UKCouncil::Alloy;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::CanBeNonPublic;
@@ -270,6 +272,8 @@ sub get_service_request_updates {
     # updates to defects
     $updates = $self->fetch_updated_resources($self->config->{defect_resource_name}, $args->{start_date});
     for my $update (@$updates) {
+        next if $self->is_ignored_category( $update );
+
         my $status = 'open';
         my $description = '';
         my $fms_id = '';
@@ -322,6 +326,74 @@ sub get_service_request_updates {
     }
 
     return @updates;
+}
+
+sub get_service_requests {
+    my ($self, $args) = @_;
+
+    my $requests = $self->fetch_updated_resources($self->config->{defect_resource_name}, $args->{start_date});
+    my @requests;
+    for my $request (@$requests) {
+        my %args;
+
+        next if $self->is_ignored_category( $request );
+
+        my $has_enquiry_parent = 0;
+        my $parents = $self->alloy->api_call('resource/' . $request->{resourceId} . '/parents')->{details}->{parents};
+        for my $parent (@$parents) {
+            next unless $parent->{actualParentSourceTypeId} == $self->config->{defect_inspection_parent_id}; # request for service
+
+            $has_enquiry_parent = 1;
+        }
+
+        next if $has_enquiry_parent;
+
+        my $category = $self->get_defect_category( $request );
+        unless ($category) {
+            warn "No category found for defect $request->{resourceId}, source type $request->{sourceTypeId} in " . $self->jurisdiction_id . "\n";
+            next;
+        }
+
+        $args{latlong} = $self->get_latlong_from_request($request);
+
+        unless ($args{latlong}) {
+            my $geometry = $request->{geometry}->{featureGeom}->{geometry};
+            $self->logger->error("Defect $request->{resourceId}: don't know how to handle geometry: $geometry->{type}");
+            warn "Defect $request->{resourceId}: don't know how to handle geometry: $geometry->{type}\n";
+            next;
+        }
+
+        my $has_fixmystreet_id;
+        my @attributes = @{$request->{values}};
+        for my $att (@attributes) {
+
+            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{description}) {
+                $args{description}= $att->{value};
+            }
+            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{status}) {
+                $args{status} = $self->defect_status($att->{value});
+            }
+
+            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{fixmystreet_id}) {
+                $has_fixmystreet_id = 1 if $att->{value};
+            }
+        }
+
+        next if $has_fixmystreet_id;
+
+        my $service = Open311::Endpoint::Service->new(
+            service_name => $category,
+            service_code => $category,
+        );
+        $args{title} = $request->{title};
+        $args{service} = $service;
+        $args{service_request_id} = $request->{resourceId};
+        $args{requested_datetime} = DateTime::Format::W3CDTF->new->parse_datetime( $request->{version}->{startDate})->truncate( to => 'second' );
+
+        push @requests, Open311::Endpoint::Service::Request::ExtendedStatus->new( %args );
+    }
+
+    return @requests;
 }
 
 sub fetch_updated_resources {
@@ -420,6 +492,65 @@ sub get_time_for_version {
     return $time;
 }
 
+sub get_latlong_from_request {
+    my ($self, $request) = @_;
+
+    my $latlong;
+
+    my $geometry = $request->{geometry}->{featureGeom}->{geometry};
+
+    if ( $geometry->{type} eq 'Point') {
+        $latlong = $self->deproject_coordinates($geometry->{coordinates}[0], $geometry->{coordinates}[1]);
+    } elsif ( $geometry->{type} eq 'LineString') {
+        my @points = @{ $geometry->{coordinates} };
+        my $half = int( @points / 2 );
+        $latlong = $self->deproject_coordinates($points[$half]->[0], $points[$half]->[1]);
+    } elsif ( $geometry->{type} eq 'Polygon') {
+        my @points = @{ $geometry->{coordinates}->[0] };
+        my ($max_x, $max_y, $min_x, $min_y) = ($points[0]->[0], $points[0]->[1], $points[0]->[0], $points[0]->[1]);
+        foreach my $point ( @points ) {
+            $max_x = $point->[0] if $point->[0] > $max_x;
+            $max_y = $point->[1] if $point->[1] > $max_y;
+
+            $min_x = $point->[0] if $point->[0] < $min_x;
+            $min_y = $point->[1] if $point->[1] < $min_y;
+        }
+        my $x = $min_x + ( ( $max_x - $min_x ) / 2 );
+        my $y = $min_y + ( ( $max_y - $min_y ) / 2 );
+        $latlong = $self->deproject_coordinates($x, $y);
+    }
+
+    return $latlong;
+}
+
+sub is_ignored_category {
+    my ($self, $defect) = @_;
+
+    return grep { $defect->{sourceTypeId} eq $_ } @{ $self->config->{ ignored_defect_types } };
+}
+
+sub get_defect_category {
+    my ($self, $defect) = @_;
+    my $mapping = $self->config->{defect_sourcetype_category_mapping}->{ $defect->{sourceTypeId} };
+
+    my $category = $mapping->{default};
+
+    if ( $mapping->{types} ) {
+        my @attributes = @{$defect->{values}};
+        my $type;
+
+        for my $att (@attributes) {
+            if ($att->{attributeCode} =~ /DEFECT_TYPE/ ) {
+                $type = $att->{value}->{values}->[0]->{resourceId};
+            }
+        }
+
+        $category = $mapping->{types}->{$type} if $mapping->{types}->{$type};
+    }
+
+    return $category;
+}
+
 sub process_attributes {
     my ($self, $source, $args) = @_;
 
@@ -484,6 +615,19 @@ sub reproject_coordinates {
     });
 
     return [ $point->{x}, $point->{y} ];
+}
+
+sub deproject_coordinates {
+    my ($self, $lon, $lat) = @_;
+
+    my $point = $self->alloy->api_call("projection/point", {
+        x => $lon,
+        y => $lat,
+        dstCode => "4326",
+        srcCode => "900913",
+    });
+
+    return [ $point->{y}, $point->{x} ];
 }
 
 sub upload_attachments {

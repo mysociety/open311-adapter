@@ -1,0 +1,1697 @@
+{
+  "totalHits": 8,
+  "searchTime": 237,
+  "page": 1,
+  "totalPages": 1,
+  "results": [
+    {
+      "colour": "#AAC6Df",
+      "geometry": {
+        "digiLength": null,
+        "lod16BboxIntMaxX": -83,
+        "lod16BboxIntMaxY": -11264,
+        "lod16BboxIntMinX": -84,
+        "lod16BboxIntMinY": -11266,
+        "featureGeom": {
+          "type": "Feature",
+          "id": "4947502",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                -50256.5,
+                6887543.2
+              ],
+              [
+                -50277.8,
+                6887620.7
+              ],
+              [
+                -50286.1,
+                6887641.2
+              ],
+              [
+                -50307.6,
+                6887676.9
+              ],
+              [
+                -50367.6,
+                6887752.6
+              ],
+              [
+                -50469.7,
+                6887860.7
+              ],
+              [
+                -50535.8,
+                6887942.6
+              ],
+              [
+                -50837,
+                6888350.8
+              ],
+              [
+                -51017.6,
+                6888635.3
+              ],
+              [
+                -51064.2,
+                6888713.9
+              ],
+              [
+                -51074.3,
+                6888736.6
+              ],
+              [
+                -51086.2,
+                6888786
+              ],
+              [
+                -51089.5,
+                6888853
+              ],
+              [
+                -51091.3,
+                6888866.4
+              ],
+              [
+                -51096.2,
+                6888875.8
+              ]
+            ]
+          },
+          "properties": {},
+          "crs": {
+            "properties": {
+              "name": "EPSG:900913"
+            },
+            "type": "name"
+          }
+        }
+      },
+      "itemId": 5028111,
+      "resourceId": 4947502,
+      "sourceId": 2120,
+      "sourceTypeId": 1000807,
+      "title": "DEF-00199143",
+      "values": [
+        {
+          "attributeId": 1000594,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_ADDITIONAL_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1009999,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_FIXMYSTREET_ID",
+          "value": "10034"
+        },
+        {
+          "attributeId": 1000603,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_REPORTED_DATE",
+          "value": "2019-02-19T09:10:00.000Z"
+        },
+        {
+          "attributeId": 1000604,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_STATUS",
+          "value": 1001024
+        },
+        {
+          "attributeId": 1003788,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_NUMBER",
+          "value": "DEF-00199143"
+        },
+        {
+          "attributeId": 1006417,
+          "attributeCode": "STU_DEFECT_ST_USER_FLOODING_ATT_LOCATION_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1006419,
+          "attributeCode": "STU_DEFECT_ST_USER_FLOODING_ATT_PERM_REPAIR_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1011114,
+          "attributeCode": "STU_DEFECT_ST_USER_FLOODING_ATT_ACTIVITY_CODE",
+          "value": "FL"
+        },
+        {
+          "attributeId": 1005772,
+          "attributeCode": "STU_DEFECT_ST_USER_FLOODING_ATT_TEAM_MEMBERS",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298176,
+                "resourceId": 4838726,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005773,
+          "attributeCode": "STU_DEFECT_ST_USER_FLOODING_ATT_DEFECT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298177,
+                "resourceId": 1828913,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005774,
+          "attributeCode": "STU_DEFECT_ST_USER_FLOODING_ATT_TREATMENT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298178,
+                "resourceId": 1828441,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005775,
+          "attributeCode": "STU_DEFECT_ST_USER_FLOODING_ATT_REPAIR_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298179,
+                "resourceId": 1147461,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005776,
+          "attributeCode": "STU_DEFECT_ST_USER_FLOODING_ATT_PRIORITIES",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298180,
+                "resourceId": 745874,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005778,
+          "attributeCode": "STU_DEFECT_ST_USER_FLOODING_ATT_XSP",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298181,
+                "resourceId": 1147463,
+                "sourceId": null
+              }
+            ]
+          }
+        }
+      ],
+      "version": {
+        "currentSystemVersionId": 271877,
+        "endDate": "9999-12-31T00:00:00.000Z",
+        "endSystemVersionId": null,
+        "resourceSystemVersionId": 271877,
+        "startDate": "2019-02-19T09:11:08.240Z",
+        "startSystemVersionId": 271877,
+        "usedDate": "2019-02-26T16:28:53.881Z",
+        "usedSystemVersionId": 272132
+      }
+    },
+    {
+      "colour": "#AAC6Df",
+      "geometry": {
+        "digiLength": null,
+        "lod16BboxIntMaxX": -83,
+        "lod16BboxIntMaxY": -11264,
+        "lod16BboxIntMinX": -84,
+        "lod16BboxIntMinY": -11266,
+        "featureGeom": {
+          "type": "Feature",
+          "id": "4947503",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                -50256.5,
+                6887543.2
+              ],
+              [
+                -50277.8,
+                6887620.7
+              ],
+              [
+                -50286.1,
+                6887641.2
+              ],
+              [
+                -50307.6,
+                6887676.9
+              ],
+              [
+                -50367.6,
+                6887752.6
+              ],
+              [
+                -50469.7,
+                6887860.7
+              ],
+              [
+                -50535.8,
+                6887942.6
+              ],
+              [
+                -50837,
+                6888350.8
+              ],
+              [
+                -51017.6,
+                6888635.3
+              ],
+              [
+                -51064.2,
+                6888713.9
+              ],
+              [
+                -51074.3,
+                6888736.6
+              ],
+              [
+                -51086.2,
+                6888786
+              ],
+              [
+                -51089.5,
+                6888853
+              ],
+              [
+                -51091.3,
+                6888866.4
+              ],
+              [
+                -51096.2,
+                6888875.8
+              ]
+            ]
+          },
+          "properties": {},
+          "crs": {
+            "properties": {
+              "name": "EPSG:900913"
+            },
+            "type": "name"
+          }
+        }
+      },
+      "itemId": 5028112,
+      "resourceId": 4947503,
+      "sourceId": 2121,
+      "sourceTypeId": 1000808,
+      "title": "DEF-00199144",
+      "values": [
+        {
+          "attributeId": 1000594,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_ADDITIONAL_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1000603,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_REPORTED_DATE",
+          "value": "2019-02-19T11:21:00.000Z"
+        },
+        {
+          "attributeId": 1000604,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_STATUS",
+          "value": 1001024
+        },
+        {
+          "attributeId": 1003788,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_NUMBER",
+          "value": "DEF-00199144"
+        },
+        {
+          "attributeId": 1006423,
+          "attributeCode": "STU_DEFECT_ST_USER_GRASSED_AREAS_ATT_LOCATION_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1006425,
+          "attributeCode": "STU_DEFECT_ST_USER_GRASSED_AREAS_ATT_PERM_REPAIR_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1011118,
+          "attributeCode": "STU_DEFECT_ST_USER_GRASSED_AREAS_ATT_ACTIVITY_CODE",
+          "value": "GA"
+        },
+        {
+          "attributeId": 1005786,
+          "attributeCode": "STU_DEFECT_ST_USER_GRASSED_AREAS_ATT_TEAM_MEMBERS",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298183,
+                "resourceId": 4838726,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005787,
+          "attributeCode": "STU_DEFECT_ST_USER_GRASSED_AREAS_ATT_DEFECT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298184,
+                "resourceId": 1828976,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005788,
+          "attributeCode": "STU_DEFECT_ST_USER_GRASSED_AREAS_ATT_TREATMENT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298185,
+                "resourceId": 1828504,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005789,
+          "attributeCode": "STU_DEFECT_ST_USER_GRASSED_AREAS_ATT_REPAIR_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298186,
+                "resourceId": 1147462,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005790,
+          "attributeCode": "STU_DEFECT_ST_USER_GRASSED_AREAS_ATT_PRIORITIES",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298187,
+                "resourceId": 745874,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005792,
+          "attributeCode": "STU_DEFECT_ST_USER_GRASSED_AREAS_ATT_XSP",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298188,
+                "resourceId": 1147466,
+                "sourceId": null
+              }
+            ]
+          }
+        }
+      ],
+      "version": {
+        "currentSystemVersionId": 271878,
+        "endDate": "9999-12-31T00:00:00.000Z",
+        "endSystemVersionId": null,
+        "resourceSystemVersionId": 271878,
+        "startDate": "2019-02-19T11:22:12.097Z",
+        "startSystemVersionId": 271878,
+        "usedDate": "2019-02-26T16:28:53.881Z",
+        "usedSystemVersionId": 272132
+      }
+    },
+    {
+      "colour": "#AAC6Df",
+      "geometry": {
+        "digiLength": null,
+        "lod16BboxIntMaxX": -163,
+        "lod16BboxIntMaxY": -11211,
+        "lod16BboxIntMinX": -163,
+        "lod16BboxIntMinY": -11211,
+        "featureGeom": {
+          "type": "Feature",
+          "id": "4947504",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -99179,
+              6855395
+            ]
+          },
+          "properties": {},
+          "crs": {
+            "properties": {
+              "name": "EPSG:900913"
+            },
+            "type": "name"
+          }
+        }
+      },
+      "itemId": 5028113,
+      "resourceId": 4947504,
+      "sourceId": 2122,
+      "sourceTypeId": 1000809,
+      "title": "DEF-00199145",
+      "values": [
+        {
+          "attributeId": 1000594,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_ADDITIONAL_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1000603,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_REPORTED_DATE",
+          "value": "2019-02-19T11:25:00.000Z"
+        },
+        {
+          "attributeId": 1000604,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_STATUS",
+          "value": 1001024
+        },
+        {
+          "attributeId": 1003788,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_NUMBER",
+          "value": "DEF-00199145"
+        },
+        {
+          "attributeId": 1006429,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_LOCATION_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1006431,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_PERM_REPAIR_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1011198,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_ACTIVITY_CODE",
+          "value": "GB"
+        },
+        {
+          "attributeId": 1005800,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_TEAM_MEMBERS",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298190,
+                "resourceId": 4838726,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005801,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_DEFECT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298191,
+                "resourceId": 1829020,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005802,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_TREATMENT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298192,
+                "resourceId": 1828521,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005803,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_REPAIR_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298193,
+                "resourceId": 1147461,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005804,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_PRIORITIES",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298194,
+                "resourceId": 745874,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005806,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_XSP",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298195,
+                "resourceId": 1147465,
+                "sourceId": null
+              }
+            ]
+          }
+        }
+      ],
+      "version": {
+        "currentSystemVersionId": 271879,
+        "endDate": "9999-12-31T00:00:00.000Z",
+        "endSystemVersionId": null,
+        "resourceSystemVersionId": 271879,
+        "startDate": "2019-02-19T11:26:26.080Z",
+        "startSystemVersionId": 271879,
+        "usedDate": "2019-02-26T16:28:53.881Z",
+        "usedSystemVersionId": 272132
+      }
+    },
+    {
+      "colour": "#AAC6Df",
+      "geometry": {
+        "digiLength": null,
+        "lod16BboxIntMaxX": -229,
+        "lod16BboxIntMaxY": -11173,
+        "lod16BboxIntMinX": -229,
+        "lod16BboxIntMinY": -11173,
+        "featureGeom": {
+          "type": "Feature",
+          "id": "4947505",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -139472.7,
+              6832035.8
+            ]
+          },
+          "properties": {},
+          "crs": {
+            "properties": {
+              "name": "EPSG:900913"
+            },
+            "type": "name"
+          }
+        }
+      },
+      "itemId": 5028114,
+      "resourceId": 4947505,
+      "sourceId": 2318,
+      "sourceTypeId": 1000948,
+      "title": "DEF-00199146",
+      "values": [
+        {
+          "attributeId": 1000594,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_ADDITIONAL_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1000603,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_REPORTED_DATE",
+          "value": "2019-02-19T11:27:00.000Z"
+        },
+        {
+          "attributeId": 1000604,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_STATUS",
+          "value": 1001024
+        },
+        {
+          "attributeId": 1003788,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_NUMBER",
+          "value": "DEF-00199146"
+        },
+        {
+          "attributeId": 1006387,
+          "attributeCode": "STU_DEFECT_ST_USER_BUS_SHELTER_ATT_LOCATION_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1006389,
+          "attributeCode": "STU_DEFECT_ST_USER_BUS_SHELTER_ATT_PERM_REPAIR_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1011108,
+          "attributeCode": "STU_DEFECT_ST_USER_BUS_SHELTER_ATT_ACTIVITY_CODE",
+          "value": "SH"
+        },
+        {
+          "attributeId": 1005944,
+          "attributeCode": "STU_DEFECT_ST_USER_BUS_SHELTER_ATT_TEAM_MEMBERS",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298197,
+                "resourceId": 4838726,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005945,
+          "attributeCode": "STU_DEFECT_ST_USER_BUS_SHELTER_ATT_REPAIR_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298198,
+                "resourceId": 1147461,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005946,
+          "attributeCode": "STU_DEFECT_ST_USER_BUS_SHELTER_ATT_PRIORITIES",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298199,
+                "resourceId": 745874,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005948,
+          "attributeCode": "STU_DEFECT_ST_USER_BUS_SHELTER_ATT_XSP",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298200,
+                "resourceId": 1147463,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1007482,
+          "attributeCode": "STU_DEFECT_ST_USER_BUS_SHELTER_ATT_DEFECT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298201,
+                "resourceId": 1948803,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1007649,
+          "attributeCode": "STU_DEFECT_ST_USER_BUS_SHELTER_ATT_TREATMENT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298202,
+                "resourceId": 1955946,
+                "sourceId": null
+              }
+            ]
+          }
+        }
+      ],
+      "version": {
+        "currentSystemVersionId": 271880,
+        "endDate": "9999-12-31T00:00:00.000Z",
+        "endSystemVersionId": null,
+        "resourceSystemVersionId": 271880,
+        "startDate": "2019-02-19T11:29:16.287Z",
+        "startSystemVersionId": 271880,
+        "usedDate": "2019-02-26T16:28:53.881Z",
+        "usedSystemVersionId": 272132
+      }
+    },
+    {
+      "colour": "#AAC6Df",
+      "geometry": {
+        "digiLength": null,
+        "lod16BboxIntMaxX": -165,
+        "lod16BboxIntMaxY": -11196,
+        "lod16BboxIntMinX": -165,
+        "lod16BboxIntMinY": -11196,
+        "featureGeom": {
+          "type": "Feature",
+          "id": "4947581",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -100723.6,
+              6845956.9
+            ]
+          },
+          "properties": {},
+          "crs": {
+            "properties": {
+              "name": "EPSG:900913"
+            },
+            "type": "name"
+          }
+        }
+      },
+      "itemId": 5028261,
+      "resourceId": 4947581,
+      "sourceId": 2122,
+      "sourceTypeId": 1000809,
+      "title": "DEF-00199147",
+      "values": [
+        {
+          "attributeId": 1000594,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_ADDITIONAL_DESCRIPTION",
+          "value": "Is missing"
+        },
+        {
+          "attributeId": 1000603,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_REPORTED_DATE",
+          "value": "2019-02-21T11:44:00.000Z"
+        },
+        {
+          "attributeId": 1000604,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_STATUS",
+          "value": 1001026
+        },
+        {
+          "attributeId": 1003788,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_NUMBER",
+          "value": "DEF-00199147"
+        },
+        {
+          "attributeId": 1006429,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_LOCATION_DESCRIPTION",
+          "value": "on pavement"
+        },
+        {
+          "attributeId": 1009999,
+          "attributeCode": "STU_DEFECT_FIXMYSTREET_ID",
+          "value": "8000"
+        },
+        {
+          "attributeId": 1006431,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_PERM_REPAIR_DESCRIPTION",
+          "value": "provide new"
+        },
+        {
+          "attributeId": 1011198,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_ACTIVITY_CODE",
+          "value": "GB"
+        },
+        {
+          "attributeId": 1005800,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_TEAM_MEMBERS",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298346,
+                "resourceId": 743503,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005801,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_DEFECT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298347,
+                "resourceId": 1829023,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005802,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_TREATMENT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298348,
+                "resourceId": 1828523,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005803,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_REPAIR_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298349,
+                "resourceId": 1147462,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005804,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_PRIORITIES",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298350,
+                "resourceId": 745883,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005806,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_XSP",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298351,
+                "resourceId": 1147463,
+                "sourceId": null
+              }
+            ]
+          }
+        }
+      ],
+      "version": {
+        "currentSystemVersionId": 272052,
+        "endDate": "9999-12-31T00:00:00.000Z",
+        "endSystemVersionId": null,
+        "resourceSystemVersionId": 272052,
+        "startDate": "2019-02-21T11:50:39.963Z",
+        "startSystemVersionId": 272052,
+        "usedDate": "2019-02-26T16:28:53.881Z",
+        "usedSystemVersionId": 272132
+      }
+    },
+    {
+      "colour": "#AAC6Df",
+      "geometry": {
+        "digiLength": null,
+        "lod16BboxIntMaxX": -167,
+        "lod16BboxIntMaxY": -11191,
+        "lod16BboxIntMinX": -167,
+        "lod16BboxIntMinY": -11191,
+        "featureGeom": {
+          "type": "Feature",
+          "id": "4947596",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                -101578.4,
+                6843165.6
+              ],
+              [
+                -101635,
+                6843234.4
+              ]
+            ]
+          },
+          "properties": {},
+          "crs": {
+            "properties": {
+              "name": "EPSG:900913"
+            },
+            "type": "name"
+          }
+        }
+      },
+      "itemId": 5028297,
+      "resourceId": 4947596,
+      "sourceId": 2128,
+      "sourceTypeId": 1000815,
+      "title": "DEF-00199148",
+      "values": [
+        {
+          "attributeId": 1000594,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_ADDITIONAL_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1000603,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_REPORTED_DATE",
+          "value": "2019-02-21T14:28:00.000Z"
+        },
+        {
+          "attributeId": 1000604,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_STATUS",
+          "value": 1001026
+        },
+        {
+          "attributeId": 1003788,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_NUMBER",
+          "value": "DEF-00199148"
+        },
+        {
+          "attributeId": 1006450,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_LOCATION_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1006452,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_PERM_REPAIR_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1010043,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_REMEDIED_DATE",
+          "value": "2019-02-21T14:50:00.000Z"
+        },
+        {
+          "attributeId": 1011124,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_ACTIVITY_CODE",
+          "value": "MC"
+        },
+        {
+          "attributeId": 1005835,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_TEAM_MEMBERS",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298364,
+                "resourceId": 4838726,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005836,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_DEFECT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298365,
+                "resourceId": 1829148,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005838,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_REPAIR_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298366,
+                "resourceId": 1147461,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005839,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_PRIORITIES",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298367,
+                "resourceId": 745874,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005841,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_XSP",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298368,
+                "resourceId": 1147463,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1007314,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_TREATMENT_TYPE_MCR",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298369,
+                "resourceId": 1894711,
+                "sourceId": null
+              }
+            ]
+          }
+        }
+      ],
+      "version": {
+        "currentSystemVersionId": 272089,
+        "endDate": "9999-12-31T00:00:00.000Z",
+        "endSystemVersionId": null,
+        "resourceSystemVersionId": 272089,
+        "startDate": "2019-02-21T14:49:55.893Z",
+        "startSystemVersionId": 272089,
+        "usedDate": "2019-02-26T16:28:53.881Z",
+        "usedSystemVersionId": 272132
+      }
+    },
+    {
+      "colour": "#AAC6Df",
+      "geometry": {
+        "digiLength": null,
+        "lod16BboxIntMaxX": -165,
+        "lod16BboxIntMaxY": -11197,
+        "lod16BboxIntMinX": -165,
+        "lod16BboxIntMinY": -11197,
+        "featureGeom": {
+          "type": "Feature",
+          "id": "4947597",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -100764.8,
+              6846337.6
+            ]
+          },
+          "properties": {},
+          "crs": {
+            "properties": {
+              "name": "EPSG:900913"
+            },
+            "type": "name"
+          }
+        }
+      },
+      "itemId": 5028295,
+      "resourceId": 4947597,
+      "sourceId": 2122,
+      "sourceTypeId": 1000809,
+      "title": "DEF-00199149",
+      "values": [
+        {
+          "attributeId": 1000594,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_ADDITIONAL_DESCRIPTION",
+          "value": "fill"
+        },
+        {
+          "attributeId": 1000603,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_REPORTED_DATE",
+          "value": "2019-02-21T14:39:00.000Z"
+        },
+        {
+          "attributeId": 1000604,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_STATUS",
+          "value": 1001026
+        },
+        {
+          "attributeId": 1003788,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_NUMBER",
+          "value": "DEF-00199149"
+        },
+        {
+          "attributeId": 1006429,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_LOCATION_DESCRIPTION",
+          "value": "pavement"
+        },
+        {
+          "attributeId": 1006431,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_PERM_REPAIR_DESCRIPTION",
+          "value": "fill"
+        },
+        {
+          "attributeId": 1011198,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_ACTIVITY_CODE",
+          "value": "GB"
+        },
+        {
+          "attributeId": 1005800,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_TEAM_MEMBERS",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298377,
+                "resourceId": 743503,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005801,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_DEFECT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298378,
+                "resourceId": 1829021,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005802,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_TREATMENT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298379,
+                "resourceId": 1828522,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005803,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_REPAIR_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298380,
+                "resourceId": 1147462,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005804,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_PRIORITIES",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298381,
+                "resourceId": 745883,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005806,
+          "attributeCode": "STU_DEFECT_ST_USER_GRIT_BINS_X_ATT_XSP",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298382,
+                "resourceId": 1147465,
+                "sourceId": null
+              }
+            ]
+          }
+        }
+      ],
+      "version": {
+        "currentSystemVersionId": 272088,
+        "endDate": "9999-12-31T00:00:00.000Z",
+        "endSystemVersionId": null,
+        "resourceSystemVersionId": 272088,
+        "startDate": "2019-02-21T14:44:53.907Z",
+        "startSystemVersionId": 272088,
+        "usedDate": "2019-02-26T16:28:53.881Z",
+        "usedSystemVersionId": 272132
+      }
+    },
+    {
+      "colour": "#AAC6Df",
+      "geometry": {
+        "digiLength": null,
+        "lod16BboxIntMaxX": -131,
+        "lod16BboxIntMaxY": -11199,
+        "lod16BboxIntMinX": -131,
+        "lod16BboxIntMinY": -11199,
+        "featureGeom": {
+          "type": "Feature",
+          "id": "4947670",
+          "geometry": {
+            "type": "Point",
+            "coordinates": [
+              -79849.1,
+              6848126.5
+            ]
+          },
+          "properties": {},
+          "crs": {
+            "properties": {
+              "name": "EPSG:900913"
+            },
+            "type": "name"
+          }
+        }
+      },
+      "itemId": 5028385,
+      "resourceId": 4947670,
+      "sourceId": 2128,
+      "sourceTypeId": 1000815,
+      "title": "DEF-00199150",
+      "values": [
+        {
+          "attributeId": 1000594,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_ADDITIONAL_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1000603,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_REPORTED_DATE",
+          "value": "2019-02-26T14:52:00.000Z"
+        },
+        {
+          "attributeId": 1000604,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_STATUS",
+          "value": 1001024
+        },
+        {
+          "attributeId": 1003788,
+          "attributeCode": "GRP_DEFECT_STANDARD_ATT_DEFECT_NUMBER",
+          "value": "DEF-00199150"
+        },
+        {
+          "attributeId": 1006450,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_LOCATION_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1006451,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_SEMI-PERM_REPAIR_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1006452,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_PERM_REPAIR_DESCRIPTION",
+          "value": "test"
+        },
+        {
+          "attributeId": 1005835,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_TEAM_MEMBERS",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298599,
+                "resourceId": 4838726,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005836,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_DEFECT_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298600,
+                "resourceId": 1829148,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005838,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_REPAIR_TYPE",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298604,
+                "resourceId": 1147461,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005839,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_PRIORITIES",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298601,
+                "resourceId": 745874,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1005841,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_XSP",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298602,
+                "resourceId": 1147465,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1007314,
+          "attributeCode": "STU_DEFECT_ST_USER_MINOR_CARRIAGEWAY_REPAIRS_ATT_TREATMENT_TYPE_MCR",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298603,
+                "resourceId": 1894712,
+                "sourceId": null
+              }
+            ]
+          }
+        }
+      ],
+      "version": {
+        "currentSystemVersionId": 272131,
+        "endDate": "9999-12-31T00:00:00.000Z",
+        "endSystemVersionId": null,
+        "resourceSystemVersionId": 272131,
+        "startDate": "2019-02-26T14:54:17.317Z",
+        "startSystemVersionId": 272131,
+        "usedDate": "2019-02-26T16:28:53.881Z",
+        "usedSystemVersionId": 272132
+      }
+    }
+  ]
+}
