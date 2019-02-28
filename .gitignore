@@ -6,5 +6,5 @@ local
 /conf/httpd.conf
 /conf/httpd.conf.deployed
 /conf/council-*
-!/conf/council-*.example
+!/conf/council-*-example
 /t/open311/test.log
