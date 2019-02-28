@@ -72,7 +72,7 @@ sub _get_response {
 sub _send_request {
     my ($self, $req) = @_;
 
-    $self->logger->debug($req->url);
+    $self->logger->debug($req->url->as_string);
     $self->logger->debug($req->content);
 
     my $response = $self->_get_response($req);
