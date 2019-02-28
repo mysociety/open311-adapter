@@ -27,7 +27,7 @@ has '+identifier_types' => (
         return {
             jurisdiction_id => Open311::Endpoint::Schema->enum('//str', @$ids),
             # some service codes have spaces
-            service_code => { type => '/open311/regex', pattern => qr/^ [\w ]+ $/ax },
+            service_code => { type => '/open311/regex', pattern => qr/^ [\w_\- \/\(\)]+ $/ax },
         };
     },
 );

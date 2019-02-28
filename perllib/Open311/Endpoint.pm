@@ -295,7 +295,7 @@ sub dispatch_request {
         $self->call_api( GET_Service_List => $args );
     },
 
-    sub (GET + /services/* + ?*) {
+    sub (GET + /services/** + ?*) {
         my ($self, $service_id, $args) = @_;
         $self->call_api( GET_Service_Definition => $service_id, $args );
     },
