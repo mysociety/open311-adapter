@@ -113,6 +113,14 @@ sub get_valuetype_mapping {
     return \%mapping;
 }
 
+sub get_parent_attributes {
+    my $self = shift;
+    my $source_type_id = shift;
+
+    # TODO: What's the correct behaviour if there's none?
+    return $self->api_call("source-type/$source_type_id/linked-source-types", { irgConfigCode => $self->config->{irg_config_code} });
+}
+
 sub get_sources {
     my $self = shift;
 
