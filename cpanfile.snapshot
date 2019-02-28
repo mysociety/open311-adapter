@@ -46,6 +46,12 @@ DISTRIBUTIONS
       Storable 0
       String::CRC32 0
       Time::HiRes 0
+  Class-Data-Inheritable-0.08
+    pathname: T/TM/TMTM/Class-Data-Inheritable-0.08.tar.gz
+    provides:
+      Class::Data::Inheritable 0.08
+    requirements:
+      ExtUtils::MakeMaker 0
   CPAN-Meta-2.150010
     pathname: D/DA/DAGOLDEN/CPAN-Meta-2.150010.tar.gz
     provides:
@@ -2216,6 +2222,21 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 6.30
       Sub::Exporter::Progressive 0
+  Sys-Syslog-0.35
+    pathname: S/SA/SAPER/Sys-Syslog-0.35.tar.gz
+    provides:
+      Sys::Syslog 0.35
+      Sys::Syslog::Win32 undef
+    requirements:
+      Carp 0
+      ExtUtils::MakeMaker 0
+      Fcntl 0
+      File::Basename 0
+      File::Spec 0
+      POSIX 0
+      Socket 0
+      Test::More 0
+      XSLoader 0
   Task-Weaken-1.04
     pathname: A/AD/ADAMK/Task-Weaken-1.04.tar.gz
     provides:
