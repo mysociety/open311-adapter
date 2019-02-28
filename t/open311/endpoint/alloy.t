@@ -91,6 +91,18 @@ $integration->mock('api_call', sub {
         push @sent, $body;
         if ( $call eq 'resource' ) {
             $content = '{ "resourceId": 12345 }';
+        } elsif ( $call eq 'search/resource-fetch' ) {
+            my $type = $body->{aqsNode}->{properties}->{entityCode};
+            my $time = $body->{aqsNode}->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
+            if ( $type =~ /DEFECT/ ) {
+                if ( $time =~ /2019-01-02/ ) {
+                    $content = path(__FILE__)->sibling('json/alloy/defect_search_all.json')->slurp;
+                } else {
+                    $content = path(__FILE__)->sibling('json/alloy/defect_search.json')->slurp;
+                }
+            } else {
+                $content = path(__FILE__)->sibling('json/alloy/inspect_search.json')->slurp;
+            }
         }
     } else {
         if ( $call eq 'reference/value-type' ) {
@@ -99,12 +111,22 @@ $integration->mock('api_call', sub {
             $content = path(__FILE__)->sibling('json/alloy/source_type.json')->slurp;
         } elsif ( $call eq 'source' ) {
             $content = path(__FILE__)->sibling('json/alloy/source.json')->slurp;
+        } elsif ( $call eq 'resource/3027029/parents' ) {
+            $content = '{ "details": { "parents": [] } }';
+        } elsif ( $call eq 'resource/3027029/versions' ) {
+            $content = path(__FILE__)->sibling('json/alloy/resource_versions.json')->slurp;
+        } elsif ( $call eq 'resource/4947502/versions' ) {
+            $content = path(__FILE__)->sibling('json/alloy/resource_versions_4947502.json')->slurp;
         } elsif ( $call eq 'resource/1' ) {
             $content = '{ "sourceTypeId": 800 }';
         } elsif ( $call eq 'source-type/800/linked-source-types' ) {
             $content = path(__FILE__)->sibling('json/alloy/linked_source_types.json')->slurp;
         } elsif ( $call eq 'projection/point' ) {
             $content = '{ "x": 1, "y": 2 }';
+        } elsif ( $call =~ m#resource/[0-9]*/parents# ) {
+            $content = '{ "details": { "parents": [] } }';
+        } elsif ( $call =~ m#resource/[0-9]*/versions# ) {
+            $content = path(__FILE__)->sibling('json/alloy/resource_versions_all.json')->slurp;
         } else {
             $content = $responses{$call};
         }
@@ -262,6 +284,36 @@ subtest "create problem with no resource_id" => sub {
             "service_request_id" => 12345
         } ], 'correct json returned';
 
+};
+
+subtest "check fetch updates" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'investigating',
+        service_request_id => '3027029',
+        description => '',
+        updated_datetime => '2014-01-01T11:59:40Z',
+        update_id => '271882',
+        media_url => '',
+    },
+    {
+        status => 'investigating',
+        service_request_id => '4947502',
+        description => '',
+        updated_datetime => '2019-02-19T09:11:08Z',
+        update_id => '271877',
+        media_url => '',
+        fixmystreet_id => '10034',
+    } ], 'correct json returned';
 };
 
 restore_time();

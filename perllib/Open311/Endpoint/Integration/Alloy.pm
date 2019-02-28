@@ -211,6 +211,174 @@ sub post_service_request {
 
 }
 
+sub get_service_request_updates {
+    my ($self, $args) = @_;
+
+    # updates to inspections
+    my $updates = $self->fetch_updated_resources($self->config->{inspection_resource_name}, $args->{start_date});
+
+    my @updates;
+
+    my $sources = $self->alloy->get_sources();
+    my $source = $sources->[0]; # XXX Only one for now!
+
+    for my $update (@$updates) {
+        # we only want updates to RFS inspections
+        next unless $update->{sourceTypeId} eq $source->{source_type_id};
+        my $status = 'open';
+        my $reason_for_closure = '';
+        my $description = '';
+        my @attributes = @{$update->{values}};
+        for my $att (@attributes) {
+            # these might be specific to each design so will probably need
+            # some config
+
+            # status
+            if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{status}) {
+                $status = $self->inspection_status($att->{value}->{values}[0]->{resourceId});
+            }
+
+            # reason for closure
+            if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{reason_for_closure}) {
+                $reason_for_closure = $att->{value}->{values}[0] ? $att->{value}->{values}[0]->{resourceId} : '' ;
+            }
+
+            if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{inspector_comments}) {
+                $description = $att->{value};
+            }
+        }
+
+        if ($reason_for_closure) {
+            $status = $self->get_status_with_closure($status, $reason_for_closure);
+        }
+
+        my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
+        my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' );
+
+        my %args = (
+            status => $status,
+            external_status_code => $reason_for_closure,
+            update_id => $update->{version}->{resourceSystemVersionId},
+            service_request_id => $update->{resourceId},
+            description => $description,
+            updated_datetime => $update_dt,
+        );
+
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
+    }
+
+    # updates to defects
+    $updates = $self->fetch_updated_resources($self->config->{defect_resource_name}, $args->{start_date});
+    for my $update (@$updates) {
+        my $status = 'open';
+        my $description = '';
+        my $fms_id = '';
+        my @attributes = @{$update->{values}};
+        for my $att (@attributes) {
+            # these might be specific to each design so will probably need
+            # some config
+            # TODO: check if we are pulling back in description. It's a mandatory field in Alloy
+            # so I suspect we should not be.
+            #if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{description}) {
+                #$description = $att->{value};
+            #}
+
+            # status
+            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{status}) {
+                $status = $self->defect_status($att->{value});
+            }
+
+            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{fixmystreet_id}) {
+                $fms_id = $att->{value};
+            }
+        }
+
+        my $service_request_id = $update->{resourceId};
+        my $parents = $self->alloy->api_call('resource/' . $update->{resourceId} . '/parents')->{details}->{parents};
+
+        # if it has a parent that is an enquiry get the resource id of the inspection and use that
+        # as the external id so updates are added to the report that created the inspection
+        for my $parent (@$parents) {
+            next unless $parent->{actualParentSourceTypeId} == $self->config->{defect_inspection_parent_id}; # request for service
+
+            $service_request_id = $parent->{parentResId};
+            $fms_id = undef;
+        }
+
+        my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
+        my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' );
+
+        my %args = (
+            status => $status,
+            update_id => $update->{version}->{resourceSystemVersionId},
+            service_request_id => $service_request_id,
+            description => $description,
+            updated_datetime => $update_dt,
+        );
+
+        $args{fixmystreet_id} = $fms_id if $fms_id;
+
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
+    }
+
+    return @updates;
+}
+
+sub fetch_updated_resources {
+    my ($self, $code, $start_date) = @_;
+
+    return $self->alloy->api_call('search/resource-fetch', undef, {
+        aqsNode => {
+            type => "FETCH",
+            properties => {
+                entityType => "SOURCE_TYPE_PROPERTY_VALUE",
+                entityCode => $code
+            },
+            children => [
+                {
+                    type => "GREATER_THAN",
+                    children => [
+                        {
+                            type => "RESOURCE_PROPERTY",
+                            properties => {
+                                resourcePropertyName => "lastEditDate"
+                            }
+                        },
+                        {
+                            type => "DATE",
+                            properties => {
+                                value => [
+                                    $start_date
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    })->{results};
+}
+
+sub inspection_status {
+    my ($self, $status) = @_;
+
+    return $self->config->{inspection_status_mapping}->{$status} || 'open';
+}
+
+sub get_status_with_closure {
+    my ($self, $status, $reason_for_closure) = @_;
+
+    return $status unless $status eq 'closed';
+
+    return $self->config->{inspection_closure_mapping}->{$reason_for_closure} || $status;
+}
+
+sub defect_status {
+    my ($self, $status) = @_;
+
+    return $self->config->{defect_status_mapping}->{$status} || 'open';
+}
+
 sub service_request_id_for_resource {
     my ($self, $resource) = @_;
 
@@ -219,6 +387,37 @@ sub service_request_id_for_resource {
     # This default behaviour just uses the resource ID which will always
     # be present.
     return $resource->{resourceId};
+}
+
+sub get_time_for_version {
+    my ($self, $resource_id, $version_id) = @_;
+
+    my $versions = $self->alloy->api_call("resource/$resource_id/versions");
+
+    # sometimes we don't seem to get back a matching version number in which case use
+    # the start time of the largest version that is smaller than the one we asked for.
+    # worst case scenario, fall back to the current time.
+    my $max = 0;
+    my $no_version = 1;
+    my $time;
+    for my $version ( @$versions ) {
+        if ($version->{currentSystemVersionId} eq $version_id) {
+            $time = $version->{startDate};
+            $no_version = 0;
+            last;
+        } elsif ( $version->{currentSystemVersionId} > $max && $version->{currentSystemVersionId} < $version_id ) {
+            $time = $version->{startDate};
+            $max = $version->{currentSystemVersionId};
+        }
+    }
+
+    $self->logger->debug("Failed to match version $version_id for resource $resource_id") if $no_version;
+
+    unless ( $time ) {
+        $time = DateTime::Format::W3CDTF->new->format_datetime( DateTime->now() );
+    }
+
+    return $time;
 }
 
 sub process_attributes {

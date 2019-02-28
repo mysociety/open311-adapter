@@ -192,6 +192,7 @@ sub format_updates {
                         qw/
                             external_status_code
                             customer_reference
+                            fixmystreet_id
                             /
                     ),
                     (
@@ -273,6 +274,7 @@ sub learn_additional_types {
             optional => {
                 external_status_code => '//str',
                 customer_reference => '//str',
+                fixmystreet_id => '//str',
             },
         }
     );

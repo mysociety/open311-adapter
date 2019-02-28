@@ -32,5 +32,10 @@ has customer_reference => (
     isa => Maybe[Str],
 );
 
+has fixmystreet_id => (
+    is => 'ro',
+    isa => Maybe[Str],
+);
+
 
 1;
