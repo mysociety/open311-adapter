@@ -48,105 +48,23 @@
       "Shelter Damaged": { "emergency": 0 },
       "Sign/Pole Damaged": { "emergency": 0 }
     },
-    "Drains": {
-      "resourceId": 6183641,
-      "Blocked - flooding private property": { "emergency": 1 },
-      "Blocked - flooding road/path": { "emergency": 1 },
-      "Blocked/Damaged": { "emergency": 0 },
-      "Blocked Ditch": { "emergency": 1 },
-      "Blocked Ditch Causing Flooding": { "emergency": 0 },
-    },
     "Highway Bridges": {
       "resourceId": 6183643,
-      "Highway Bridgers - Damaged/Unsafe": { "emergency": 1 },
+      "Highway Bridges - Damaged/Unsafe": { "emergency": 1 },
     },
     "Drain Covers": {
       "resourceId": 6183640,
       "Loose / Raised/Sunken": { "emergency": 0 },
       "Broken / Missing": { "emergency": 1 },
     },
-    "Footway/Footpath": {
-      "resourceId": 6183642,
-      "Obstruction (Not Vegetation)": { "emergency": 0 },
-      "Pothole / Failed Reinstatement": { "emergency": 0 },
-      "Slabs - Uneven / Damaged / Cracked": { "emergency": 0 },
-      "Slabs - Missing": { "emergency": 1 },
-    },
     "Kerbs": {
       "resourceId": 6183644,
       "Damaged/Loose": { "emergency": 0 },
       "Missing": { "emergency": 1 },
     },
-    "Crash Barriers": {
-      "resourceId": 6183639,
-      "Crash Barriers - Damaged / Missing": { "emergency": 0 },
-    },
-    "Pedestrian Barriers": {
-      "resourceId": 6183645,
-      "Pedestrian Barriers - Damaged / Missing": { "emergency": 0 },
-    },
-    "Rights of Way": {
-      "resourceId": 6183646,
-      "Bridge-Damaged/ Missing": { "emergency": 0 },
-      "Gate - Damaged/ Missing": { "emergency": 0 },
-      "Livestock": { "emergency": 0 },
-      "Passage-Obstructed/Overgrown": { "emergency": 0 },
-      "Sign/Waymarking - Damaged/Missing": { "emergency": 0 },
-      "Stile-Damaged/Missing": { "emergency": 0 },
-    },
-    "Road Markings": {
-      "resourceId": 6183647,
-      "Road Markings - Worn/Faded": { "emergency": 0 },
-    },
-    "Roads": {
-      "resourceId": 6183648,
-      "Damaged Speed Humps": { "emergency": 0 },
-      "Flooding": { "emergency": 1 },
-      "Mud on Road": { "emergency": 1 },
-      "Potholes / Highway Condition": { "emergency": 0 },
-      "Spill - Oil/Diesel": { "emergency": 1 },
-    },
-    "Safety Bollard": {
-      "resourceId": 6183649,
-      "Safety Bollard - Damaged/Missing": { "emergency": 0 },
-    },
-    "Sign": {
-      "resourceId": 6183650,
-        "Damaged / Missing / Facing Wrong Way": { "emergency": 0 },
-        "Obscured by vegetation or Dirty": { "emergency": 0 },
-    },
-    "Traffic Signals / Crossings": {
-      "resourceId": 6183651,
-      "Damaged/Exposed Wiring / Vandalised": { "emergency": 0 },
-      "Lamp/Bulb Failure": { "emergency": 0 },
-      "Signal Failure": { "emergency": 0 },
-      "Signal Failure all out": { "emergency": 0 },
-      "Signal Stuck": { "emergency": 0 },
-      "Signal Head Failure": { "emergency": 0 },
-      "Request Timing Review": { "emergency": 0 },
-      "Damaged Control box": { "emergency": 0 },
-      "Signal Failure/Damaged - Toucan/Pelican": { "emergency": 0 },
-    },
-    "Vegetation": {
-      "resourceId": 6183652,
-      "Fallen Tree": { "emergency": 0 },
-      "Restricted Visibility / Overgrown / Overhanging": { "emergency": 0 },
-      "Restricted Visibility": { "emergency": 0 },
-      "Weeds": { "emergency": 0 },
-    },
-      "Verges": {
-      "resourceId": 6183653,
-      "Verges - Damaged by Vehicles": { "emergency": 0 },
-    },
-    "Winter Maintenance": {
-      "resourceId": 6183654,
-        "Grit Bin - damaged/replacement": { "emergency": 0 },
-        "Grit Bin - empty/refill": { "emergency": 0 },
-        "Icy Footpath": { "emergency": 0 },
-        "Icy Road": { "emergency": 0 },
-        "Missed published Gritted Route": { "emergency": 0 },
-    },
   },
+
+  "emergency_text": "This is an emergency",
 
   # Some resource attributes always have the same values when sent to Alloy
   "resource_attribute_defaults": {

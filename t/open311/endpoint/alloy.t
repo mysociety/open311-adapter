@@ -374,6 +374,196 @@ subtest "check fetch problem" => sub {
    }], "correct json returned";
 };
 
+subtest "check fetch service description" => sub {
+    my $res = $endpoint->run_test_request(
+      GET => '/services.json?jurisdiction_id=dummy',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        service_code => 'Bus Stops_Shelter Damaged',
+        service_name => "Shelter Damaged",
+        description => "Shelter Damaged",
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        group => "Bus Stops"
+    },
+    {
+        service_code => 'Bus Stops_Sign/Pole Damaged',
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        group => "Bus Stops",
+        service_name => "Sign/Pole Damaged",
+        description => "Sign/Pole Damaged"
+    },
+    {
+        service_code => 'Drain Covers_Broken / Missing',
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        group => "Drain Covers",
+        service_name => "Broken / Missing",
+        description => "Broken / Missing"
+    },
+    {
+        service_code => 'Drain Covers_Loose / Raised/Sunken',
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        group => "Drain Covers",
+        service_name => "Loose / Raised/Sunken",
+        description => "Loose / Raised/Sunken"
+    },
+    {
+        service_code => 'Highway Bridges_Highway Bridges - Damaged/Unsafe',
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        group => "Highway Bridges",
+        service_name => "Highway Bridges - Damaged/Unsafe",
+        description => "Highway Bridges - Damaged/Unsafe"
+    },
+    {
+        service_code => 'Kerbs_Damaged/Loose',
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        group => "Kerbs",
+        service_name => "Damaged/Loose",
+        description => "Damaged/Loose"
+    },
+    {
+        service_code => 'Kerbs_Missing',
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        group => "Kerbs",
+        service_name => "Missing",
+        description => "Missing"
+    } ], 'correct json returned';
+};
+
+subtest "check fetch service metadata" => sub {
+    my $res = $endpoint->run_test_request(
+      GET => '/services/Highway%20Bridges_Highway%20Bridges%20-%20Damaged/Unsafe.json?jurisdiction_id=dummy',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    {
+        service_code => "Highway Bridges_Highway Bridges - Damaged/Unsafe",
+        attributes => [
+          {
+            variable => 'false',
+            code => "easting",
+            datatype => "number",
+            required => 'true',
+            datatype_description => '',
+            order => 1,
+            description => "easting",
+            automated => 'server_set',
+          },
+          {
+            variable => 'false',
+            code => "northing",
+            datatype => "number",
+            required => 'true',
+            datatype_description => '',
+            order => 2,
+            description => "northing",
+            automated => 'server_set',
+          },
+          {
+            variable => 'false',
+            code => "fixmystreet_id",
+            datatype => "string",
+            required => 'true',
+            datatype_description => '',
+            order => 3,
+            description => "external system ID",
+            automated => 'server_set',
+          },
+          {
+            variable => 'true',
+            code => "report_url",
+            datatype => "string",
+            required => 'true',
+            datatype_description => '',
+            order => 4,
+            description => "Report URL",
+            automated => 'server_set',
+          },
+          {
+            variable => 'true',
+            code => "title",
+            datatype => "string",
+            required => 'true',
+            datatype_description => '',
+            order => 5,
+            description => "Title",
+            automated => 'server_set',
+          },
+          {
+            variable => 'true',
+            code => "description",
+            datatype => "text",
+            required => 'true',
+            datatype_description => '',
+            order => 6,
+            description => "Description",
+            automated => 'server_set',
+          },
+          {
+            variable => 'true',
+            code => "category",
+            datatype => "text",
+            required => 'true',
+            datatype_description => '',
+            order => 7,
+            description => "Category",
+            automated => 'server_set',
+          },
+          {
+            variable => 'true',
+            code => "asset_resource_id",
+            datatype => "text",
+            required => 'true',
+            datatype_description => '',
+            order => 8,
+            description => "Asset resource ID",
+            automated => 'hidden_field',
+          },
+          {
+            variable => 'true',
+            code => "1010927",
+            datatype => "string",
+            required => 'false',
+            datatype_description => '',
+            order => 9,
+            description => "FMS Contact",
+            automated => 'server_set',
+          },
+          {
+            variable => 'false',
+            code => "emergency",
+            datatype => "text",
+            required => 'false',
+            datatype_description => '',
+            order => 10,
+            description => "This is an emergency",
+          },
+        ]
+    }, 'correct json returned';
+};
 
 restore_time();
 done_testing;
