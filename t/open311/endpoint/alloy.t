@@ -328,7 +328,7 @@ subtest "check fetch problem" => sub {
 
     is_deeply decode_json($res->content),
     [{
-      updated_datetime => "2014-01-01T12:00:00Z",
+      updated_datetime => "2019-02-19T11:26:26Z",
       service_code => "Grit Bin - damaged/replacement",
       requested_datetime => "2019-02-19T11:26:26Z",
       long => 1,
@@ -346,7 +346,7 @@ subtest "check fetch problem" => sub {
       long => 1,
       requested_datetime => "2019-02-19T11:29:16Z",
       service_code => "Shelter Damaged",
-      updated_datetime => "2014-01-01T12:00:00Z",
+      updated_datetime => "2019-02-19T11:29:16Z",
       service_name => "Shelter Damaged",
       address_id => "",
       lat => 2,
@@ -369,7 +369,8 @@ subtest "check fetch problem" => sub {
       zipcode => "",
       requested_datetime => "2019-02-21T14:44:53Z",
       long => 1,
-      updated_datetime => "2014-01-01T12:00:00Z",
+      updated_datetime => "2019-02-21T14:44:53Z",
+      service_code => "Grit Bin - damaged/replacement",
       service_code => "Grit Bin - empty/refill"
    }], "correct json returned";
 };

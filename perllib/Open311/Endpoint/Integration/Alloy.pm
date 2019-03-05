@@ -389,6 +389,7 @@ sub get_service_requests {
         $args{service} = $service;
         $args{service_request_id} = $request->{resourceId};
         $args{requested_datetime} = DateTime::Format::W3CDTF->new->parse_datetime( $request->{version}->{startDate})->truncate( to => 'second' );
+        $args{updated_datetime} = DateTime::Format::W3CDTF->new->parse_datetime( $request->{version}->{startDate})->truncate( to => 'second' );
 
         push @requests, Open311::Endpoint::Service::Request::ExtendedStatus->new( %args );
     }
