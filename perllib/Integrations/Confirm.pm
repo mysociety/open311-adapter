@@ -37,6 +37,14 @@ has 'point_of_contact_code' => (
     default => sub { $_[0]->config->{point_of_contact_code} }
 );
 
+# Similar to enquiry_method_code/point_of_contact_code, if the Confirm endpoint requires a particular
+# CustomerTypeCode for NewEnquiry requests, override this in the subclass.
+# Valid values can be found by calling the GetCustomerLookup method on the endpoint.
+has 'customer_type_code' => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{customer_type_code} }
+);
+
 has 'server_timezone' => (
     is => 'lazy',
     default => sub { $_[0]->config->{server_timezone} }
@@ -273,6 +281,9 @@ sub NewEnquiry {
     }
     if (my $point_of_contact = $self->point_of_contact_code) {
         push @customer, SOAP::Data->name('PointOfContactCode' => SOAP::Utils::encode_data($point_of_contact))->type("");
+    }
+    if (my $customer_type = $self->customer_type_code) {
+        push @customer, SOAP::Data->name('CustomerTypeCode' => SOAP::Utils::encode_data($customer_type))->type("");
     }
     push @elements, SOAP::Data->name('EnquiryCustomer' => \SOAP::Data->value(@customer));
 
