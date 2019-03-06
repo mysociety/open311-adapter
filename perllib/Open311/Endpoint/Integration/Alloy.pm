@@ -292,7 +292,7 @@ sub get_service_request_updates {
                 $status = $self->defect_status($att->{value});
             }
 
-            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{fixmystreet_id}) {
+            if ($att->{attributeCode} =~ /_FIXMYSTREET_ID$/) {
                 $fms_id = $att->{value};
             }
         }
@@ -374,7 +374,7 @@ sub get_service_requests {
                 $args{status} = $self->defect_status($att->{value});
             }
 
-            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{fixmystreet_id}) {
+            if ($att->{attributeCode} =~ /_FIXMYSTREET_ID$/) {
                 $has_fixmystreet_id = 1 if $att->{value};
             }
         }
