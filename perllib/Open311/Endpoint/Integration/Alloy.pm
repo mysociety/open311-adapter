@@ -277,6 +277,7 @@ sub get_service_request_updates {
         my $status = 'open';
         my $description = '';
         my $fms_id = '';
+        my $linked_defect;
         my @attributes = @{$update->{values}};
         for my $att (@attributes) {
             # these might be specific to each design so will probably need
@@ -293,6 +294,7 @@ sub get_service_request_updates {
             }
 
             if ($att->{attributeCode} =~ /_FIXMYSTREET_ID$/) {
+                $linked_defect = 1;
                 $fms_id = $att->{value};
             }
         }
@@ -305,9 +307,13 @@ sub get_service_request_updates {
         for my $parent (@$parents) {
             next unless $parent->{actualParentSourceTypeId} == $self->config->{defect_inspection_parent_id}; # request for service
 
+            $linked_defect = 1;
             $service_request_id = $parent->{parentResId};
             $fms_id = undef;
         }
+
+        # we don't care about linked defects until they have been scheduled
+        next if $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
 
         my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
         my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' );

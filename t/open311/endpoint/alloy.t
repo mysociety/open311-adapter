@@ -306,7 +306,7 @@ subtest "check fetch updates" => sub {
         media_url => '',
     },
     {
-        status => 'investigating',
+        status => 'action_scheduled',
         service_request_id => '4947502',
         description => '',
         updated_datetime => '2019-02-19T09:11:08Z',
