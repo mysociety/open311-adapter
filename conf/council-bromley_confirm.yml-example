@@ -1,0 +1,24 @@
+{
+  "endpoint_url": "",
+  "username": "",
+  "password": "",
+  "tenant_id": "",
+  "server_timezone": "Europe/London",
+  "customer_type_code": "",
+  "point_of_contact_code": "",
+  "enquiry_method_code": "",
+
+  "service_whitelist": {},
+
+  "ignored_attributes": [],
+  "ignored_attribute_options": [],
+  "attribute_descriptions": {},
+  "attribute_overrides": {},
+
+  "forward_status_mapping": {}
+  "reverse_status_mapping": {
+ },
+  "default_site_code": "",
+  "cutoff_enquiry_date": "2019-03-14T09:00:00",
+
+}
