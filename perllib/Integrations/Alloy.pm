@@ -64,7 +64,7 @@ sub api_call {
         return decode_json($response->content);
     } else {
         $self->logger->error($call);
-        $self->logger->error(encode_json($body)) if $body and (ref $body eq 'HASHREF' || ref $body eq 'ARRAY');
+        $self->logger->error(encode_json($body)) if $body and (ref $body eq 'HASH' || ref $body eq 'ARRAY');
         $self->logger->error($response->content);
         try {
             my $json_response = decode_json($response->content);
