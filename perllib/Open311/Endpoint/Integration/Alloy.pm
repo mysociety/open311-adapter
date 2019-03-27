@@ -254,8 +254,10 @@ sub get_service_request_updates {
             $status = $self->get_status_with_closure($status, $reason_for_closure);
         }
 
-        my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
-        my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' );
+        # this is causing some odd race conditions with the lastupdate time of problems when we return them
+        #my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
+        #my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' );
+        my $update_dt = DateTime->now()->add( seconds => -20 );
 
         my %args = (
             status => $status,
@@ -315,8 +317,9 @@ sub get_service_request_updates {
         # we don't care about linked defects until they have been scheduled
         next if $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
 
-        my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
-        my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' );
+        #my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
+        #my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' );
+        my $update_dt = DateTime->now()->add( seconds => -20 );
 
         my %args = (
             status => $status,
