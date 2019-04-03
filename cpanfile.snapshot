@@ -2531,6 +2531,28 @@ DISTRIBUTIONS
       Test::SharedFork 0.29
       Time::HiRes 0
       perl 5.008001
+  Text-CSV-1.99
+    pathname: I/IS/ISHIGAKI/Text-CSV-1.99.tar.gz
+    provides:
+      Text::CSV 1.99
+      Text::CSV::ErrorDiag 1.99
+      Text::CSV_PP 1.99
+    requirements:
+      ExtUtils::MakeMaker 0
+      IO::Handle 0
+      Test::Harness 0
+      Test::More 0.71
+      perl 5.006001
+  Text-CSV_XS-1.39
+    pathname: H/HM/HMBRAND/Text-CSV_XS-1.39.tgz
+    provides:
+      Text::CSV_XS 1.39
+    requirements:
+      Config 0
+      ExtUtils::MakeMaker 0
+      IO::Handle 0
+      Test::More 0
+      XSLoader 0
   Text-Glob-0.09
     pathname: R/RC/RCLAMP/Text-Glob-0.09.tar.gz
     provides:
