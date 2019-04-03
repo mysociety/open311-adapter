@@ -123,6 +123,21 @@ $bexley_end->mock(endpoint_config => sub {
         },
     }
 });
+$bexley_end->mock(_get_csv => sub {
+    <<EOF;
+date_history,date_recorded,crno,request_type,stage_desc,ac1,date_cleared,inspection,lca,action_due,event_type,event_text,lca_desc,stage
+13/03/2019 07:31,12/03/2019,569810,HW,RECORDED,R,,NI1,N1,NI1MOB,,,,1
+14/03/2019 07:32,13/03/2019,569924,HW,CLEARED,R,14/03/2019,NI2,NI2MOB,,,,Filled,9
+17/04/2019 12:05,04/04/2019,560065,HW,RECORDED,R,,SI6,S6,SI6MOB,,,,1
+17/04/2019 12:05,04/04/2019,560064,HW,RECORDED,R,,SI6,PTC,PTC,,,,1
+17/04/2019 12:32,02/04/2019,560057,HW,RECORDED,R,,NI3,NI3MOB,PTS,,,,1
+17/04/2019 13:29,04/04/2019,560063,HW,RECORDED,R,,SI6,S5,NCR,,,,1
+17/04/2019 13:34,02/04/2019,560056,HW,RECORDED,R,,SI6,SI6MOB,SI6MOB,,,,1
+17/04/2019 13:49,17/04/2019,560067,HW,RECORDED,R,,SI4,S4,SI4MOB,,,,1
+17/04/2019 13:50,04/04/2019,560058,HW,RECORDED,R,,SI6,SI6MOB,IR,,,,1
+17/04/2019 14:08,04/04/2019,560062,HW,RECORDED,R,,SI5,NCR,NCR,,,,1
+EOF
+});
 
 use Open311::Endpoint::Integration::UK::Bexley;
 
@@ -354,6 +369,98 @@ subtest "POST update OK" => sub {
         [ {
             'update_id' => 456,
         } ], 'correct json returned';
+};
+
+subtest "GET updates OK" => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?start_date=2019-01-01T00:00:00Z&end_date=2020-01-01T00:00:00Z',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [
+           {
+              "update_id" => "569810_8f6f708f",
+              "updated_datetime" => "2019-03-13T07:31:00+00:00",
+              "service_request_id" => "569810",
+              "status" => "investigating",
+              "description" => "",
+              "media_url" => "",
+           },
+           {
+              "update_id" => "569924_039bb3e6",
+              "updated_datetime" => "2019-03-14T07:32:00+00:00",
+              "service_request_id" => "569924",
+              "status" => "fixed",
+              "description" => "",
+              "media_url" => "",
+           },
+           {
+              "update_id" => "560065_25c5a489",
+              "updated_datetime" => "2019-04-17T12:05:00+01:00",
+              "service_request_id" => "560065",
+              "status" => "investigating",
+              "description" => "",
+              "media_url" => "",
+           },
+           {
+              "update_id" => "560064_25c5a489",
+              "updated_datetime" => "2019-04-17T12:05:00+01:00",
+              "service_request_id" => "560064",
+              "status" => "action_scheduled",
+              "description" => "",
+              "media_url" => "",
+           },
+           {
+              "update_id" => "560057_2e8df8d9",
+              "updated_datetime" => "2019-04-17T12:32:00+01:00",
+              "service_request_id" => "560057",
+              "status" => "action_scheduled",
+              "description" => "",
+              "media_url" => "",
+           },
+           {
+              "update_id" => "560063_ceb1790d",
+              "updated_datetime" => "2019-04-17T13:29:00+01:00",
+              "service_request_id" => "560063",
+              "status" => "not_councils_responsibility",
+              "description" => "",
+              "media_url" => "",
+           },
+           {
+              "update_id" => "560056_c97962f2",
+              "updated_datetime" => "2019-04-17T13:34:00+01:00",
+              "service_request_id" => "560056",
+              "status" => "investigating",
+              "description" => "",
+              "media_url" => "",
+           },
+           {
+              "update_id" => "560067_c3faabad",
+              "updated_datetime" => "2019-04-17T13:49:00+01:00",
+              "service_request_id" => "560067",
+              "status" => "investigating",
+              "description" => "",
+              "media_url" => "",
+           },
+           {
+              "update_id" => "560058_840c808d",
+              "updated_datetime" => "2019-04-17T13:50:00+01:00",
+              "service_request_id" => "560058",
+              "status" => "internal_referral",
+              "description" => "",
+              "media_url" => "",
+           },
+           {
+              "update_id" => "560062_e922a171",
+              "updated_datetime" => "2019-04-17T14:08:00+01:00",
+              "service_request_id" => "560062",
+              "status" => "not_councils_responsibility",
+              "description" => "",
+              "media_url" => "",
+           }
+       ], 'correct json returned';
 };
 
 done_testing;
