@@ -3,9 +3,13 @@ package Open311::Endpoint::Integration::Symology;
 use v5.14;
 use warnings;
 
+use DateTime::Format::Strptime;
+use DateTime::Format::W3CDTF;
+use Digest::MD5 qw(md5_hex);
 use Moo;
 use Path::Tiny;
 use JSON::MaybeXS;
+use Text::CSV;
 use YAML::XS qw(LoadFile);
 use YAML::Logic;
 
@@ -20,6 +24,13 @@ use Open311::Endpoint::Service::UKCouncil::Symology;
 has jurisdiction_id => ( is => 'ro' );
 
 has endpoint_config => ( is => 'lazy' );
+
+has date_formatter => ( is => 'lazy', default => sub {
+    DateTime::Format::Strptime->new(
+        pattern => '%d/%m/%Y %H:%M',
+        time_zone => 'Europe/London',
+    );
+});
 
 sub _build_endpoint_config {
     my $self = shift;
@@ -36,6 +47,11 @@ has category_mapping => (
 has username => (
     is => 'lazy',
     default => sub { $_[0]->endpoint_config->{username} }
+);
+
+has update_urls => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{update_urls} }
 );
 
 # May want something like Confirm's service_assigned_officers
@@ -244,10 +260,88 @@ sub check_error {
     }
 }
 
+sub _get_csvs {
+    my $self = shift;
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+    my @csv_files = map { $ua->get($_) } @{$self->update_urls};
+    @csv_files = map { $_->content_ref } @csv_files;
+    return \@csv_files;
+}
+
 sub get_service_request_updates {
     my ($self, $args) = @_;
-    # TODO
-    return ();
+
+    my $w3c = DateTime::Format::W3CDTF->new;
+    my $start_time = $w3c->parse_datetime($args->{start_date});
+    my $end_time = $w3c->parse_datetime($args->{end_date});
+
+    my @updates;
+    my $csv_files = $self->_get_csvs;
+    foreach (@$csv_files) {
+        open my $fh, '<', $_;
+
+        my $csv = Text::CSV->new;
+        $csv->header($fh, { munge_column_names => {
+            "History Date/Time" => "date_history",
+        } });
+
+        while (my $row = $csv->getline_hr($fh)) {
+            my $dt = $self->date_formatter->parse_datetime($row->{date_history});
+            next unless $dt >= $start_time && $dt <= $end_time;
+
+            push @updates, $self->_process_csv_row($row);
+        }
+    }
+
+    return @updates;
+}
+
+sub _process_csv_row {
+    my ($self, $row) = @_;
+
+    my $dt = $self->date_formatter->parse_datetime($row->{date_history});
+
+    my $status = do {
+        my $maint_stage = $row->{'Maint. Stage'} || '';
+        my $action_due = $row->{'Action Due'} || '';
+        if ($maint_stage eq 'ORDERED') {
+            'investigating'
+        } elsif ($maint_stage eq 'COMMENCED' || $maint_stage eq 'ALLOCATED') {
+            'action_scheduled'
+        } elsif ($maint_stage =~ /COMPLETED|CLAIMED|APPROVED/) {
+            'fixed'
+        } elsif ($action_due eq 'CLEARREQ') {
+            'no_further_action'
+        } elsif ($action_due eq 'CR') {
+            'fixed'
+        } elsif ($action_due =~ /^[NS][1-6]$/) {
+            'in_progress'
+        } elsif ($action_due eq 'IR') {
+            'internal_referral'
+        } elsif ($action_due eq 'NCR') {
+            'not_councils_responsibility'
+        } elsif ($action_due =~ /^([NS]I[1-6]MOB|IPSGM|IGF|IABV)$/) {
+            'investigating'
+        } elsif ($action_due =~ /^PT[CS]$/) {
+            'action_scheduled'
+        } elsif ($row->{Stage} == 9) {
+            'IGNORE'
+        } else {
+            'open' # XXX Might want to maintain existing status?
+        }
+    };
+    return if $status eq 'IGNORE';
+
+    my $digest_key = join "-", map { $row->{$_} } sort keys %$row;
+    my $digest = substr(md5_hex($digest_key), 0, 8);
+    my $update_id = $row->{CRNo} . '_' . $digest;
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        status => $status,
+        update_id => $update_id,
+        service_request_id => $row->{CRNo}+0,
+        description => '', # lca description not used
+        updated_datetime => $dt,
+    );
 }
 
 1;
