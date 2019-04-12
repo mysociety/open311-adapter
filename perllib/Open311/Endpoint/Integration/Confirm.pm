@@ -137,6 +137,9 @@ service.
 This attribute should be an arrayref of Open311 service_code codes to mark as
 private.
 
+This also has the effect of marking fetched ServiceRequests for these services
+as non_public.
+
 =cut
 
 has private_services => (
@@ -573,6 +576,7 @@ sub get_service_requests {
     my %services = map {
         $_->{service_code} => $_
     } @services;
+    my %private_services = map { $_ => 1 } @{$self->private_services};
 
     my @enquiries = $integ->GetEnquiries(@enquiry_ids);
 
@@ -618,7 +622,7 @@ sub get_service_requests {
             status => $status,
         );
 
-        if ( $self->fetch_reports_private ) {
+        if ( $self->fetch_reports_private || $private_services{$code} ) {
             $args{non_public} = 1;
         }
 
