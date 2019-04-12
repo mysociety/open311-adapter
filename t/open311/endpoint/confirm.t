@@ -32,6 +32,19 @@ around BUILDARGS => sub {
 has integration_class => (is => 'ro', default => 'Integrations::Confirm::Dummy');
 sub jurisdiction_id { return 'dummy_private'; }
 
+package Open311::Endpoint::Integration::UK::DummyPrivateServices;
+use Path::Tiny;
+use Moo;
+extends 'Open311::Endpoint::Integration::Confirm';
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{jurisdiction_id} = 'dummy_private_services';
+    $args{config_file} = path(__FILE__)->sibling("confirm_private_services.yml")->stringify;
+    return $class->$orig(%args);
+};
+has integration_class => (is => 'ro', default => 'Integrations::Confirm::Dummy');
+sub jurisdiction_id { return 'dummy_private_services'; }
+
 package main;
 
 use strict;
@@ -55,7 +68,7 @@ $open311->mock(perform_request => sub {
     if ($op->name && $op->name eq 'GetEnquiryLookups') {
         return {
             OperationResponse => { GetEnquiryLookupsResponse => { TypeOfService => [
-                { ServiceCode => 'ABC', ServiceName => 'Graffiti', EnquirySubject => [ { SubjectCode => "DEF" } ] }
+                { ServiceCode => 'ABC', ServiceName => 'Graffiti', EnquirySubject => [ { SubjectCode => "DEF" } ] },
             ] } }
         };
     } elsif ( $op->name && $op->name eq 'GetEnquiry' ) {
@@ -363,6 +376,27 @@ XML
 
 # need to use this otherwise we get errors in GET_Service_Requests_output_schema
 $endpoint = Open311::Endpoint::Integration::UK->new;
+
+subtest "GET Service List - private services" => sub {
+    my $res = $endpoint->run_test_request( GET => '/services.xml?jurisdiction_id=dummy_private_services' );
+    ok $res->is_success, 'xml success';
+    my $expected = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<services>
+  <service>
+    <description>Flooding</description>
+    <group>Flooding &amp; Drainage</group>
+    <keywords>private</keywords>
+    <metadata>true</metadata>
+    <service_code>ABC_DEF</service_code>
+    <service_name>Flooding</service_name>
+    <type>realtime</type>
+  </service>
+</services>
+XML
+    is $res->content, $expected
+        or diag $res->content;
+};
 
 subtest 'GET reports' => sub {
     my $res = $endpoint->run_test_request(

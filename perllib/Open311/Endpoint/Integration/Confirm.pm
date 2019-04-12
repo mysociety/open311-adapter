@@ -128,6 +128,22 @@ has wrapped_services => (
     default => sub { undef }
 );
 
+=head2 private_services
+
+Some Confirm services should be marked as private in the Open311 service
+metadata. This is implemented by including 'private' in the keywords for the
+service.
+
+This attribute should be an arrayref of Open311 service_code codes to mark as
+private.
+
+=cut
+
+has private_services => (
+    is => 'ro',
+    default => sub { [] }
+);
+
 =head2 ignored_attributes
 
 Some Confirm attributes should never be published in the Open311 service
@@ -470,6 +486,7 @@ sub _services {
     my $available_attributes = $self->_parse_attributes($response);
 
     my %ignored_attribs = map { $_ => 1 } @{$self->ignored_attributes};
+    my %private_services = map { $_ => 1 } @{$self->private_services};
 
     my %services = ();
     for my $service (@$confirm_services) {
@@ -514,6 +531,7 @@ sub _services {
                 service_code => $code,
                 description => $name,
                 group => $group,
+                keywords => $private_services{$code} ? [qw/ private /] : [],
             );
             my $o311_service = $self->service_class->new(%service);
             for (@{$services{$code}->{attribs}}) {
