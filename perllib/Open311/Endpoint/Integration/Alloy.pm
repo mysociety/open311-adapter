@@ -337,8 +337,12 @@ sub get_service_request_updates {
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
 
+    $self->get_historic_updates(\@updates, $args->{start_date});
+
     return @updates;
 }
+
+sub get_historic_updates {}
 
 sub get_service_requests {
     my ($self, $args) = @_;
