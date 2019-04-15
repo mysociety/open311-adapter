@@ -52,6 +52,20 @@ has integration_class => (is => 'ro', default => 'Integrations::Alloy::Dummy');
 sub jurisdiction_id { return 'dummy'; }
 has service_request_content => (is => 'ro', default => '/open311/service_request_extended');
 
+package Open311::Endpoint::Integration::UK::NCC;
+use Path::Tiny;
+use Moo;
+extends 'Open311::Endpoint::Integration::UK::Northamptonshire';
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{jurisdiction_id} = 'ncc';
+    $args{config_file} = path(__FILE__)->sibling("alloy.yml")->stringify;
+    return $class->$orig(%args);
+};
+has integration_class => (is => 'ro', default => 'Integrations::Alloy::Dummy');
+sub jurisdiction_id { return 'ncc'; }
+has service_request_content => (is => 'ro', default => '/open311/service_request_extended');
+
 package main;
 
 use strict; use warnings;
@@ -99,6 +113,12 @@ $integration->mock('api_call', sub {
                     $content = path(__FILE__)->sibling('json/alloy/defect_search_all.json')->slurp;
                 } else {
                     $content = path(__FILE__)->sibling('json/alloy/defect_search.json')->slurp;
+                }
+            } elsif ( $type =~ /MIGRATED/ ) {
+                if ( $time =~ /2019-01-01/ ) {
+                    $content = path(__FILE__)->sibling('json/alloy/historic_search_updated.json')->slurp;
+                } else {
+                    $content = path(__FILE__)->sibling('json/alloy/historic_search.json')->slurp;
                 }
             } else {
                 $content = path(__FILE__)->sibling('json/alloy/inspect_search.json')->slurp;
@@ -578,6 +598,108 @@ subtest "check fetch service metadata" => sub {
           },
         ]
     }, 'correct json returned';
+};
+
+subtest "check fetch historic reports" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z&historic=true',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content), [], 'default integration returns no historic reports';
+};
+
+subtest "check fetch northamptonshire historic reports" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/requests.json?jurisdiction_id=ncc&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z&historic=true',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [{
+      updated_datetime => "2018-11-19T07:24:08Z",
+      service_code => "Safety Bollard - Damaged/Missing",
+      requested_datetime => "2018-11-19T07:24:08Z",
+      long => 1,
+      address => "",
+      status => "in_progress",
+      media_url => "",
+      zipcode => "",
+      description => "Reflective keep left bollard on centre island demolished in RTC",
+      service_request_id => 959109,
+      lat => 2,
+      address_id => "",
+      service_name => "Safety Bollard - Damaged/Missing"
+   },
+   {
+      long => 1,
+      requested_datetime => "2018-11-19T07:28:16Z",
+      service_code => "Damaged / Missing / Facing Wrong Way",
+      updated_datetime => "2018-11-19T07:28:16Z",
+      service_name => "Damaged / Missing / Facing Wrong Way",
+      address_id => "",
+      lat => 2,
+      description => "Keep left arrows demolished / missing on centre island ",
+      service_request_id => 959110,
+      zipcode => "",
+      media_url => "",
+      status => "no_further_action",
+      address => ""
+   }], 'correct json returned';
+};
+
+subtest "check fetch updates including historic updates" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=ncc&start_date=2019-01-01T00:00:00Z&end_date=2019-01-01T02:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'investigating',
+        service_request_id => '3027029',
+        description => '',
+        updated_datetime => '2019-01-01T01:59:40Z',
+        update_id => '271882',
+        media_url => '',
+    },
+    {
+        status => 'action_scheduled',
+        service_request_id => '4947502',
+        description => '',
+        updated_datetime => '2019-01-01T01:59:40Z',
+        update_id => '271877',
+        media_url => '',
+        fixmystreet_id => '10034',
+    },
+    {
+        status => 'closed',
+        service_request_id => '959109',
+        description => '',
+        updated_datetime => '2019-01-01T01:59:40Z',
+        update_id => '270483',
+        media_url => '',
+    },
+    {
+        status => 'no_further_action',
+        service_request_id => '959110',
+        description => '',
+        updated_datetime => '2019-01-01T01:59:40Z',
+        update_id => '270485',
+        media_url => '',
+    } ], 'correct json returned';
 };
 
 restore_time();

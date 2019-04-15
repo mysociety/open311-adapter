@@ -1,0 +1,541 @@
+{
+    "totalHits": 2,
+    "searchTime": 437,
+    "page": 1,
+    "totalPages": 1,
+    "results": [
+        {
+            "colour": "#99cf22",
+            "geometry": {
+                "digiLength": null,
+                "lod16BboxIntMaxX": -111,
+                "lod16BboxIntMaxY": -11219,
+                "lod16BboxIntMinX": -111,
+                "lod16BboxIntMinY": -11219,
+                "featureGeom": {
+                    "type": "Feature",
+                    "id": "3408101",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            -67658.3,
+                            6860124.6
+                        ]
+                    },
+                    "properties": {},
+                    "crs": {
+                        "properties": {
+                            "name": "EPSG:900913"
+                        },
+                        "type": "name"
+                    }
+                }
+            },
+            "itemId": 3482876,
+            "resourceId": 3408101,
+            "sourceId": 2563,
+            "sourceTypeId": 1001142,
+            "title": "INS-00009915, 959109",
+            "values": [
+                {
+                    "attributeId": 1003787,
+                    "attributeCode": "GRP_INSPECTION_STANDARD_ATT_INSPECTION_NUMBER",
+                    "value": "INS-00009915"
+                },
+                {
+                    "attributeId": 1008012,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ADMIN_UNIT_NAME",
+                    "value": "NORTHAMPTONSHIRE COUNTY COUNCIL"
+                },
+                {
+                    "attributeId": 1008014,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_CATEGORY",
+                    "value": "RFS"
+                },
+                {
+                    "attributeId": 1008015,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_CATEGORY_DESCRIPTION",
+                    "value": "Request for Service"
+                },
+                {
+                    "attributeId": 1008016,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_CATEGORY_TYPE_DESCRIPTION",
+                    "value": "Damaged/Missing"
+                },
+                {
+                    "attributeId": 1008017,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_CLASS",
+                    "value": "SBOL"
+                },
+                {
+                    "attributeId": 1008018,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_CLASS_DESCRIPTION",
+                    "value": "Safety Bollard"
+                },
+                {
+                    "attributeId": 1008019,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_COMPLAINANT_FIRST_NAME",
+                    "value": "ANOTHER"
+                },
+                {
+                    "attributeId": 1008021,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_COMPLAINANT_SURNAME",
+                    "value": "USER"
+                },
+                {
+                    "attributeId": 1008082,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_COMPLAINANT_TITLE",
+                    "value": "MR"
+                },
+                {
+                    "attributeId": 1008150,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_DATE_RECORDED",
+                    "value": "2018-11-19T07:24:08.000Z"
+                },
+                {
+                    "attributeId": 1008152,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_DESCRIPTION",
+                    "value": "Reflective keep left bollard on centre island demolished in RTC"
+                },
+                {
+                    "attributeId": 1008153,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_EMAIL",
+                    "value": "user@example.com"
+                },
+                {
+                    "attributeId": 1008154,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ENQUIRY_CHANGED_BY",
+                    "value": "NCCSTAFF"
+                },
+                {
+                    "attributeId": 1008155,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ENQUIRY_ID",
+                    "value": "959109"
+                },
+                {
+                    "attributeId": 1008156,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ENQUIRY_RAISED_BY",
+                    "value": "Web User"
+                },
+                {
+                    "attributeId": 1008157,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ENQUIRY_REASON_DATE_CHANGED",
+                    "value": "2018-11-19T12:47:04.000Z"
+                },
+                {
+                    "attributeId": 1008158,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ENQUIRY_STATUS",
+                    "value": "WORKS INSTRUCTED"
+                },
+                {
+                    "attributeId": 1008159,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ENQUIRY_TYPE",
+                    "value": "DAMI"
+                },
+                {
+                    "attributeId": 1008161,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_FLAG",
+                    "value": "EM"
+                },
+                {
+                    "attributeId": 1008166,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_HOME",
+                    "value": ""
+                },
+                {
+                    "attributeId": 1008167,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_INCIDENT_DATE",
+                    "value": "2018-11-19T00:00:00.000Z"
+                },
+                {
+                    "attributeId": 1008168,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_LOCALITY",
+                    "value": "IRTHLINGBOROUGH"
+                },
+                {
+                    "attributeId": 1008169,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_LOCATION",
+                    "value": "FINEDON ROAD N/B CENTRAL ISLAND 20 METRES NORTH OF ADDINGTON ROAD (FINEDON ROAD,IRTHLINGBOROUGH)"
+                },
+                {
+                    "attributeId": 1008170,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_MOBILE",
+                    "value": ""
+                },
+                {
+                    "attributeId": 1008171,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_PRIORITY",
+                    "value": "5"
+                },
+                {
+                    "attributeId": 1008172,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_PRIORITY_DESCRIPTION",
+                    "value": "5 Working Days"
+                },
+                {
+                    "attributeId": 1008174,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_REASON_FOR_CHANGE",
+                    "value": "Works have been Instructed and will be undertaken within the next 3 months. Referred to Andy Hudson. "
+                },
+                {
+                    "attributeId": 1008177,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_RESPONSIBILITY_OF",
+                    "value": "NCC Staff"
+                },
+                {
+                    "attributeId": 1008178,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_SOURCE",
+                    "value": "W"
+                },
+                {
+                    "attributeId": 1008179,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_SOURCE_DESCRIPTION",
+                    "value": "Web Site"
+                },
+                {
+                    "attributeId": 1008180,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_STATUS_CODE",
+                    "value": "WI"
+                },
+                {
+                    "attributeId": 1008182,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_TARGET_DATE",
+                    "value": "2018-11-26T07:23:51.000Z"
+                },
+                {
+                    "attributeId": 1008183,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_TYPE",
+                    "value": "ENQUIRER"
+                },
+                {
+                    "attributeId": 1008184,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_WORK",
+                    "value": ""
+                },
+                {
+                    "attributeId": 1010137,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_NUMBER",
+                    "value": "28"
+                },
+                {
+                    "attributeId": 1010138,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_POSTAL_CODE",
+                    "value": "NN95SX"
+                },
+                {
+                    "attributeId": 1010139,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ROAD",
+                    "value": "CRCEA6   3/10603, , FINEDON ROAD N/B CENTRAL ISLAND 20 METRE"
+                },
+                {
+                    "attributeId": 1010140,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_STREET",
+                    "value": "FITZWILLIAM ROAD"
+                },
+                {
+                    "attributeId": 1010141,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_TOWN",
+                    "value": "WELLINGBOROUGH"
+                },
+                {
+                    "attributeId": 1001546,
+                    "attributeCode": "GRP_PROJECT_TASK_ATT_PROJECT_TASK_STATUS",
+                    "value": {
+                        "parentReferenceContainerId": null,
+                        "systemVersion": {
+                            "allReferencesId": null,
+                            "allResourcesId": null,
+                            "childSummaryId": null
+                        },
+                        "values": [
+                            {
+                                "referenceId": 295217,
+                                "resourceId": 6,
+                                "sourceId": null
+                            }
+                        ]
+                    }
+                }
+            ],
+            "version": {
+                "currentSystemVersionId": 270483,
+                "endDate": "9999-12-31T00:00:00.000Z",
+                "endSystemVersionId": null,
+                "resourceSystemVersionId": 270483,
+                "startDate": "2019-01-09T10:35:07.707Z",
+                "startSystemVersionId": 270483,
+                "usedDate": "2019-04-22T09:11:12.707Z",
+                "usedSystemVersionId": 279473
+            }
+        },
+        {
+            "colour": "#99cf22",
+            "geometry": {
+                "digiLength": null,
+                "lod16BboxIntMaxX": -124,
+                "lod16BboxIntMaxY": -11214,
+                "lod16BboxIntMinX": -124,
+                "lod16BboxIntMinY": -11214,
+                "featureGeom": {
+                    "type": "Feature",
+                    "id": "3408102",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            -75221.1,
+                            6856938.3
+                        ]
+                    },
+                    "properties": {},
+                    "crs": {
+                        "properties": {
+                            "name": "EPSG:900913"
+                        },
+                        "type": "name"
+                    }
+                }
+            },
+            "itemId": 3482879,
+            "resourceId": 3408102,
+            "sourceId": 2563,
+            "sourceTypeId": 1001142,
+            "title": "INS-00009916, 959110",
+            "values": [
+                {
+                    "attributeId": 1003787,
+                    "attributeCode": "GRP_INSPECTION_STANDARD_ATT_INSPECTION_NUMBER",
+                    "value": "INS-00009916"
+                },
+                {
+                    "attributeId": 1008012,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ADMIN_UNIT_NAME",
+                    "value": "NORTHAMPTONSHIRE COUNTY COUNCIL"
+                },
+                {
+                    "attributeId": 1008014,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_CATEGORY",
+                    "value": "RFS"
+                },
+                {
+                    "attributeId": 1008015,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_CATEGORY_DESCRIPTION",
+                    "value": "Request for Service"
+                },
+                {
+                    "attributeId": 1008016,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_CATEGORY_TYPE_DESCRIPTION",
+                    "value": "Damaged/Missing"
+                },
+                {
+                    "attributeId": 1008017,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_CLASS",
+                    "value": "SIGN"
+                },
+                {
+                    "attributeId": 1008018,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_CLASS_DESCRIPTION",
+                    "value": "Sign"
+                },
+                {
+                    "attributeId": 1008019,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_COMPLAINANT_FIRST_NAME",
+                    "value": "DIFFERENT"
+                },
+                {
+                    "attributeId": 1008021,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_COMPLAINANT_SURNAME",
+                    "value": "PERSON"
+                },
+                {
+                    "attributeId": 1008082,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_COMPLAINANT_TITLE",
+                    "value": "MR"
+                },
+                {
+                    "attributeId": 1008150,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_DATE_RECORDED",
+                    "value": "2018-11-19T07:28:16.000Z"
+                },
+                {
+                    "attributeId": 1008152,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_DESCRIPTION",
+                    "value": "Keep left arrows demolished / missing on centre island "
+                },
+                {
+                    "attributeId": 1008153,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_EMAIL",
+                    "value": "person@example.org"
+                },
+                {
+                    "attributeId": 1008154,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ENQUIRY_CHANGED_BY",
+                    "value": "NCCUSER"
+                },
+                {
+                    "attributeId": 1008155,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ENQUIRY_ID",
+                    "value": "959110"
+                },
+                {
+                    "attributeId": 1008156,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ENQUIRY_RAISED_BY",
+                    "value": "Web User"
+                },
+                {
+                    "attributeId": 1008157,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ENQUIRY_REASON_DATE_CHANGED",
+                    "value": "2018-11-19T13:05:47.000Z"
+                },
+                {
+                    "attributeId": 1008158,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ENQUIRY_STATUS",
+                    "value": "WORKS INSTRUCTED"
+                },
+                {
+                    "attributeId": 1008159,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ENQUIRY_TYPE",
+                    "value": "DAM"
+                },
+                {
+                    "attributeId": 1008161,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_FLAG",
+                    "value": "EM"
+                },
+                {
+                    "attributeId": 1008166,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_HOME",
+                    "value": ""
+                },
+                {
+                    "attributeId": 1008167,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_INCIDENT_DATE",
+                    "value": "2018-11-19T00:00:00.000Z"
+                },
+                {
+                    "attributeId": 1008168,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_LOCALITY",
+                    "value": "IRTHLINGBOROUGH"
+                },
+                {
+                    "attributeId": 1008169,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_LOCATION",
+                    "value": "FINEDON ROAD N/B 15 METRES SOUTH OF RIXON ROAD ON CENTRE ISLAND (FINEDON ROAD,WELLINGBOROUGH)"
+                },
+                {
+                    "attributeId": 1008170,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_MOBILE",
+                    "value": ""
+                },
+                {
+                    "attributeId": 1008171,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_PRIORITY",
+                    "value": "5"
+                },
+                {
+                    "attributeId": 1008172,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_PRIORITY_DESCRIPTION",
+                    "value": "5 Working Days"
+                },
+                {
+                    "attributeId": 1008174,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_REASON_FOR_CHANGE",
+                    "value": "Works were Instructed and will be undertaken within the next 3 months. Referred to Andy Hudson. "
+                },
+                {
+                    "attributeId": 1008177,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_RESPONSIBILITY_OF",
+                    "value": "NCC Staff"
+                },
+                {
+                    "attributeId": 1008178,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_SOURCE",
+                    "value": "W"
+                },
+                {
+                    "attributeId": 1008179,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_SOURCE_DESCRIPTION",
+                    "value": "Web Site"
+                },
+                {
+                    "attributeId": 1008180,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_STATUS_CODE",
+                    "value": "WI"
+                },
+                {
+                    "attributeId": 1008182,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_TARGET_DATE",
+                    "value": "2018-11-26T07:28:05.000Z"
+                },
+                {
+                    "attributeId": 1008183,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_TYPE",
+                    "value": "ENQUIRER"
+                },
+                {
+                    "attributeId": 1008184,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_WORK",
+                    "value": ""
+                },
+                {
+                    "attributeId": 1010137,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_NUMBER",
+                    "value": "28"
+                },
+                {
+                    "attributeId": 1010138,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_POSTAL_CODE",
+                    "value": "NN95SX"
+                },
+                {
+                    "attributeId": 1010139,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_ROAD",
+                    "value": "CRCWA51283/90370, , FINEDON ROAD N/B 15 METRES SOUTH OF RIXO"
+                },
+                {
+                    "attributeId": 1010140,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_STREET",
+                    "value": "FITZWILLIAM ROAD"
+                },
+                {
+                    "attributeId": 1010141,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_TOWN",
+                    "value": "WELLINGBOROUGH"
+                },
+                {
+                    "attributeId": 1001546,
+                    "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_REASON_FOR_CLOSURE",
+                    "value": 4281524
+                },
+                {
+                    "attributeId": 1001546,
+                    "attributeCode": "GRP_PROJECT_TASK_ATT_PROJECT_TASK_STATUS",
+                    "value": {
+                        "parentReferenceContainerId": null,
+                        "systemVersion": {
+                            "allReferencesId": null,
+                            "allResourcesId": null,
+                            "childSummaryId": null
+                        },
+                        "values": [
+                            {
+                                "referenceId": 295220,
+                                "resourceId": 6,
+                                "sourceId": null
+                            }
+                        ]
+                    }
+                }
+            ],
+            "version": {
+                "currentSystemVersionId": 270485,
+                "endDate": "9999-12-31T00:00:00.000Z",
+                "endSystemVersionId": null,
+                "resourceSystemVersionId": 270485,
+                "startDate": "2019-01-09T10:35:26.573Z",
+                "startSystemVersionId": 270485,
+                "usedDate": "2019-04-22T09:11:12.707Z",
+                "usedSystemVersionId": 279473
+            }
+        }
+    ]
+}
