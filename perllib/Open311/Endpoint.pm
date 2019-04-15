@@ -573,6 +573,7 @@ sub GET_Service_Requests_input_schema {
                 type => '/open311/comma',
                 contents => '/open311/status',
             },
+            historic => '/open311/bool',
         },
     };
 }
@@ -599,11 +600,17 @@ sub GET_Service_Requests {
         start_date => $args->{start_date},
         end_date => $args->{end_date},
 
-        map {
+        (map {
             $args->{$_} ?
                 ( $_ => [ split ',' => $args->{$_} ] )
               : ()
-        } qw/ service_request_id service_code status /,
+        } qw/ service_request_id service_code status /),
+
+        (map {
+            $args->{$_} ?
+                ( $_ => $args->{$_} )
+              : ()
+        } qw / historic /),
     });
 
     $self->format_service_requests(@service_requests);

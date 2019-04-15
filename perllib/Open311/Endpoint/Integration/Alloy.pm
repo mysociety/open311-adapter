@@ -343,6 +343,12 @@ sub get_service_request_updates {
 sub get_service_requests {
     my ($self, $args) = @_;
 
+    # this is for a one off call to fetch the historic enquiries
+    if ($args->{historic} && $args->{historic} eq 'true') {
+        $self->logger->debug('fetching historic requests');
+        return $self->get_historic_requests($args);
+    }
+
     my $requests = $self->fetch_updated_resources($self->config->{defect_resource_name}, $args->{start_date});
     my @requests;
     for my $request (@$requests) {
@@ -409,6 +415,8 @@ sub get_service_requests {
     return @requests;
 }
 
+sub get_historic_requests { () }
+
 sub fetch_updated_resources {
     my ($self, $code, $start_date) = @_;
 
@@ -451,7 +459,7 @@ sub fetch_updated_resources {
         $pages = $result->{totalPages};
         $page++;
 
-        push @results, @{ $result->{results} }
+        push @results, @{ $result->{results} };
     }
 
     return \@results;
