@@ -409,36 +409,49 @@ sub get_service_requests {
 sub fetch_updated_resources {
     my ($self, $code, $start_date) = @_;
 
-    return $self->alloy->api_call('search/resource-fetch', undef, {
-        aqsNode => {
-            type => "FETCH",
-            properties => {
-                entityType => "SOURCE_TYPE_PROPERTY_VALUE",
-                entityCode => $code
-            },
-            children => [
-                {
-                    type => "GREATER_THAN",
-                    children => [
-                        {
-                            type => "RESOURCE_PROPERTY",
-                            properties => {
-                                resourcePropertyName => "lastEditDate"
+    my @results;
+
+    my $page = 1;
+    my $pages = 1;
+    while ($page <= $pages) {
+        my $result = $self->alloy->api_call("search/resource-fetch?page=$page", undef, {
+            aqsNode => {
+                type => "FETCH",
+                properties => {
+                    entityType => "SOURCE_TYPE_PROPERTY_VALUE",
+                    entityCode => $code
+                },
+                children => [
+                    {
+                        type => "GREATER_THAN",
+                        children => [
+                            {
+                                type => "RESOURCE_PROPERTY",
+                                properties => {
+                                    resourcePropertyName => "lastEditDate"
+                                }
+                            },
+                            {
+                                type => "DATE",
+                                properties => {
+                                    value => [
+                                        $start_date
+                                    ]
+                                }
                             }
-                        },
-                        {
-                            type => "DATE",
-                            properties => {
-                                value => [
-                                    $start_date
-                                ]
-                            }
-                        }
-                    ]
-                }
-            ]
-        }
-    })->{results};
+                        ]
+                    }
+                ]
+            }
+        });
+
+        $pages = $result->{totalPages};
+        $page++;
+
+        push @results, @{ $result->{results} }
+    }
+
+    return \@results;
 }
 
 sub inspection_status {

@@ -91,7 +91,7 @@ $integration->mock('api_call', sub {
         push @sent, $body;
         if ( $call eq 'resource' ) {
             $content = '{ "resourceId": 12345 }';
-        } elsif ( $call eq 'search/resource-fetch' ) {
+        } elsif ( $call =~ 'search/resource-fetch' ) {
             my $type = $body->{aqsNode}->{properties}->{entityCode};
             my $time = $body->{aqsNode}->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
             if ( $type =~ /DEFECT/ ) {
