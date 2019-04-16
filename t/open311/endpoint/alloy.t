@@ -289,7 +289,7 @@ subtest "create problem with no resource_id" => sub {
 subtest "check fetch updates" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
-      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z',
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z&end_date=2019-01-01T02:00:00Z',
     );
 
     my $sent = pop @sent;
@@ -301,7 +301,7 @@ subtest "check fetch updates" => sub {
         status => 'investigating',
         service_request_id => '3027029',
         description => '',
-        updated_datetime => '2014-01-01T11:59:40Z',
+        updated_datetime => '2019-01-01T01:59:40Z',
         update_id => '271882',
         media_url => '',
     },
@@ -309,7 +309,7 @@ subtest "check fetch updates" => sub {
         status => 'action_scheduled',
         service_request_id => '4947502',
         description => '',
-        updated_datetime => '2014-01-01T11:59:40Z',
+        updated_datetime => '2019-01-01T01:59:40Z',
         update_id => '271877',
         media_url => '',
         fixmystreet_id => '10034',
@@ -319,7 +319,7 @@ subtest "check fetch updates" => sub {
 subtest "check fetch problem" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
-      GET => '/requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z',
+      GET => '/requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
     );
 
     my $sent = pop @sent;

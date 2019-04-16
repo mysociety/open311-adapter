@@ -257,7 +257,7 @@ sub get_service_request_updates {
         # this is causing some odd race conditions with the lastupdate time of problems when we return them
         #my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
         #my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' );
-        my $update_dt = DateTime->now()->add( seconds => -20 );
+        my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $args->{end_date} )->add( seconds => -20 );
 
         my %args = (
             status => $status,
@@ -319,7 +319,7 @@ sub get_service_request_updates {
 
         #my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
         #my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' );
-        my $update_dt = DateTime->now()->add( seconds => -20 );
+        my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $args->{end_date} )->add( seconds => -20 );
 
         my %args = (
             status => $status,
