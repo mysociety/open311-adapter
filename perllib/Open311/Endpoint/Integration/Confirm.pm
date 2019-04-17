@@ -427,7 +427,7 @@ sub get_service_request_updates {
         for my $status_log (@$status_logs) {
             my $enquiry_id = $enquiry->{EnquiryNumber};
             my $update_id = $enquiry_id . "_" . $status_log->{EnquiryLogNumber};
-            my $ts = $self->date_parser->parse_datetime($status_log->{LoggedTime});
+            my $ts = $self->date_parser->parse_datetime($status_log->{LoggedTime})->truncate( to => 'second' );
             $ts->set_time_zone($integ->server_timezone);
             my $description = $self->publish_service_update_text ?
                 ($status_log->{StatusLogNotes} || "") :
@@ -581,11 +581,11 @@ sub get_service_requests {
             next;
         }
 
-        my $createdtime = $self->date_parser->parse_datetime($enquiry->{EnquiryLogTime});
+        my $createdtime = $self->date_parser->parse_datetime($enquiry->{EnquiryLogTime})->truncate( to => 'second' );
         $createdtime->set_time_zone($integ->server_timezone);
         next if $self->cutoff_enquiry_date && $createdtime < $self->cutoff_enquiry_date;
 
-        my $updatedtime = $self->date_parser->parse_datetime($enquiry->{LoggedTime});
+        my $updatedtime = $self->date_parser->parse_datetime($enquiry->{LoggedTime})->truncate( to => 'second' );
         $updatedtime->set_time_zone($integ->server_timezone);
 
         my %args = (

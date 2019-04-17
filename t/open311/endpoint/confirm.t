@@ -85,7 +85,7 @@ $open311->mock(perform_request => sub {
         return { OperationResponse => { GetEnquiryStatusChangesResponse => { UpdatedEnquiry => [
             { EnquiryNumber => 2001, EnquiryStatusLog => [ { EnquiryLogNumber => 3, LogEffectiveTime => '2018-03-01T12:00:00Z', LoggedTime => '2018-03-01T12:00:00Z', EnquiryStatusCode => 'INP' } ] },
             { EnquiryNumber => 2002, EnquiryStatusLog => [ { EnquiryLogNumber => 1, LogEffectiveTime => '2018-03-01T13:00:00Z', LoggedTime => '2018-03-01T13:00:00Z', EnquiryStatusCode => 'INP' } ] },
-            { EnquiryNumber => 2002, EnquiryStatusLog => [ { EnquiryLogNumber => 2, LogEffectiveTime => '2018-01-17T12:34:56Z', LoggedTime => '2018-03-01T13:30:00Z', EnquiryStatusCode => 'DUP' } ] },
+            { EnquiryNumber => 2002, EnquiryStatusLog => [ { EnquiryLogNumber => 2, LogEffectiveTime => '2018-01-17T12:34:56Z', LoggedTime => '2018-03-01T13:30:00.4000Z', EnquiryStatusCode => 'DUP' } ] },
         ] } } };
     }
     return {};
