@@ -34,7 +34,9 @@ has memcache => (
 );
 
 sub api_call {
-    my ($self, $call, $params, $body, $is_file) = @_;
+    my ($self, %args) = @_;
+    my $call = $args{call};
+    my $body = $args{body};
 
     my $ua = LWP::UserAgent->new(
         agent => "FixMyStreet/open311-adapter",
@@ -42,15 +44,16 @@ sub api_call {
             apiKey => $self->config->{api_key}
         )
     );
-    my $method = $body ? 'POST' : 'GET';
+    my $method = $args{method};
+    $method = $body ? 'POST' : 'GET' unless $method;
     my $uri = URI->new( $self->config->{api_url} . $call );
-    $uri->query_form(%$params);
+    $uri->query_form(%{ $args{params} });
     my $request = HTTP::Request->new($method, $uri);
-    if ($is_file) {
+    if ($args{is_file}) {
         $request = HTTP::Request::Common::POST(
             $uri,
             Content_Type => 'form-data',
-            Content => [ file => [undef, $params->{'model.name'}, Content => $body] ]
+            Content => [ file => [undef, $args{params}->{'model.name'}, Content => $body] ]
         );
     } elsif ($body) {
         $request->content_type('application/json; charset=UTF-8');
@@ -79,7 +82,10 @@ sub get_source_types {
     my $self = shift;
 
     my %whitelist = map { $_ => 1} @{ $self->config->{source_type_id_whitelist} };
-    my $source_types = $self->api_call("source-type", { propertyName => $self->config->{source_type_property_name} })->{sourceTypes};
+    my $source_types = $self->api_call(
+        call => "source-type",
+        params => { propertyName => $self->config->{source_type_property_name} }
+    )->{sourceTypes};
     return grep { $whitelist{$_->{sourceTypeId}} } @$source_types;
 }
 
@@ -87,7 +93,10 @@ sub get_source_for_source_type_id {
     my $self = shift;
     my $source_type_id = shift;
 
-    my $sources = $self->api_call("source", { sourceTypeId => $source_type_id })->{sources};
+    my $sources = $self->api_call(
+        call => "source",
+        params => { sourceTypeId => $source_type_id }
+    )->{sources};
     # TODO: Check that the source is valid - e.g. startDate/endDate/softDeleted fields
     # TODO: What if there's zero or more than one source?
     return @$sources[0] if @$sources;
@@ -108,7 +117,7 @@ sub get_valuetype_mapping {
         GEOMETRY => "string", # err. Probably GeoJSON?
         IRG_REF => "string", # err. This is an item lookup
     };
-    my $valuetypes = $self->api_call("reference/value-type");
+    my $valuetypes = $self->api_call(call => "reference/value-type");
     my %mapping = map { $_->{valueTypeId} => $mapping->{$_->{code}} } @$valuetypes;
     return \%mapping;
 }
@@ -118,7 +127,10 @@ sub get_parent_attributes {
     my $source_type_id = shift;
 
     # TODO: What's the correct behaviour if there's none?
-    return $self->api_call("source-type/$source_type_id/linked-source-types", { irgConfigCode => $self->config->{irg_config_code} });
+    return $self->api_call(
+        call => "source-type/$source_type_id/linked-source-types",
+        params => { irgConfigCode => $self->config->{irg_config_code} }
+    );
 }
 
 sub get_sources {
@@ -149,7 +161,7 @@ sub get_sources {
                 my %values = ();
                 if ($datatype eq 'singlevaluelist' && $source_attribute->{attributeOptionTypeId}) {
                     # Fetch all the options for this attribute from the API
-                    my $options = $self->api_call("attribute-option-type/$source_attribute->{attributeOptionTypeId}")->{optionList};
+                    my $options = $self->api_call(call => "attribute-option-type/$source_attribute->{attributeOptionTypeId}")->{optionList};
                     for my $option (@$options) {
                         $values{$option->{optionId}} = $option->{optionDescription};
                     }

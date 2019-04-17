@@ -83,7 +83,10 @@ my @calls;
 
 my $integration = Test::MockModule->new('Integrations::Alloy');
 $integration->mock('api_call', sub {
-    my ($self, $call, $params, $body) = @_;
+    my ($self, %args) = @_;
+    my $call = $args{call};
+    my $params = $args{params};
+    my $body = $args{body};
 
     my $content = '[]';
     push @calls, $call;

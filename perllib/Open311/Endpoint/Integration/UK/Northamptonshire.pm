@@ -77,36 +77,39 @@ sub _find_contact {
         return undef;
     }
 
-    my $results = $self->alloy->api_call("search/resource", undef, {
-        aqsNode => {
-            type => "SEARCH",
-            properties => {
-                entityType => "SOURCE_TYPE",
-                entityCode => $entity_code
-            },
-            children => [
-                {
-                    type => "EQUALS",
-                    children => [
-                        {
-                            type => "ATTRIBUTE",
-                            properties => {
-                                attributeCode => $attribute_code
+    my $results = $self->alloy->api_call(
+        call => "search/resource",
+        body => {
+            aqsNode => {
+                type => "SEARCH",
+                properties => {
+                    entityType => "SOURCE_TYPE",
+                    entityCode => $entity_code
+                },
+                children => [
+                    {
+                        type => "EQUALS",
+                        children => [
+                            {
+                                type => "ATTRIBUTE",
+                                properties => {
+                                    attributeCode => $attribute_code
+                                }
+                            },
+                            {
+                                type => "STRING",
+                                properties => {
+                                    value => [
+                                        $search_term
+                                    ]
+                                }
                             }
-                        },
-                        {
-                            type => "STRING",
-                            properties => {
-                                value => [
-                                    $search_term
-                                ]
-                            }
-                        }
-                    ]
-                }
-            ]
+                        ]
+                    }
+                ]
+            }
         }
-    });
+    );
 
     return undef unless $results->{totalHits};
     return $results->{results}[0]->{result};
@@ -150,7 +153,10 @@ sub _create_contact {
         colour => undef
     };
 
-    return $self->alloy->api_call("resource", undef, $contact);
+    return $self->alloy->api_call(
+        call => "resource",
+        body => $contact
+    );
 }
 
 1;

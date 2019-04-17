@@ -145,7 +145,9 @@ sub post_service_request {
 
     if ( $resource_id ) {
         # get the attribute id for the parents so alloy checks in the right place for the asset id
-        my $resource_type = $self->alloy->api_call("resource/$resource_id")->{sourceTypeId};
+        my $resource_type = $self->alloy->api_call(
+            call => "resource/$resource_id"
+        )->{sourceTypeId};
         my $parent_attributes = $self->alloy->get_parent_attributes($resource_type);
         for my $attribute ( @$parent_attributes ) {
             if ( $attribute->{linkedSourceTypeId} eq $source->{source_type_id} ) {
@@ -204,7 +206,10 @@ sub post_service_request {
     $resource->{attributes} = $self->process_attributes($source, $args);
 
     # post it up
-    my $response = $self->alloy->api_call("resource", undef, $resource);
+    my $response = $self->alloy->api_call(
+        call => "resource",
+        body => $resource
+    );
 
     # create a new Request and return it
     return $self->new_request(
@@ -302,7 +307,9 @@ sub get_service_request_updates {
         }
 
         my $service_request_id = $update->{resourceId};
-        my $parents = $self->alloy->api_call('resource/' . $update->{resourceId} . '/parents')->{details}->{parents};
+        my $parents = $self->alloy->api_call(
+            call => 'resource/' . $update->{resourceId} . '/parents'
+        )->{details}->{parents};
 
         # if it has a parent that is an enquiry get the resource id of the inspection and use that
         # as the external id so updates are added to the report that created the inspection
@@ -346,7 +353,9 @@ sub get_service_requests {
         next if $self->is_ignored_category( $request );
 
         my $has_enquiry_parent = 0;
-        my $parents = $self->alloy->api_call('resource/' . $request->{resourceId} . '/parents')->{details}->{parents};
+        my $parents = $self->alloy->api_call(
+            call => 'resource/' . $request->{resourceId} . '/parents'
+        )->{details}->{parents};
         for my $parent (@$parents) {
             next unless $parent->{actualParentSourceTypeId} == $self->config->{defect_inspection_parent_id}; # request for service
 
@@ -412,7 +421,9 @@ sub fetch_updated_resources {
     my $page = 1;
     my $pages = 1;
     while ($page <= $pages) {
-        my $result = $self->alloy->api_call("search/resource-fetch?page=$page", undef, {
+        my $result = $self->alloy->api_call(
+            call => "search/resource-fetch?page=$page",
+            body => {
             aqsNode => {
                 type => "FETCH",
                 properties => {
@@ -485,7 +496,7 @@ sub service_request_id_for_resource {
 sub get_time_for_version {
     my ($self, $resource_id, $version_id) = @_;
 
-    my $versions = $self->alloy->api_call("resource/$resource_id/versions");
+    my $versions = $self->alloy->api_call(call => "resource/$resource_id/versions");
 
     # sometimes we don't seem to get back a matching version number in which case use
     # the start time of the largest version that is smaller than the one we asked for.
@@ -516,7 +527,7 @@ sub get_time_for_version {
 sub get_last_version_inspector_comments {
     my ($self, $resource_id) = @_;
 
-    my $versions = $self->alloy->api_call("resource/$resource_id/versions");
+    my $versions = $self->alloy->api_call(call => "resource/$resource_id/versions");
 
     my @version_ids = ();
     for my $version ( @$versions ) {
@@ -529,7 +540,7 @@ sub get_last_version_inspector_comments {
 
     my $prev_version = $version_ids[-2];
 
-    my $resource = $self->alloy->api_call("resource/$resource_id/full?systemVersion=$prev_version");
+    my $resource = $self->alloy->api_call(call => "resource/$resource_id/full?systemVersion=$prev_version");
     my $description = '';
     if ( $resource ) {
         my @attributes = @{$resource->{values}};
@@ -658,12 +669,15 @@ sub process_attributes {
 sub reproject_coordinates {
     my ($self, $lon, $lat) = @_;
 
-    my $point = $self->alloy->api_call("projection/point", {
-        x => $lon,
-        y => $lat,
-        srcCode => "4326",
-        dstCode => "900913",
-    });
+    my $point = $self->alloy->api_call(
+        call => "projection/point",
+        params => {
+            x => $lon,
+            y => $lat,
+            srcCode => "4326",
+            dstCode => "900913",
+        }
+    );
 
     return [ $point->{x}, $point->{y} ];
 }
@@ -671,12 +685,15 @@ sub reproject_coordinates {
 sub deproject_coordinates {
     my ($self, $lon, $lat) = @_;
 
-    my $point = $self->alloy->api_call("projection/point", {
-        x => $lon,
-        y => $lat,
-        dstCode => "4326",
-        srcCode => "900913",
-    });
+    my $point = $self->alloy->api_call(
+        call => "projection/point",
+        params => {
+            x => $lon,
+            y => $lat,
+            dstCode => "4326",
+            srcCode => "900913",
+        }
+    );
 
     return [ $point->{y}, $point->{x} ];
 }
@@ -697,10 +714,15 @@ sub upload_attachments {
 
     # upload the file to the folder, with a FMS-related name
     my @resource_ids = map {
-        $self->alloy->api_call("file", {
-            'model.folderId' => $folder_id,
-            'model.name' => $_->filename
-        }, $_->content, 1)->{resourceId};
+        $self->alloy->api_call(
+            call => "file",
+            params => {
+                'model.folderId' => $folder_id,
+                'model.name' => $_->filename
+            },
+            body=> $_->content,
+            is_file => 1
+        )->{resourceId};
     } @photos;
 
     # return a list of the form
