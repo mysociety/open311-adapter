@@ -137,6 +137,7 @@
       "status": 1001546, # this is a structure so needs more processing
       "reason_for_closure": 1010926,
       "inspector_comments": 1011096,
+      "updates": 1013262,
   },
 
   "inspection_status_mapping": {

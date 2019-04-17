@@ -94,6 +94,8 @@ $integration->mock('api_call', sub {
         push @sent, $body;
         if ( $call eq 'resource' ) {
             $content = '{ "resourceId": 12345 }';
+        } elsif ( $call eq 'resource/12345' ) {
+            $content = '{ "systemVersionId": 8011 }';
         } elsif ( $call =~ 'search/resource-fetch' ) {
             my $type = $body->{aqsNode}->{properties}->{entityCode};
             my $time = $body->{aqsNode}->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
@@ -140,6 +142,8 @@ $integration->mock('api_call', sub {
             $content = '{ "details": { "parents": [] } }';
         } elsif ( $call =~ m#resource/[0-9]*/versions# ) {
             $content = path(__FILE__)->sibling('json/alloy/resource_versions_all.json')->slurp;
+        } elsif ( $call eq 'resource/12345/full' ) {
+            $content = '{ "resourceId": 12345, "values": [ { "attributeId": 1013262, "value": "Original text" } ], "version": { "currentSystemVersionId": 8001, "resourceSystemVersionId": 8000 } }';
         } else {
             $content = $responses{$call};
         }
@@ -382,6 +386,43 @@ subtest "check fetch multiple updates" => sub {
         media_url => '',
     },
 ], 'correct json returned';
+};
+
+subtest "create comment" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request( 
+        POST => '/servicerequestupdates.json', 
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'This is an update',
+        service_request_id => 12345,
+        update_id => 999,
+        status => 'OPEN',
+        updated_datetime => '2019-04-17T14:39:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply $sent,
+    {
+    attributes =>         {
+        1013262 => "Original text
+This is an update"
+    },
+    systemVersionId => 8000
+    }
+    , 'correct json sent';
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => 8011
+        } ], 'correct json returned';
+
 };
 
 subtest "check fetch problem" => sub {

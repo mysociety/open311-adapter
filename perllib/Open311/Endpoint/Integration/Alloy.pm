@@ -218,6 +218,45 @@ sub post_service_request {
 
 }
 
+sub post_service_request_update {
+    my ($self, $args) = @_;
+
+    my $resource_id = $args->{service_request_id};
+    my $inspection = $self->alloy->api_call(call => "resource/$resource_id/full");
+
+    my @attributes = @{ $inspection->{values} };
+    my $updates = '';
+    for my $attribute ( @attributes ) {
+        if ($attribute->{attributeId} == $self->config->{inspection_attribute_mapping}->{updates}) {
+            $updates = $attribute->{value};
+        }
+    }
+
+    $updates .= "\n" . $args->{description};
+
+    my $updated = {
+        attributes => {
+            $self->config->{inspection_attribute_mapping}->{updates} => $updates
+        },
+        systemVersionId => $inspection->{version}->{resourceSystemVersionId},
+    };
+
+    if ( $self->config->{resource_attachment_attribute_id} && @{ $args->{media_url} }) {
+        $updated->{attributes}->{$self->config->{resource_attachment_attribute_id}} = $self->upload_attachments($args);
+    }
+
+    my $update = $self->alloy->api_call(
+        call => "resource/$resource_id",
+        method => 'PUT',
+        body => $updated
+    );
+
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        status => lc $args->{status},
+        update_id => $update->{systemVersionId},
+    );
+}
+
 sub get_service_request_updates {
     my ($self, $args) = @_;
 
