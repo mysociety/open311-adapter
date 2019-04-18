@@ -136,7 +136,7 @@ sub get_service_requests {
             $request->{Service_Area__c};
 
         my $update_time = $self->parse_datetime($request->{LastModifiedDate});
-        my $request_time = $self->parse_datetime($request->{requested_datetime__c});
+        my $request_time = $self->parse_datetime($request->{requested_datetime__c}) || $update_time;
         my $service = $self->service( $request->{Service_Area__c} );
         push @updates, Open311::Endpoint::Service::Request::SalesForce->new(
             service => $service,
