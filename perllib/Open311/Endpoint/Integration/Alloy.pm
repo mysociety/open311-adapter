@@ -276,65 +276,74 @@ sub get_service_request_updates {
     for my $update (@$updates) {
         next if $self->is_ignored_category( $update );
 
-        my $status = 'open';
-        my $description = '';
-        my $fms_id = '';
-        my $linked_defect;
-        my @attributes = @{$update->{values}};
-        for my $att (@attributes) {
-            # these might be specific to each design so will probably need
-            # some config
-            # TODO: check if we are pulling back in description. It's a mandatory field in Alloy
-            # so I suspect we should not be.
-            #if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{description}) {
-                #$description = $att->{value};
-            #}
+        my $update_args = $self->process_defect_update($args, $update);
+        next unless $update_args;
 
-            # status
-            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{status}) {
-                $status = $self->defect_status($att->{value});
-            }
-
-            if ($att->{attributeCode} =~ /_FIXMYSTREET_ID$/) {
-                $linked_defect = 1;
-                $fms_id = $att->{value};
-            }
-        }
-
-        my $service_request_id = $update->{resourceId};
-        my $parents = $self->alloy->api_call('resource/' . $update->{resourceId} . '/parents')->{details}->{parents};
-
-        # if it has a parent that is an enquiry get the resource id of the inspection and use that
-        # as the external id so updates are added to the report that created the inspection
-        for my $parent (@$parents) {
-            next unless $parent->{actualParentSourceTypeId} == $self->config->{defect_inspection_parent_id}; # request for service
-
-            $linked_defect = 1;
-            $service_request_id = $parent->{parentResId};
-            $fms_id = undef;
-        }
-
-        # we don't care about linked defects until they have been scheduled
-        next if $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
-
-        #my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
-        #my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' );
-        my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $args->{end_date} )->add( seconds => -20 );
-
-        my %args = (
-            status => $status,
-            update_id => $update->{version}->{resourceSystemVersionId},
-            service_request_id => $service_request_id,
-            description => $description,
-            updated_datetime => $update_dt,
-        );
-
-        $args{fixmystreet_id} = $fms_id if $fms_id;
-
-        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %$update_args );
     }
 
     return @updates;
+}
+
+sub process_defect_update {
+    my ($self, $args, $update) = @_;
+
+    my $status = 'open';
+    my $description = '';
+    my $fms_id = '';
+    my $linked_defect;
+    my @attributes = @{$update->{values}};
+    for my $att (@attributes) {
+        # these might be specific to each design so will probably need
+        # some config
+        # TODO: check if we are pulling back in description. It's a mandatory field in Alloy
+        # so I suspect we should not be.
+        #if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{description}) {
+            #$description = $att->{value};
+        #}
+
+        # status
+        if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{status}) {
+            $status = $self->defect_status($att->{value});
+        }
+
+        if ($att->{attributeCode} =~ /_FIXMYSTREET_ID$/) {
+            $linked_defect = 1;
+            $fms_id = $att->{value};
+        }
+    }
+
+    my $service_request_id = $update->{resourceId};
+    my $parents = $self->alloy->api_call('resource/' . $update->{resourceId} . '/parents')->{details}->{parents};
+
+    # if it has a parent that is an enquiry get the resource id of the inspection and use that
+    # as the external id so updates are added to the report that created the inspection
+    for my $parent (@$parents) {
+        next unless $parent->{actualParentSourceTypeId} == $self->config->{defect_inspection_parent_id}; # request for service
+
+        $linked_defect = 1;
+        $service_request_id = $parent->{parentResId};
+        $fms_id = undef;
+    }
+
+    # we don't care about linked defects until they have been scheduled
+    return if $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
+
+    #my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
+    #my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' );
+    my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $args->{end_date} )->add( seconds => -20 );
+
+    my %args = (
+        status => $status,
+        update_id => $update->{version}->{resourceSystemVersionId},
+        service_request_id => $service_request_id,
+        description => $description,
+        updated_datetime => $update_dt,
+    );
+
+    $args{fixmystreet_id} = $fms_id if $fms_id;
+
+    return \%args;
 }
 
 sub get_service_requests {

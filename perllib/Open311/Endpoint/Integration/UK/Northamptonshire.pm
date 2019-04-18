@@ -3,6 +3,8 @@ package Open311::Endpoint::Integration::UK::Northamptonshire;
 use Moo;
 extends 'Open311::Endpoint::Integration::Alloy';
 
+with 'Role::Logger';
+
 use JSON::MaybeXS;
 
 around BUILDARGS => sub {
@@ -50,6 +52,38 @@ sub process_attributes {
 
     return $attributes;
 
+}
+
+sub process_defect_update {
+    my ($self, $args, $update) = @_;
+
+    my $update_args = $self->SUPER::process_defect_update($args, $update);
+    return unless $update_args;
+
+    my @attributes = @{$update->{values}};
+    my ( $target_date, $reported_date );
+    for my $att (@attributes) {
+        if ($att->{attributeCode} =~ /_TARGET_DATE$/) {
+            $target_date = $att->{value};
+        }
+
+        if ($att->{attributeCode} =~ /_DEFECT_REPORTED_DATE$/) {
+            $reported_date = $att->{value};
+        }
+    }
+
+    return $update_args unless $target_date;
+
+    $self->logger->debug("reported date is " . $reported_date );
+    $self->logger->debug("target date is " . $target_date );
+    my $reported_dt = DateTime::Format::W3CDTF->new->parse_datetime( $reported_date)->truncate( to => 'day' );
+    my $target_dt = DateTime::Format::W3CDTF->new->parse_datetime( $target_date)->truncate( to => 'day' );
+    my $diff = $reported_dt->delta_days( $target_dt );
+
+    $update_args->{external_status_code} = $diff->in_units('days');
+    $self->logger->debug('diff is ' . $diff->in_units('days'));
+
+    return $update_args;
 }
 
 sub _find_or_create_contact {
