@@ -6,6 +6,7 @@ use DateTime::Format::W3CDTF;
 use Carp ();
 use Moo;
 use Cache::Memcached;
+use Open311::Endpoint::Logger;
 
 use vars qw(@ISA);
 @ISA = qw(Exporter SOAP::Lite);
@@ -20,6 +21,13 @@ sub credentials {
         $config->{tenant_id}
     );
 }
+
+# Using "with 'Role::Logger';" causes some issue with SOAP::Lite->proxy
+# that I don't understand, so declare the attribute ourselves.
+has logger => (
+    is => 'lazy',
+    default => sub { Open311::Endpoint::Logger->new },
+);
 
 # If the Confirm endpoint requires a particular EnquiryMethodCode for NewEnquiry
 # requests, override this in the subclass. Valid values can be found by calling
