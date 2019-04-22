@@ -128,6 +128,10 @@ sub get_service_requests {
     my $w3c = DateTime::Format::W3CDTF->new;
     my @updates = ();
 
+    my $start_time = $args->{start_date} ?
+        DateTime::Format::W3CDTF->parse_datetime($args->{start_date})
+        : undef;
+
     for my $request (@$requests) {
         next unless
             $request->{lat__c} and
@@ -137,6 +141,11 @@ sub get_service_requests {
 
         my $update_time = $self->parse_datetime($request->{LastModifiedDate});
         my $request_time = $self->parse_datetime($request->{requested_datetime__c}) || $update_time;
+
+        # we get all the reports back at once but FMS will reject those that are before
+        # the start date so skip those.
+        next if $start_time && $update_time < $start_time;
+
         my $service = $self->service( $request->{Service_Area__c} );
         push @updates, Open311::Endpoint::Service::Request::SalesForce->new(
             service => $service,

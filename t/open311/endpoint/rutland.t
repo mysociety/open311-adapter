@@ -423,7 +423,7 @@ subtest "create problem with multiple photos" => sub {
 subtest "check fetch problem" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
-      GET => '/requests.json?jurisdiction_id=rutland',
+      GET => '/requests.json?jurisdiction_id=rutland&start_date=2018-01-10T00:00:00Z&end_date=2018-01-10T23:59:59Z',
     );
 
     my $sent = pop @sent;
@@ -488,7 +488,7 @@ subtest "check fetch problem with not responsible status" => sub {
 
     }]',
     my $res = $endpoint->run_test_request(
-      GET => '/requests.json?jurisdiction_id=rutland',
+      GET => '/requests.json?jurisdiction_id=rutland&start_date=2018-01-10T00:00:00Z&end_date=2018-01-10T23:59:59Z',
     );
 
     my $sent = pop @sent;
@@ -507,6 +507,121 @@ subtest "check fetch problem with not responsible status" => sub {
         description => 'There is graffiti on the wall',
         requested_datetime => '2018-01-09T18:00:00Z',
         updated_datetime => '2018-01-10T22:46:56Z',
+        lat => 52.68248,
+        long => -0.469137,
+        zipcode => '',
+        media_url => '',
+    } ], 'correct json returned';
+};
+
+subtest "check fetch problem ignores problems older than start date" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    $responses{'GET FixMyStreet all'} = '[{
+        "attributes": {
+            "type": "FixMyStreet__c",
+            "url": "/services/data/v41.0/sobjects/FixMyStreet__c/a086E000001gnM6QAI"
+        },
+        "Id": "a086E000001gnM6QAI",
+        "OwnerId": "0056E000001rzDCQAY",
+        "IsDeleted": false,
+        "Name": "FMS-RCC-00049",
+        "RecordTypeId": "0126E0000000qWvQAI",
+        "CreatedDate": "2018-01-05T17:02:05.000+0000",
+        "CreatedById": "0056E000001rzDCQAY",
+        "LastModifiedDate": "2018-01-09T22:46:56.000+0000",
+        "LastModifiedById": "0050Y000001zMXrQAM",
+        "SystemModstamp": "2018-01-19T11:33:02.000+0000",
+        "LastViewedDate": "2018-02-08T14:07:32.000+0000",
+        "LastReferencedDate": "2018-02-08T14:07:32.000+0000",
+        "Description__c": "There is graffiti on the wall",
+        "detail__c": "There is graffiti on the wall",
+        "interface_used__c": "Web interface",
+        "lat__c": 52.68248,
+        "long__c": -0.469137,
+        "requestor_name__c": "Struan Donald",
+        "requested_datetime__c": "2018-01-09T18:00:00.000+0000",
+        "service_request_id__c": 975,
+        "title__c": "Graffiti on the wall",
+        "agency_responsible__c": "Rutland County Council",
+        "Update_Comments__c": "new comments from FMS2",
+        "Service_Area__c": "a096E000007pbxWQAQ",
+        "Status__c": "not responsible",
+        "Contact_Name__c": "Struan Donald",
+        "Contact_Email__c": "struan@mysociety.org",
+        "Contact_Phone__c": "01234 56789",
+        "Update_FixMyStreet__c": false
+
+    }]',
+    my $res = $endpoint->run_test_request(
+      GET => '/requests.json?jurisdiction_id=rutland&start_date=2018-01-10T00:00:00Z&end_date=2018-01-10T23:59:59Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [], 'correct json returned';
+};
+
+subtest "check fetch problem works with no start date" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    $responses{'GET FixMyStreet all'} = '[{
+        "attributes": {
+            "type": "FixMyStreet__c",
+            "url": "/services/data/v41.0/sobjects/FixMyStreet__c/a086E000001gnM6QAI"
+        },
+        "Id": "a086E000001gnM6QAI",
+        "OwnerId": "0056E000001rzDCQAY",
+        "IsDeleted": false,
+        "Name": "FMS-RCC-00049",
+        "RecordTypeId": "0126E0000000qWvQAI",
+        "CreatedDate": "2018-01-05T17:02:05.000+0000",
+        "CreatedById": "0056E000001rzDCQAY",
+        "LastModifiedDate": "2018-01-09T22:46:56.000+0000",
+        "LastModifiedById": "0050Y000001zMXrQAM",
+        "SystemModstamp": "2018-01-19T11:33:02.000+0000",
+        "LastViewedDate": "2018-02-08T14:07:32.000+0000",
+        "LastReferencedDate": "2018-02-08T14:07:32.000+0000",
+        "Description__c": "There is graffiti on the wall",
+        "detail__c": "There is graffiti on the wall",
+        "interface_used__c": "Web interface",
+        "lat__c": 52.68248,
+        "long__c": -0.469137,
+        "requestor_name__c": "Struan Donald",
+        "requested_datetime__c": "2018-01-09T18:00:00.000+0000",
+        "service_request_id__c": 975,
+        "title__c": "Graffiti on the wall",
+        "agency_responsible__c": "Rutland County Council",
+        "Update_Comments__c": "new comments from FMS2",
+        "Service_Area__c": "a096E000007pbxWQAQ",
+        "Status__c": "not responsible",
+        "Contact_Name__c": "Struan Donald",
+        "Contact_Email__c": "struan@mysociety.org",
+        "Contact_Phone__c": "01234 56789",
+        "Update_FixMyStreet__c": false
+
+    }]',
+    my $res = $endpoint->run_test_request(
+      GET => '/requests.json?jurisdiction_id=rutland',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        address => '',
+        address_id => '',
+        status => 'not_councils_responsibility',
+        service_request_id => 'a086E000001gnM6QAI',
+        service_name => 'POT',
+        service_code => 'a096E000007pbxWQAQ',
+        title => 'Graffiti on the wall',
+        description => 'There is graffiti on the wall',
+        requested_datetime => '2018-01-09T18:00:00Z',
+        updated_datetime => '2018-01-09T22:46:56Z',
         lat => 52.68248,
         long => -0.469137,
         zipcode => '',
