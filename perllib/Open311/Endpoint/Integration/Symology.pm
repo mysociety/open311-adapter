@@ -55,8 +55,13 @@ sub services {
             my %attribute = (
                 code => $_->{code},
                 description => $_->{description},
-                required => 1,
             );
+            if ($_->{variable} // 1) {
+                $attribute{required} = 1;
+            } else {
+                $attribute{variable} = 0;
+                $attribute{required} = 0;
+            }
             if ($_->{values}) {
                 $attribute{datatype} = 'singlevaluelist';
                 $attribute{values} = { map { $_ => $_ } @{$_->{values}} };
