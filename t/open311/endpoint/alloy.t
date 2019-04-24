@@ -117,6 +117,12 @@ $integration->mock('api_call', sub {
             $content = path(__FILE__)->sibling('json/alloy/resource_versions.json')->slurp;
         } elsif ( $call eq 'resource/4947502/versions' ) {
             $content = path(__FILE__)->sibling('json/alloy/resource_versions_4947502.json')->slurp;
+        } elsif ( $call eq 'resource/3027030/versions' ) {
+            $content = path(__FILE__)->sibling('json/alloy/resource_versions_3027030.json')->slurp;
+        } elsif ( $call eq 'resource/3027029/full?systemVersion=272125' ) {
+            $content = path(__FILE__)->sibling('json/alloy/resource_3027029_v272125.json')->slurp;
+        } elsif ( $call eq 'resource/3027030/full?systemVersion=271881' ) {
+            $content = path(__FILE__)->sibling('json/alloy/resource_3027030_v271881.json')->slurp;
         } elsif ( $call eq 'resource/1' ) {
             $content = '{ "sourceTypeId": 800 }';
         } elsif ( $call eq 'source-type/800/linked-source-types' ) {
@@ -300,9 +306,17 @@ subtest "check fetch updates" => sub {
     [ {
         status => 'investigating',
         service_request_id => '3027029',
-        description => '',
+        description => 'This is a customer response',
         updated_datetime => '2019-01-01T01:59:40Z',
         update_id => '271882',
+        media_url => '',
+    },
+    {
+        status => 'investigating',
+        service_request_id => '3027030',
+        description => '',
+        updated_datetime => '2019-01-01T01:59:40Z',
+        update_id => '271883',
         media_url => '',
     },
     {

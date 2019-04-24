@@ -250,6 +250,9 @@ sub get_service_request_updates {
             }
         }
 
+        my $last_version_description = $self->get_last_version_inspector_comments($update->{resourceId});
+        $description = '' unless $description ne $last_version_description;
+
         if ($reason_for_closure) {
             $status = $self->get_status_with_closure($status, $reason_for_closure);
         }
@@ -513,6 +516,36 @@ sub get_time_for_version {
     }
 
     return $time;
+}
+
+sub get_last_version_inspector_comments {
+    my ($self, $resource_id) = @_;
+
+    my $versions = $self->alloy->api_call("resource/$resource_id/versions");
+
+    my @version_ids = ();
+    for my $version ( @$versions ) {
+        push @version_ids, $version->{currentSystemVersionId};
+    }
+
+    @version_ids = sort(@version_ids);
+
+    return '' if scalar @version_ids < 2;
+
+    my $prev_version = $version_ids[-2];
+
+    my $resource = $self->alloy->api_call("resource/$resource_id/full?systemVersion=$prev_version");
+    my $description = '';
+    if ( $resource ) {
+        my @attributes = @{$resource->{values}};
+        for my $att (@attributes) {
+            if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{inspector_comments}) {
+                $description = $att->{value};
+            }
+        }
+    }
+
+    return $description;
 }
 
 sub get_latlong_from_request {
