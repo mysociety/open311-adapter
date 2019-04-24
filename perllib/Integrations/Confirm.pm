@@ -11,6 +11,7 @@ use JSON::MaybeXS;
 use LWP::UserAgent;
 use HTTP::Request::Common;
 use MIME::Base64 qw(encode_base64 decode_base64);
+use Path::Tiny;
 
 use vars qw(@ISA);
 @ISA = qw(Exporter SOAP::Lite);
@@ -456,8 +457,8 @@ sub GetEnquiryStatusChanges {
     return $enquiries;
 }
 
-# If the request succeeded and there are photos, upload them to
-# the central enquiries API
+# If the request succeeded and there are photos or uploaded files, upload
+# them to the central enquiries API
 sub _upload_enquiry_documents {
     my ($self, $enquiry_number, $args) = @_;
 
@@ -472,11 +473,19 @@ sub _upload_enquiry_documents {
         } if $photo->is_success;
     } @{ $args->{media_url} };
 
-    return unless @photos;
+    my @uploads = map {
+        {
+            documentName => $_->filename,
+            documentNotes => "File from problem reporter.",
+            blobData => encode_base64(path($_->tempname)->slurp)
+        };
+    } @{ $args->{uploads} };
+
+    return unless @photos or @uploads;
 
     my $body = {
         enquiryNumber => $enquiry_number,
-        centralDocLinks => \@photos
+        centralDocLinks => [ @photos, @uploads ]
     };
 
     my $token = $self->oauth_token;
@@ -489,7 +498,7 @@ sub _upload_enquiry_documents {
         Content => encode_json($body);
     my $response = $self->ua->request($req);
     unless ($response->is_success) {
-        $self->logger->warn("Couldn't post photos to Confirm: " . $response->content);
+        $self->logger->warn("Couldn't post files to Confirm: " . $response->content);
     };
 }
 
