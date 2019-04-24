@@ -112,6 +112,7 @@ $bexley_end->mock(endpoint_config => sub {
                     AnalysisCode2 => 'A2',
                 },
                 questions => [
+                    { code => 'message', description => 'Please ignore yellow cars', variable => 0 },
                     { code => 'car_details', description => 'Car details', },
                     { code => 'burnt', description => 'Burnt out?', values => [ 'Yes', 'No' ], },
                 ],
@@ -207,8 +208,17 @@ subtest "GET service" => sub {
              "automated" => "server_set"
           },
           {
-             "required" => "true",
+             "required" => "false",
              "order" => 6,
+             "datatype" => "string",
+             "code" => "message",
+             "description" => "Please ignore yellow cars",
+             "variable" => "false",
+             "datatype_description" => "",
+          },
+          {
+             "required" => "true",
+             "order" => 7,
              "datatype" => "string",
              "code" => "car_details",
              "description" => "Car details",
@@ -217,7 +227,7 @@ subtest "GET service" => sub {
           },
           {
              "required" => "true",
-             "order" => 7,
+             "order" => 8,
              "datatype" => "singlevaluelist",
              "code" => "burnt",
              "description" => "Burnt out?",

@@ -55,8 +55,13 @@ sub services {
             my %attribute = (
                 code => $_->{code},
                 description => $_->{description},
-                required => 1,
             );
+            if ($_->{variable} // 1) {
+                $attribute{required} = 1;
+            } else {
+                $attribute{variable} = 0;
+                $attribute{required} = 0;
+            }
             if ($_->{values}) {
                 $attribute{datatype} = 'singlevaluelist';
                 $attribute{values} = { map { $_ => $_ } @{$_->{values}} };
@@ -118,10 +123,15 @@ sub process_service_request_args {
 
     # We then need to add all other attributes to the Description
     my %attr_lookup;
+    my %ignore;
     foreach (@{$codes->{questions}}) {
-        $attr_lookup{$_->{code}} = $_->{description};
+        my $code = $_->{code};
+        my $variable = $_->{variable} // 1;
+        $ignore{$code} = 1 unless $variable;
+        $attr_lookup{$code} = $_->{description};
     }
     foreach (sort keys %{$args->{attributes}}) {
+        next if $ignore{$_};
         my $key = $attr_lookup{$_} || $_;
         $request->{Description} .= "\n\n$key: " . $args->{attributes}->{$_};
     }
