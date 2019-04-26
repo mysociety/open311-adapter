@@ -188,18 +188,28 @@ subtest "GET service" => sub {
              "datatype" => "string"
           },
           {
-             "description" => "NSG reference",
+             "description" => "Unit ID",
              "variable" => "true",
              "datatype_description" => "",
              "automated" => "hidden_field",
              "order" => 4,
              "required" => "false",
              "datatype" => "string",
+             "code" => "UnitID"
+          },
+          {
+             "description" => "NSG reference",
+             "variable" => "true",
+             "datatype_description" => "",
+             "automated" => "hidden_field",
+             "order" => 5,
+             "required" => "false",
+             "datatype" => "string",
              "code" => "NSGRef"
           },
           {
              "required" => "false",
-             "order" => 5,
+             "order" => 6,
              "datatype" => "string",
              "code" => "contributed_by",
              "description" => "Contributed by",
@@ -209,7 +219,7 @@ subtest "GET service" => sub {
           },
           {
              "required" => "false",
-             "order" => 6,
+             "order" => 7,
              "datatype" => "string",
              "code" => "message",
              "description" => "Please ignore yellow cars",
@@ -218,7 +228,7 @@ subtest "GET service" => sub {
           },
           {
              "required" => "true",
-             "order" => 7,
+             "order" => 8,
              "datatype" => "string",
              "code" => "car_details",
              "description" => "Car details",
@@ -227,7 +237,7 @@ subtest "GET service" => sub {
           },
           {
              "required" => "true",
-             "order" => 8,
+             "order" => 9,
              "datatype" => "singlevaluelist",
              "code" => "burnt",
              "description" => "Burnt out?",
