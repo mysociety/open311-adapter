@@ -11,6 +11,13 @@ sub _build_attributes {
         @{ $self->SUPER::_build_attributes() },
 
         Open311::Endpoint::Service::Attribute->new(
+            code => "UnitID",
+            description => "Unit ID",
+            datatype => "string",
+            required => 0,
+            automated => 'hidden_field',
+        ),
+        Open311::Endpoint::Service::Attribute->new(
             code => "NSGRef",
             description => "NSG reference",
             datatype => "string",
