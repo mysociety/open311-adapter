@@ -251,7 +251,11 @@ sub check_error {
     unless (($response->{StatusCode}//-1) == 0) {
         my $error = "Couldn't create $type in Symology: $response->{StatusMessage}";
         my $result = $response->{SendRequestResults}->{SendRequestResultRow};
-        $error .= " - $result->{MessageText}" if $result->{RecordType} == 1;
+        $result = [ $result ] if ref $result ne 'ARRAY';
+        foreach (@$result) {
+            $error .= " - $_->{MessageText}" if $_->{RecordType} == 1;
+            $error .= " - created request $_->{ConvertCRNo}" if $_->{RecordType} == 2;
+        }
         $self->log_and_die($error);
     }
 }
