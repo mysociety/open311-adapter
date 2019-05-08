@@ -381,7 +381,7 @@ subtest "GET updates OK" => sub {
     is_deeply decode_json($res->content),
         [
            {
-              "update_id" => "569810_8f6f708f",
+              "update_id" => "569810_305b9fab",
               "updated_datetime" => "2019-03-13T07:31:00+00:00",
               "service_request_id" => "569810",
               "status" => "investigating",
@@ -389,7 +389,7 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "569924_039bb3e6",
+              "update_id" => "569924_cc072b95",
               "updated_datetime" => "2019-03-14T07:32:00+00:00",
               "service_request_id" => "569924",
               "status" => "fixed",
@@ -397,7 +397,7 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560065_25c5a489",
+              "update_id" => "560065_8b6f97c5",
               "updated_datetime" => "2019-04-17T12:05:00+01:00",
               "service_request_id" => "560065",
               "status" => "investigating",
@@ -405,7 +405,7 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560064_25c5a489",
+              "update_id" => "560064_b7e2d1f1",
               "updated_datetime" => "2019-04-17T12:05:00+01:00",
               "service_request_id" => "560064",
               "status" => "action_scheduled",
@@ -413,7 +413,7 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560057_2e8df8d9",
+              "update_id" => "560057_04da2aa5",
               "updated_datetime" => "2019-04-17T12:32:00+01:00",
               "service_request_id" => "560057",
               "status" => "action_scheduled",
@@ -421,7 +421,7 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560063_ceb1790d",
+              "update_id" => "560063_191d076c",
               "updated_datetime" => "2019-04-17T13:29:00+01:00",
               "service_request_id" => "560063",
               "status" => "not_councils_responsibility",
@@ -429,7 +429,7 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560056_c97962f2",
+              "update_id" => "560056_7481316d",
               "updated_datetime" => "2019-04-17T13:34:00+01:00",
               "service_request_id" => "560056",
               "status" => "investigating",
@@ -437,7 +437,7 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560067_c3faabad",
+              "update_id" => "560067_c94b4dc5",
               "updated_datetime" => "2019-04-17T13:49:00+01:00",
               "service_request_id" => "560067",
               "status" => "investigating",
@@ -445,7 +445,7 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560058_840c808d",
+              "update_id" => "560058_1d1cbda6",
               "updated_datetime" => "2019-04-17T13:50:00+01:00",
               "service_request_id" => "560058",
               "status" => "internal_referral",
@@ -453,7 +453,7 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560062_e922a171",
+              "update_id" => "560062_761c376c",
               "updated_datetime" => "2019-04-17T14:08:00+01:00",
               "service_request_id" => "560062",
               "status" => "not_councils_responsibility",

@@ -310,7 +310,8 @@ sub get_service_request_updates {
             }
         };
 
-        my $digest = substr(md5_hex($row->{date_history}), 0, 8);
+        my $digest_key = join "-", map { $row->{$_} } sort keys %$row;
+        my $digest = substr(md5_hex($digest_key), 0, 8);
         my $update_id = $row->{crno} . '_' . $digest;
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
             status => $status,
