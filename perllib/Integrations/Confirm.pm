@@ -294,6 +294,7 @@ sub NewEnquiry {
 
     if ($args->{external_system_number}) {
         $enq{ExternalSystemNumber} = $args->{external_system_number};
+        $enq{ExternalSystemReference} = $args->{attributes}->{fixmystreet_id};
     }
 
     my @elements = map {
