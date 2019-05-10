@@ -297,6 +297,11 @@ has default_site_code => (
     default => ''
 );
 
+has external_system_number => (
+    is => 'ro',
+    default => ''
+);
+
 =head2 cutoff_enquiry_date
 
 A date before which you never want to return
@@ -396,6 +401,10 @@ sub post_service_request {
     }
 
     $args = $self->process_service_request_args($args);
+
+    if ($self->external_system_number) {
+        $args->{external_system_number} = $self->external_system_number;
+    }
 
     my $new_id = $integ->NewEnquiry($service, $args);
 

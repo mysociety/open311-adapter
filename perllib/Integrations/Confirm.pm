@@ -292,6 +292,9 @@ sub NewEnquiry {
         $enq{CentralAssetId} = $args->{central_asset_id};
     }
 
+    if ($args->{external_system_number}) {
+        $enq{ExternalSystemNumber} = $args->{external_system_number};
+    }
 
     my @elements = map {
         my $value = SOAP::Utils::encode_data($enq{$_});
