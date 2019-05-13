@@ -49,9 +49,9 @@ has username => (
     default => sub { $_[0]->endpoint_config->{username} }
 );
 
-has update_url => (
+has update_urls => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{update_url} }
+    default => sub { $_[0]->endpoint_config->{update_urls} }
 );
 
 # May want something like Confirm's service_assigned_officers
@@ -260,11 +260,12 @@ sub check_error {
     }
 }
 
-sub _get_csv {
+sub _get_csvs {
     my $self = shift;
     my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
-    my $csv_file = $ua->get($self->update_url);
-    return $csv_file->content_ref;
+    my @csv_files = map { $ua->get($_) } @{$self->update_urls};
+    @csv_files = map { $_->content_ref } @csv_files;
+    return \@csv_files;
 }
 
 sub get_service_request_updates {
@@ -274,55 +275,72 @@ sub get_service_request_updates {
     my $start_time = $w3c->parse_datetime($args->{start_date});
     my $end_time = $w3c->parse_datetime($args->{end_date});
 
-    my $csv_file = $self->_get_csv;
-    open my $fh, '<', $csv_file;
-
-    my $csv = Text::CSV->new;
-    my @cols = qw(date_history date_recorded crno request_type stage_desc date_cleared inspection lca action_due event_type stage);
-    my $row = {};
-    $csv->bind_columns(\@{$row}{@cols});
-    $csv->getline($fh); # Header
-
     my @updates;
-    while ($csv->getline($fh)) {
-        my $dt = $self->date_formatter->parse_datetime($row->{date_history});
-        next unless $dt >= $start_time && $dt <= $end_time;
+    my $csv_files = $self->_get_csvs;
+    foreach (@$csv_files) {
+        open my $fh, '<', $_;
 
-        my $status = do {
-            if ($row->{action_due} eq 'CLEARREQ') {
-                'no_further_action'
-            } elsif ($row->{action_due} eq 'CR') {
-                'fixed'
-            } elsif ($row->{action_due} =~ /^[NS][1-6]$/) {
-                'in_progress'
-            } elsif ($row->{action_due} eq 'IR') {
-                'internal_referral'
-            } elsif ($row->{action_due} eq 'NCR') {
-                'not_councils_responsibility'
-            } elsif ($row->{action_due} =~ /^[NS]I[1-6]MOB$/) {
-                'investigating'
-            } elsif ($row->{action_due} =~ /^PT[CS]$/) {
-                'action_scheduled'
-            } elsif ($row->{stage} == 9) {
-                'fixed'
-            } else {
-                'open' # XXX Might want to maintain existing status?
-            }
-        };
+        my $csv = Text::CSV->new;
+        $csv->header($fh, { munge_column_names => {
+            "History Date/Time" => "date_history",
+        } });
 
-        my $digest_key = join "-", map { $row->{$_} } sort keys %$row;
-        my $digest = substr(md5_hex($digest_key), 0, 8);
-        my $update_id = $row->{crno} . '_' . $digest;
-        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
-            status => $status,
-            update_id => $update_id,
-            service_request_id => $row->{crno}+0,
-            description => '', # lca description not used
-            updated_datetime => $dt,
-        );
+        while (my $row = $csv->getline_hr($fh)) {
+            my $dt = $self->date_formatter->parse_datetime($row->{date_history});
+            next unless $dt >= $start_time && $dt <= $end_time;
+
+            push @updates, $self->_process_csv_row($row);
+        }
     }
 
     return @updates;
+}
+
+sub _process_csv_row {
+    my ($self, $row) = @_;
+
+    my $dt = $self->date_formatter->parse_datetime($row->{date_history});
+
+    my $status = do {
+        my $maint_stage = $row->{'Maint. Stage'} || '';
+        my $action_due = $row->{'Action Due'} || '';
+        if ($maint_stage eq 'ORDERED') {
+            'investigating'
+        } elsif ($maint_stage eq 'COMMENCED' || $maint_stage eq 'ALLOCATED') {
+            'action_scheduled'
+        } elsif ($maint_stage =~ /COMPLETED|CLAIMED|APPROVED/) {
+            'fixed'
+        } elsif ($action_due eq 'CLEARREQ') {
+            'no_further_action'
+        } elsif ($action_due eq 'CR') {
+            'fixed'
+        } elsif ($action_due =~ /^[NS][1-6]$/) {
+            'in_progress'
+        } elsif ($action_due eq 'IR') {
+            'internal_referral'
+        } elsif ($action_due eq 'NCR') {
+            'not_councils_responsibility'
+        } elsif ($action_due =~ /^[NS]I[1-6]MOB$/) {
+            'investigating'
+        } elsif ($action_due =~ /^PT[CS]$/) {
+            'action_scheduled'
+        } elsif ($row->{Stage} == 9) {
+            'fixed'
+        } else {
+            'open' # XXX Might want to maintain existing status?
+        }
+    };
+
+    my $digest_key = join "-", map { $row->{$_} } sort keys %$row;
+    my $digest = substr(md5_hex($digest_key), 0, 8);
+    my $update_id = $row->{CRNo} . '_' . $digest;
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        status => $status,
+        update_id => $update_id,
+        service_request_id => $row->{CRNo}+0,
+        description => '', # lca description not used
+        updated_datetime => $dt,
+    );
 }
 
 1;

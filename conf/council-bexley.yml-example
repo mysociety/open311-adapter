@@ -1,6 +1,8 @@
 endpoint_url: ''
 username: FMS
-update_url: https://...
+update_urls:
+  - https://...
+  - https://...
 
 # For each category:
 #   name: The display name for the category
