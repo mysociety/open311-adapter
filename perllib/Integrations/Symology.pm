@@ -217,7 +217,7 @@ sub make_soap_structure {
                 ])
                 ->attr({'soapenc:arrayType' => "ro:$type" . "[]"});
         } else {
-            push @out, SOAP::Data->name($name => $v);
+            push @out, SOAP::Data->name($name => $v)->type('xsi:string');
         }
     }
     return @out;
