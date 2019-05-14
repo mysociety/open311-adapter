@@ -126,6 +126,7 @@ $bexley_end->mock(endpoint_config => sub {
 $bexley_end->mock(_get_csvs => sub {
     [ \<<EOF,
 "History Date/Time","Recorded Date","CRNo","Stage Desc.","Date Cleared","Inspection","LCA","Action Due","Event Type","Stage"
+13/03/2017 07:31,12/03/2019,569810,RECORDED,,NI1,N1,NI1MOB,Ignored,1
 13/03/2019 07:31,12/03/2019,569810,RECORDED,,NI1,N1,NI1MOB,,1
 14/03/2019 07:32,13/03/2019,569924,CLEARED,14/03/2019,NI2,NI2MOB,,,9
 17/04/2019 12:05,04/04/2019,560065,RECORDED,,SI6,S6,S6,,1
