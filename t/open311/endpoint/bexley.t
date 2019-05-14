@@ -65,8 +65,10 @@ $soap_lite->mock(call => sub {
         }
         return {
             StatusCode => 0,
+            StatusMessage => 'Success',
             SendRequestResults => {
                 SendRequestResultRow => {
+                    RecordType => 2,
                     ConvertCRNo => 1001,
                 }
             }
@@ -77,8 +79,10 @@ $soap_lite->mock(call => sub {
         is_deeply \@request, [ 'ServiceCode', 1001, 123, 'CCA', '', 'FMS', "This is the update$photo_desc" ];
         return {
             StatusCode => 0,
+            StatusMessage => 'Event Loaded',
             SendEventActionResults => {
                 SendEventActionResultRow => {
+                    RecordType => 2,
                 }
             }
         };
@@ -304,7 +308,7 @@ subtest "POST Abandoned Vehicles Bad" => sub {
 
     is_deeply decode_json($res->content),
         [ {
-            "description" => "Couldn't create Request in Symology: Failed - Unknown identifier\n",
+            "description" => "Couldn't create SendRequest in Symology: Failed - Unknown identifier\n",
             "code" => 500,
         } ], 'correct json returned';
 };
