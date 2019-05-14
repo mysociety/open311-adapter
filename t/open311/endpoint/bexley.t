@@ -128,14 +128,14 @@ $bexley_end->mock(_get_csvs => sub {
 "History Date/Time","Recorded Date","CRNo","Stage Desc.","Date Cleared","Inspection","LCA","Action Due","Event Type","Stage"
 13/03/2019 07:31,12/03/2019,569810,RECORDED,,NI1,N1,NI1MOB,,1
 14/03/2019 07:32,13/03/2019,569924,CLEARED,14/03/2019,NI2,NI2MOB,,,9
-17/04/2019 12:05,04/04/2019,560065,RECORDED,,SI6,S6,SI6MOB,,1
+17/04/2019 12:05,04/04/2019,560065,RECORDED,,SI6,S6,S6,,1
 17/04/2019 12:05,04/04/2019,560064,RECORDED,,SI6,PTC,PTC,,1
 17/04/2019 12:32,02/04/2019,560057,RECORDED,,NI3,NI3MOB,PTS,,1
 17/04/2019 13:29,04/04/2019,560063,RECORDED,,SI6,S5,NCR,,1
 17/04/2019 13:34,02/04/2019,560056,RECORDED,,SI6,SI6MOB,SI6MOB,,1
-17/04/2019 13:49,17/04/2019,560067,RECORDED,,SI4,S4,SI4MOB,,1
+17/04/2019 13:49,17/04/2019,560067,RECORDED,,SI4,S4,CLEARREQ,,1
 17/04/2019 13:50,04/04/2019,560058,RECORDED,,SI6,SI6MOB,IR,,1
-17/04/2019 14:08,04/04/2019,560062,RECORDED,,SI5,NCR,NCR,,1
+17/04/2019 14:08,04/04/2019,560062,RECORDED,,SI5,NCR,CR,,1
 EOF
     \<<EOF
 "History Date/Time","Recorded Date","CRNo","Stage Desc.","Date Cleared","Maint. Stage","L.A.Code"
@@ -412,10 +412,10 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560065_bad85ba1",
+              "update_id" => "560065_128faf5f",
               "updated_datetime" => "2019-04-17T12:05:00+01:00",
               "service_request_id" => "560065",
-              "status" => "investigating",
+              "status" => "in_progress",
               "description" => "",
               "media_url" => "",
            },
@@ -452,10 +452,10 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560067_f9691c4d",
+              "update_id" => "560067_24e7b980",
               "updated_datetime" => "2019-04-17T13:49:00+01:00",
               "service_request_id" => "560067",
-              "status" => "investigating",
+              "status" => "no_further_action",
               "description" => "",
               "media_url" => "",
            },
@@ -468,10 +468,10 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560062_a3923be9",
+              "update_id" => "560062_94e427db",
               "updated_datetime" => "2019-04-17T14:08:00+01:00",
               "service_request_id" => "560062",
-              "status" => "not_councils_responsibility",
+              "status" => "fixed",
               "description" => "",
               "media_url" => "",
            },
