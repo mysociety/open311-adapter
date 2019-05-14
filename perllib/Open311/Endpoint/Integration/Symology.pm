@@ -190,7 +190,7 @@ sub post_service_request {
         @args
     );
 
-    $self->check_error($response, 'Request');
+    $self->check_error($response, 'SendRequest');
 
     my $result = $response->{SendRequestResults}->{SendRequestResultRow};
     my $request = $self->new_request(
@@ -233,7 +233,7 @@ sub post_service_request_update {
         @args
     );
 
-    $self->check_error($response, 'Action');
+    $self->check_error($response, 'SendEventAction');
 
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
         status => lc $args->{status},
@@ -248,15 +248,24 @@ sub check_error {
 
     $self->logger->debug(encode_json($response));
 
-    unless (($response->{StatusCode}//-1) == 0) {
-        my $error = "Couldn't create $type in Symology: $response->{StatusMessage}";
-        my $result = $response->{SendRequestResults}->{SendRequestResultRow};
-        $result = [ $result ] if ref $result ne 'ARRAY';
-        foreach (@$result) {
-            $error .= " - $_->{MessageText}" if $_->{RecordType} == 1;
-            $error .= " - created request $_->{ConvertCRNo}" if $_->{RecordType} == 2;
+    # StatusCode is 0 on success, but we can get failures and still create an
+    # entry, in which case there is no point trying again, so look for creation.
+    my $crno;
+    my $error = $response->{StatusMessage};
+    my $result = $response->{$type."Results"}->{$type."ResultRow"};
+    $result = [ $result ] if ref $result ne 'ARRAY';
+    foreach (@$result) {
+        $error .= " - $_->{MessageText}" if $_->{RecordType} == 1;
+        if ($_->{RecordType} == 2 && $type eq 'SendRequest') {
+            $crno = $_->{ConvertCRNo};
+            $error .= " - created request $crno";
         }
-        $self->log_and_die($error);
+    }
+
+    if (($response->{StatusCode}//-1) == 0 || $crno) {
+        $self->logger->debug("Created $type in Symology: $error");
+    } else {
+        $self->log_and_die("Couldn't create $type in Symology: $error");
     }
 }
 
