@@ -156,7 +156,7 @@ sub get_historic_requests {
         } elsif ( defined $self->config->{historic_category_mapping}->{$code}->{$desc} ) {
             $category = $self->config->{historic_category_mapping}->{$code}->{$desc};
         } else {
-            $self->log->debug("no map $code -- $desc");
+            $self->logger->debug("no map $code -- $desc");
             $category = "";
         }
 
