@@ -60,7 +60,7 @@
                 {
                     "attributeId": 1008016,
                     "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_CATEGORY_TYPE_DESCRIPTION",
-                    "value": "Damaged/Missing"
+                    "value": "Missing"
                 },
                 {
                     "attributeId": 1008017,
@@ -70,7 +70,7 @@
                 {
                     "attributeId": 1008018,
                     "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_CLASS_DESCRIPTION",
-                    "value": "Safety Bollard"
+                    "value": "Kerbs"
                 },
                 {
                     "attributeId": 1008019,
@@ -240,7 +240,21 @@
                 {
                     "attributeId": 1001546,
                     "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_REASON_FOR_CLOSURE",
-                    "value": 4281523
+                    "value": {
+                        "parentReferenceContainerId": null,
+                        "systemVersion": {
+                            "allReferencesId": null,
+                            "allResourcesId": null,
+                            "childSummaryId": null
+                        },
+                        "values": [
+                            {
+                                "referenceId": 295217,
+                                "resourceId": 4281523,
+                                "sourceId": null
+                            }
+                        ]
+                    }
                 },
                 {
                     "attributeId": 1001546,
@@ -509,7 +523,21 @@
                 {
                     "attributeId": 1001546,
                     "attributeCode": "STU_INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA_ATT_REASON_FOR_CLOSURE",
-                    "value": 4281524
+                    "value": {
+                        "parentReferenceContainerId": null,
+                        "systemVersion": {
+                            "allReferencesId": null,
+                            "allResourcesId": null,
+                            "childSummaryId": null
+                        },
+                        "values": [
+                            {
+                                "referenceId": 295217,
+                                "resourceId": 4281524,
+                                "sourceId": null
+                            }
+                        ]
+                    }
                 },
                 {
                     "attributeId": 1001546,

@@ -197,7 +197,7 @@
     "2": "investigating", # issued to contractor
     "4": "investigating", # in progress
     # "3": "" # on hold
-    "6": "investigating" # closed
+    "6": "closed" # closed
   },
 
   "historic_inspection_closure_mapping": {

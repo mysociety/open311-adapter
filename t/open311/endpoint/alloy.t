@@ -625,32 +625,32 @@ subtest "check fetch northamptonshire historic reports" => sub {
 
     is_deeply decode_json($res->content),
     [{
-      updated_datetime => "2018-11-19T07:24:08Z",
-      service_code => "Safety Bollard - Damaged/Missing",
+      updated_datetime => "2018-11-19T12:47:04Z",
+      service_code => "Missing",
       requested_datetime => "2018-11-19T07:24:08Z",
       long => 1,
       address => "",
       status => "in_progress",
       media_url => "",
-      zipcode => "",
       description => "Reflective keep left bollard on centre island demolished in RTC",
       service_request_id => 959109,
+      zipcode => "",
       lat => 2,
       address_id => "",
-      service_name => "Safety Bollard - Damaged/Missing"
+      service_name => "Missing"
    },
    {
       long => 1,
       requested_datetime => "2018-11-19T07:28:16Z",
       service_code => "Damaged / Missing / Facing Wrong Way",
-      updated_datetime => "2018-11-19T07:28:16Z",
+      updated_datetime => "2018-11-19T13:05:47Z",
       service_name => "Damaged / Missing / Facing Wrong Way",
       address_id => "",
       lat => 2,
       description => "Keep left arrows demolished / missing on centre island ",
       service_request_id => 959110,
-      zipcode => "",
       media_url => "",
+      zipcode => "",
       status => "no_further_action",
       address => ""
    }], 'correct json returned';
@@ -670,9 +670,17 @@ subtest "check fetch updates including historic updates" => sub {
     [ {
         status => 'investigating',
         service_request_id => '3027029',
-        description => '',
+        description => 'This is a customer response',
         updated_datetime => '2019-01-01T01:59:40Z',
         update_id => '271882',
+        media_url => '',
+    },
+    {
+        status => 'investigating',
+        service_request_id => '3027030',
+        description => '',
+        updated_datetime => '2019-01-01T01:59:40Z',
+        update_id => '271883',
         media_url => '',
     },
     {
