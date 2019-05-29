@@ -78,8 +78,9 @@ sub get_historic_updates {
 
         $status = $self->get_historic_status_with_closure($status, $reason_for_closure);
 
-        #my $update_time = $self->get_time_for_version($update->{resourceId}, $update->{version}->{resourceSystemVersionId});
-        #my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update_time )->truncate( to => 'second' );
+        # subtract 20 seconds to make sure it passes FixMyStreet time checks
+        # ideally this should use the time of the actual update but it's not really clear how to get this
+        # out of the Alloy API so easier just to use the end date
         my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $end_date )->add( seconds => -20 );
 
         my %args = (
