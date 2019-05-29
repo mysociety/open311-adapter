@@ -146,7 +146,7 @@ sub get_historic_requests {
         }
 
         # this doesn't seem to be correctly represented in the statuses
-        next if $orig_status eq 'WORK COMPLETE' && $status eq 'closed';
+        next if defined $orig_status && $orig_status eq 'WORK COMPLETE' && $status eq 'closed';
 
         $args{status} = $self->get_historic_status_with_closure($status, $reason_for_closure);
         next if $self->config->{historic_skip_import_status}->{$args{status}};
