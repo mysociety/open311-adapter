@@ -1,0 +1,5 @@
+# Timed tasks for open311-adapter
+
+PATH=/usr/local/bin:/usr/bin:/bin
+
+*/5 * * * * run-with-lockfile -n "$BASE/confirm-upload.lock" "$BASE/bin/confirm-upload" || echo "stalled?"
