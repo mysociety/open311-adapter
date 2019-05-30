@@ -36,16 +36,8 @@ has logger => (
 
 has ua => (
     is => 'lazy',
-    # Aggressive timeout because Confirm can be slow. The enquiry has already
-    # been created, which is the important bit, so it doesn't matter so much
-    # if photo uploading fails. If we spend too long on photos we run the risk
-    # of the FMS Open311 POST Service Request failing, and a duplicate enquiry
-    # being raised next time FMS attempts to send the report.
     default => sub {
-        LWP::UserAgent->new(
-            agent => "FixMyStreet/open311-adapter",
-            timeout => 20,
-        )
+        LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter")
     },
 );
 
@@ -368,7 +360,7 @@ sub NewEnquiry {
 
     my $external_id = $response->{OperationResponse}->{NewEnquiryResponse}->{Enquiry}->{EnquiryNumber};
 
-    $self->_upload_enquiry_documents($external_id, $args);
+    $self->_store_enquiry_documents($external_id, $args);
 
     return $external_id;
 }
@@ -457,9 +449,37 @@ sub GetEnquiryStatusChanges {
     return $enquiries;
 }
 
+# Confirm can be slow, so instead of uploading the documents now,
+# store them and upload them in a bit
+sub _store_enquiry_documents {
+    my ($self, $enquiry_number, $args) = @_;
+
+    my $dir = $self->config->{uploads_dir};
+    return unless $enquiry_number && $self->config->{web_url} && $dir
+        && (@{$args->{media_url}} || @{$args->{uploads}});
+
+    $dir = path($dir);
+    $dir->mkpath;
+
+    my $data;
+    $data->{media_url} = $args->{media_url} if @{$args->{media_url}};
+
+    if (@{$args->{uploads}}) {
+        my $uploads_dir = $dir->child($enquiry_number);
+        $uploads_dir->mkpath;
+        foreach (@{$args->{uploads}}) {
+            my $out = $uploads_dir->child($_->basename);
+            path($_)->copy($out);
+            push @{$data->{uploads}}, "$out";
+        }
+    }
+
+    $dir->child("$enquiry_number.json")->spew_utf8(encode_json($data));
+}
+
 # If the request succeeded and there are photos or uploaded files, upload
 # them to the central enquiries API
-sub _upload_enquiry_documents {
+sub upload_enquiry_documents {
     my ($self, $enquiry_number, $args) = @_;
 
     return unless $enquiry_number && $self->config->{web_url};
@@ -474,10 +494,11 @@ sub _upload_enquiry_documents {
     } @{ $args->{media_url} };
 
     my @uploads = map {
+        my $file = path($_);
         {
-            documentName => $_->filename,
+            documentName => $file->basename,
             documentNotes => "File from problem reporter.",
-            blobData => encode_base64(path($_->tempname)->slurp)
+            blobData => encode_base64($file->slurp)
         };
     } @{ $args->{uploads} };
 
@@ -499,7 +520,9 @@ sub _upload_enquiry_documents {
     my $response = $self->ua->request($req);
     unless ($response->is_success) {
         $self->logger->warn("Couldn't post files to Confirm: " . $response->content);
+        return;
     };
+    return 1;
 }
 
 1;

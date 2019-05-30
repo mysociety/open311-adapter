@@ -8,6 +8,8 @@ use Types::Standard ':all';
 use Module::Pluggable
     search_path => ['Open311::Endpoint::Integration::UK'],
     instantiate => 'new';
+use JSON::MaybeXS;
+use Path::Tiny;
 
 use Open311::Endpoint::Schema;
 
@@ -85,6 +87,29 @@ sub post_service_request_update {
     my ($self, $args) = @_;
     return $self->_call('post_service_request_update', $args->{jurisdiction_id},
         $args);
+}
+
+sub confirm_upload {
+    my $self = shift;
+    foreach ($self->plugins) {
+        next unless $_->can('get_integration');
+        my $integ = $_->get_integration;
+        next unless $integ->isa('Integrations::Confirm');
+
+        my $dir = $integ->config->{uploads_dir};
+        next unless $dir;
+        $dir = path($dir);
+
+        foreach ($dir->children( qr/\.json$/ )) {
+            my $id = $_->basename('.json');
+            my $data = decode_json($_->slurp_utf8);
+            my $success = $integ->upload_enquiry_documents($id, $data);
+            if ($success) {
+                $dir->child($id)->remove_tree; # Files for upload
+                $_->remove;
+            }
+        }
+    }
 }
 
 __PACKAGE__->run_if_script;
