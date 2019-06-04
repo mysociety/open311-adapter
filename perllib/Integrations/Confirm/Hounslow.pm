@@ -1,13 +1,13 @@
-package Integrations::WDM::Oxfordshire;
+package Integrations::Confirm::Hounslow;
 
 use Path::Tiny;
 use Moo;
-extends 'Integrations::WDM';
+extends 'Integrations::Confirm';
 with 'Role::Config';
 
 has config_filename => (
     is => 'ro',
-    default => 'oxfordshire_wdm',
+    default => 'hounslow_confirm',
 );
 
 sub _build_config_file {

@@ -300,9 +300,13 @@ sub dispatch_request {
         $self->call_api( GET_Service_Definition => $service_id, $args );
     },
 
-    sub (POST + /requests + %:@media_url~&*) {
-        my ($self, $args) = @_;
-        $self->call_api( POST_Service_Request => $args );
+    sub (POST + /requests + %:@media_url~&* + **) {
+        my ($self, $args, $uploads) = @_;
+        my @files = grep {
+            $_->is_upload
+        } values %$uploads;
+        $args->{uploads} = \@files;
+        $self->call_api( POST_Service_Request => $args, );
     },
 
     sub (GET + /tokens/*) {
@@ -470,6 +474,7 @@ sub POST_Service_Request_input_schema {
                 phone => '//str',
                 description => '//str',
                 media_url => { type => '//arr', contents => '//str' },
+                uploads => { type => '//arr', contents => '//any' },
                 %{ $attributes{optional} || {}},
                 (map %$_, @address_options),
                 $self->get_jurisdiction_id_optional_clause,

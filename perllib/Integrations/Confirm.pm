@@ -7,6 +7,11 @@ use Carp ();
 use Moo;
 use Cache::Memcached;
 use Open311::Endpoint::Logger;
+use JSON::MaybeXS;
+use LWP::UserAgent;
+use HTTP::Request::Common;
+use MIME::Base64 qw(encode_base64 decode_base64);
+use Path::Tiny;
 
 use vars qw(@ISA);
 @ISA = qw(Exporter SOAP::Lite);
@@ -27,6 +32,13 @@ sub credentials {
 has logger => (
     is => 'lazy',
     default => sub { Open311::Endpoint::Logger->new },
+);
+
+has ua => (
+    is => 'lazy',
+    default => sub {
+        LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter")
+    },
 );
 
 # If the Confirm endpoint requires a particular EnquiryMethodCode for NewEnquiry
@@ -73,6 +85,30 @@ has memcache => (
             'debug' => 0,
             'compress_threshold' => 10_000,
         };
+    },
+);
+
+has oauth_token => (
+    is => 'lazy',
+    default => sub {
+        my $self = shift;
+
+        my $token = $self->memcache->get('oauth_token');
+        unless ($token) {
+            my ($username, $password, $tenant) = $self->credentials;
+            my $url = $self->config->{web_url} . $tenant . "/oauth/token";
+            my $req = POST $url, [ grant_type => "client_credentials" ];
+            $req->authorization_basic($username, $password);
+            my $response = $self->ua->request($req);
+            unless ($response->is_success) {
+                $self->logger->warn("Getting OAuth token failed: $url");
+                return;
+            }
+            my $content = decode_json($response->content);
+            $token = decode_base64($content->{access_token});
+            $self->memcache->set('oauth_token', $token, $content->{expires_in});
+        }
+        return $token;
     },
 );
 
@@ -297,7 +333,7 @@ sub NewEnquiry {
 
     if ($args->{media_url}->[0]) {
         foreach my $photo_url (@{ $args->{media_url} }) {
-            my $notes = "Photo from problem reporter.";
+            my $notes = "View photo on FixMyStreet.";
             push @elements, SOAP::Data->name('EnquiryDocument' => \SOAP::Data->value(
                 SOAP::Data->name('DocumentNotes' => SOAP::Utils::encode_data($notes))->type(""),
                 SOAP::Data->name('DocumentLocation' => SOAP::Utils::encode_data($photo_url))->type(""),
@@ -323,6 +359,8 @@ sub NewEnquiry {
     my $response = $self->perform_request($operation);
 
     my $external_id = $response->{OperationResponse}->{NewEnquiryResponse}->{Enquiry}->{EnquiryNumber};
+
+    $self->_store_enquiry_documents($external_id, $args);
 
     return $external_id;
 }
@@ -409,6 +447,82 @@ sub GetEnquiryStatusChanges {
     my $enquiries = $status_changes ? $status_changes->{UpdatedEnquiry} : [];
     $enquiries = [ $enquiries ] if (ref($enquiries) eq 'HASH');
     return $enquiries;
+}
+
+# Confirm can be slow, so instead of uploading the documents now,
+# store them and upload them in a bit
+sub _store_enquiry_documents {
+    my ($self, $enquiry_number, $args) = @_;
+
+    my $dir = $self->config->{uploads_dir};
+    return unless $enquiry_number && $self->config->{web_url} && $dir
+        && (@{$args->{media_url}} || @{$args->{uploads}});
+
+    $dir = path($dir);
+    $dir->mkpath;
+
+    my $data;
+    $data->{media_url} = $args->{media_url} if @{$args->{media_url}};
+
+    if (@{$args->{uploads}}) {
+        my $uploads_dir = $dir->child($enquiry_number);
+        $uploads_dir->mkpath;
+        foreach (@{$args->{uploads}}) {
+            my $out = $uploads_dir->child($_->basename);
+            path($_)->copy($out);
+            push @{$data->{uploads}}, "$out";
+        }
+    }
+
+    $dir->child("$enquiry_number.json")->spew_utf8(encode_json($data));
+}
+
+# If the request succeeded and there are photos or uploaded files, upload
+# them to the central enquiries API
+sub upload_enquiry_documents {
+    my ($self, $enquiry_number, $args) = @_;
+
+    return unless $enquiry_number && $self->config->{web_url};
+
+    my @photos = map {
+        my $photo = $self->ua->get($_);
+        {
+            documentName => $photo->filename,
+            documentNotes => "Photo from problem reporter.",
+            blobData => encode_base64($photo->content)
+        } if $photo->is_success;
+    } @{ $args->{media_url} };
+
+    my @uploads = map {
+        my $file = path($_);
+        {
+            documentName => $file->basename,
+            documentNotes => "File from problem reporter.",
+            blobData => encode_base64($file->slurp)
+        };
+    } @{ $args->{uploads} };
+
+    return unless @photos or @uploads;
+
+    my $body = {
+        enquiryNumber => $enquiry_number,
+        centralDocLinks => [ @photos, @uploads ]
+    };
+
+    my $token = $self->oauth_token;
+    return unless $token;
+    my ($username, $password, $tenant) = $self->credentials;
+    my $url = $self->config->{web_url} . $tenant . "/centralEnquiries";
+    my $req = POST $url,
+        AccessToken => $token,
+        'Content-Type' => 'application/json',
+        Content => encode_json($body);
+    my $response = $self->ua->request($req);
+    unless ($response->is_success) {
+        $self->logger->warn("Couldn't post files to Confirm: " . $response->content);
+        return;
+    };
+    return 1;
 }
 
 1;
