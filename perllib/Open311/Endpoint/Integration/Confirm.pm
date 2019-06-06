@@ -603,6 +603,10 @@ sub get_service_requests {
             next;
         }
 
+        # If an enquiry originated on FixMyStreet, we don't want to pass it back
+        # to FMS as a new service request.
+        next if $enquiry->{LoggedByUserId} eq $integ->config->{username};
+
         my $createdtime = $self->date_parser->parse_datetime($enquiry->{EnquiryLogTime})->truncate( to => 'second' );
         $createdtime->set_time_zone($integ->server_timezone);
         next if $self->cutoff_enquiry_date && $createdtime < $self->cutoff_enquiry_date;
