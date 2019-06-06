@@ -13,6 +13,7 @@ use Open311::Endpoint::Service::Request::CanBeNonPublic;
 
 use Path::Tiny;
 use SOAP::Lite; # +trace => [ qw/method debug/ ];
+use Text::CSV;
 
 
 around BUILDARGS => sub {
@@ -522,8 +523,10 @@ sub _services {
         }
     }
 
+    my $csv = Text::CSV->new();
     my @services = ();
-    for my $group (keys %{ $self->service_whitelist }) {
+    my %service_codes;
+    for my $group (sort keys %{ $self->service_whitelist }) {
         my $whitelist = $self->service_whitelist->{$group};
         for my $code (keys %{ $whitelist }) {
             my $subject = $services{$code}->{subject};
@@ -532,19 +535,28 @@ sub _services {
                 next;
             }
             my $name = $whitelist->{$code} eq 1 ? $subject->{SubjectName} :  $whitelist->{$code};
-            my %service = (
-                service_name => $name,
-                service_code => $code,
-                description => $name,
-                group => $group,
-                keywords => $private_services{$code} ? [qw/ private /] : [],
-            );
-            my $o311_service = $self->service_class->new(%service);
-            for (@{$services{$code}->{attribs}}) {
-                push @{$o311_service->attributes}, $_;
+            if ( defined $service_codes{ $code } ) {
+                push @{$service_codes{$code}->{group}}, $group;
+            } else {
+                $service_codes{$code} = {
+                    service_name => $name,
+                    service_code => $code,
+                    description => $name,
+                    group => [$group],
+                    keywords => $private_services{$code} ? [qw/ private /] : [],
+                };
             }
-            push @services, $o311_service;
         }
+    }
+    for my $code (sort keys %service_codes) {
+        my %service = %{ $service_codes{$code} };
+        $csv->combine(@{$service{group}});
+        $service{group} = $csv->string;
+        my $o311_service = $self->service_class->new(%service);
+        for (@{$services{$code}->{attribs}}) {
+            push @{$o311_service->attributes}, $_;
+        }
+        push @services, $o311_service;
     }
 
     return @services;

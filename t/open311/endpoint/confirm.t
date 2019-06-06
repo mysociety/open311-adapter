@@ -129,7 +129,7 @@ subtest "GET Service List" => sub {
 <services>
   <service>
     <description>Flooding</description>
-    <group>Flooding &amp; Drainage</group>
+    <group>Flooding,&quot;Flooding &amp; Drainage&quot;</group>
     <keywords></keywords>
     <metadata>true</metadata>
     <service_code>ABC_DEF</service_code>
@@ -395,7 +395,7 @@ subtest "GET Service List - private services" => sub {
 <services>
   <service>
     <description>Flooding</description>
-    <group>Flooding &amp; Drainage</group>
+    <group>&quot;Flooding &amp; Drainage&quot;</group>
     <keywords>private</keywords>
     <metadata>true</metadata>
     <service_code>ABC_DEF</service_code>
