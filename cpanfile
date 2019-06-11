@@ -28,10 +28,13 @@ requires 'Path::Tiny';
 requires 'Scalar::Util';
 requires 'SOAP::Lite';
 requires 'Starman';
+requires 'Text::CSV';
+requires 'Text::CSV_XS';
 requires 'Types::Standard';
 requires 'XML::Simple';
 requires 'Web::Simple';
 requires 'YAML::XS';
+requires 'YAML::Logic';
 requires 'Log::Dispatch';
 
 # Modules used by the test suite
