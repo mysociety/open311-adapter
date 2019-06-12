@@ -412,6 +412,7 @@ subtest "create comment" => sub {
     {
     attributes =>         {
         1013262 => "Original text
+Customer update at 2019-04-17 14:39:00
 This is an update"
     },
     systemVersionId => 8000

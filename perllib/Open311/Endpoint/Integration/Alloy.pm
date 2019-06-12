@@ -232,7 +232,9 @@ sub post_service_request_update {
         }
     }
 
-    $updates .= "\n" . $args->{description};
+    my $time = DateTime::Format::W3CDTF->new->parse_datetime($args->{updated_datetime});
+    my $formatted_time = $time->ymd . " " . $time->hms;
+    $updates .= "\nCustomer update at " . "$formatted_time" . "\n" . $args->{description};
 
     my $updated = {
         attributes => {
