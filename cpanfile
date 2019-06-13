@@ -45,3 +45,4 @@ requires 'Test::LongString';
 requires 'Test::MockModule';
 requires 'Test::MockTime';
 requires 'Test::More';
+requires 'Test::Output';

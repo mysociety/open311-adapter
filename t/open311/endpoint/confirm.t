@@ -53,6 +53,7 @@ use warnings;
 use Test::More;
 use Test::LongString;
 use Test::MockModule;
+use Test::Output;
 
 use JSON::MaybeXS;
 use Path::Tiny;
@@ -72,9 +73,17 @@ $open311->mock(perform_request => sub {
             ] } }
         };
     } elsif ( $op->name && $op->name eq 'GetEnquiry' ) {
-        return { OperationResponse => { GetEnquiryResponse => { Enquiry => {
+        return { OperationResponse => [
+          { GetEnquiryResponse => { Enquiry => {
             ServiceCode => 'ABC', SubjectCode => 'DEF', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z'
-        } } } };
+          } } },
+          { GetEnquiryResponse => { Enquiry => {
+            ServiceCode => 'ABC', SubjectCode => 'DEF', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm with no easting/northing', EnquiryNumber => '2004', EnquiryLogTime => '2018-04-17T12:34:57Z', LoggedTime => '2018-04-17T12:34:57Z'
+          } } },
+          { GetEnquiryResponse => { Enquiry => {
+            ServiceCode => 'ABC', SubjectCode => 'DEF', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm with a zero easting/northing', EnquiryNumber => '2005', EnquiryX => '0', EnquiryY => '0', EnquiryLogTime => '2018-04-17T12:34:58Z', LoggedTime => '2018-04-17T12:34:58Z'
+          } } }
+        ] };
     }
     $op = $op->value;
     if ($op->name eq 'NewEnquiry') {
@@ -399,9 +408,12 @@ XML
 };
 
 subtest 'GET reports' => sub {
-    my $res = $endpoint->run_test_request(
-        GET => '/requests.xml?jurisdiction_id=dummy&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
-    );
+    my $res;
+    stderr_is {
+        $res = $endpoint->run_test_request(
+            GET => '/requests.xml?jurisdiction_id=dummy&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
+        );
+    } "no easting/northing for Enquiry 2004\nno easting/northing for Enquiry 2005\n", 'Warnings about invalid locations output';
     ok $res->is_success, 'valid request' or diag $res->content;
 
 my $expected = <<XML;
@@ -430,9 +442,12 @@ XML
 };
 
 subtest 'GET reports - private' => sub {
-    my $res = $endpoint->run_test_request(
-        GET => '/requests.xml?jurisdiction_id=dummy_private&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
-    );
+    my $res;
+    stderr_is {
+        $res = $endpoint->run_test_request(
+          GET => '/requests.xml?jurisdiction_id=dummy_private&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
+        );
+    } "no easting/northing for Enquiry 2004\nno easting/northing for Enquiry 2005\n", 'Warnings about invalid locations output';
     ok $res->is_success, 'valid request' or diag $res->content;
 
 my $expected = <<XML;
@@ -462,9 +477,12 @@ XML
 };
 
 subtest 'GET reports - private services' => sub {
-    my $res = $endpoint->run_test_request(
-        GET => '/requests.xml?jurisdiction_id=dummy_private_services&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
-    );
+    my $res;
+    stderr_is {
+        $res = $endpoint->run_test_request(
+          GET => '/requests.xml?jurisdiction_id=dummy_private_services&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
+        );
+    } "no easting/northing for Enquiry 2004\nno easting/northing for Enquiry 2005\n", 'Warnings about invalid locations output';
     ok $res->is_success, 'valid request' or diag $res->content;
 
 my $expected = <<XML;

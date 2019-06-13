@@ -62,6 +62,21 @@ DISTRIBUTIONS
       Storable 0
       String::CRC32 0
       Time::HiRes 0
+  Capture-Tiny-0.48
+    pathname: D/DA/DAGOLDEN/Capture-Tiny-0.48.tar.gz
+    provides:
+      Capture::Tiny 0.48
+    requirements:
+      Carp 0
+      Exporter 0
+      ExtUtils::MakeMaker 6.17
+      File::Spec 0
+      File::Temp 0
+      IO::Handle 0
+      Scalar::Util 0
+      perl 5.006
+      strict 0
+      warnings 0
   Class-Data-Inheritable-0.08
     pathname: T/TM/TMTM/Class-Data-Inheritable-0.08.tar.gz
     provides:
@@ -2494,6 +2509,16 @@ DISTRIBUTIONS
       Test::More 0
       Time::Local 0
       Time::Piece 1.08
+  Test-Output-1.031
+    pathname: B/BD/BDFOY/Test-Output-1.031.tar.gz
+    provides:
+      Test::Output 1.031
+    requirements:
+      Capture::Tiny 0.17
+      ExtUtils::MakeMaker 6.64
+      File::Spec::Functions 0
+      File::Temp 0.17
+      perl 5.008
   Test-Requires-0.10
     pathname: T/TO/TOKUHIROM/Test-Requires-0.10.tar.gz
     provides:

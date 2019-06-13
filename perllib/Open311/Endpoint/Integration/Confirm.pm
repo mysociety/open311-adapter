@@ -598,7 +598,7 @@ sub get_service_requests {
             $status = 'open';
         }
 
-        unless (defined $enquiry->{EnquiryY} && defined $enquiry->{EnquiryX}) {
+        unless ($enquiry->{EnquiryY} && $enquiry->{EnquiryX}) {
             warn "no easting/northing for Enquiry $enquiry->{EnquiryNumber}\n";
             next;
         }
