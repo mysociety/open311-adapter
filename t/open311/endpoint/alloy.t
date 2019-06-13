@@ -97,6 +97,8 @@ $integration->mock('api_call', sub {
             if ( $type =~ /DEFECT/ ) {
                 if ( $time =~ /2019-01-02/ ) {
                     $content = path(__FILE__)->sibling('json/alloy/defect_search_all.json')->slurp;
+                } elsif ( $time =~ /2019-01-03/ ) {
+                    $content = path(__FILE__)->sibling('json/alloy/defect_search_multiple.json')->slurp;
                 } else {
                     $content = path(__FILE__)->sibling('json/alloy/defect_search.json')->slurp;
                 }
@@ -113,6 +115,8 @@ $integration->mock('api_call', sub {
             $content = path(__FILE__)->sibling('json/alloy/source.json')->slurp;
         } elsif ( $call eq 'resource/3027029/parents' ) {
             $content = '{ "details": { "parents": [] } }';
+        } elsif ( $call eq 'resource/4947504/parents' ) {
+            $content = '{ "details": { "parents": [ {"actualParentSourceTypeId": 1001181, "parentResId": 3027030 } ] } }';
         } elsif ( $call eq 'resource/3027029/versions' ) {
             $content = path(__FILE__)->sibling('json/alloy/resource_versions.json')->slurp;
         } elsif ( $call eq 'resource/4947502/versions' ) {
@@ -307,7 +311,7 @@ subtest "check fetch updates" => sub {
         status => 'investigating',
         service_request_id => '3027029',
         description => 'This is a customer response',
-        updated_datetime => '2019-01-01T01:59:40Z',
+        updated_datetime => '2019-01-01T00:32:40Z',
         update_id => '271882',
         media_url => '',
     },
@@ -315,7 +319,7 @@ subtest "check fetch updates" => sub {
         status => 'investigating',
         service_request_id => '3027030',
         description => '',
-        updated_datetime => '2019-01-01T01:59:40Z',
+        updated_datetime => '2019-01-01T01:42:40Z',
         update_id => '271883',
         media_url => '',
     },
@@ -323,11 +327,58 @@ subtest "check fetch updates" => sub {
         status => 'action_scheduled',
         service_request_id => '4947502',
         description => '',
-        updated_datetime => '2019-01-01T01:59:40Z',
+        updated_datetime => '2019-02-19T09:11:08Z',
         update_id => '271877',
         media_url => '',
         fixmystreet_id => '10034',
     } ], 'correct json returned';
+};
+
+subtest "check fetch multiple updates" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-03T00:00:00Z&end_date=2019-01-03T02:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'investigating',
+        service_request_id => '3027029',
+        description => 'This is a customer response',
+        updated_datetime => '2019-01-01T00:32:40Z',
+        update_id => '271882',
+        media_url => '',
+    },
+    {
+        status => 'investigating',
+        service_request_id => '3027030',
+        description => '',
+        updated_datetime => '2019-01-01T01:42:40Z',
+        update_id => '271883',
+        media_url => '',
+    },
+    {
+        status => 'action_scheduled',
+        service_request_id => '4947502',
+        description => '',
+        updated_datetime => '2019-01-03T09:12:18Z',
+        update_id => '271877',
+        media_url => '',
+        fixmystreet_id => '10034',
+    },
+    {
+        status => 'action_scheduled',
+        service_request_id => '3027030',
+        description => '',
+        updated_datetime => '2019-01-03T09:11:08Z',
+        update_id => '271884',
+        media_url => '',
+    },
+], 'correct json returned';
 };
 
 subtest "check fetch problem" => sub {
@@ -342,25 +393,10 @@ subtest "check fetch problem" => sub {
 
     is_deeply decode_json($res->content),
     [{
-      updated_datetime => "2019-02-19T11:26:26Z",
-      service_code => "Grit Bin - damaged/replacement",
-      requested_datetime => "2019-02-19T11:26:26Z",
       long => 1,
-      address => "",
-      status => "investigating",
-      media_url => "",
-      zipcode => "",
-      description => "test",
-      service_request_id => 4947504,
-      lat => 2,
-      address_id => "",
-      service_name => "Grit Bin - damaged/replacement"
-   },
-   {
-      long => 1,
-      requested_datetime => "2019-02-19T11:29:16Z",
+      requested_datetime => "2019-01-02T11:29:16Z",
       service_code => "Shelter Damaged",
-      updated_datetime => "2019-02-19T11:29:16Z",
+      updated_datetime => "2019-01-02T11:29:16Z",
       service_name => "Shelter Damaged",
       address_id => "",
       lat => 2,
@@ -381,9 +417,9 @@ subtest "check fetch problem" => sub {
       media_url => "",
       address => "",
       zipcode => "",
-      requested_datetime => "2019-02-21T14:44:53Z",
+      requested_datetime => "2019-01-02T14:44:53Z",
       long => 1,
-      updated_datetime => "2019-02-21T14:44:53Z",
+      updated_datetime => "2019-01-02T14:44:53Z",
       service_code => "Grit Bin - damaged/replacement",
       service_code => "Grit Bin - empty/refill"
    }], "correct json returned";
