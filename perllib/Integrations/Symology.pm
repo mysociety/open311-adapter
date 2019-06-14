@@ -125,10 +125,10 @@ sub SOAP::Serializer::as_ArrayOfAdditionalFieldSend {
     my ($self, $value, $name, $type, $attr) = @_;
 
     my $v = [
-          { FieldLine => 17, ValueType => 1, DataValue => $value },
+          [ FieldLine => 17, ValueType => 1, DataValue => $value ],
     ];
     my $elem = \SOAP::Data
-        ->name('AdditionalFieldSend' => map { [ make_soap_structure(%$_) ] } @$v)
+        ->name('AdditionalFieldSend' => map { [ make_soap_structure(@$_) ] } @$v)
         ->attr({'xsi:type' => 'AdditionalFieldSend'});
     return [$name, {'xsi:type' => $type, %$attr}, $elem];
 }
@@ -169,7 +169,7 @@ sub SOAP::Serializer::as_RequestSend {
 sub SOAP::Serializer::as_CustomerSend {
     my ($self, $value, $name, $type, $attr) = @_;
 
-    my $dt = DateTime->now();
+    my $dt = DateTime->now(time_zone => 'Europe/London');
     my $elem = \SOAP::Data->value( make_soap_structure(
           CustomerFullName => $value->{name},
           CustomerTelNo => $value->{phone},
