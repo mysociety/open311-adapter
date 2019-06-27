@@ -192,7 +192,7 @@ sub SOAP::Serializer::as_EventActionSend {
         ServiceCode => $value->{ServiceCode},
         CRNo => $value->{CRNo},
         WebRequestID => $value->{fixmystreet_id},
-        EventType => 'CCA',
+        EventType => $value->{closed} ? 'CR' : 'CCA',
         EventDescription => '',
         UserName => $value->{UserName},
         Description => $value->{Description},

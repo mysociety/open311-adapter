@@ -207,7 +207,10 @@ sub process_service_request_update_args {
     my $codes = $self->category_mapping->{$service_code};
     $self->log_and_die("Could not find category mapping for $service_code") unless $codes;
 
+    my $closed = $args->{status} =~ /FIXED|DUPLICATE|NOT_COUNCILS_RESPONSIBILITY|NO_FURTHER_ACTION|INTERNAL_REFERRAL|CLOSED/;
+
     my $request = {
+        closed => $closed,
         Description => $args->{description},
         ServiceCode => $codes->{parameters}{ServiceCode},
         CRNo => $args->{service_request_id},

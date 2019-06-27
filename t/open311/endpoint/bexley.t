@@ -22,6 +22,8 @@ use constant {
     REPORT_INWEB => 12,
     REPORT_SERVICECODE => 13,
     REPORT_NEXTACTION => 14,
+    UPDATE_REPORT_ID => 123,
+    UPDATE_REPORT_ID_CLOSING => 234,
 };
 
 use constant {
@@ -76,7 +78,9 @@ $soap_lite->mock(call => sub {
     } elsif ($args[0] eq 'SendEventAction') {
         my @request = map { $_->value } ${$args[2]->value}->value;
         my $photo_desc = "\n\n[ This update contains a photo, see: http://example.org/photo/1.jpeg ]";
-        is_deeply \@request, [ 'ServiceCode', 1001, 123, 'CCA', '', 'FMS', "This is the update$photo_desc" ];
+        my $report_id = $request[2];
+        my $code = $report_id == UPDATE_REPORT_ID_CLOSING ? 'CR' : 'CCA';
+        is_deeply \@request, [ 'ServiceCode', 1001, $report_id, $code, '', 'FMS', "This is the update$photo_desc" ];
         return {
             StatusCode => 0,
             StatusMessage => 'Event Loaded',
@@ -427,7 +431,31 @@ subtest "POST update OK" => sub {
         first_name => 'Bob',
         last_name => 'Mould',
         description => "This is the update",
-        service_request_id_ext => 123,
+        service_request_id_ext => UPDATE_REPORT_ID,
+        update_id => 456,
+        media_url => 'http://example.org/photo/1.jpeg',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            'update_id' => 456,
+        } ], 'correct json returned';
+};
+
+subtest "POST closing update OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        updated_datetime => '2019-03-01T12:00:00Z',
+        service_code => 'AbanVeh',
+        service_request_id => 1001,
+        status => 'FIXED',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the update",
+        service_request_id_ext => UPDATE_REPORT_ID_CLOSING,
         update_id => 456,
         media_url => 'http://example.org/photo/1.jpeg',
     );
