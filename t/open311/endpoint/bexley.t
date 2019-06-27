@@ -367,6 +367,55 @@ subtest "POST Abandoned Vehicles burnt OK" => sub {
         } ], 'correct json returned';
 };
 
+$bexley_end->mock(endpoint_config => sub {
+    {
+        username => 'FMS',
+        nsgref_to_action => {
+            NSGREF, 'N1',
+            '234/5678' => 'S2',
+        },
+        category_mapping => {
+            AbanVeh => {
+                name => 'Abandoned vehicles',
+                parameters => {
+                    ServiceCode => 'ServiceCode',
+                    RequestType => 'ReqType',
+                    AnalysisCode1 => 'A1',
+                    AnalysisCode2 => 'A2',
+                },
+                questions => [
+                    { code => 'car_details', description => 'Car details', },
+                ],
+                logic => [
+                    { rules => [ { '$attr.car_details' => 'Grey' } ], output => { Priority => 'P1' } },
+                ],
+            },
+        },
+    }
+});
+$endpoint = Open311::Endpoint::Integration::UK::Bexley->new;
+
+subtest "POST with bad rules fails" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'AbanVeh',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the & details",
+        lat => 51,
+        long => -1,
+        media_url => 'http://example.org/photo/1.jpeg',
+        'attribute[NSGRef]' => NSGREF,
+        'attribute[easting]' => EASTING_GOOD,
+        'attribute[northing]' => NORTHING,
+        'attribute[fixmystreet_id]' => 123,
+        'attribute[car_details]' => 'Grey',
+    );
+    ok $res->is_error, 'invalid request'
+        or diag $res->content;
+};
+
 subtest "POST update OK" => sub {
     my $res = $endpoint->run_test_request(
         POST => '/servicerequestupdates.json',

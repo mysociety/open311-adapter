@@ -154,6 +154,7 @@ sub process_service_request_args {
 
     my $logic = YAML::Logic->new();
     foreach (@{$codes->{logic}}) {
+        die unless @{$_->{rules}} %2 == 0; # Must be even
         if ($logic->evaluate($_->{rules}, {
           attr => $args->{attributes},
           request => $request
