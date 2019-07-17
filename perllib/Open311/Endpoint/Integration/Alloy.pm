@@ -318,6 +318,8 @@ sub get_service_request_updates {
     }
 
     # updates to defects
+    my $closure_mapping = $self->config->{inspection_closure_mapping};
+    my %reverse_closure_mapping = map { $closure_mapping->{$_} => $_ } keys %{$closure_mapping};
     $updates = $self->fetch_updated_resources($self->config->{defect_resource_name}, $args->{start_date});
     for my $update (@$updates) {
         next if $self->is_ignored_category( $update );
@@ -375,6 +377,17 @@ sub get_service_request_updates {
             updated_datetime => $update_dt,
         );
 
+        # we need to set this to stop phantom updates being produced. This happens because
+        # when an inspection is closed it always sets an external_status_code which we never
+        # unset. Then when updates arrive from defects with no external_status_code the template
+        # fetching code at FixMyStreet sees that the external_status_code has changed and fetches
+        # the template. This means we always get an update even if nothing has changed. So, set
+        # this to the external_status_code used when an inspection is marked for raising as a
+        # defect. Only do this for 'action_scheduled' thouogh as otherwise the template lookup
+        # will fail as it will be looking for status + ext code which won't match.
+        if ( $status eq 'action_scheduled' && ( $fms_id || $linked_defect ) ) {
+            $args{external_status_code} = $reverse_closure_mapping{'action_scheduled'};
+        }
         $args{fixmystreet_id} = $fms_id if $fms_id;
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );

@@ -150,7 +150,7 @@
   },
 
   "inspection_closure_mapping": {
-    4281523: 'in_progress', # works instructed
+    4281523: 'action_scheduled', # works instructed
     4281524: 'no_further_action', # no action necessary
     4281525: 'not_councils_responsibility', # outside NCC control
     4281526: 'no_further_action', # highways to monitor

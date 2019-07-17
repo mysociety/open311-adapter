@@ -128,10 +128,14 @@ $integration->mock('api_call', sub {
             $content = path(__FILE__)->sibling('json/alloy/resource_versions_4947502.json')->slurp;
         } elsif ( $call eq 'resource/3027030/versions' ) {
             $content = path(__FILE__)->sibling('json/alloy/resource_versions_3027030.json')->slurp;
+        } elsif ( $call eq 'resource/3027031/versions' ) {
+            $content = path(__FILE__)->sibling('json/alloy/resource_versions_3027031.json')->slurp;
         } elsif ( $call eq 'resource/3027029/full?systemVersion=272125' ) {
             $content = path(__FILE__)->sibling('json/alloy/resource_3027029_v272125.json')->slurp;
         } elsif ( $call eq 'resource/3027030/full?systemVersion=271881' ) {
             $content = path(__FILE__)->sibling('json/alloy/resource_3027030_v271881.json')->slurp;
+        } elsif ( $call eq 'resource/3027031/full?systemVersion=271883' ) {
+            $content = path(__FILE__)->sibling('json/alloy/resource_3027031_v271883.json')->slurp;
         } elsif ( $call eq 'resource/1' ) {
             $content = '{ "sourceTypeId": 800 }';
         } elsif ( $call eq 'source-type/800/linked-source-types' ) {
@@ -331,7 +335,16 @@ subtest "check fetch updates" => sub {
         media_url => '',
     },
     {
-        status => 'action_scheduled',
+        status => 'not_councils_responsibility',
+        service_request_id => '3027031',
+        description => '',
+        updated_datetime => '2019-02-19T02:42:40Z',
+        update_id => '271884',
+        media_url => '',
+        external_status_code => 4281525,
+    },
+    {
+        status => 'fixed',
         service_request_id => '4947502',
         description => '',
         updated_datetime => '2019-02-19T09:11:08Z',
@@ -369,6 +382,15 @@ subtest "check fetch multiple updates" => sub {
         media_url => '',
     },
     {
+        status => 'not_councils_responsibility',
+        service_request_id => '3027031',
+        description => '',
+        updated_datetime => '2019-02-19T02:42:40Z',
+        update_id => '271884',
+        media_url => '',
+        external_status_code => 4281525,
+    },
+    {
         status => 'action_scheduled',
         service_request_id => '4947502',
         description => '',
@@ -376,6 +398,7 @@ subtest "check fetch multiple updates" => sub {
         update_id => '271877',
         media_url => '',
         fixmystreet_id => '10034',
+        external_status_code => 4281523,
     },
     {
         status => 'action_scheduled',
@@ -384,6 +407,7 @@ subtest "check fetch multiple updates" => sub {
         updated_datetime => '2019-01-03T09:11:08Z',
         update_id => '271884',
         media_url => '',
+        external_status_code => 4281523,
     },
 ], 'correct json returned';
 };
