@@ -4,11 +4,10 @@ notifications:
 
 language: perl
 perl:
-  - "5.14" # wheezy, precise
-  - "5.18" # trusty
-  - "5.20" # jessie
   - "5.22" # xenial
-  - "5.24" # stretch, zesty
+  - "5.24" # stretch
+  - "5.26" # bionic
+  - "5.28" # buster
 
 env:
   global:
