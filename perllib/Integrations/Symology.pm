@@ -121,6 +121,9 @@ sub AUTOLOAD {
 # ---
 # All below is added
 
+use strict;
+use warnings;
+
 sub SOAP::Serializer::as_ArrayOfAdditionalFieldSend {
     my ($self, $value, $name, $type, $attr) = @_;
 
@@ -192,7 +195,7 @@ sub SOAP::Serializer::as_EventActionSend {
         ServiceCode => $value->{ServiceCode},
         CRNo => $value->{CRNo},
         WebRequestID => $value->{fixmystreet_id},
-        EventType => $value->{closed} ? 'CR' : 'CCA',
+        EventType => $value->{EventType},
         EventDescription => '',
         UserName => $value->{UserName},
         Description => $value->{Description},

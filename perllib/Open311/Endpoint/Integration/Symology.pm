@@ -217,6 +217,7 @@ sub process_service_request_update_args {
         fixmystreet_id => $args->{service_request_id_ext},
         UserName => $self->username,
     };
+    $request->{EventType} = $self->event_action_event_type($request);
 
     if ($args->{media_url}->[0]) {
         $request->{Description} .= "\n\n[ This update contains a photo, see: " . $args->{media_url}->[0] . " ]";

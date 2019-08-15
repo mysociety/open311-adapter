@@ -28,4 +28,12 @@ sub process_service_request_args {
     return @args;
 }
 
+sub event_action_event_type {
+    my ($self, $args) = @_;
+    return do {
+          $args->{ServiceCode} eq 'SLC' && $args->{closed} ? 'RC'
+        : $args->{closed} ? 'CR'
+        : 'CCA'
+    };
+}
 1;
