@@ -1,0 +1,65 @@
+name: CI
+
+on: [push]
+
+jobs:
+  test:
+    name: Test on perl ${{ matrix.perl_version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        perl_version: [ 5.22, 5.24, 5.26, 5.28 ] # xenial, stretch, bionic, buster
+        coverage: [ 0, 1 ]
+        exclude:
+        - perl_version: '5.22'
+          coverage: 1
+        - perl_version: '5.24'
+          coverage: 0
+        - perl_version: '5.26'
+          coverage: 1
+        - perl_version: '5.28'
+          coverage: 1
+    container: perl:${{ matrix.perl_version }}
+    steps:
+    - name: Perl version
+      run: perl --version
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+    - name: Set up config
+      run: |
+        cp conf/general.yml-example conf/general.yml
+        cp conf/council-banes_confirm.yml-example conf/council-banes_confirm.yml
+        cp conf/council-buckinghamshire_confirm.yml-example conf/council-buckinghamshire_confirm.yml
+        cp conf/council-hounslow_confirm.yml-example conf/council-hounslow_confirm.yml
+        cp conf/council-lincolnshire_confirm.yml-example conf/council-lincolnshire_confirm.yml
+        cp conf/council-northamptonshire_alloy.yml-example conf/council-northamptonshire_alloy.yml
+    - name: Install packages
+      run: .github/bin/install
+      env:
+        TRAVIS_PERL_VERSION: ${{ matrix.perl_version }}
+    - name: Install coverage
+      if: matrix.coverage != ''
+      run: cpanm --quiet --notest Devel::Cover::Report::Codecov
+    - name: Run tests
+      if: matrix.coverage == 0
+      run: script/test
+    - name: Run tests (with coverage)
+      if: matrix.coverage == 1
+      run: script/test
+      env:
+        HARNESS_PERL_SWITCHES: "-MDevel::Cover=+ignore,local/lib/perl5,^t"
+    - name: Cache installed packages
+      run: .github/bin/after_script
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        TRAVIS_PERL_VERSION: ${{ matrix.perl_version }}
+    - name: Generate coverage report
+      if: success() && matrix.coverage != ''
+      run: |
+        cpanm --quiet --notest JSON::MaybeXS
+        cover --report codecov
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+

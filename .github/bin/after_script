@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import site
 import sys
 import tarfile
 from utils import get_bundle_filename
@@ -12,8 +11,9 @@ if os.path.exists(wanted_filename) and os.path.getsize(wanted_filename):
     print "File was downloaded, no need to upload"
     sys.exit()
 
-site.addsitedir(site.getusersitepackages())
-os.system('pip install --user boto')
+os.system('curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py');
+os.system('python get-pip.py')
+os.system('pip install boto')
 
 import boto
 from boto.s3.key import Key

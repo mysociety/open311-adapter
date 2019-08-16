@@ -18,7 +18,7 @@ env:
 sudo: false
 
 install:
-  - .travis/install
+  - .github/bin/install
   - 'if [ "$TRAVIS_PERL_VERSION" = "5.24" ]; then cpanm --quiet --notest Devel::Cover::Report::Codecov; fi'
 before_script:
   - cp conf/general.yml-example conf/general.yml
@@ -31,5 +31,5 @@ before_script:
 script:
   - script/test
 after_script:
-  - .travis/after_script
+  - .github/bin/after_script
   - 'if [ "$TRAVIS_PERL_VERSION" = "5.24" ]; then cover --report codecov; fi'
