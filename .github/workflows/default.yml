@@ -1,0 +1,57 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    name: Test on perl ${{ matrix.perl_version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        perl_version: [ 5.22, 5.24, 5.26, 5.28, '5.30' ] # xenial, stretch, bionic, buster, focal/bullseye
+    container: perl:${{ matrix.perl_version }}
+    steps:
+    - name: Perl version
+      run: perl --version
+
+    - uses: actions/checkout@v2
+
+    - name: Setup carton cache
+      uses: actions/cache@v2
+      with:
+        path: local
+        key: ${{ runner.os }}-perl-${{ matrix.perl_version }}-carton-${{ hashFiles('**/cpanfile.snapshot') }}
+        restore-keys: |
+          ${{ runner.os }}-perl-${{ matrix.perl_version }}-carton-
+
+    - name: Setup carton cache (coverage)
+      if: matrix.perl_version == 5.24
+      uses: actions/cache@v2
+      with:
+        path: |
+          /usr/local/lib/perl5/site_perl
+          /usr/local/bin
+        key: ${{ runner.os }}-perl-${{ matrix.perl_version }}-coverage
+
+    - name: Install packages
+      run: script/setup
+
+    - name: Run tests
+      if: matrix.perl_version != 5.24
+      run: script/test
+
+    - name: Run tests (with coverage)
+      if: matrix.perl_version == 5.24
+      run: |
+        cpanm --quiet --notest Devel::Cover::Report::Codecov JSON::MaybeXS
+        script/test
+      env:
+        HARNESS_PERL_SWITCHES: "-MDevel::Cover=+ignore,local/lib/perl5,^t"
+
+    - name: Generate coverage report
+      if: success() && matrix.perl_version == 5.24
+      run: cover --report codecov
+      env:
+        PERL5LIB: 'perllib'
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
