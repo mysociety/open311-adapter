@@ -721,6 +721,8 @@ sub _parse_attributes {
 
     my %ignored_options = map { $_ => 1 } @{$self->ignored_attribute_options};
 
+    # sometimes the EnquiryAttribute call returns a hash so wrap it in an array
+    $attribute_types = [ $attribute_types ] if $attribute_types && ref $attribute_types ne 'ARRAY';
     for (@$attribute_types) {
         my $code = $_->{EnqAttribTypeCode};
 
