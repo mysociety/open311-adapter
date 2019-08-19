@@ -1,0 +1,11 @@
+{
+  "endpoint_url": "",
+  "username": "",
+  "password": "",
+  "tenant_id": "",
+  "server_timezone": "Europe/London",
+  "customer_type_code": "",
+  "point_of_contact_code": "",
+  "enquiry_method_code": "",
+  "service_whitelist": {},
+}
