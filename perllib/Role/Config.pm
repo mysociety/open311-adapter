@@ -21,6 +21,7 @@ has config => (
 sub _build_config {
     my $self = shift;
     local $YAML::XS::Boolean = "JSON::PP";
+    return {} if !$self->config_file->is_file && $ENV{TEST_MODE};
     my $conf = LoadFile($self->config_file);
     return $conf;
 }

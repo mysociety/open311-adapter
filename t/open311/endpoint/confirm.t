@@ -58,6 +58,7 @@ use Test::Output;
 use JSON::MaybeXS;
 use Path::Tiny;
 
+BEGIN { $ENV{TEST_MODE} = 1; }
 use Open311::Endpoint::Integration::UK;
 
 my ($IC, $SIC, $DC);

@@ -60,7 +60,10 @@ has service_class  => (
 
 has service_whitelist => (
     is => 'ro',
-    default => sub { die "Attribute Alloy::service_whitelist not overridden"; }
+    default => sub {
+        return {} if $ENV{TEST_MODE};
+        die "Attribute Alloy::service_whitelist not overridden";
+    }
 );
 
 sub services {

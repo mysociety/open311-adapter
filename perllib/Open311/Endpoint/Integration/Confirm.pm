@@ -63,7 +63,10 @@ typically only want to publish a small number (to begin with) on FixMyStreet.
 
 has service_whitelist => (
     is => 'ro',
-    default => sub { die "Attribute Confirm::service_whitelist not overridden"; }
+    default => sub {
+        return {} if $ENV{TEST_MODE};
+        die "Attribute Confirm::service_whitelist not overridden";
+    }
 );
 
 =head2 wrapped_services

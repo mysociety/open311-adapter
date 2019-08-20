@@ -45,6 +45,7 @@ use Open311::Endpoint;
 use Data::Dumper;
 use JSON::MaybeXS;
 
+BEGIN { $ENV{TEST_MODE} = 1; }
 use Open311::Endpoint::Integration::UK;
 use Integrations::SalesForce::Rutland;
 
