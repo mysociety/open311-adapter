@@ -8,6 +8,7 @@ use Open311::Endpoint;
 use Data::Dumper;
 use JSON::MaybeXS;
 
+use lib '.';
 use t::open311::endpoint::Endpoint1;
 
 my $endpoint = t::open311::endpoint::Endpoint1->new;

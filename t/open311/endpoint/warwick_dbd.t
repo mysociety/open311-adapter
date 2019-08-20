@@ -8,6 +8,7 @@ warwick_dbd.t - test that Oracle constants can be imported if present
 
 use Test::More;
 
+use lib '.';
 use lib 't/open311/endpoint/exor/';
 
 use DBD::Oracle; # fake from above test lib (or real if installed)
