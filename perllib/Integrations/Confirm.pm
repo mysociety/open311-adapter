@@ -259,23 +259,25 @@ sub NewEnquiry {
     my %service_types = map { $_->code => $_->datatype } @{ $service->attributes };
     my %attributes_required = map { $_->code => $_->required } @{ $service->attributes };
 
-    my $now = DateTime->now();
-    $now->set_time_zone($self->server_timezone);
-    my $logged_time = DateTime::Format::W3CDTF->new->format_datetime($now);
-
     my %enq = (
         EnquiryNumber => 1,
         EnquiryX => $args->{attributes}->{easting},
         EnquiryY => $args->{attributes}->{northing},
         EnquiryReference => $args->{attributes}->{fixmystreet_id},
         EnquiryDescription => substr($args->{description}, 0, 2000),
-        LoggedTime => $logged_time,
         ServiceCode => $service_code,
         SubjectCode => $subject_code,
         ContactName => $args->{first_name} . " " . $args->{last_name},
         ContactEmail => $args->{email},
         ContactPhone => $args->{phone},
     );
+    unless ($args->{omit_logged_time}) {
+        my $now = DateTime->now();
+        $now->set_time_zone($self->server_timezone);
+        my $logged_time = DateTime::Format::W3CDTF->new->format_datetime($now);
+
+        $enq{LoggedTime} = $logged_time;
+    }
     if ($args->{location}) {
         $enq{EnquiryLocation} = substr($args->{location}, 0, 2000);
     }

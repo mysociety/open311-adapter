@@ -302,6 +302,11 @@ has external_system_number => (
     default => ''
 );
 
+has omit_logged_time => (
+    is => 'ro',
+    default => 0
+);
+
 =head2 cutoff_enquiry_date
 
 A date before which you never want to return
@@ -404,6 +409,10 @@ sub post_service_request {
 
     if ($self->external_system_number) {
         $args->{external_system_number} = $self->external_system_number;
+    }
+
+    if ($self->omit_logged_time) {
+        $args->{omit_logged_time} = 1;
     }
 
     my $new_id = $integ->NewEnquiry($service, $args);
