@@ -12,6 +12,19 @@ sub new_service {
     Open311::Endpoint::Service->new(description => $_[0], service_code => $_[0], service_name => $_[0]);
 }
 
+my $confirm = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::Confirm');
+$confirm->mock(services => sub {
+    return ( new_service('A_BC'), new_service('D_EF') );
+});
+$confirm->mock(post_service_request_update => sub {
+    my ($self, $args) = @_;
+    is $args->{service_code}, 'D_EF';
+    is $args->{service_request_id}, 1001;
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        status => 'in_progress',
+        update_id => 456,
+    );
+});
 my $symology = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::Symology');
 $symology->mock(services => sub {
     return ( new_service('GHI'), new_service('JKL') );
@@ -22,15 +35,6 @@ $symology->mock(post_service_request => sub {
     is $service->service_code, 'GHI';
     return Open311::Endpoint::Service::Request->new(
         service_request_id => 1001,
-    );
-});
-$symology->mock(post_service_request_update => sub {
-    my ($self, $args) = @_;
-    is $args->{service_code}, 'JKL';
-    is $args->{service_request_id}, 1001;
-    return Open311::Endpoint::Service::Request::Update::mySociety->new(
-        status => 'in_progress',
-        update_id => 456,
     );
 });
 
@@ -45,6 +49,24 @@ subtest "GET Service List" => sub {
     is_string $res->content, <<CONTENT, 'xml string ok';
 <?xml version="1.0" encoding="utf-8"?>
 <services>
+  <service>
+    <description>A_BC</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>false</metadata>
+    <service_code>Confirm-A_BC</service_code>
+    <service_name>A_BC</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
+    <description>D_EF</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>false</metadata>
+    <service_code>Confirm-D_EF</service_code>
+    <service_name>D_EF</service_name>
+    <type>realtime</type>
+  </service>
   <service>
     <description>GHI</description>
     <group></group>
@@ -68,7 +90,7 @@ CONTENT
 };
 
 subtest "GET Service Definition" => sub {
-    my $res = $endpoint->run_test_request( GET => '/services/GHI.xml' );
+    my $res = $endpoint->run_test_request( GET => '/services/Confirm-A_BC.xml' );
     ok $res->is_success, 'xml success',
         or diag $res->content;
     is_string $res->content, <<CONTENT, 'xml string ok';
@@ -76,7 +98,7 @@ subtest "GET Service Definition" => sub {
 <service_definition>
   <attributes>
   </attributes>
-  <service_code>GHI</service_code>
+  <service_code>Confirm-A_BC</service_code>
 </service_definition>
 CONTENT
 
@@ -116,8 +138,8 @@ subtest "POST update OK" => sub {
         POST => '/servicerequestupdates.json',
         api_key => 'test',
         updated_datetime => '2019-03-01T12:00:00Z',
-        service_code => 'JKL',
-        service_request_id => "1001",
+        service_code => 'Confirm-D_EF',
+        service_request_id => "Confirm-1001",
         status => 'IN_PROGRESS',
         first_name => 'Bob',
         last_name => 'Mould',
@@ -131,7 +153,7 @@ subtest "POST update OK" => sub {
 
     is_deeply decode_json($res->content),
         [ {
-            'update_id' => "456",
+            'update_id' => "Confirm-456",
         } ], 'correct json returned';
 };
 
