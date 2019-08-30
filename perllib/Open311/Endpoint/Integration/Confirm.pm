@@ -523,15 +523,18 @@ sub _services {
 
     my @services = ();
     my %service_codes;
-    for my $group (sort keys %{ $self->service_whitelist }) {
-        my $whitelist = $self->service_whitelist->{$group};
+    my $fetch_all_services = 0;
+    my $service_whitelist = $fetch_all_services ? { '' => 'DUMMY' } : $self->service_whitelist;
+    for my $group (sort keys %$service_whitelist) {
+        my $whitelist = $fetch_all_services ? \%services : $self->service_whitelist->{$group};
         for my $code (keys %{ $whitelist }) {
             my $subject = $services{$code}->{subject};
             if (!$subject) {
                 printf("$code doesn't exist in Confirm.\n");
                 next;
             }
-            my $name = $whitelist->{$code} eq 1 ? $subject->{SubjectName} :  $whitelist->{$code};
+            my $name = $subject->{SubjectName};
+            $name = $whitelist->{$code} if !$fetch_all_services && $whitelist->{$code} ne 1;
             if ( defined $service_codes{ $code } ) {
                 push @{$service_codes{$code}->{groups}}, $group;
             } else {
@@ -539,7 +542,7 @@ sub _services {
                     service_name => $name,
                     service_code => $code,
                     description => $name,
-                    groups => [$group],
+                    $group ? (groups => [$group]) : (),
                     keywords => $private_services{$code} ? [qw/ private /] : [],
                 };
             }
