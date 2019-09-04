@@ -124,6 +124,12 @@ sub AUTOLOAD {
 use strict;
 use warnings;
 
+sub current_date {
+    my $dt = DateTime->now(time_zone => 'Europe/London');
+    $dt->subtract(minutes => 2); # XXX Server is currently a bit out
+    return $dt;
+}
+
 sub SOAP::Serializer::as_ArrayOfAdditionalFieldSend {
     my ($self, $value, $name, $type, $attr) = @_;
 
@@ -139,7 +145,7 @@ sub SOAP::Serializer::as_ArrayOfAdditionalFieldSend {
 sub SOAP::Serializer::as_RequestSend {
     my ($self, $value, $name, $type, $attr) = @_;
 
-    my $dt = DateTime->now(time_zone => 'Europe/London');
+    my $dt = current_date();
     my $elem = \SOAP::Data->value( make_soap_structure(
         $value->{NSGRef} ? (NSGRef => $value->{NSGRef}) : (), # Might not be optional in end
         $value->{RegionSite} ? (RegionSite => $value->{RegionSite}) : (), # Might not be optional in end
@@ -172,7 +178,7 @@ sub SOAP::Serializer::as_RequestSend {
 sub SOAP::Serializer::as_CustomerSend {
     my ($self, $value, $name, $type, $attr) = @_;
 
-    my $dt = DateTime->now(time_zone => 'Europe/London');
+    my $dt = current_date();
     my $elem = \SOAP::Data->value( make_soap_structure(
           CustomerFullName => $value->{name},
           CustomerTelNo => $value->{phone},
