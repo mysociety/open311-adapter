@@ -42,6 +42,10 @@ $symology->mock(post_service_request => sub {
         service_request_id => 1001,
     );
 });
+my $uniform = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::Uniform');
+$uniform->mock(services => sub {
+    return ( new_service('DFOUL'), new_service('RUBB') );
+});
 
 use_ok('Open311::Endpoint::Integration::UK::Bexley');
 
@@ -106,6 +110,24 @@ subtest "GET Service List" => sub {
     <metadata>false</metadata>
     <service_code>JKL</service_code>
     <service_name>JKL</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
+    <description>DFOUL</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>false</metadata>
+    <service_code>Uniform-DFOUL</service_code>
+    <service_name>DFOUL</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
+    <description>RUBB</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>false</metadata>
+    <service_code>Uniform-RUBB</service_code>
+    <service_name>RUBB</service_name>
     <type>realtime</type>
   </service>
 </services>
