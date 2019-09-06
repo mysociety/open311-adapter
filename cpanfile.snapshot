@@ -1799,6 +1799,14 @@ DISTRIBUTIONS
       parent 0
       strict 0
       warnings 0
+  Object-Tiny-1.09
+    pathname: E/ET/ETHER/Object-Tiny-1.09.tar.gz
+    provides:
+      Object::Tiny 1.09
+    requirements:
+      ExtUtils::MakeMaker 0
+      perl 5.006
+      strict 0
   POSIX-strftime-Compiler-0.42
     pathname: K/KA/KAZEBURO/POSIX-strftime-Compiler-0.42.tar.gz
     provides:

@@ -40,6 +40,7 @@ requires 'Log::Dispatch';
 # Modules used by the test suite
 requires 'LWP::Protocol::PSGI';
 requires 'Module::Loaded';
+requires 'Object::Tiny';
 requires 'Test::Exception';
 requires 'Test::LongString';
 requires 'Test::MockModule';
