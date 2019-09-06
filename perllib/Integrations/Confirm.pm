@@ -268,9 +268,6 @@ sub NewEnquiry {
         EnquiryDescription => substr($args->{description}, 0, 2000),
         ServiceCode => $service_code,
         SubjectCode => $subject_code,
-        ContactName => $args->{first_name} . " " . $args->{last_name},
-        ContactEmail => $args->{email},
-        ContactPhone => $args->{phone},
     );
     unless ($args->{omit_logged_time}) {
         my $now = DateTime->now();
@@ -278,6 +275,11 @@ sub NewEnquiry {
         my $logged_time = DateTime::Format::W3CDTF->new->format_datetime($now);
 
         $enq{LoggedTime} = $logged_time;
+    }
+    unless ( $self->config->{skip_enquiry_contact_fields} ) {
+        $enq{ContactName} = $args->{first_name} . " " . $args->{last_name};
+        $enq{ContactEmail} = $args->{email};
+        $enq{ContactPhone} = $args->{phone};
     }
     if ($args->{location}) {
         $enq{EnquiryLocation} = substr($args->{location}, 0, 2000);
