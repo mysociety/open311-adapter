@@ -272,10 +272,12 @@ sub NewEnquiry {
         LoggedTime => $logged_time,
         ServiceCode => $service_code,
         SubjectCode => $subject_code,
-        ContactName => $args->{first_name} . " " . $args->{last_name},
-        ContactEmail => $args->{email},
-        ContactPhone => $args->{phone},
     );
+    unless ( $self->config->{skip_enquiry_contact_fields} ) {
+        $enq{ContactName} = $args->{first_name} . " " . $args->{last_name};
+        $enq{ContactEmail} = $args->{email};
+        $enq{ContactPhone} = $args->{phone};
+    }
     if ($args->{location}) {
         $enq{EnquiryLocation} = substr($args->{location}, 0, 2000);
     }
