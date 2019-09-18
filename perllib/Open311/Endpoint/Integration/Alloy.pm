@@ -265,6 +265,10 @@ sub post_service_request_update {
 sub get_service_request_updates {
     my ($self, $args) = @_;
 
+    my $w3c = DateTime::Format::W3CDTF->new;
+    my $start_time = $w3c->parse_datetime($args->{start_date});
+    my $end_time = $w3c->parse_datetime($args->{end_date});
+
     # updates to inspections
     my $updates = $self->fetch_updated_resources($self->config->{inspection_resource_name}, $args->{start_date});
 
@@ -276,48 +280,63 @@ sub get_service_request_updates {
     for my $update (@$updates) {
         # we only want updates to RFS inspections
         next unless $update->{sourceTypeId} eq $source->{source_type_id};
-        my $status = 'open';
-        my $reason_for_closure = '';
-        my $description = '';
-        my @attributes = @{$update->{values}};
-        for my $att (@attributes) {
-            # these might be specific to each design so will probably need
-            # some config
 
-            # status
-            if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{status}) {
-                $status = $self->inspection_status($att->{value}->{values}[0]->{resourceId});
+        my $latest = $w3c->parse_datetime( $update->{version}->{startDate} )->truncate( to => 'second' );
+        next unless $latest >= $start_time && $latest <= $end_time;
+
+        # We need to fetch all versions that changed in the time wanted
+        my @version_ids = $self->get_versions_of_resource($update->{resourceId});
+
+        my $last_description = '';
+        foreach (@version_ids) {
+            my $resource = $self->alloy->api_call(call => "resource/$update->{resourceId}/full?systemVersion=$_");
+            next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
+
+            my $status = 'open';
+            my $reason_for_closure = '';
+            my $description = '';
+            my @attributes = @{$resource->{values} || []};
+            for my $att (@attributes) {
+                # these might be specific to each design so will probably need
+                # some config
+
+                # status
+                if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{status}) {
+                    $status = $self->inspection_status($att->{value}->{values}[0]->{resourceId});
+                }
+
+                # reason for closure
+                if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{reason_for_closure}) {
+                    $reason_for_closure = $att->{value}->{values}[0] ? $att->{value}->{values}[0]->{resourceId} : '' ;
+                }
+
+                if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{inspector_comments}) {
+                    $description = $att->{value};
+                }
             }
 
-            # reason for closure
-            if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{reason_for_closure}) {
-                $reason_for_closure = $att->{value}->{values}[0] ? $att->{value}->{values}[0]->{resourceId} : '' ;
+            my $description_to_send = $description ne $last_description ? $description : '';
+            $last_description = $description;
+
+            # Now we have the description, can skip if update is not in our timeframe
+            my $update_dt = $w3c->parse_datetime( $resource->{version}->{startDate} )->truncate( to => 'second' );
+            next unless $update_dt >= $start_time && $update_dt <= $end_time;
+
+            if ($reason_for_closure) {
+                $status = $self->get_status_with_closure($status, $reason_for_closure);
             }
 
-            if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{inspector_comments}) {
-                $description = $att->{value};
-            }
+            my %args = (
+                status => $status,
+                external_status_code => $reason_for_closure,
+                update_id => $resource->{version}->{resourceSystemVersionId},
+                service_request_id => $update->{resourceId},
+                description => $description_to_send,
+                updated_datetime => $update_dt,
+            );
+
+            push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
         }
-
-        my $last_version_description = $self->get_last_version_inspector_comments($update->{resourceId});
-        $description = '' unless $description ne $last_version_description;
-
-        if ($reason_for_closure) {
-            $status = $self->get_status_with_closure($status, $reason_for_closure);
-        }
-
-        my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update->{version}->{startDate} )->truncate( to => 'second' );
-
-        my %args = (
-            status => $status,
-            external_status_code => $reason_for_closure,
-            update_id => $update->{version}->{resourceSystemVersionId},
-            service_request_id => $update->{resourceId},
-            description => $description,
-            updated_datetime => $update_dt,
-        );
-
-        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
 
     # updates to defects
@@ -370,7 +389,7 @@ sub get_service_request_updates {
         # we don't care about linked defects until they have been scheduled
         next if $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
 
-        my $update_dt = DateTime::Format::W3CDTF->new->parse_datetime( $update->{version}->{startDate} )->truncate( to => 'second' );
+        my $update_dt = $w3c->parse_datetime( $update->{version}->{startDate} )->truncate( to => 'second' );
 
         my %args = (
             status => $status,
@@ -581,7 +600,7 @@ sub get_time_for_version {
     return $time;
 }
 
-sub get_last_version_inspector_comments {
+sub get_versions_of_resource {
     my ($self, $resource_id) = @_;
 
     my $versions = $self->alloy->api_call(call => "resource/$resource_id/versions");
@@ -592,23 +611,7 @@ sub get_last_version_inspector_comments {
     }
 
     @version_ids = sort(@version_ids);
-
-    return '' if scalar @version_ids < 2;
-
-    my $prev_version = $version_ids[-2];
-
-    my $resource = $self->alloy->api_call(call => "resource/$resource_id/full?systemVersion=$prev_version");
-    my $description = '';
-    if ( $resource ) {
-        my @attributes = @{$resource->{values}};
-        for my $att (@attributes) {
-            if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{inspector_comments}) {
-                $description = $att->{value};
-            }
-        }
-    }
-
-    return $description;
+    return @version_ids;
 }
 
 sub get_latlong_from_request {

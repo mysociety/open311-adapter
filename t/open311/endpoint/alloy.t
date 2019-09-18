@@ -311,7 +311,7 @@ subtest "create problem with no resource_id" => sub {
 subtest "check fetch updates" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
-      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z&end_date=2019-01-01T02:00:00Z',
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z&end_date=2019-03-01T02:00:00Z',
     );
 
     my $sent = pop @sent;
@@ -358,7 +358,7 @@ subtest "check fetch updates" => sub {
 subtest "check fetch multiple updates" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
-      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-03T00:00:00Z&end_date=2019-01-03T02:00:00Z',
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-03T00:00:00Z&end_date=2019-03-03T02:00:00Z',
     );
 
     my $sent = pop @sent;
@@ -367,22 +367,6 @@ subtest "check fetch multiple updates" => sub {
 
     is_deeply decode_json($res->content),
     [ {
-        status => 'investigating',
-        service_request_id => '3027029',
-        description => 'This is a customer response',
-        updated_datetime => '2019-01-01T00:32:40Z',
-        update_id => '271882',
-        media_url => '',
-    },
-    {
-        status => 'investigating',
-        service_request_id => '3027030',
-        description => '',
-        updated_datetime => '2019-01-01T01:42:40Z',
-        update_id => '271883',
-        media_url => '',
-    },
-    {
         status => 'not_councils_responsibility',
         service_request_id => '3027031',
         description => '',
