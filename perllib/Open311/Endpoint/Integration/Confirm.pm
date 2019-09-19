@@ -13,7 +13,6 @@ use Open311::Endpoint::Service::Request::CanBeNonPublic;
 
 use Path::Tiny;
 use SOAP::Lite; # +trace => [ qw/method debug/ ];
-use Text::CSV;
 
 
 around BUILDARGS => sub {
@@ -523,7 +522,6 @@ sub _services {
         }
     }
 
-    my $csv = Text::CSV->new();
     my @services = ();
     my %service_codes;
     for my $group (sort keys %{ $self->service_whitelist }) {
@@ -536,13 +534,13 @@ sub _services {
             }
             my $name = $whitelist->{$code} eq 1 ? $subject->{SubjectName} :  $whitelist->{$code};
             if ( defined $service_codes{ $code } ) {
-                push @{$service_codes{$code}->{group}}, $group;
+                push @{$service_codes{$code}->{groups}}, $group;
             } else {
                 $service_codes{$code} = {
                     service_name => $name,
                     service_code => $code,
                     description => $name,
-                    group => [$group],
+                    groups => [$group],
                     keywords => $private_services{$code} ? [qw/ private /] : [],
                 };
             }
@@ -550,8 +548,6 @@ sub _services {
     }
     for my $code (sort keys %service_codes) {
         my %service = %{ $service_codes{$code} };
-        $csv->combine(@{$service{group}});
-        $service{group} = $csv->string;
         my $o311_service = $self->service_class->new(%service);
         for (@{$services{$code}->{attribs}}) {
             push @{$o311_service->attributes}, $_;

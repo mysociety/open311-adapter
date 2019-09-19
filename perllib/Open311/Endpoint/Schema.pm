@@ -96,6 +96,10 @@ has schema => (
                 optional => {
                     keywords => '//str',
                     group => '//str',
+                    groups => {
+                        type => '//arr',
+                        contents => '//str',
+                    }
                 }
             }
         );

@@ -37,6 +37,12 @@ has group => (
     default => '',
 );
 
+has groups => (
+    is => 'rw',
+    isa => ArrayRef[Str],
+    default => sub { [] },
+);
+
 has type => (
     is => 'ro',
     isa => Enum[qw/ realtime batch blackbox /],
