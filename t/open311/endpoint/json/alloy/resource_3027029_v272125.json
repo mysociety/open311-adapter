@@ -43,6 +43,11 @@
       "value": "INS-00009033"
     },
     {
+      "attributeId": 1011096,
+      "attributeCode": "GRP_INSPECTION_STANDARD_ATT_INSPECTION_-_ENQUIRY_-_REQUEST_FOR_SERVICE_RESPONSE_TO_CUSTOMER",
+      "value": "This is a customer response"
+    },
+    {
       "attributeId": 1001546,
       "attributeCode": "GRP_PROJECT_TASK_ATT_PROJECT_TASK_STATUS",
       "value": {
@@ -86,7 +91,7 @@
     "endDate": "9999-12-31T00:00:00.000Z",
     "endSystemVersionId": null,
     "resourceSystemVersionId": 271882,
-    "startDate": "2014-01-01T11:59:40Z",
+    "startDate": "2019-01-01T00:32:40Z",
     "startSystemVersionId": 268108,
     "usedDate": "2019-02-19T18:19:14.543Z",
     "usedSystemVersionId": 271882
