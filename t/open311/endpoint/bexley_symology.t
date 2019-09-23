@@ -48,7 +48,7 @@ $soap_lite->mock(call => sub {
     if ($args[0] eq 'SendRequestAdditionalGroup') {
         my @request = ${$args[2]->value}->value;
         is $request[REPORT_NSGREF]->value, NSGREF;
-        my $next_action = Open311::Endpoint::Integration::UK::Bexley->endpoint_config->{nsgref_to_action}{+NSGREF};
+        my $next_action = Open311::Endpoint::Integration::UK::Bexley::Symology->endpoint_config->{nsgref_to_action}{+NSGREF};
         is $request[REPORT_NEXTACTION]->value, $next_action; # Worked out automatically from 0
         is $request[REPORT_NORTHING]->value, NORTHING;
         my $photo_desc = "\n\n[ This report contains a photo, see: http://example.org/photo/1.jpeg ]";
@@ -104,7 +104,7 @@ $bexley_integ->mock(config => sub {
     }
 });
 
-my $bexley_end = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley');
+my $bexley_end = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::Symology');
 $bexley_end->mock(endpoint_config => sub {
     {
         username => 'FMS',
@@ -165,9 +165,9 @@ EOF
 EOF
 ] });
 
-use Open311::Endpoint::Integration::UK::Bexley;
+use Open311::Endpoint::Integration::UK::Bexley::Symology;
 
-my $endpoint = Open311::Endpoint::Integration::UK::Bexley->new;
+my $endpoint = Open311::Endpoint::Integration::UK::Bexley::Symology->new;
 
 subtest "GET services" => sub {
     my $res = $endpoint->run_test_request(
@@ -399,7 +399,7 @@ $bexley_end->mock(endpoint_config => sub {
         },
     }
 });
-$endpoint = Open311::Endpoint::Integration::UK::Bexley->new;
+$endpoint = Open311::Endpoint::Integration::UK::Bexley::Symology->new;
 
 subtest "POST with bad rules fails" => sub {
     my $res = $endpoint->run_test_request(

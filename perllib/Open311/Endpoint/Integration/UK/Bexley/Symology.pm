@@ -1,4 +1,4 @@
-package Open311::Endpoint::Integration::UK::Bexley;
+package Open311::Endpoint::Integration::UK::Bexley::Symology;
 
 # use SOAP::Lite +trace => [ qw/method debug/ ];
 
@@ -7,7 +7,7 @@ extends 'Open311::Endpoint::Integration::Symology';
 
 has jurisdiction_id => (
     is => 'ro',
-    default => 'bexley',
+    default => 'bexley_symology',
 );
 
 use Integrations::Symology::Bexley;
