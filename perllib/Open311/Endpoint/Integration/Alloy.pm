@@ -329,7 +329,7 @@ sub get_service_request_updates {
             my %args = (
                 status => $status,
                 external_status_code => $reason_for_closure,
-                update_id => $resource->{version}->{resourceSystemVersionId},
+                update_id => $resource->{version}->{usedSystemVersionId},
                 service_request_id => $update->{resourceId},
                 description => $description_to_send,
                 updated_datetime => $update_dt,
