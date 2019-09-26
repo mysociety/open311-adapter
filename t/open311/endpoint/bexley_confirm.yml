@@ -5,10 +5,10 @@ tenant_id: "123"
 server_timezone: Europe/London
 default_site_code: 999999
 service_whitelist:
-  Flooding & Drainage:
-    ABC_DEF: Flooding
   Flooding:
     ABC_DEF: Flooding
+  Graffiti:
+    GHI_JKL: Graffiti
 reverse_status_mapping:
   DUP: duplicate
   INP: in_progress
