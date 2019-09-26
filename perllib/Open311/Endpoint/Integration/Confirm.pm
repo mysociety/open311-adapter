@@ -728,7 +728,9 @@ sub _wrap_services {
     for my $code (keys %{$self->wrapped_services}) {
         if ($self->wrapped_services->{$code}->{passthrough}) {
             my $original_service = $original_services{$code};
-            $original_service->group($self->wrapped_services->{$code}->{group} || $original_service->group);
+            my $wrapped_group = $self->wrapped_services->{$code}->{group};
+            $wrapped_group = [$wrapped_group] if ( $wrapped_group && ref $wrapped_group ne 'ARRAY' );
+            $original_service->groups($wrapped_group || $original_service->groups);
             push @services, $original_service;
             next;
         }
@@ -756,11 +758,13 @@ sub _wrap_services {
             );
         }
 
+        my $groups = $self->wrapped_services->{$code}->{group};
+        $groups = [$groups] if $groups && ref $groups ne 'ARRAY';
         my %service = (
             service_name => $self->wrapped_services->{$code}->{name},
             service_code => $code,
             description => $self->wrapped_services->{$code}->{name},
-            group => $self->wrapped_services->{$code}->{group},
+            groups => $groups,
             attributes => [ values %attributes ],
         );
         my $o311_service = $self->service_class->new(%service);
