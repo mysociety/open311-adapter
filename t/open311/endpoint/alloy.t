@@ -49,8 +49,7 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 has integration_class => (is => 'ro', default => 'Integrations::Alloy::Dummy');
-sub jurisdiction_id { return 'dummy'; }
-has service_request_content => (is => 'ro', default => '/open311/service_request_extended');
+sub service_request_content { '/open311/service_request_extended' }
 
 package main;
 
@@ -70,9 +69,8 @@ use JSON::MaybeXS;
 use Path::Tiny;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
-use Open311::Endpoint::Integration::UK;
 
-my $endpoint = Open311::Endpoint::Integration::UK->new;
+my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
 
 my %responses = (
     resource => '{

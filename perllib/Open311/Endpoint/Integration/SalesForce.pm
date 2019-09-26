@@ -15,10 +15,9 @@ use Encode qw(encode_utf8);
 use Digest::MD5 qw(md5_hex);
 use DateTime::Format::Strptime;
 
-has service_request_content => (
-    is => 'ro',
-    default => '/open311/service_request_extended'
-);
+sub service_request_content {
+    '/open311/service_request_extended'
+}
 
 sub parse_datetime {
     my ($self, $time) = @_;

@@ -288,10 +288,9 @@ has attribute_descriptions => (
     default => sub { {} }
 );
 
-has service_request_content => (
-    is => 'ro',
-    default => '/open311/service_request_extended'
-);
+sub service_request_content {
+    '/open311/service_request_extended'
+}
 
 has default_site_code => (
     is => 'ro',

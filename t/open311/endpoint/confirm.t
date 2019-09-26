@@ -17,7 +17,6 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 has integration_class => (is => 'ro', default => 'Integrations::Confirm::Dummy');
-sub jurisdiction_id { return 'dummy'; }
 
 package Open311::Endpoint::Integration::UK::DummyPrivate;
 use Path::Tiny;
@@ -30,7 +29,6 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 has integration_class => (is => 'ro', default => 'Integrations::Confirm::Dummy');
-sub jurisdiction_id { return 'dummy_private'; }
 
 package Open311::Endpoint::Integration::UK::DummyPrivateServices;
 use Path::Tiny;
@@ -43,7 +41,6 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 has integration_class => (is => 'ro', default => 'Integrations::Confirm::Dummy');
-sub jurisdiction_id { return 'dummy_private_services'; }
 
 package main;
 
@@ -59,7 +56,6 @@ use JSON::MaybeXS;
 use Path::Tiny;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
-use Open311::Endpoint::Integration::UK;
 
 my ($IC, $SIC, $DC);
 
@@ -114,12 +110,7 @@ $open311->mock(perform_request => sub {
     return {};
 });
 
-use Open311::Endpoint::Integration::UK::Dummy;
-
-my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new(
-    jurisdiction_id => 'dummy',
-    config_file => path(__FILE__)->sibling("confirm.yml")->stringify,
-);
+my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
 
 subtest "GET Service List" => sub {
     my $res = $endpoint->run_test_request( GET => '/services.xml' );
@@ -387,32 +378,6 @@ XML
     or diag $res->content;
 };
 
-# need to use this otherwise we get errors in GET_Service_Requests_output_schema
-$endpoint = Open311::Endpoint::Integration::UK->new;
-
-subtest "GET Service List - private services" => sub {
-    my $res = $endpoint->run_test_request( GET => '/services.xml?jurisdiction_id=dummy_private_services' );
-    ok $res->is_success, 'xml success';
-    my $expected = <<XML;
-<?xml version="1.0" encoding="utf-8"?>
-<services>
-  <service>
-    <description>Flooding</description>
-    <groups>
-      <group>Flooding &amp; Drainage</group>
-    </groups>
-    <keywords>private</keywords>
-    <metadata>true</metadata>
-    <service_code>ABC_DEF</service_code>
-    <service_name>Flooding</service_name>
-    <type>realtime</type>
-  </service>
-</services>
-XML
-    is $res->content, $expected
-        or diag $res->content;
-};
-
 subtest 'GET reports' => sub {
     my $res;
     stderr_is {
@@ -447,6 +412,8 @@ XML
     or diag $res->content;
 };
 
+$endpoint = Open311::Endpoint::Integration::UK::DummyPrivate->new;
+
 subtest 'GET reports - private' => sub {
     my $res;
     stderr_is {
@@ -480,6 +447,31 @@ XML
 
     is_string $res->content, $expected, 'xml string ok'
     or diag $res->content;
+};
+
+$endpoint = Open311::Endpoint::Integration::UK::DummyPrivateServices->new;
+
+subtest "GET Service List - private services" => sub {
+    my $res = $endpoint->run_test_request( GET => '/services.xml?jurisdiction_id=dummy_private_services' );
+    ok $res->is_success, 'xml success';
+    my $expected = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<services>
+  <service>
+    <description>Flooding</description>
+    <groups>
+      <group>Flooding &amp; Drainage</group>
+    </groups>
+    <keywords>private</keywords>
+    <metadata>true</metadata>
+    <service_code>ABC_DEF</service_code>
+    <service_name>Flooding</service_name>
+    <type>realtime</type>
+  </service>
+</services>
+XML
+    is $res->content, $expected
+        or diag $res->content;
 };
 
 subtest 'GET reports - private services' => sub {

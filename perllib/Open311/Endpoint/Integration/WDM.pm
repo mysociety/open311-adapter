@@ -15,10 +15,9 @@ has service_class  => (
     default => 'Open311::Endpoint::Service::UKCouncil::Oxfordshire'
 );
 
-has service_request_content => (
-    is => 'ro',
-    default => '/open311/service_request_extended'
-);
+sub service_request_content {
+    '/open311/service_request_extended'
+}
 
 has '+request_class' => (
     is => 'ro',

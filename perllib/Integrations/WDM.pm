@@ -30,11 +30,6 @@ has 'updates_endpoint' => (
     default => 'updates.xml',
 );
 
-has service_request_content => (
-    is => 'ro',
-    default => '/open311/service_request_extended'
-);
-
 sub format_datetime {
     my ($self, $dt) = @_;
 

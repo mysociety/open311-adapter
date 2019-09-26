@@ -3,6 +3,7 @@ package Open311::Endpoint::Integration::Alloy;
 use Moo;
 use DateTime::Format::W3CDTF;
 use LWP::UserAgent;
+use Types::Standard ':all';
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 with 'Open311::Endpoint::Role::ConfigFile';
@@ -12,6 +13,7 @@ with 'Role::Logger';
 use Open311::Endpoint::Service::UKCouncil::Alloy;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::CanBeNonPublic;
+use Open311::Endpoint::Service::Request::Update::mySociety;
 
 use Path::Tiny;
 
@@ -30,6 +32,18 @@ has jurisdiction_id => (
 has '+request_class' => (
     is => 'ro',
     default => 'Open311::Endpoint::Service::Request::CanBeNonPublic',
+);
+
+has '+identifier_types' => (
+    is => 'lazy',
+    isa => HashRef[Any],
+    default => sub {
+        my $self = shift;
+        return {
+            # some service codes have spaces
+            service_code => { type => '/open311/regex', pattern => qr/^ [\w_\- \/\(\)]+ $/ax },
+        };
+    },
 );
 
 has alloy => (
