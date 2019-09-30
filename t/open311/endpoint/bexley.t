@@ -50,7 +50,7 @@ subtest "GET Service List" => sub {
     <group></group>
     <keywords></keywords>
     <metadata>false</metadata>
-    <service_code>Symology-GHI</service_code>
+    <service_code>GHI</service_code>
     <service_name>GHI</service_name>
     <type>realtime</type>
   </service>
@@ -59,7 +59,7 @@ subtest "GET Service List" => sub {
     <group></group>
     <keywords></keywords>
     <metadata>false</metadata>
-    <service_code>Symology-JKL</service_code>
+    <service_code>JKL</service_code>
     <service_name>JKL</service_name>
     <type>realtime</type>
   </service>
@@ -68,7 +68,7 @@ CONTENT
 };
 
 subtest "GET Service Definition" => sub {
-    my $res = $endpoint->run_test_request( GET => '/services/Symology-GHI.xml' );
+    my $res = $endpoint->run_test_request( GET => '/services/GHI.xml' );
     ok $res->is_success, 'xml success',
         or diag $res->content;
     is_string $res->content, <<CONTENT, 'xml string ok';
@@ -76,15 +76,15 @@ subtest "GET Service Definition" => sub {
 <service_definition>
   <attributes>
   </attributes>
-  <service_code>Symology-GHI</service_code>
+  <service_code>GHI</service_code>
 </service_definition>
 CONTENT
 
-    $res = $endpoint->run_test_request( GET => '/services/Symology-JKL.json' );
+    $res = $endpoint->run_test_request( GET => '/services/JKL.json' );
     ok $res->is_success, 'json success';
     is_deeply decode_json($res->content),
         {
-            "service_code" => "Symology-JKL",
+            "service_code" => "JKL",
             "attributes" => [
             ],
         }, 'json structure ok';
@@ -94,7 +94,7 @@ subtest "POST service request OK" => sub {
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
         api_key => 'test',
-        service_code => 'Symology-GHI',
+        service_code => 'GHI',
         first_name => 'Bob',
         last_name => 'Mould',
         description => "This is the details",
@@ -107,7 +107,7 @@ subtest "POST service request OK" => sub {
 
     is_deeply decode_json($res->content),
         [ {
-            "service_request_id" => "Symology-1001"
+            "service_request_id" => "1001"
         } ], 'correct json returned';
 };
 
@@ -116,8 +116,8 @@ subtest "POST update OK" => sub {
         POST => '/servicerequestupdates.json',
         api_key => 'test',
         updated_datetime => '2019-03-01T12:00:00Z',
-        service_code => 'Symology-JKL',
-        service_request_id => "Symology-1001",
+        service_code => 'JKL',
+        service_request_id => "1001",
         status => 'IN_PROGRESS',
         first_name => 'Bob',
         last_name => 'Mould',
@@ -131,7 +131,7 @@ subtest "POST update OK" => sub {
 
     is_deeply decode_json($res->content),
         [ {
-            'update_id' => "Symology-456",
+            'update_id' => "456",
         } ], 'correct json returned';
 };
 

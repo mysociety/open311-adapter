@@ -26,6 +26,11 @@ has integrations => (
     },
 );
 
+has integration_without_prefix => (
+    is => 'ro',
+    default => 'Symology',
+);
+
 sub _call {
     my ($self, $fn, $integration, @args) = @_;
     foreach (@{$self->integrations}) {
@@ -50,14 +55,24 @@ sub _map_with_new_id {
     my ($self, $attribute, @results) = @_;
     @results = map {
         my ($name, $result) = @$_;
-        (ref $result)->new(%$result, $attribute => "$name-" . $result->$attribute);
+        if ($name eq $self->integration_without_prefix) {
+            $result;
+        } else {
+            (ref $result)->new(%$result, $attribute => "$name-" . $result->$attribute);
+        }
     } @results;
     return @results;
 }
 
 sub _map_from_new_id {
     my ($self, $code) = @_;
-    my ($integration, $service_code) = $code =~ /^(.*?)-(.*)/;
+
+    my $names = join('|', grep { $_ ne $self->integration_without_prefix } map { $_->{name} } @{$_[0]->integrations});
+    my ($integration, $service_code) = $code =~ /^($names)-(.*)/;
+    if (!$integration) {
+        $integration = $self->integration_without_prefix;
+        $service_code = $code;
+    }
     return ($integration, $service_code);
 }
 
