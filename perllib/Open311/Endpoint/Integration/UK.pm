@@ -7,6 +7,7 @@ with 'Open311::Endpoint::Role::mySociety';
 use Types::Standard ':all';
 use Module::Pluggable
     search_path => ['Open311::Endpoint::Integration::UK'],
+    except => qr/^Open311::Endpoint::Integration::UK::Bexley::/,
     instantiate => 'new';
 use JSON::MaybeXS;
 use Path::Tiny;

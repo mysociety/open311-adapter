@@ -7,7 +7,7 @@ with 'Role::Config';
 
 has config_filename => (
     is => 'ro',
-    default => 'bexley',
+    default => 'bexley_symology',
 );
 
 sub _build_config_file {
