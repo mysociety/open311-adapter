@@ -742,7 +742,6 @@ sub _wrap_services {
     my @original_services = @_;
 
     my %original_services = map { $_->service_code => $_ } @original_services;
-    my %service_attributes = map { $_->service_code => $_->attributes } @original_services;
 
     my @services = ();
     for my $code (keys %{$self->wrapped_services}) {
@@ -758,8 +757,8 @@ sub _wrap_services {
         my %wrapped_services = map { $_ => $original_services{$_}->service_name } @{ $self->wrapped_services->{$code}->{wraps} };
 
         my $desc = $self->wrapped_services->{$code}->{description} || "What is the issue?";
-        my %attributes = (
-            "_wrapped_service_code" => Open311::Endpoint::Service::Attribute->new(
+        my @attributes = (
+            Open311::Endpoint::Service::Attribute->new(
                 code => "_wrapped_service_code",
                 description => $desc,
                 datatype => "singlevaluelist",
@@ -767,15 +766,17 @@ sub _wrap_services {
                 values => \%wrapped_services,
             ),
         );
+        my %seen_attributes = (_wrapped_service_code => 1);
 
         # The wrapped services may have their own attributes, so merge
         # them all together (stripping duplicates) and include them in
         # the wrapping service.
         for my $wrapped_service ( map { $original_services{$_} } @{ $self->wrapped_services->{$code}->{wraps} }) {
-            %attributes = (
-                %attributes,
-                map { $_->code => $_ } @{ $wrapped_service->attributes },
-            );
+            foreach (@{ $wrapped_service->attributes }) {
+                next if $seen_attributes{$_->{code}};
+                push @attributes, $_;
+                $seen_attributes{$_->{code}} = 1;
+            }
         }
 
         my $groups = $self->wrapped_services->{$code}->{group};
@@ -785,7 +786,7 @@ sub _wrap_services {
             service_code => $code,
             description => $self->wrapped_services->{$code}->{name},
             groups => $groups,
-            attributes => [ values %attributes ],
+            attributes => \@attributes,
         );
         my $o311_service = $self->service_class->new(%service);
         push @services, $o311_service;
