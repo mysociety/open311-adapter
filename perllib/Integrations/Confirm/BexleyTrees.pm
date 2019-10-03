@@ -1,4 +1,4 @@
-package Integrations::Confirm::Bexley;
+package Integrations::Confirm::BexleyTrees;
 
 use Path::Tiny;
 use Moo;
@@ -7,7 +7,7 @@ with 'Role::Config';
 
 has config_filename => (
     is => 'ro',
-    default => 'bexley_confirm',
+    default => 'bexley_confirm_trees',
 );
 
 sub _build_config_file {

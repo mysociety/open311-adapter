@@ -9,7 +9,7 @@ use Test::MockModule;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
-my $open311 = Test::MockModule->new('Integrations::Confirm::Bexley');
+my $open311 = Test::MockModule->new('Integrations::Confirm::BexleyTrees');
 $open311->mock(perform_request => sub {
     my ($self, $op) = @_; # Don't care about subsequent ops
     $op = $$op;
@@ -24,8 +24,8 @@ $open311->mock(perform_request => sub {
     return {};
 });
 
-use Open311::Endpoint::Integration::UK::Bexley::Confirm;
-my $endpoint = Open311::Endpoint::Integration::UK::Bexley::Confirm->new(
+use Open311::Endpoint::Integration::UK::Bexley::ConfirmTrees;
+my $endpoint = Open311::Endpoint::Integration::UK::Bexley::ConfirmTrees->new(
   config_file => path(__FILE__)->sibling("bexley_confirm.yml")->stringify,
 );
 
