@@ -37,7 +37,6 @@ service_whitelist:
     return $class->$orig(%args);
 };
 has integration_class => (is => 'ro', default => 'Integrations::Confirm::Hounslow');
-sub jurisdiction_id { return 'dummy'; }
 
 package main;
 

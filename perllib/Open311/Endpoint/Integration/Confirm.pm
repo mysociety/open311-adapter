@@ -744,7 +744,7 @@ sub _wrap_services {
     my %original_services = map { $_->service_code => $_ } @original_services;
 
     my @services = ();
-    for my $code (keys %{$self->wrapped_services}) {
+    for my $code (sort keys %{$self->wrapped_services}) {
         if ($self->wrapped_services->{$code}->{passthrough}) {
             my $original_service = $original_services{$code};
             my $wrapped_group = $self->wrapped_services->{$code}->{group};
