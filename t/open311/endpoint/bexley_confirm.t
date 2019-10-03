@@ -24,8 +24,8 @@ $open311->mock(perform_request => sub {
     return {};
 });
 
-use Open311::Endpoint::Integration::UK::Bexley::Confirm;
-my $endpoint = Open311::Endpoint::Integration::UK::Bexley::Confirm->new(
+use Open311::Endpoint::Integration::UK::Bexley::ConfirmTrees;
+my $endpoint = Open311::Endpoint::Integration::UK::Bexley::ConfirmTrees->new(
   config_file => path(__FILE__)->sibling("bexley_confirm.yml")->stringify,
 );
 

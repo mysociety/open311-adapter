@@ -12,11 +12,15 @@ sub new_service {
     Open311::Endpoint::Service->new(description => $_[0], service_code => $_[0], service_name => $_[0]);
 }
 
-my $confirm = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::Confirm');
-$confirm->mock(services => sub {
+my $confirm_grounds = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::ConfirmGrounds');
+$confirm_grounds->mock(services => sub {
     return ( new_service('A_BC'), new_service('D_EF') );
 });
-$confirm->mock(post_service_request_update => sub {
+my $confirm_trees = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::ConfirmTrees');
+$confirm_trees->mock(services => sub {
+    return ( new_service('X_YZ'), new_service('D_EF') );
+});
+$confirm_trees->mock(post_service_request_update => sub {
     my ($self, $args) = @_;
     is $args->{service_code}, 'D_EF';
     is $args->{service_request_id}, 1001;
@@ -54,7 +58,7 @@ subtest "GET Service List" => sub {
     <group></group>
     <keywords></keywords>
     <metadata>false</metadata>
-    <service_code>Confirm-A_BC</service_code>
+    <service_code>ConfirmGrounds-A_BC</service_code>
     <service_name>A_BC</service_name>
     <type>realtime</type>
   </service>
@@ -63,7 +67,25 @@ subtest "GET Service List" => sub {
     <group></group>
     <keywords></keywords>
     <metadata>false</metadata>
-    <service_code>Confirm-D_EF</service_code>
+    <service_code>ConfirmGrounds-D_EF</service_code>
+    <service_name>D_EF</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
+    <description>X_YZ</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>false</metadata>
+    <service_code>ConfirmTrees-X_YZ</service_code>
+    <service_name>X_YZ</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
+    <description>D_EF</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>false</metadata>
+    <service_code>ConfirmTrees-D_EF</service_code>
     <service_name>D_EF</service_name>
     <type>realtime</type>
   </service>
@@ -90,7 +112,7 @@ CONTENT
 };
 
 subtest "GET Service Definition" => sub {
-    my $res = $endpoint->run_test_request( GET => '/services/Confirm-A_BC.xml' );
+    my $res = $endpoint->run_test_request( GET => '/services/ConfirmGrounds-A_BC.xml' );
     ok $res->is_success, 'xml success',
         or diag $res->content;
     is_string $res->content, <<CONTENT, 'xml string ok';
@@ -98,7 +120,7 @@ subtest "GET Service Definition" => sub {
 <service_definition>
   <attributes>
   </attributes>
-  <service_code>Confirm-A_BC</service_code>
+  <service_code>ConfirmGrounds-A_BC</service_code>
 </service_definition>
 CONTENT
 
@@ -138,8 +160,8 @@ subtest "POST update OK" => sub {
         POST => '/servicerequestupdates.json',
         api_key => 'test',
         updated_datetime => '2019-03-01T12:00:00Z',
-        service_code => 'Confirm-D_EF',
-        service_request_id => "Confirm-1001",
+        service_code => 'ConfirmTrees-D_EF',
+        service_request_id => "ConfirmTrees-1001",
         status => 'IN_PROGRESS',
         first_name => 'Bob',
         last_name => 'Mould',
@@ -153,7 +175,7 @@ subtest "POST update OK" => sub {
 
     is_deeply decode_json($res->content),
         [ {
-            'update_id' => "Confirm-456",
+            'update_id' => "ConfirmTrees-456",
         } ], 'correct json returned';
 };
 
