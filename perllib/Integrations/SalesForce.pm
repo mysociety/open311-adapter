@@ -10,12 +10,12 @@ use JSON::MaybeXS;
 
 has 'endpoint_url' => (
     is => 'ro',
-    default => sub { die "abstract method endpoint_url not overridden" }
+    default => sub { $_[0]->config->{endpoint} || '' }
 );
 
 has 'credentials' => (
     is => 'ro',
-    default => sub { die "abstract method credentials not overridden" }
+    default => sub { $_[0]->config->{credentials} || {} }
 );
 
 has 'requests_endpoint' => (

@@ -1,15 +1,19 @@
 package Integrations::SalesForce::Rutland;
 
+use Path::Tiny;
 use Moo;
 extends 'Integrations::SalesForce';
 with 'Role::Config';
 
-has '+endpoint_url' => (
-    default => sub { $_[0]->config->{Rutland}->{endpoint} || '' }
+has config_filename => (
+    is => 'ro',
+    default => 'rutland',
 );
 
-has '+credentials' => (
-    default => sub { $_[0]->config->{Rutland}->{credentials} || {} }
-);
+sub _build_config_file {
+    my $self = shift;
+    # uncoverable statement
+    path(__FILE__)->parent(4)->realpath->child('conf/council-' . $self->config_filename . '.yml');
+}
 
 1;

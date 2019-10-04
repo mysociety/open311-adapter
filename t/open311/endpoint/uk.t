@@ -1,0 +1,50 @@
+use strict;
+use warnings;
+use Test::More;
+use File::Basename;
+
+BEGIN { $ENV{TEST_MODE} = 1; }
+
+use_ok('Open311::Endpoint::Integration::UK');
+
+my $endpoint = Open311::Endpoint::Integration::UK->new;
+
+my %config_filenames = (
+    'Open311::Endpoint::Integration::UK::BANES' => 'banes_confirm',
+    'Open311::Endpoint::Integration::UK::Buckinghamshire' => 'buckinghamshire_confirm',
+    'Open311::Endpoint::Integration::UK::Hounslow' => 'hounslow_confirm',
+    'Open311::Endpoint::Integration::UK::IslandRoads' => 'island_roads_confirm',
+    'Open311::Endpoint::Integration::UK::Lincolnshire' => 'lincolnshire_confirm',
+    'Open311::Endpoint::Integration::UK::Oxfordshire' => 'oxfordshire_wdm',
+    'Open311::Endpoint::Integration::UK::Rutland' => 'rutland',
+);
+
+foreach ($endpoint->plugins) {
+    next unless $_->can('get_integration');
+    my $integ = $_->get_integration;
+    next unless $integ->can('config_filename');
+    my $name = delete $config_filenames{ref($_)};
+    is $integ->config_filename, $name;
+    is basename($integ->config_file), "council-$name.yml";
+}
+
+is_deeply \%config_filenames, {};
+
+use_ok('Open311::Endpoint::Integration::UK::Bexley');
+
+$endpoint = Open311::Endpoint::Integration::UK::Bexley->new;
+
+%config_filenames = (
+    'Open311::Endpoint::Integration::UK::Bexley::Symology' => 'bexley_symology',
+);
+
+foreach ($endpoint->plugins) {
+    my $integ = $_->get_integration;
+    my $name = delete $config_filenames{ref($_)};
+    is $integ->config_filename, $name;
+    is basename($integ->config_file), "council-$name.yml";
+}
+
+is_deeply \%config_filenames, {};
+
+done_testing;
