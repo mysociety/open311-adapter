@@ -18,7 +18,7 @@ $confirm_grounds->mock(services => sub {
 });
 my $confirm_trees = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::ConfirmTrees');
 $confirm_trees->mock(services => sub {
-    return ( new_service('A_BC'), new_service('D_EF') );
+    return ( new_service('X_YZ'), new_service('D_EF') );
 });
 $confirm_trees->mock(post_service_request_update => sub {
     my ($self, $args) = @_;
@@ -72,12 +72,12 @@ subtest "GET Service List" => sub {
     <type>realtime</type>
   </service>
   <service>
-    <description>A_BC</description>
+    <description>X_YZ</description>
     <group></group>
     <keywords></keywords>
     <metadata>false</metadata>
-    <service_code>ConfirmTrees-A_BC</service_code>
-    <service_name>A_BC</service_name>
+    <service_code>ConfirmTrees-X_YZ</service_code>
+    <service_name>X_YZ</service_name>
     <type>realtime</type>
   </service>
   <service>
@@ -112,7 +112,7 @@ CONTENT
 };
 
 subtest "GET Service Definition" => sub {
-    my $res = $endpoint->run_test_request( GET => '/services/ConfirmTrees-A_BC.xml' );
+    my $res = $endpoint->run_test_request( GET => '/services/ConfirmGrounds-A_BC.xml' );
     ok $res->is_success, 'xml success',
         or diag $res->content;
     is_string $res->content, <<CONTENT, 'xml string ok';
@@ -120,7 +120,7 @@ subtest "GET Service Definition" => sub {
 <service_definition>
   <attributes>
   </attributes>
-  <service_code>ConfirmTrees-A_BC</service_code>
+  <service_code>ConfirmGrounds-A_BC</service_code>
 </service_definition>
 CONTENT
 
