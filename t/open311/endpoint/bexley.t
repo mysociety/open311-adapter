@@ -16,15 +16,6 @@ my $confirm_grounds = Test::MockModule->new('Open311::Endpoint::Integration::UK:
 $confirm_grounds->mock(services => sub {
     return ( new_service('A_BC'), new_service('D_EF') );
 });
-$confirm_grounds->mock(post_service_request_update => sub {
-    my ($self, $args) = @_;
-    is $args->{service_code}, 'D_EF';
-    is $args->{service_request_id}, 1001;
-    return Open311::Endpoint::Service::Request::Update::mySociety->new(
-        status => 'in_progress',
-        update_id => 456,
-    );
-});
 my $confirm_trees = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::ConfirmTrees');
 $confirm_trees->mock(services => sub {
     return ( new_service('A_BC'), new_service('D_EF') );
