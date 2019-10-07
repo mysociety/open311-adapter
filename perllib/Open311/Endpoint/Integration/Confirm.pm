@@ -10,6 +10,7 @@ use Open311::Endpoint::Service::UKCouncil::Confirm;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 use Open311::Endpoint::Service::Request::CanBeNonPublic;
+use Integrations::Confirm;
 
 use Path::Tiny;
 use SOAP::Lite; # +trace => [ qw/method debug/ ];
@@ -387,9 +388,17 @@ has '+request_class' => (
     default => 'Open311::Endpoint::Service::Request::CanBeNonPublic',
 );
 
+has 'integration_class' => (
+    is => 'ro',
+    default => 'Integrations::Confirm',
+);
+
 sub get_integration {
     my $self = shift;
-    return $self->integration_class->on_fault(sub { my($soap, $res) = @_; die ref $res ? $res->faultstring : $soap->transport->status, "\n"; });
+    my $integ = $self->integration_class;
+    $integ = $integ->on_fault(sub { my($soap, $res) = @_; die ref $res ? $res->faultstring : $soap->transport->status, "\n"; });
+    $integ->config_filename($self->jurisdiction_id);
+    return $integ;
 }
 
 sub post_service_request {

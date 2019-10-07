@@ -6,6 +6,8 @@ use XML::Simple;
 use SOAP::Lite;
 use DateTime::Format::Strptime;
 
+with 'Role::Config';
+
 sub endpoint_url { $_[0]->config->{endpoint_url} }
 
 has xml => (

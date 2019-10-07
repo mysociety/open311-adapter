@@ -9,13 +9,6 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
-use Integrations::Confirm::Lincolnshire;
-
-has integration_class => (
-    is => 'ro',
-    default => 'Integrations::Confirm::Lincolnshire'
-);
-
 sub process_service_request_args {
     my $self = shift;
     my $args = $self->SUPER::process_service_request_args(shift);

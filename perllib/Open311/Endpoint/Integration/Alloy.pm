@@ -10,6 +10,7 @@ with 'Open311::Endpoint::Role::ConfigFile';
 
 with 'Role::Logger';
 
+use Integrations::Alloy;
 use Open311::Endpoint::Service::UKCouncil::Alloy;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::CanBeNonPublic;
@@ -46,10 +47,19 @@ has '+identifier_types' => (
     },
 );
 
+has integration_class => (
+    is => 'ro',
+    default => 'Integrations::Alloy'
+);
+
 has alloy => (
     is => 'lazy',
-    default => sub { $_[0]->integration_class->new }
+    default => sub { $_[0]->integration_class->new(config_filename => $_[0]->jurisdiction_id) }
 );
+
+sub get_integration {
+    return $_[0]->alloy;
+}
 
 has config => (
     is => 'lazy',

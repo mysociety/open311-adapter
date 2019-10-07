@@ -25,9 +25,11 @@ has '+request_class' => (
 );
 
 
+sub integration_class { 'Integrations::WDM' }
+
 sub get_integration {
     my $self = shift;
-    return $self->integration_class->new;
+    return $self->integration_class->new(config_filename => $self->jurisdiction_id);
 }
 
 

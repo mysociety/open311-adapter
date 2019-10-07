@@ -123,7 +123,7 @@ $integration->mock('_soap_call', sub {
     return $som;
 });
 
-my $ox_integration = Test::MockModule->new('Integrations::WDM::Oxfordshire');
+my $ox_integration = Test::MockModule->new('Integrations::WDM');
 $ox_integration->mock('_build_config_file', sub {
     path(__FILE__)->sibling('oxfordshire.yml');
 });

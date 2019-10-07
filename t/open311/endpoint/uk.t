@@ -15,7 +15,8 @@ my %config_filenames = (
     'Open311::Endpoint::Integration::UK::Hounslow' => 'hounslow_confirm',
     'Open311::Endpoint::Integration::UK::IslandRoads' => 'island_roads_confirm',
     'Open311::Endpoint::Integration::UK::Lincolnshire' => 'lincolnshire_confirm',
-    'Open311::Endpoint::Integration::UK::Oxfordshire' => 'oxfordshire_wdm',
+    'Open311::Endpoint::Integration::UK::Northamptonshire' => 'northamptonshire_alloy',
+    'Open311::Endpoint::Integration::UK::Oxfordshire' => 'oxfordshire',
     'Open311::Endpoint::Integration::UK::Rutland' => 'rutland',
 );
 

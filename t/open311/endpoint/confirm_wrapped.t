@@ -1,11 +1,6 @@
 use strict;
 use warnings;
 
-package Integrations::Confirm::Dummy;
-use Moo;
-extends 'Integrations::Confirm';
-has config_filename => ( is => 'ro', default => 'dummy' );
-
 package Open311::Endpoint::Integration::UK::Dummy;
 use Moo;
 extends 'Open311::Endpoint::Integration::Confirm';
@@ -31,7 +26,6 @@ wrapped_services:
 ';
     return $class->$orig(%args);
 };
-has integration_class => (is => 'ro', default => 'Integrations::Confirm::Dummy');
 
 package main;
 

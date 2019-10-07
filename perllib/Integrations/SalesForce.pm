@@ -4,6 +4,7 @@ use Moo;
 use HTTP::Request;
 use LWP::UserAgent;
 
+with 'Role::Config';
 with 'Role::Logger';
 
 use JSON::MaybeXS;

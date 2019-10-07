@@ -17,6 +17,7 @@ extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 with 'Role::Logger';
 
+use Integrations::Symology;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 use Open311::Endpoint::Service::UKCouncil::Symology;
@@ -174,9 +175,17 @@ sub process_service_request_args {
     return ($request, $customer, $fields);
 }
 
+has integration_class => (
+    is => 'ro',
+    default => 'Integrations::Symology'
+);
+
 sub get_integration {
     my $self = shift;
-    return $self->integration_class->on_fault(sub { my($soap, $res) = @_; die ref $res ? $res->faultstring : $soap->transport->status, "\n"; });
+    my $integ = $self->integration_class;
+    $integ = $integ->on_fault(sub { my($soap, $res) = @_; die ref $res ? $res->faultstring : $soap->transport->status, "\n"; });
+    $integ->config_filename($self->jurisdiction_id);
+    return $integ;
 }
 
 sub post_service_request {

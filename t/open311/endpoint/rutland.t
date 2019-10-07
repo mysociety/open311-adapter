@@ -47,7 +47,7 @@ use JSON::MaybeXS;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 use Open311::Endpoint::Integration::UK;
-use Integrations::SalesForce::Rutland;
+use Integrations::SalesForce;
 
 my $endpoint = Open311::Endpoint::Integration::UK->new;
 
@@ -184,7 +184,7 @@ my %responses = (
 
 my @sent;
 
-my $integration = Test::MockModule->new('Integrations::SalesForce::Rutland');
+my $integration = Test::MockModule->new('Integrations::SalesForce');
 $integration->mock('_get_response', sub {
     my ($self, $req) = @_;
     (my $path = $req->uri->path) =~ s{.*/}{};

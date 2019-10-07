@@ -48,6 +48,9 @@ use vars qw(@ISA $AUTOLOAD @EXPORT_OK %EXPORT_TAGS);
 @EXPORT_OK = (keys %methods);
 %EXPORT_TAGS = ('all' => [@EXPORT_OK]);
 
+use Moo;
+with 'Role::Config';
+
 sub _call {
     my ($self, $method) = (shift, shift);
     my $name = UNIVERSAL::isa($method => 'SOAP::Data') ? $method->name : $method;

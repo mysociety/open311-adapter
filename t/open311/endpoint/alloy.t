@@ -34,8 +34,6 @@ package Integrations::Alloy::Dummy;
 use Path::Tiny;
 use Moo;
 extends 'Integrations::Alloy';
-with 'Role::Config';
-has config_filename => ( is => 'ro', default => 'dummy' );
 sub _build_config_file { path(__FILE__)->sibling("alloy.yml")->stringify }
 
 package Open311::Endpoint::Integration::UK::Dummy;

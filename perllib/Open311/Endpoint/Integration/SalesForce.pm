@@ -39,9 +39,11 @@ sub parse_datetime {
 
 sub reverse_status_mapping {}
 
+sub integration_class { 'Integrations::SalesForce' }
+
 sub get_integration {
     my $self = shift;
-    return $self->integration_class->new;
+    return $self->integration_class->new(config_filename => $self->jurisdiction_id);
 }
 
 sub post_service_request {

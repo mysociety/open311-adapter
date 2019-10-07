@@ -12,6 +12,7 @@ use Try::Tiny;
 use Encode qw(encode_utf8);
 use JSON::MaybeXS qw(encode_json decode_json);
 
+with 'Role::Config';
 with 'Role::Logger';
 
 

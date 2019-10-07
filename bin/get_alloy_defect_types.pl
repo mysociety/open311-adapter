@@ -2,10 +2,10 @@
 
 use Try::Tiny;
 
-use Integrations::Alloy::Northamptonshire;
+use Integrations::Alloy;
 use feature qw/say/;
 
-my $i = Integrations::Alloy::Northamptonshire->new();
+my $i = Integrations::Alloy->new(config_filename => 'northamptonshire_alloy');
 
 for my $defect_type ( keys %{ $i->config->{defect_sourcetype_category_mapping} } ) {
     my $defect_source;

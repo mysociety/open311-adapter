@@ -4,13 +4,24 @@ use Path::Tiny;
 use YAML::XS qw(LoadFile);
 use Moo::Role;
 
+has config_filename => (
+    is => 'rw',
+    default => '',
+);
+
 has config_file => (
     is => 'lazy',
     coerce => sub { path($_[0]) },
 );
 
 sub _build_config_file {
-    path(__FILE__)->parent(3)->realpath->child('conf/general.yml');
+    my $self = shift;
+    my $path = path(__FILE__)->parent(3)->realpath->child('conf');
+    if ($self->config_filename) {
+        $path->child('council-' . $self->config_filename . '.yml');
+    } else {
+        $path->child('general.yml');
+    }
 }
 
 has config => (

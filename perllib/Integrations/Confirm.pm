@@ -16,6 +16,8 @@ use Path::Tiny;
 use vars qw(@ISA);
 @ISA = qw(Exporter SOAP::Lite);
 
+with 'Role::Config';
+
 sub endpoint_url { $_[0]->config->{endpoint_url} }
 
 sub credentials {

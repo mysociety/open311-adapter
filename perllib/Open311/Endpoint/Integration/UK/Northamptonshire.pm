@@ -11,13 +11,6 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
-use Integrations::Alloy::Northamptonshire;
-
-has integration_class => (
-    is => 'ro',
-    default => 'Integrations::Alloy::Northamptonshire'
-);
-
 sub service_request_content {
     '/open311/service_request_extended'
 }

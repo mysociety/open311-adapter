@@ -2,8 +2,6 @@ package Integrations::Confirm::Dummy;
 use Path::Tiny;
 use Moo;
 extends 'Integrations::Confirm';
-with 'Role::Config';
-has config_filename => ( is => 'ro', default => 'dummy' );
 sub _build_config_file { path(__FILE__)->sibling("confirm.yml")->stringify }
 
 package Open311::Endpoint::Integration::UK::Dummy;
@@ -127,10 +125,7 @@ $open311->mock(perform_request => sub {
 
 my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
 
-my $endpoint2 = Open311::Endpoint::Integration::UK::DummyOmitLogged->new(
-    jurisdiction_id => 'dummy_omit_logged',
-    config_file => path(__FILE__)->sibling("confirm_omit_logged.yml")->stringify,
-);
+my $endpoint2 = Open311::Endpoint::Integration::UK::DummyOmitLogged->new;
 
 subtest "GET Service List" => sub {
     my $res = $endpoint->run_test_request( GET => '/services.xml' );

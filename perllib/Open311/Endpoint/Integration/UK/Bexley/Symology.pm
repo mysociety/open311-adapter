@@ -10,13 +10,6 @@ has jurisdiction_id => (
     default => 'bexley_symology',
 );
 
-use Integrations::Symology::Bexley;
-
-has integration_class => (
-    is => 'ro',
-    default => 'Integrations::Symology::Bexley'
-);
-
 sub process_service_request_args {
     my $self = shift;
     my @args = $self->SUPER::process_service_request_args(@_);

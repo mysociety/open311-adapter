@@ -10,19 +10,7 @@ use JSON::MaybeXS;
 use Path::Tiny;
 use Open311::Endpoint::Integration::UK;
 
-# Override config of the Integration package
-my $uploads_dir = Path::Tiny->tempdir;
-my $hounslow_integ = Test::MockModule->new('Integrations::Confirm::Hounslow');
-$hounslow_integ->mock(config => sub {
-    {
-        web_url => 'http://www.example.org/web',
-        uploads_dir => $uploads_dir,
-        tenant_id => 'dummy',
-        server_timezone => 'Europe/London',
-    }
-});
-
-# And need to override the endpoint config, bit fiddly
+# Need to override the endpoint config, bit fiddly
 package Open311::Endpoint::Integration::UK::Dummy;
 use Moo;
 extends 'Open311::Endpoint::Integration::Confirm';
@@ -36,12 +24,21 @@ service_whitelist:
 ';
     return $class->$orig(%args);
 };
-has integration_class => (is => 'ro', default => 'Integrations::Confirm::Hounslow');
 
 package main;
 
-# Also need to override any hits to a server
+# Override config of the Integration package
+my $uploads_dir = Path::Tiny->tempdir;
+
 my $open311 = Test::MockModule->new('Integrations::Confirm');
+$open311->mock(config => sub {
+    {
+        web_url => 'http://www.example.org/web',
+        uploads_dir => $uploads_dir,
+        tenant_id => 'dummy',
+        server_timezone => 'Europe/London',
+    }
+});
 $open311->mock(perform_request => sub {
     my ($self, $op) = @_; # Don't care about subsequent ops
     $op = $$op;

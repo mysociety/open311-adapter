@@ -97,7 +97,7 @@ $soap_lite->mock(call => sub {
     }
 });
 
-my $bexley_integ = Test::MockModule->new('Integrations::Symology::Bexley');
+my $bexley_integ = Test::MockModule->new('Integrations::Symology');
 $bexley_integ->mock(config => sub {
     {
         endpoint_url => 'http://www.example.org/',

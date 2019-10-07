@@ -9,11 +9,4 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
-use Integrations::Confirm::Hounslow;
-
-has integration_class => (
-    is => 'ro',
-    default => 'Integrations::Confirm::Hounslow'
-);
-
 1;

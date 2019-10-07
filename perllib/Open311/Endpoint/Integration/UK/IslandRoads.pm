@@ -9,11 +9,4 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
-use Integrations::Confirm::IslandRoads;
-
-has integration_class => (
-    is => 'ro',
-    default => 'Integrations::Confirm::IslandRoads'
-);
-
 1;
