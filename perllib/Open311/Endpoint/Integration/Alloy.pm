@@ -339,6 +339,12 @@ sub get_service_request_updates {
                 }
             }
 
+            # we don't care about the reason for closure unless the enquiry is closed so
+            # blank it to stop us setting spurious external statuses
+            if ( $status ne 'closed' ) {
+                $reason_for_closure = '';
+            }
+
             my $description_to_send = $description ne $last_description ? $description : '';
             $last_description = $description;
 
@@ -571,8 +577,6 @@ sub inspection_status {
 
 sub get_status_with_closure {
     my ($self, $status, $reason_for_closure) = @_;
-
-    return $status unless $status eq 'closed';
 
     return $self->config->{inspection_closure_mapping}->{$reason_for_closure} || $status;
 }
