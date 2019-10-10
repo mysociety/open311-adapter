@@ -133,8 +133,7 @@ sub _call {
     my ($self, $method) = (shift, shift);
     my $name = UNIVERSAL::isa($method => 'SOAP::Data') ? $method->name : $method;
     my %method = %{ $self->_methods->{$name} };
-    $self->proxy($self->endpoint_url || Carp::croak "No server address (proxy) specified", timeout => 360)
-        unless $self->proxy;
+    $self->proxy($self->endpoint_url || Carp::croak("No server address (proxy) specified"), timeout => 360);
     my @templates = @{$method{parameters}};
     my @parameters = ();
     foreach my $param (@_) {
