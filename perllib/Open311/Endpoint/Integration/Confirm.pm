@@ -289,6 +289,19 @@ has attribute_descriptions => (
     default => sub { {} }
 );
 
+=head2 attribute_value_overrides
+
+Some options Confirm attributes need a different name in the Open311 service
+metadata. This attribute should be a hashref of Confirm service codes to a
+hashref mapping attribute option name to their new name to use.
+
+=cut
+
+has attribute_value_overrides => (
+    is => 'ro',
+    default => sub { {} }
+);
+
 sub service_request_content {
     '/open311/service_request_extended'
 }
@@ -719,7 +732,9 @@ sub _parse_attributes {
             if ($ignored_options{$_->{EnqAttribValueCode}}) {
                 ()
             } else {
-                $_->{EnqAttribValueCode} => $_->{EnqAttribValueName}
+                my $name = $_->{EnqAttribValueName};
+                $name = $self->attribute_value_overrides->{$code}->{$name} || $name;
+                $_->{EnqAttribValueCode} => $name
             }
         } @{ $enquiry_attributes };
         my $type = %values ? 'singlevaluelist' : 'string';

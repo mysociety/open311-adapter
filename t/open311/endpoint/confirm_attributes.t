@@ -9,20 +9,18 @@ around BUILDARGS => sub {
     $args{jurisdiction_id} = 'dummy';
     $args{config_data} = '
 service_whitelist:
-   Everything:
-     HM_PHS: Small pothole
-     HM_PHL: Large pothole
-     ST_STP4: Broken bridge
-wrapped_services:
-  POTHOLES:
-    group: "Road defects"
-    name: "Pothole"
-    wraps:
-      - HM_PHS
-      - HM_PHL
-  ST_STP4:
-    passthrough: 1
-    group: Bridges and safety barriers
+  Roads:
+    HM_PHS: Small pothole
+    HM_PHL: Large pothole
+ignored_attributes:
+  - IGN
+ignored_attribute_options:
+  - PS
+attribute_descriptions:
+  QUES2: "Better question text"
+attribute_value_overrides:
+  QUES:
+    "do not use": "use instead"
 ';
     return $class->$orig(%args);
 };
@@ -42,10 +40,29 @@ $open311->mock(perform_request => sub {
     if ($op->name && $op->name eq 'GetEnquiryLookups') {
         return {
             OperationResponse => { GetEnquiryLookupsResponse => { TypeOfService => [
-                { ServiceCode => 'HM', ServiceName => 'Highways', EnquirySubject => [ { SubjectCode => "PHS" } ] },
+                { ServiceCode => 'HM', ServiceName => 'Highways', EnquirySubject => [ {
+                    SubjectCode => "PHS",
+                    SubjectAttribute => [
+                        { EnqAttribTypeCode => 'QUES', },
+                        { EnqAttribTypeCode => 'QUES2', },
+                        { EnqAttribTypeCode => 'IGN', },
+                    ],
+                } ] },
                 { ServiceCode => 'HM', ServiceName => 'Highways', EnquirySubject => [ { SubjectCode => "PHL" } ] },
-                { ServiceCode => 'ST', ServiceName => 'Streets', EnquirySubject => [ { SubjectCode => "STP4" } ] },
-            ] } }
+            ],
+            EnquiryAttributeType => [
+                { EnqAttribTypeCode => 'QUES', MandatoryFlag => 'true', EnqAttribTypeName => 'Question?',
+                  EnquiryAttributeValue => [
+                      { EnqAttribValueCode => 'PS', EnqAttribValueName => 'Please select' },
+                      { EnqAttribValueCode => 'Y', EnqAttribValueName => 'Yes' },
+                      { EnqAttribValueCode => 'N', EnqAttribValueName => 'No' },
+                      { EnqAttribValueCode => 'DK', EnqAttribValueName => 'do not use' },
+                  ] },
+                { EnqAttribTypeCode => 'QUES2', MandatoryFlag => 'false', EnqAttribTypeName => 'Bad question',
+                  EnquiryAttributeValue => [] },
+                { EnqAttribTypeCode => 'IGN', MandatoryFlag => 'false', EnqAttribTypeName => 'Ignored question' },
+            ],
+            } }
         };
     }
     return {};
@@ -54,72 +71,20 @@ $open311->mock(endpoint_url => sub { 'http://example.org/' });
 
 my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
 
-subtest "GET Service List" => sub {
-    my $res = $endpoint->run_test_request( GET => '/services.xml' );
-    ok $res->is_success, 'xml success';
-    my $expected = <<XML;
-<?xml version="1.0" encoding="utf-8"?>
-<services>
-  <service>
-    <description>Pothole</description>
-    <groups>
-      <group>Road defects</group>
-    </groups>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>POTHOLES</service_code>
-    <service_name>Pothole</service_name>
-    <type>realtime</type>
-  </service>
-  <service>
-    <description>Broken bridge</description>
-    <groups>
-      <group>Bridges and safety barriers</group>
-    </groups>
-    <keywords></keywords>
-    <metadata>true</metadata>
-    <service_code>ST_STP4</service_code>
-    <service_name>Broken bridge</service_name>
-    <type>realtime</type>
-  </service>
-</services>
-XML
-    is_string $res->content, $expected;
-};
-
 subtest "GET wrapped Service List Description" => sub {
-    my $res = $endpoint->run_test_request( GET => '/services/POTHOLES.xml' );
+    my $res = $endpoint->run_test_request( GET => '/services/HM_PHS.xml' );
     ok $res->is_success, 'xml success';
     my $expected = <<XML;
 <?xml version="1.0" encoding="utf-8"?>
 <service_definition>
   <attributes>
     <attribute>
-      <code>_wrapped_service_code</code>
-      <datatype>singlevaluelist</datatype>
-      <datatype_description></datatype_description>
-      <description>What is the issue?</description>
-      <order>1</order>
-      <required>true</required>
-      <values>
-        <value>
-          <name>Large pothole</name>
-          <key>HM_PHL</key>
-        </value>
-        <value>
-          <name>Small pothole</name>
-          <key>HM_PHS</key>
-        </value>
-      </values>
-      <variable>true</variable>
-    </attribute>
-    <attribute>
       <automated>server_set</automated>
       <code>easting</code>
       <datatype>number</datatype>
       <datatype_description></datatype_description>
       <description>easting</description>
-      <order>2</order>
+      <order>1</order>
       <required>true</required>
       <variable>false</variable>
     </attribute>
@@ -129,7 +94,7 @@ subtest "GET wrapped Service List Description" => sub {
       <datatype>number</datatype>
       <datatype_description></datatype_description>
       <description>northing</description>
-      <order>3</order>
+      <order>2</order>
       <required>true</required>
       <variable>false</variable>
     </attribute>
@@ -139,7 +104,7 @@ subtest "GET wrapped Service List Description" => sub {
       <datatype>string</datatype>
       <datatype_description></datatype_description>
       <description>external system ID</description>
-      <order>4</order>
+      <order>3</order>
       <required>true</required>
       <variable>false</variable>
     </attribute>
@@ -149,7 +114,7 @@ subtest "GET wrapped Service List Description" => sub {
       <datatype>string</datatype>
       <datatype_description></datatype_description>
       <description>Report URL</description>
-      <order>5</order>
+      <order>4</order>
       <required>true</required>
       <variable>true</variable>
     </attribute>
@@ -159,7 +124,7 @@ subtest "GET wrapped Service List Description" => sub {
       <datatype>string</datatype>
       <datatype_description></datatype_description>
       <description>Title</description>
-      <order>6</order>
+      <order>5</order>
       <required>true</required>
       <variable>true</variable>
     </attribute>
@@ -169,7 +134,7 @@ subtest "GET wrapped Service List Description" => sub {
       <datatype>text</datatype>
       <datatype_description></datatype_description>
       <description>Description</description>
-      <order>7</order>
+      <order>6</order>
       <required>true</required>
       <variable>true</variable>
     </attribute>
@@ -179,7 +144,7 @@ subtest "GET wrapped Service List Description" => sub {
       <datatype>text</datatype>
       <datatype_description></datatype_description>
       <description>Asset information</description>
-      <order>8</order>
+      <order>7</order>
       <required>false</required>
       <variable>true</variable>
     </attribute>
@@ -189,7 +154,7 @@ subtest "GET wrapped Service List Description" => sub {
       <datatype>text</datatype>
       <datatype_description></datatype_description>
       <description>Site code</description>
-      <order>9</order>
+      <order>8</order>
       <required>false</required>
       <variable>true</variable>
     </attribute>
@@ -199,7 +164,7 @@ subtest "GET wrapped Service List Description" => sub {
       <datatype>string</datatype>
       <datatype_description></datatype_description>
       <description>Central Asset ID</description>
-      <order>10</order>
+      <order>9</order>
       <required>false</required>
       <variable>true</variable>
     </attribute>
@@ -209,14 +174,47 @@ subtest "GET wrapped Service List Description" => sub {
       <datatype>string</datatype>
       <datatype_description></datatype_description>
       <description>Closest address</description>
+      <order>10</order>
+      <required>false</required>
+      <variable>true</variable>
+    </attribute>
+    <attribute>
+      <code>QUES</code>
+      <datatype>singlevaluelist</datatype>
+      <datatype_description></datatype_description>
+      <description>Question?</description>
       <order>11</order>
+      <required>true</required>
+      <values>
+        <value>
+          <name>use instead</name>
+          <key>DK</key>
+        </value>
+        <value>
+          <name>No</name>
+          <key>N</key>
+        </value>
+        <value>
+          <name>Yes</name>
+          <key>Y</key>
+        </value>
+      </values>
+      <variable>true</variable>
+    </attribute>
+    <attribute>
+      <code>QUES2</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>Better question text</description>
+      <order>12</order>
       <required>false</required>
       <variable>true</variable>
     </attribute>
   </attributes>
-  <service_code>POTHOLES</service_code>
+  <service_code>HM_PHS</service_code>
 </service_definition>
 XML
+    print $res->content;
     is_string $res->content, $expected;
 };
 
