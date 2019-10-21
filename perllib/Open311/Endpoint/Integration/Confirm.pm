@@ -464,6 +464,7 @@ sub post_service_request_update {
     my $update_id = $enquiry->{EnquiryNumber} .  "_" . $enquiry->{EnquiryLogNumber};
 
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        service_request_id => $enquiry->{EnquiryNumber},
         status => lc $args->{status},
         update_id => $update_id,
     );

@@ -25,6 +25,7 @@ $confirm_trees->mock(post_service_request_update => sub {
     is $args->{service_code}, 'D_EF';
     is $args->{service_request_id}, 1001;
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        service_request_id => 1001,
         status => 'in_progress',
         update_id => 456,
     );

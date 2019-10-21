@@ -58,7 +58,13 @@ sub _map_with_new_id {
         if ($name eq $self->integration_without_prefix) {
             $result;
         } else {
-            (ref $result)->new(%$result, $attribute => "$name-" . $result->$attribute);
+            my %params;
+            $params{$attribute} = "$name-" . $result->$attribute;
+            # Also need to update the relevant request ID if it's an update
+            if ($attribute eq 'update_id') {
+                $params{service_request_id} = "$name-" . $result->service_request_id;
+            }
+            (ref $result)->new(%$result, %params);
         }
     } @results;
     return @results;
