@@ -69,7 +69,7 @@ $soap_lite->mock(call => sub {
         return SOAP::Result->new(method => {
             ServiceRequestIdentification => {
                 ServiceRequestTechnicalKey => 'ABC',
-                ReferenceValue => 1001,
+                ReferenceValue => '12/00034/AB',
             }
         });
     } elsif ($args[0] eq 'GetChangedServiceRequestRefVals') {
@@ -229,7 +229,7 @@ subtest "POST Dog fouling OK" => sub {
 
     is_deeply decode_json($res->content),
         [ {
-            "service_request_id" => 1001
+            "service_request_id" => '12/00034/AB'
         } ], 'correct json returned';
 };
 

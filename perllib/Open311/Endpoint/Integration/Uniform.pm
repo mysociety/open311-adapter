@@ -9,6 +9,7 @@ use DateTime::Format::W3CDTF;
 use Digest::MD5 qw(md5_hex);
 use Moo;
 use Path::Tiny;
+use Types::Standard ':all';
 use JSON::MaybeXS;
 use YAML::XS qw(LoadFile);
 
@@ -23,6 +24,17 @@ use Open311::Endpoint::Service::Request::Update::mySociety;
 has jurisdiction_id => ( is => 'ro' );
 
 has endpoint_config => ( is => 'lazy' );
+
+has '+identifier_types' => (
+    is => 'lazy',
+    isa => HashRef[Any],
+    default => sub {
+        return {
+            # some request IDs include slashes
+            service_request_id => { type => '/open311/regex', pattern => qr/^ [\w_\-\/]+ $/ax },
+        };
+    },
+);
 
 sub _build_endpoint_config {
     my $self = shift;
