@@ -250,8 +250,7 @@ sub get_service_request_updates {
     my @updates;
     foreach (@$requests) {
         # RequestType is GENERAL
-        my $request = $self->get_integration->GetGeneralServiceRequestByReferenceValue($_->{ReferenceValue});
-        $request = $request->result;
+        my $request = $self->_get_request($_->{ReferenceValue});
         my $code = $request->{AdministrationDetails}->{StatusCode} || '';
         my $closing_code = $request->{AdministrationDetails}->{ClosingActionCode} || '';
 
@@ -274,6 +273,69 @@ sub get_service_request_updates {
 
 sub map_status_code {
     # Nothing by default
+}
+
+sub _get_request {
+    my ($self, $id) = @_;
+    my $request = $self->get_integration->GetGeneralServiceRequestByReferenceValue($id);
+    $request = $request->result;
+    $self->log_and_die("No such request") unless $request;
+    return $request;
+}
+
+sub _get_visits {
+    my ($self, $request) = @_;
+    my $visits = $request->{InspectionDetails}->{Visits} || { Visit => [] };
+    $visits = $visits->{Visit};
+    $visits = [ $visits ] unless ref $visits eq 'ARRAY';
+    return $visits;
+}
+
+sub post_service_request_update {
+    my ($self, $args) = @_;
+
+    $self->logon;
+
+    if ($args->{media_url}->[0]) {
+        $args->{description} .= "\n\n[ This update contains a photo, see: " . $args->{media_url}->[0] . " ]";
+    }
+
+    # Loses any timezone on submission, so make sure it's in UK local time.
+    my $w3c = DateTime::Format::W3CDTF->new;
+    my $time = $w3c->parse_datetime($args->{updated_datetime});
+    $time->set_time_zone('Europe/London');
+    $time->set_time_zone('floating');
+    $args->{updated_datetime} = $w3c->format_datetime($time);
+
+    my $request = $self->_get_request($args->{service_request_id});
+    my $inspection_id = $request->{InspectionDetails}->{ReferenceValue};
+    $self->get_integration->AddVisitsToInspection($inspection_id, $args); # Doesn't return anything
+
+    # Get the request again, to get the ID of the newly added visit...
+    $request = $self->_get_request($args->{service_request_id});
+    my $visits = $self->_get_visits($request);
+    my $num_visits = @$visits;
+
+    # The visits are not always in the order added...
+    my $visit_id;
+    foreach (@$visits) {
+        if ($_->{OfficerCode} eq 'EHCALL' && $_->{VisitTypeCode} eq 'EHCUR' && $_->{Comments} eq $args->{description} && $_->{ScheduledDateOfVisit} eq $args->{updated_datetime}) {
+            $visit_id = $_->{ReferenceValue};
+            last;
+        }
+    }
+    $self->log_and_die("Could not find matching Visit") unless $visit_id;
+
+    $self->get_integration->AddActionsToVisit($visit_id, $args); # Doesn't return anything
+
+    my $update_id = $args->{service_request_id};
+    $update_id =~ s{/}{_}g;
+    $update_id .= "_" . $num_visits;
+
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        status => lc $args->{status},
+        update_id => $update_id,
+    );
 }
 
 1;

@@ -88,9 +88,36 @@ $soap_lite->mock(call => sub {
         ] });
     } elsif ($args[0] eq 'GetGeneralServiceRequestByReferenceValue') {
         my @request = $args[1]->value;
-        like $request[0], qr/^[123]$/;
-        return SOAP::Result->new(result => {
-        });
+        if ($request[0] eq '12/00034/AB') {
+            return SOAP::Result->new(result => {
+                InspectionDetails => {
+                    ReferenceValue => '12/00034/GCOMP',
+                    # This is the visit about to be added, here so the action can then be added to it...
+                    Visits => { Visit => [ {
+                        Comments => 'This is the update',
+                        OfficerCode => 'EHCALL',
+                        VisitTypeCode => 'EHCUR',
+                        ScheduledDateOfVisit => '2019-10-22T17:21:34',
+                        ReferenceValue => 'ABCDEF',
+                    } ] },
+                },
+            });
+        } else {
+            like $request[0], qr/^[123]$/;
+            return SOAP::Result->new(result => {});
+        }
+    } elsif ($args[0] eq 'AddVisitsToInspection') {
+        my $id = $args[1]->value;
+        is $id, '12/00034/GCOMP';
+        my $request = ${$args[2]->value}->value;
+        like $request->[3]->value, qr/This is the update/;
+        return SOAP::Result->new(result => {});
+    } elsif ($args[0] eq 'AddActionsToVisit') {
+        my $id = $args[1]->value;
+        is $id, 'ABCDEF';
+        my $request = ${$args[2]->value}->value;
+        is $request->[2]->value, '2019-10-22T17:21:34';
+        return SOAP::Result->new(result => {});
     } else {
         is $args[0], '';
     }
@@ -260,6 +287,27 @@ subtest "POST Dog fouling OK" => sub {
     is_deeply decode_json($res->content),
         [ {
             "service_request_id" => '12/00034/AB'
+        } ], 'correct json returned';
+};
+
+subtest 'post update' => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        description => "This is the update",
+        service_request_id => '12/00034/AB',
+        status => 'OPEN',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        updated_datetime => '2019-10-22T16:21:34Z',
+        update_id => 1001,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            update_id => '12_00034_AB_1',
         } ], 'correct json returned';
 };
 
