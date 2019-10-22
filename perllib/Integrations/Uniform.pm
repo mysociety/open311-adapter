@@ -69,6 +69,23 @@ my %methods = (
     ], # end parameters
   }, # end GetChangedServiceRequestRefVals
 
+'AddVisitsToInspection' => {
+    soapaction => 'http://www.caps-solutions.co.uk/webservices/connectors/servicerequest/actions/AddVisitsToInspection',
+    namespace => 'http://www.caps-solutions.co.uk/webservices/connectors/731/servicerequest/messagetypes',
+    parameters => [
+        SOAP::Data->new(name => 's9:InspectionIdentifier', type => 'xsd:string', attr => {}),
+        SOAP::Data->new(name => 's5:Visits', type => 's9:ArrayOfSubmittedVisitType', attr => {}),
+    ], # end parameters
+  }, # end AddVisitsToInspection
+'AddActionsToVisit' => {
+    soapaction => 'http://www.caps-solutions.co.uk/webservices/connectors/servicerequest/actions/AddActionsToVisit',
+    namespace => 'http://www.caps-solutions.co.uk/webservices/connectors/731/servicerequest/messagetypes',
+    parameters => [
+        SOAP::Data->new(name => 's9:VisitIdentifier', type => 'xsd:string', attr => {}),
+        SOAP::Data->new(name => 's5:Actions', type => 's9:ArrayOfSubmittedActionType', attr => {}),
+    ], # end parameters
+  }, # end AddActionsToVisit
+
 ); # end my %methods
 
 use vars qw(@ISA $AUTOLOAD @EXPORT_OK %EXPORT_TAGS);
@@ -263,6 +280,37 @@ sub make_soap_structure {
         }
     }
     return @out;
+}
+
+sub SOAP::Serializer::as_ArrayOfSubmittedVisitType {
+    my ($self, $value, $name, $type, $attr) = @_;
+
+    my $v = [
+        VisitTypeCode => 'EHCUR',
+        ScheduledDateOfVisit => $value->{updated_datetime},
+        OfficerCode => 'EHCALL',
+        Comments => $value->{description},
+    ];
+    my $elem = \SOAP::Data
+        ->name('s9:SubmittedVisit' => [ make_soap_structure('s9', @$v) ])
+        ->attr({'xsi:type' => 's9:SubmittedVisitType'});
+
+    return [$name, $attr, $elem];
+}
+
+sub SOAP::Serializer::as_ArrayOfSubmittedActionType {
+    my ($self, $value, $name, $type, $attr) = @_;
+
+    my $v = [
+        ActionCode => 'EHPCU',
+        OfficerCode => 'EHCALL',
+        DueDate => $value->{updated_datetime},
+    ];
+    my $elem = \SOAP::Data
+        ->name('s9:SubmittedAction' => [ make_soap_structure('s9', @$v) ])
+        ->attr({'xsi:type' => 's9:SubmittedActionType'});
+
+    return [$name, $attr, $elem];
 }
 
 1;
