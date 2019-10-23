@@ -1,0 +1,10 @@
+# Example logrotate config file
+/path/to/logfile.log {
+  daily
+  missingok
+  rotate 7
+  compress
+  delaycompress
+  notifempty
+  copytruncate
+}

@@ -5,6 +5,8 @@ local
 /conf/general.yml.deployed
 /conf/httpd.conf
 /conf/httpd.conf.deployed
+/conf/logrotate
+/conf/logrotate.deployed
 /conf/council-*
 !/conf/council-*-example
 /t/open311/test.log
