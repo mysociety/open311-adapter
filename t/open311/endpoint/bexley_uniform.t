@@ -83,8 +83,8 @@ $end->mock(endpoint_config => sub {
     {
         username => 'FMS',
         service_whitelist => {
-            DFOUL => 'Dog fouling',
-            FLY => 'Fly tipping',
+            DFOUL => { name => 'Dog fouling' },
+            FLY => { name => 'Fly tipping' },
         },
     }
 });

@@ -183,6 +183,15 @@ sub SOAP::Serializer::as_SubmittedGeneralServiceRequestType {
 
     my $dt = DateTime->now(time_zone => 'Europe/London');
     my $time = DateTime::Format::W3CDTF->new->format_datetime($dt);
+
+    my %xtra;
+    foreach (keys %{$value->{xtra}}) {
+        push @{$xtra{XtraValues}{SR_Xtra}}, {
+            FieldName => $_,
+            FieldValue => $value->{xtra}{$_},
+        };
+    }
+
     my $elem = \SOAP::Data->value( make_soap_structure('s4',
         ServiceRequestIdentification => {
             ReceptionReference => '',
@@ -218,6 +227,7 @@ sub SOAP::Serializer::as_SubmittedGeneralServiceRequestType {
             }
         },
         TimeReceived => $time,
+        %xtra,
     ));
     return [$name, $attr, $elem];
 }

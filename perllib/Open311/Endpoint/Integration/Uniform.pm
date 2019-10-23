@@ -18,6 +18,7 @@ with 'Open311::Endpoint::Role::mySociety';
 with 'Role::Logger';
 
 use Integrations::Uniform;
+use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::UKCouncil;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 
@@ -97,6 +98,25 @@ sub services {
             $data->{group} ? (group => $data->{group}) : (),
             $data->{private} ? (keywords => ['private']) : (),
         );
+        foreach (@{$data->{questions}}) {
+            my %attribute = (
+                code => $_->{code},
+                description => $_->{description},
+            );
+            if ($_->{variable} // 1) {
+                $attribute{required} = 1;
+            } else {
+                $attribute{variable} = 0;
+                $attribute{required} = 0;
+            }
+            if ($_->{values}) {
+                $attribute{datatype} = 'singlevaluelist';
+                $attribute{values} = { map { $_ => $_ } @{$_->{values}} };
+            } else {
+                $attribute{datatype} = 'string';
+            }
+            push @{$service->attributes}, Open311::Endpoint::Service::Attribute->new(%attribute);
+        }
         $service;
     } @services;
     return @services;
@@ -139,6 +159,7 @@ sub process_service_request_args {
             $request->{$_} = delete $args->{attributes}->{$_};
         }
     }
+    $request->{xtra} = $args->{attributes};
 
     if ($args->{media_url}->[0]) {
         foreach my $photo_url (@{ $args->{media_url} }) {

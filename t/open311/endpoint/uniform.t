@@ -60,6 +60,15 @@ $soap_lite->mock(call => sub {
         my $photo_desc = "\n\n[ This report contains a photo, see: http://example.org/photo/1.jpeg ]";
         is $request[3]->value, "This is the details$photo_desc";
 
+        my @xtra = ${${$request[7]->value}->value->value}->value;
+        foreach (@xtra) {
+            if ($_->name eq 'FieldName') {
+                is $_->value, 'LOC';
+            } elsif ($_->name eq 'FieldValue') {
+                is $_->value, 'Inside';
+            }
+        }
+
         if ($easting == EASTING_BAD) {
             return SOAP::Result->new(method => {
                 TransactionSuccess => 'False',
@@ -100,8 +109,15 @@ $end->mock(endpoint_config => sub {
     {
         username => 'FMS',
         service_whitelist => {
-            DOG => 'Dog fouling',
-            FLY => 'Fly tipping',
+            DOG => {
+                name => 'Dog fouling',
+                questions => [
+                    { code => 'LOC', description => 'Where?', values => [ 'Inside', 'Outside' ] },
+                ]
+            },
+            FLY => {
+                name => 'Fly tipping',
+            },
         },
     }
 });
@@ -179,6 +195,19 @@ subtest "GET service" => sub {
              "code" => "fixmystreet_id",
              "datatype" => "string"
           },
+          {
+             "datatype_description" => "",
+             "variable" => "true",
+             "description" => "Where?",
+             "required" => "true",
+             "order" => 4,
+             "code" => "LOC",
+             "datatype" => "singlevaluelist",
+             values => [
+                 { key => 'Inside', name => 'Inside' },
+                 { key => 'Outside', name => 'Outside' },
+             ],
+          },
        ],
     }, 'correct json returned';
 };
@@ -198,6 +227,7 @@ subtest "POST Dog fouling Bad" => sub {
         'attribute[easting]' => EASTING_BAD,
         'attribute[northing]' => NORTHING,
         'attribute[fixmystreet_id]' => 123,
+        'attribute[LOC]' => 'Inside',
     );
     ok !$res->is_success, 'invalid request'
         or diag $res->content;
@@ -223,6 +253,7 @@ subtest "POST Dog fouling OK" => sub {
         'attribute[easting]' => EASTING_GOOD,
         'attribute[northing]' => NORTHING,
         'attribute[fixmystreet_id]' => 123,
+        'attribute[LOC]' => 'Inside',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
