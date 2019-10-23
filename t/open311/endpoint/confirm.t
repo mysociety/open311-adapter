@@ -114,11 +114,18 @@ $open311->mock(perform_request => sub {
         }
         return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 2001, EnquiryLogNumber => 2 } } } };
     } elsif ($op->name eq 'GetEnquiryStatusChanges') {
-        return { OperationResponse => { GetEnquiryStatusChangesResponse => { UpdatedEnquiry => [
-            { EnquiryNumber => 2001, EnquiryStatusLog => [ { EnquiryLogNumber => 3, LogEffectiveTime => '2018-03-01T12:00:00Z', LoggedTime => '2018-03-01T12:00:00Z', EnquiryStatusCode => 'INP' } ] },
-            { EnquiryNumber => 2002, EnquiryStatusLog => [ { EnquiryLogNumber => 1, LogEffectiveTime => '2018-03-01T13:00:00Z', LoggedTime => '2018-03-01T13:00:00Z', EnquiryStatusCode => 'INP' } ] },
-            { EnquiryNumber => 2002, EnquiryStatusLog => [ { EnquiryLogNumber => 2, LogEffectiveTime => '2018-01-17T12:34:56Z', LoggedTime => '2018-03-01T13:30:00.4000Z', EnquiryStatusCode => 'DUP' } ] },
-        ] } } };
+        my %req = map { $_->name => $_->value } ${$op->value}->value;
+        if ($req{LoggedTimeFrom} eq '2019-10-23T01:00:00+01:00' && $req{LoggedTimeTo} eq '2019-10-24T01:00:00+01:00') {
+          return { OperationResponse => { GetEnquiryStatusChangesResponse => { UpdatedEnquiry => [
+              { EnquiryNumber => 2020, EnquiryStatusLog => [ { EnquiryLogNumber => 5, StatusLogNotes => 'Secret status log notes', LogEffectiveTime => '2019-10-23T12:00:00Z', LoggedTime => '2019-10-23T12:00:00Z', EnquiryStatusCode => 'INP' } ] },
+          ] } } };
+        } else {
+          return { OperationResponse => { GetEnquiryStatusChangesResponse => { UpdatedEnquiry => [
+              { EnquiryNumber => 2001, EnquiryStatusLog => [ { EnquiryLogNumber => 3, LogEffectiveTime => '2018-03-01T12:00:00Z', LoggedTime => '2018-03-01T12:00:00Z', EnquiryStatusCode => 'INP' } ] },
+              { EnquiryNumber => 2002, EnquiryStatusLog => [ { EnquiryLogNumber => 1, LogEffectiveTime => '2018-03-01T13:00:00Z', LoggedTime => '2018-03-01T13:00:00Z', EnquiryStatusCode => 'INP' } ] },
+              { EnquiryNumber => 2002, EnquiryStatusLog => [ { EnquiryLogNumber => 2, LogEffectiveTime => '2018-01-17T12:34:56Z', LoggedTime => '2018-03-01T13:30:00.4000Z', EnquiryStatusCode => 'DUP' } ] },
+          ] } } };
+        }
     }
     return {};
 });
@@ -550,5 +557,14 @@ XML
 
     is_string $res->content, $expected, 'xml string ok'
     or diag $res->content;
+};
+
+subtest "StatusLogNotes shouldn't appear in updates" => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.xml?start_date=2019-10-23T00:00:00Z&end_date=2019-10-24T00:00:00Z',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+    contains_string $res->content, '<update_id>2020_5</update_id>';
+    lacks_string $res->content, 'Secret status log notes';
 };
 done_testing;
