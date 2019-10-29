@@ -79,28 +79,13 @@ sub api_call {
     }
 }
 
-sub get_source_types {
+sub get_designs {
     my $self = shift;
 
-    my %whitelist = map { $_ => 1} @{ $self->config->{source_type_id_whitelist} };
-    my $source_types = $self->api_call(
-        call => "source-type",
-        params => { propertyName => $self->config->{source_type_property_name} }
-    )->{sourceTypes};
-    return grep { $whitelist{$_->{sourceTypeId}} } @$source_types;
-}
-
-sub get_source_for_source_type_id {
-    my $self = shift;
-    my $source_type_id = shift;
-
-    my $sources = $self->api_call(
-        call => "source",
-        params => { sourceTypeId => $source_type_id }
-    )->{sources};
-    # TODO: Check that the source is valid - e.g. startDate/endDate/softDeleted fields
-    # TODO: What if there's zero or more than one source?
-    return @$sources[0] if @$sources;
+    my $design = $self->api_call(
+        call => "design/" . $self->config->{rfs_design},
+    );
+    return ($design);
 }
 
 sub get_valuetype_mapping {
@@ -118,6 +103,7 @@ sub get_valuetype_mapping {
         GEOMETRY => "string", # err. Probably GeoJSON?
         IRG_REF => "string", # err. This is an item lookup
     };
+    return $mapping;
     my $valuetypes = $self->api_call(call => "reference/value-type");
     my %mapping = map { $_->{valueTypeId} => $mapping->{$_->{code}} } @$valuetypes;
     return \%mapping;
@@ -143,36 +129,34 @@ sub get_sources {
     unless ($sources) {
         $sources = [];
         my $type_mapping = $self->get_valuetype_mapping();
-        my @source_types = $self->get_source_types();
-        for my $source_type (@source_types) {
-            my $alloy_source = $self->get_source_for_source_type_id($source_type->{sourceTypeId});
+        my @designs = $self->get_designs;
+        for my $design (@designs) {
 
             my $source = {
-                source_type_id => $source_type->{sourceTypeId},
-                description => $source_type->{description},
-                source_id => $alloy_source->{sourceId},
+                code => $design->{code},
+                description => $design->{name},
             };
 
             my @attributes = ();
-            my $source_type_attributes = $source_type->{attributes};
-            for my $source_attribute (@$source_type_attributes) {
-                next unless $source_attribute->{isRequired};
+            my $design_attributes = $design->{attributes};
+            for my $attribute (@$design_attributes) {
+                next unless $attribute->{required};
 
-                my $datatype = $type_mapping->{$source_attribute->{valueTypeId}} || "string";
+                my $datatype = $type_mapping->{$attribute->{type}} || "string";
                 my %values = ();
-                if ($datatype eq 'singlevaluelist' && $source_attribute->{attributeOptionTypeId}) {
+                if ($datatype eq 'singlevaluelist' && $attribute->{attributeOptionTypeId}) {
                     # Fetch all the options for this attribute from the API
-                    my $options = $self->api_call(call => "attribute-option-type/$source_attribute->{attributeOptionTypeId}")->{optionList};
+                    my $options = $self->api_call(call => "attribute-option-type/$attribute->{attributeOptionTypeId}")->{optionList};
                     for my $option (@$options) {
                         $values{$option->{optionId}} = $option->{optionDescription};
                     }
                 }
 
                 push @attributes, {
-                    description => $source_attribute->{description},
-                    name => $source_attribute->{name},
-                    id => $source_attribute->{attributeId},
-                    required => $source_attribute->{isRequired},
+                    description => $attribute->{name},
+                    name => $attribute->{name},
+                    id => $attribute->{code},
+                    required => $attribute->{required},
                     datatype => $datatype,
                     values => \%values,
                 };
