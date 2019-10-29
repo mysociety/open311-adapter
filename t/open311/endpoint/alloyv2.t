@@ -89,6 +89,9 @@ $integration->mock('api_call', sub {
     push @calls, $call;
     if ( $body ) {
         push @sent, $body;
+        if ( $call eq 'item' ) {
+            $content = '{ "item": { "itemId": 12345 } }';
+        }
     } else {
         if ( $call eq 'design/designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6' ) {
             $content = path(__FILE__)->sibling('json/alloyv2/design_rfs.json')->slurp;
@@ -102,6 +105,124 @@ $integration->mock('api_call', sub {
     my $result = decode_json(encode_utf8($content));
     return $result;
 });
+
+subtest "create basic problem" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request( 
+        POST => '/requests.json', 
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        service_code => 'Kerbs_Missing',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        'attribute[description]' => 'description',
+        'attribute[title]' => '1',
+        'attribute[report_url]' => 'http://localhost/1',
+        'attribute[asset_resource_id]' => 1,
+        'attribute[easting]' => 1,
+        'attribute[northing]' => 2,
+        'attribute[category]' => 'Kerbs_Missing',
+        'attribute[fixmystreet_id]' => 1,
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+
+    # order these so comparison works
+    $sent->{attributes} = [ sort { $a->{attributeCode} cmp $b->{attributeCode} } @{ $sent->{attributes} } ];
+    is_deeply $sent,
+    {
+    attributes => [
+        #{ attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => 'Category' },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
+        #{ attributeCode  => 'attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29', value => [ 708823 ] },
+        { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
+    ],
+    designCode => 'designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6',
+    geometry => {
+        coordinates => [
+            0.1,
+            50
+        ],
+        type => "Point"
+    },
+    parents => {},
+    }
+    , 'correct json sent';
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => 12345
+        } ], 'correct json returned';
+
+};
+
+subtest "create problem with no resource_id" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request( 
+        POST => '/requests.json', 
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        service_code => 'Kerbs_Missing',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        'attribute[description]' => 'description',
+        'attribute[title]' => '1',
+        'attribute[report_url]' => 'http://localhost/1',
+        'attribute[asset_resource_id]' => '',
+        'attribute[easting]' => 1,
+        'attribute[northing]' => 2,
+        'attribute[category]' => 'Kerbs_Missing',
+        'attribute[fixmystreet_id]' => 1,
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    $sent->{attributes} = [ sort { $a->{attributeCode} cmp $b->{attributeCode} } @{ $sent->{attributes} } ];
+    is_deeply $sent,
+    {
+    attributes => [
+        #{ attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => 'Category' },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
+        #{ attributeCode  => 'attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29', value => [ 708823 ] },
+        { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
+    ],
+    designCode => 'designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6',
+    geometry => {
+        coordinates => [
+            0.1,
+            50
+        ],
+        type => "Point"
+    },
+    parents => {},
+    }
+    , 'correct json sent';
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => 12345
+        } ], 'correct json returned';
+
+};
 
 subtest "check fetch service description" => sub {
     my $res = $endpoint->run_test_request(
