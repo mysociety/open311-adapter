@@ -169,4 +169,17 @@ sub get_sources {
     return $sources;
 }
 
+sub update_attributes {
+    my ($self, $values, $map, $attributes) = @_;
+
+    for my $key ( keys %$map ) {
+        push @$attributes, {
+            attributeCode => $map->{$key},
+            value => $values->{$key}
+        }
+    }
+
+    return $attributes;
+}
+
 1;

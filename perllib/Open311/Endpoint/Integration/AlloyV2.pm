@@ -170,43 +170,39 @@ sub post_service_request {
 
     my $parent_attribute_id;
 
-    if ( $resource_id ) {
-        # get the attribute id for the parents so alloy checks in the right place for the asset id
-        my $resource_type = $self->alloy->api_call(
-            call => "resource/$resource_id"
-        )->{sourceTypeId};
-        my $parent_attributes = $self->alloy->get_parent_attributes($resource_type);
-        for my $attribute ( @$parent_attributes ) {
-            if ( $attribute->{linkedSourceTypeId} eq $source->{source_type_id} ) {
-                $parent_attribute_id = $attribute->{attributeId};
-                last;
-            }
-        }
+    #if ( $resource_id ) {
+        ## get the attribute id for the parents so alloy checks in the right place for the asset id
+        #my $resource_type = $self->alloy->api_call(
+            #call => "resource/$resource_id"
+        #)->{sourceTypeId};
+        #my $parent_attributes = $self->alloy->get_parent_attributes($resource_type);
+        #for my $attribute ( @$parent_attributes ) {
+            #if ( $attribute->{linkedSourceTypeId} eq $source->{source_type_id} ) {
+                #$parent_attribute_id = $attribute->{attributeId};
+                #last;
+            #}
+        #}
 
-        unless ( $parent_attribute_id ) {
-            my $msg = "no parent attribute id found for asset $resource_id with type $resource_type ($source->{source_type_id})";
-            $self->logger->error($msg);
-            die $msg;
-        }
-    }
+        #unless ( $parent_attribute_id ) {
+            #my $msg = "no parent attribute id found for asset $resource_id with type $resource_type ($source->{source_type_id})";
+            #$self->logger->error($msg);
+            #die $msg;
+        #}
+    #}
 
     my ( $group, $category ) = split('_', $service->service_code);
     my $resource = {
-        # This is seemingly fine to omit, inspections created via the
-        # Alloy web UI don't include it anyway.
-        networkReference => undef,
-
         # This appears to be shared amongst all asset types for now,
         # as everything is based off one design.
-        sourceId => $source->{source_id},
+        designCode => $self->config->{rfs_design},
 
 
         # No way to include the SRS in the GeoJSON, sadly, so
         # requires another API call to reproject. Beats making
         # open311-adapter geospatially aware, anyway :)
-        geoJson => {
+        geometry => {
             type => "Point",
-            coordinates => $self->reproject_coordinates($args->{long}, $args->{lat}),
+            coordinates => [$args->{long}, $args->{lat}],
         }
     };
 
@@ -217,7 +213,7 @@ sub post_service_request {
         # It's a list so perhaps an inspection can be linked to many
         # assets, and maybe even many different asset types, but for
         # now one is fine.
-        $resource->{parents} = {
+        $resource->{parents} = {#
             $parent_attribute_id => [ $resource_id ],
         };
     } else {
@@ -234,7 +230,7 @@ sub post_service_request {
 
     # post it up
     my $response = $self->alloy->api_call(
-        call => "resource",
+        call => "item",
         body => $resource
     );
 
@@ -590,7 +586,7 @@ sub service_request_id_for_resource {
     # This may be overridden by subclasses depending on the council's workflow.
     # This default behaviour just uses the resource ID which will always
     # be present.
-    return $resource->{resourceId};
+    return $resource->{item}->{itemId};
 }
 
 sub get_time_for_version {
@@ -716,30 +712,34 @@ sub process_attributes {
     # Some of the Open311 service attributes need remapping to Alloy resource
     # attributes according to the config...
     my $remapping = $self->config->{request_to_resource_attribute_mapping} || {};
-    my $remapped = {};
-    for my $key ( keys %$remapping ) {
-        $remapped->{$remapping->{$key}} = $args->{attributes}->{$key};
-    }
+    #my @remapped;
+    #for my $key ( keys %$remapping ) {
+        #push @remapped, {
+            #attributeCode => $remapping->{$key},
+            #value => $args->{attributes}->{$key}
+        #}
+    #}
+
+    my @remapped = @{ $self->alloy->update_attributes( $args->{attributes}, $remapping, []) };
 
     # service code is a special case
     my ( $group, $category ) = split('_', $args->{service_code});
     my $group_code = $self->config->{service_whitelist}->{$group}->{resourceId};
-    $remapped->{$remapping->{category}} = [ { resourceId => $group_code, command => "add" } ];
+    #$remapped->{$remapping->{category}} = [ { resourceId => $group_code, command => "add" } ];
 
-    $attributes = {
-        %$attributes,
-        %$defaults,
-        %$remapped,
-    };
 
     # Set the creation time for this resource to the current timestamp.
     # TODO: Should this take the 'confirmed' field from FMS?
     if ( $self->config->{created_datetime_attribute_id} ) {
         my $now = DateTime->now();
         my $created_time = DateTime::Format::W3CDTF->new->format_datetime($now);
-        $attributes->{$self->config->{created_datetime_attribute_id}} = $created_time;
+        push @remapped, { 
+            attributeCode => $self->config->{created_datetime_attribute_id},
+            value => $created_time
+        };
     }
 
+    $attributes = \@remapped;
 
     # Upload any photos to Alloy and link them to the new resource
     # via the appropriate attribute
