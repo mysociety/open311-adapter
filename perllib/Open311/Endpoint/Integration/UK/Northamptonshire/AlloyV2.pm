@@ -31,14 +31,17 @@ sub process_attributes {
 
     # For category we use the group and not the category
     my ( $group, $category ) = split('_', $args->{service_code});
-    my $group_code = $self->config->{service_whitelist}->{$group}->{resourceId} + 0;
-    $attributes->{$self->config->{request_to_resource_attribute_mapping}->{category}} = [ { resourceId => $group_code, command => "add" } ];
+    my $group_code = $self->config->{service_whitelist}->{$group}->{resourceId};
+    push @$attributes, {
+        attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{category},
+        value => [ $group_code ],
+    };
 
     # Attach the caller to the inspection attributes
-    $attributes->{$self->config->{contact}->{attribute_id}} = [{
-        resourceId => $contact_resource_id,
-        command => 'add'
-    }];
+    push @$attributes, {
+        attributeCode => $self->config->{contact}->{attribute_id},
+        value => [ $contact_resource_id ],
+    };
 
     return $attributes;
 
@@ -48,16 +51,15 @@ sub _find_or_create_contact {
     my ($self, $args) = @_;
 
     if (my $contact = $self->_find_contact($args->{email})) {
-        return $contact->{resourceId};
+        return $contact->{itemId};
     } else {
-        return $self->_create_contact($args)->{resourceId};
+        return $self->_create_contact($args)->{item}->{itemId};
     }
 }
 
 sub _find_contact {
     my ($self, $email, $phone) = @_;
 
-    my $entity_code = $self->config->{contact}->{search_entity_code};
     my ($attribute_code, $search_term);
     if ( $email ) {
         $search_term = $email;
@@ -70,41 +72,31 @@ sub _find_contact {
     }
 
     my $results = $self->alloy->api_call(
-        call => "search/resource",
+        call => "aqs/query",
         body => {
-            aqsNode => {
-                type => "SEARCH",
-                properties => {
-                    entityType => "SOURCE_TYPE",
-                    entityCode => $entity_code
-                },
-                children => [
-                    {
-                        type => "EQUALS",
-                        children => [
-                            {
-                                type => "ATTRIBUTE",
-                                properties => {
-                                    attributeCode => $attribute_code
-                                }
-                            },
-                            {
-                                type => "STRING",
-                                properties => {
-                                    value => [
-                                        $search_term
-                                    ]
-                                }
+            type => "Query",
+            properties => {
+                dodiCode => $self->config->{contact}->{code},
+                collectionCode => "Live"
+            },
+            children => [
+                {
+                    type => "GlobalAttributeSearch",
+                    children=> [
+                        {
+                            type => "String",
+                            properties => {
+                                value => [$search_term]
                             }
-                        ]
-                    }
-                ]
-            }
-        }
+                        }
+                    ]
+                }
+            ]
+        },
     );
 
-    return undef unless $results->{totalHits};
-    return $results->{results}[0]->{result};
+    return undef unless $results->{results};
+    return $results->{results}->[0];
 }
 
 sub _create_contact {
@@ -118,7 +110,7 @@ sub _create_contact {
     #
     # we could possibly use local $YAML::XS::Boolean = "JSON::PP" in the Config module
     # to get round all this but not sure if that would break something else.
-    my $attributes = {
+    my $defaults = {
         map {
             $_ => $self->config->{contact}->{attribute_defaults}->{$_} =~ /^(true|false)$/
                 ? JSON()->$1
@@ -129,24 +121,29 @@ sub _create_contact {
     # phone cannot be null;
     $args->{phone} ||= '';
 
-    my $remapping = $self->config->{contact}->{attribute_mapping} || {};
-    for my $key ( keys %$remapping ) {
-        $attributes->{$remapping->{$key}} = $args->{$key};
-    }
+    # include the defaults which map to themselves in the mapping
+    my $remapping = {
+        %{$self->config->{contact}->{attribute_mapping}},
+        map {
+            $_ => $_
+        } keys %{ $self->config->{contact}->{attribute_defaults} }
+    };
+
+    $args = {
+        %$args,
+        %$defaults
+    };
+
+    my @attributes = @{ $self->alloy->update_attributes( $args, $remapping, []) };
 
     my $contact = {
-        sourceId => $self->config->{contact}->{source_id},
-        attributes => $attributes,
-        geoJson => undef,
-        startDate => undef,
-        endDate => undef,
-        networkReference => undef,
-        parents => {},
-        colour => undef
+        designCode => $self->config->{contact}->{code},
+        attributes => \@attributes,
+        geometry => undef,
     };
 
     return $self->alloy->api_call(
-        call => "resource",
+        call => "item",
         body => $contact
     );
 }
