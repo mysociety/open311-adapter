@@ -41,13 +41,13 @@ sub api_call {
 
     my $ua = LWP::UserAgent->new(
         agent => "FixMyStreet/open311-adapter",
-        default_headers => HTTP::Headers->new(
-            apiKey => $self->config->{api_key}
-        )
     );
     my $method = $args{method};
     $method = $body ? 'POST' : 'GET' unless $method;
     my $uri = URI->new( $self->config->{api_url} . $call );
+
+    $args{params}->{token} = $self->config->{api_key};
+
     $uri->query_form(%{ $args{params} });
     my $request = HTTP::Request->new($method, $uri);
     if ($args{is_file}) {
