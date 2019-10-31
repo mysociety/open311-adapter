@@ -57,6 +57,15 @@ subtest "GET Service List" => sub {
     <type>realtime</type>
   </service>
   <service>
+    <description>Dog Fouling</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>true</metadata>
+    <service_code>EF_C_DF</service_code>
+    <service_name>Dog Fouling</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
     <description>Litter in Parks &amp; Open spaces</description>
     <group></group>
     <keywords></keywords>

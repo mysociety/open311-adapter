@@ -93,6 +93,7 @@ sub services {
     my @services = (
         [ 'Abandoned vehicles', 'EF_E_AVE' ],
         [ 'Dog Bin overflow', 'P_C_DBE' ],
+        [ 'Dog Fouling', 'EF_C_DF' ],
         [ 'Litter in Parks & Open spaces', 'P_C_LPR' ],
         [ 'Litter Bin overflow in Parks & Open spaces', 'P_C_LBE' ],
         [ 'Grass Cutting', 'P_C_GNC' ],
