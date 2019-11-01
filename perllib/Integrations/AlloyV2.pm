@@ -111,13 +111,19 @@ sub get_valuetype_mapping {
 
 sub get_parent_attributes {
     my $self = shift;
-    my $source_type_id = shift;
+    my $design_code = shift;
 
     # TODO: What's the correct behaviour if there's none?
-    return $self->api_call(
-        call => "source-type/$source_type_id/linked-source-types",
-        params => { irgConfigCode => $self->config->{irg_config_code} }
+    my $design = $self->api_call(
+        call => "design/$design_code",
     );
+
+    for my $att ( @{ $design->{design}->{attributes} } ) {
+        $self->logger->debug($att->{name});
+        if ( $att->{name} eq 'Inspection - Enquiry - Request for Service' ) {
+            return $att->{code};
+        }
+    }
 }
 
 sub get_sources {
