@@ -81,26 +81,26 @@
   # map attributes from inspections/defects back to update values
   "inspection_attribute_mapping": {
       "description": 1000594,
-      "status": 1001546, # this is a structure so needs more processing
-      "reason_for_closure": 1010926,
-      "inspector_comments": 1011096,
-      "updates": 1014437,
+      "status": 'attributes_taskStatus', # this is a structure so needs more processing
+      "reason_for_closure": 'attributes_enquiryInspectionRFS1001181ReasonForClosure1010926_5d3245d8fe2ad806f8dfbb24',
+      "inspector_comments": 'attributes_enquiryInspectionRFS1001181ResponseToCustomer1011096_5d3245dafe2ad806f8dfbb2e',
+      "updates": 'attributes_enquiryInspectionRFS1001181UpdatesFromFixMyStreet1014437_5d3245dffe2ad806f8dfbb42',
   },
 
   "inspection_status_mapping": {
-    "1": "open", # proposed
-    "2": "investigating", # issued to contractor
-    "4": "investigating", # in progress
-    # "3": "" # on hold
-    "6": "closed" # closed
-    # "8": "" # cancelled
+    "5bc5bdd281d088d177342c72": "open", # proposed
+    "5bc5bdd281d088d177342c73": "investigating", # issued to contractor
+    "5bc5bdd281d088d177342c74": "investigating", # in progress
+    # "5bc5bdd281d088d177342c75": "" # on hold
+    "5bc5bdd281d088d177342c76": "closed" # completed
+    # "5bc5bdd281d088d177342c79": "" # cancelled
   },
 
   "inspection_closure_mapping": {
-    4281523: 'in_progress', # works instructed
-    4281524: 'no_further_action', # no action necessary
-    4281525: 'not_councils_responsibility', # outside NCC control
-    4281526: 'no_further_action', # highways to monitor
+    '01b51bb3c0de101a004154b3': 'in_progress', # works instructed
+    '01b51bb4c0de101a004154b4': 'no_further_action', # no action necessary
+    '01b51bb5c0de101a004154b5': 'not_councils_responsibility', # outside NCC control
+    '01b51bb6c0de101a004154b6': 'no_further_action', # highways to monitor
   },
 
   "inspection_resource_name": "INSPECTION_ST INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_REQUEST_FOR_SERVICE",
