@@ -1,0 +1,743 @@
+{
+  "design": {
+    "colour": "#99cf22",
+    "icon": "icon-inspection-unknown",
+    "versioned": false,
+    "geometry": {
+      "allows": [
+        "Point",
+        "MultiPoint",
+        "LineString",
+        "MultiLineString",
+        "Polygon",
+        "MultiPolygon",
+        "GeometryCollection"
+      ],
+      "required": true
+    },
+    "collections": [
+      "Archive",
+      "Live"
+    ],
+    "name": "Mock Resouce Design",
+    "code": "a_design_code",
+    "context": "Customer",
+    "implements": [
+      {
+        "code": "designInterfaces_items",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6"
+      }
+    ],
+    "attributes": [
+      {
+        "name": "Inspection - Enquiry - Request for Service",
+        "code": "attribute_design_code",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "String",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "max": 20,
+          "discriminator": "DodiAttributeOptionsStringWebModel"
+        }
+      },
+      {
+        "name": "Source ID",
+        "code": "attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "String",
+        "required": true,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "discriminator": "DodiAttributeOptionsStringWebModel"
+        }
+      },
+      {
+        "name": "Source",
+        "code": "attributes_enquiryInspectionRFS1001181Source1009856_5d3245d2fe2ad806f8dfbb0b",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "String",
+        "required": true,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "defaultValue": "FixMyStreet",
+          "discriminator": "DodiAttributeOptionsStringWebModel"
+        }
+      },
+      {
+        "name": "Enquiry Type",
+        "code": "attributes_enquiryInspectionRFS1001181EnquiryType1009857_5d3245d3fe2ad806f8dfbb10",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "String",
+        "required": true,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "defaultValue": "Request for Service",
+          "discriminator": "DodiAttributeOptionsStringWebModel"
+        }
+      },
+      {
+        "name": "Summary",
+        "code": "attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "String",
+        "required": true,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "discriminator": "DodiAttributeOptionsStringWebModel"
+        }
+      },
+      {
+        "name": "Explanation",
+        "code": "attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "String",
+        "required": true,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "discriminator": "DodiAttributeOptionsStringWebModel"
+        }
+      },
+      {
+        "name": "Reported DateTime",
+        "code": "attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "DateTime",
+        "required": true,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "precision": "Seconds",
+          "discriminator": "DodiAttributeOptionsDateTimeWebModel"
+        }
+      },
+      {
+        "name": "Reason for Closure",
+        "code": "attributes_enquiryInspectionRFS1001181ReasonForClosure1010926_5d3245d8fe2ad806f8dfbb24",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "Link",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "code": "designs_listEnquiryClosureReasonsRFS1001215_5d32114bfe2ad806f8df997a",
+          "graph": "Lookup",
+          "weakReference": true,
+          "max": 1,
+          "defaultValue": [],
+          "discriminator": "DodiAttributeOptionsLinkWebModel"
+        }
+      },
+      {
+        "name": "FMS Contact",
+        "code": "attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "Link",
+        "required": true,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "code": "designs_fMSContacts1001214_5d321178fe2ad80354bbc0a7",
+          "graph": "Lookup",
+          "weakReference": true,
+          "max": 1,
+          "defaultValue": [],
+          "discriminator": "DodiAttributeOptionsLinkWebModel"
+        }
+      },
+      {
+        "name": "Response to Customer",
+        "code": "attributes_enquiryInspectionRFS1001181ResponseToCustomer1011096_5d3245dafe2ad806f8dfbb2e",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "String",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "discriminator": "DodiAttributeOptionsStringWebModel"
+        }
+      },
+      {
+        "name": "Category",
+        "code": "attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "Link",
+        "required": true,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "code": "designs_listFixMyStreetCategories1001257_5d3210e1fe2ad806f8df98c1",
+          "graph": "Lookup",
+          "weakReference": true,
+          "max": 1,
+          "defaultValue": [],
+          "discriminator": "DodiAttributeOptionsLinkWebModel"
+        }
+      },
+      {
+        "name": "Inspector Comments (Internal)",
+        "code": "attributes_enquiryInspectionRFS1001181InspectorCommentsInternal1013385_5d3245dcfe2ad806f8dfbb38",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "String",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "discriminator": "DodiAttributeOptionsStringWebModel"
+        }
+      },
+      {
+        "name": "Enforcement Stage",
+        "code": "attributes_enquiryInspectionRFS1001181EnforcementStage1014436_5d3245ddfe2ad806f8dfbb3d",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "Link",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "code": "designs_listEnquiryStages1001382_5d320f03fe2ad806f8df9610",
+          "graph": "Lookup",
+          "weakReference": true,
+          "max": 1,
+          "defaultValue": [],
+          "discriminator": "DodiAttributeOptionsLinkWebModel"
+        }
+      },
+      {
+        "name": "Updates from FixMyStreet",
+        "code": "attributes_enquiryInspectionRFS1001181UpdatesFromFixMyStreet1014437_5d3245dffe2ad806f8dfbb42",
+        "parent": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+        "context": "Customer",
+        "type": "String",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "discriminator": "DodiAttributeOptionsStringWebModel"
+        }
+      },
+      {
+        "name": "Description",
+        "code": "attributes_tasksDescription",
+        "parent": "designInterfaces_tasks",
+        "context": "Core",
+        "type": "String",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "max": 256,
+          "discriminator": "DodiAttributeOptionsStringWebModel"
+        }
+      },
+      {
+        "name": "Status",
+        "code": "attributes_tasksStatus",
+        "parent": "designInterfaces_tasks",
+        "context": "Core",
+        "type": "Link",
+        "required": true,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "code": "designs_taskStatuses",
+          "graph": "Lookup",
+          "weakReference": true,
+          "max": 1,
+          "defaultValue": [
+            "5bc5bdd281d088d177342c72"
+          ],
+          "discriminator": "DodiAttributeOptionsLinkWebModel"
+        }
+      },
+      {
+        "name": "Priority",
+        "code": "attributes_tasksPriority",
+        "parent": "designInterfaces_tasks",
+        "context": "Core",
+        "type": "Link",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "code": "designs_taskPriorities",
+          "graph": "Lookup",
+          "weakReference": true,
+          "max": 1,
+          "defaultValue": [],
+          "discriminator": "DodiAttributeOptionsLinkWebModel"
+        }
+      },
+      {
+        "name": "Team",
+        "code": "attributes_tasksTeam",
+        "parent": "designInterfaces_tasks",
+        "context": "Core",
+        "type": "Link",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "code": "designs_teams",
+          "graph": "Team",
+          "weakReference": true,
+          "max": 1,
+          "defaultValue": [],
+          "discriminator": "DodiAttributeOptionsLinkWebModel"
+        }
+      },
+      {
+        "name": "Team Member",
+        "code": "attributes_tasksTeamMember",
+        "parent": "designInterfaces_tasks",
+        "context": "Core",
+        "type": "Link",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "code": "designs_teamMembers",
+          "graph": "Team",
+          "weakReference": true,
+          "max": 1,
+          "defaultValue": [],
+          "discriminator": "DodiAttributeOptionsLinkWebModel"
+        }
+      },
+      {
+        "name": "Raised Time",
+        "code": "attributes_tasksRaisedTime",
+        "parent": "designInterfaces_tasks",
+        "context": "Core",
+        "type": "DateTime",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "precision": "Minutes",
+          "discriminator": "DodiAttributeOptionsDateTimeWebModel"
+        }
+      },
+      {
+        "name": "Estimated Start Time",
+        "code": "attributes_tasksEstimatedStartTime",
+        "parent": "designInterfaces_tasks",
+        "context": "Core",
+        "type": "DateTime",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "precision": "Minutes",
+          "discriminator": "DodiAttributeOptionsDateTimeWebModel"
+        }
+      },
+      {
+        "name": "Start Time",
+        "code": "attributes_tasksStartTime",
+        "parent": "designInterfaces_tasks",
+        "context": "Core",
+        "type": "DateTime",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "precision": "Minutes",
+          "discriminator": "DodiAttributeOptionsDateTimeWebModel"
+        }
+      },
+      {
+        "name": "Completion Time",
+        "code": "attributes_tasksCompletionTime",
+        "parent": "designInterfaces_tasks",
+        "context": "Core",
+        "type": "DateTime",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [
+          "RequiredOnTaskStatusCompleted"
+        ],
+        "options": {
+          "precision": "Minutes",
+          "discriminator": "DodiAttributeOptionsDateTimeWebModel"
+        }
+      },
+      {
+        "name": "Target Time",
+        "code": "attributes_tasksTargetTime",
+        "parent": "designInterfaces_tasks",
+        "context": "Core",
+        "type": "DateTime",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "precision": "Minutes",
+          "discriminator": "DodiAttributeOptionsDateTimeWebModel"
+        }
+      },
+      {
+        "name": "Cancelled Time",
+        "code": "attributes_tasksCancelledTime",
+        "parent": "designInterfaces_tasks",
+        "context": "Core",
+        "type": "DateTime",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [
+          "RequiredOnTaskStatusCancelled"
+        ],
+        "options": {
+          "precision": "Minutes",
+          "discriminator": "DodiAttributeOptionsDateTimeWebModel"
+        }
+      },
+      {
+        "name": "Estimated End Time",
+        "code": "attributes_tasksEstimatedEndTime",
+        "parent": "designInterfaces_tasks",
+        "context": "Core",
+        "type": "DateTime",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "precision": "Minutes",
+          "discriminator": "DodiAttributeOptionsDateTimeWebModel"
+        }
+      },
+      {
+        "name": "Inspection Number",
+        "code": "attributes_inspectionsInspectionNumber",
+        "parent": "designInterfaces_inspections",
+        "context": "Core",
+        "type": "Number",
+        "required": true,
+        "readonly": false,
+        "unique": false,
+        "tags": [
+          "AutoIncrement"
+        ],
+        "options": {
+          "decimalPlaces": 0,
+          "min": 0,
+          "discriminator": "DodiAttributeOptionsNumberWebModel"
+        }
+      },
+      {
+        "name": "Related Inspections",
+        "code": "attributes_inspectionsRelatedInspections",
+        "parent": "designInterfaces_inspections",
+        "context": "Core",
+        "type": "Link",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "code": "designInterfaces_inspections",
+          "graph": "Inspection",
+          "weakReference": false,
+          "defaultValue": [],
+          "discriminator": "DodiAttributeOptionsLinkWebModel"
+        }
+      },
+      {
+        "name": "Attachments",
+        "code": "attributes_filesAttachableAttachments",
+        "parent": "designInterfaces_filesAttachable",
+        "context": "Core",
+        "type": "Link",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "code": "designs_files",
+          "graph": "FileSystem",
+          "weakReference": true,
+          "defaultValue": [],
+          "discriminator": "DodiAttributeOptionsLinkWebModel"
+        }
+      },
+      {
+        "name": "Raised Jobs",
+        "code": "attributes_inspectionsRaisingJobsRaisedJobs",
+        "parent": "designInterfaces_inspectionsRaisingJobs",
+        "context": "Core",
+        "type": "Link",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "code": "designInterfaces_jobs",
+          "graph": "Inspection",
+          "weakReference": true,
+          "defaultValue": [],
+          "discriminator": "DodiAttributeOptionsLinkWebModel"
+        }
+      },
+      {
+        "name": "Raised Defects",
+        "code": "attributes_inspectionsRaisingDefectsRaisedDefects",
+        "parent": "designInterfaces_inspectionsRaisingDefects",
+        "context": "Core",
+        "type": "Link",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "code": "designInterfaces_defects",
+          "graph": "Inspection",
+          "weakReference": true,
+          "defaultValue": [],
+          "discriminator": "DodiAttributeOptionsLinkWebModel"
+        }
+      },
+      {
+        "name": "Defects",
+        "code": "attributes_defectsAssignableDefects",
+        "parent": "designInterfaces_defectsAssignable",
+        "context": "Core",
+        "type": "Link",
+        "required": false,
+        "readonly": false,
+        "unique": false,
+        "tags": [],
+        "options": {
+          "code": "designInterfaces_defects",
+          "graph": "Defect",
+          "weakReference": false,
+          "defaultValue": [],
+          "discriminator": "DodiAttributeOptionsLinkWebModel"
+        }
+      }
+    ],
+    "title": "INS-{{attributes_inspectionsInspectionNumber}}, {{attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06}}",
+    "subtitle": "Enquiry Inspection RFS",
+    "metadata": {
+      "createdDate": "2019-07-19T22:35:49.271Z",
+      "createdUserUsername": "andrewhardyman-richards",
+      "lastEditDate": "2019-08-13T13:35:15.014Z",
+      "lastEditUserUsername": "keithnixon2",
+      "signature": "5d52bc93fe2ad80c3403439b"
+    },
+    "discriminator": "DesignWebModel"
+  },
+  "operationsSummary": {
+    "canWrite": true,
+    "canReadItems": true,
+    "canEditItems": true,
+    "canDeleteItems": true,
+    "canCreateItems": true,
+    "attributeOperationsSummary": [
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181OriginalInspectionNumber1003787_5d3245d0fe2ad806f8dfbb01",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181Source1009856_5d3245d2fe2ad806f8dfbb0b",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181EnquiryType1009857_5d3245d3fe2ad806f8dfbb10",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181ReasonForClosure1010926_5d3245d8fe2ad806f8dfbb24",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181ResponseToCustomer1011096_5d3245dafe2ad806f8dfbb2e",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181InspectorCommentsInternal1013385_5d3245dcfe2ad806f8dfbb38",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181EnforcementStage1014436_5d3245ddfe2ad806f8dfbb3d",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181UpdatesFromFixMyStreet1014437_5d3245dffe2ad806f8dfbb42",
+        "canWriteDodiAttribute": true,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_tasksDescription",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_tasksStatus",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_tasksPriority",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_tasksTeam",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_tasksTeamMember",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_tasksRaisedTime",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_tasksEstimatedStartTime",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_tasksStartTime",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_tasksCompletionTime",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_tasksTargetTime",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_tasksCancelledTime",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_tasksEstimatedEndTime",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_inspectionsInspectionNumber",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_inspectionsRelatedInspections",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_filesAttachableAttachments",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_inspectionsRaisingJobsRaisedJobs",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_inspectionsRaisingDefectsRaisedDefects",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      },
+      {
+        "attributeCode": "attributes_defectsAssignableDefects",
+        "canWriteDodiAttribute": false,
+        "canWriteItemAttribute": true
+      }
+    ]
+  }
+}
