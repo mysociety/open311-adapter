@@ -95,6 +95,10 @@ $integration->mock('api_call', sub {
     } else {
         if ( $call eq 'design/designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6' ) {
             $content = path(__FILE__)->sibling('json/alloyv2/design_rfs.json')->slurp;
+        } elsif ( $call eq 'design/a_design_code' ) {
+            $content = path(__FILE__)->sibling('json/alloyv2/design_resource.json')->slurp;
+        } elsif ( $call eq 'item/39dhd38dhdkdnxj' ) {
+            $content = '{ "item": { "designCode": "a_design_code" } }';
         } else {
             $content = $responses{$call};
         }
@@ -123,7 +127,7 @@ subtest "create basic problem" => sub {
         'attribute[description]' => 'description',
         'attribute[title]' => '1',
         'attribute[report_url]' => 'http://localhost/1',
-        'attribute[asset_resource_id]' => 1,
+        'attribute[asset_resource_id]' => '39dhd38dhdkdnxj',
         'attribute[easting]' => 1,
         'attribute[northing]' => 2,
         'attribute[category]' => 'Kerbs_Missing',
@@ -155,7 +159,7 @@ subtest "create basic problem" => sub {
         ],
         type => "Point"
     },
-    parents => {},
+    parents => { "attribute_design_code" => [ '39dhd38dhdkdnxj' ] },
     }
     , 'correct json sent';
 

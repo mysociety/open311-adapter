@@ -164,31 +164,23 @@ sub post_service_request {
     delete $args->{attributes}->{emergency};
 
     # extract attribute values
-    my $resource_id = $args->{attributes}->{asset_resource_id} || 0;
-    $resource_id =~ s/^\d+\.(\d+)$/$1/; # strip the unecessary layer id
-    $resource_id += 0;
+    my $resource_id = $args->{attributes}->{asset_resource_id} || '';
 
     my $parent_attribute_id;
 
-    #if ( $resource_id ) {
+    if ( $resource_id ) {
         ## get the attribute id for the parents so alloy checks in the right place for the asset id
-        #my $resource_type = $self->alloy->api_call(
-            #call => "resource/$resource_id"
-        #)->{sourceTypeId};
-        #my $parent_attributes = $self->alloy->get_parent_attributes($resource_type);
-        #for my $attribute ( @$parent_attributes ) {
-            #if ( $attribute->{linkedSourceTypeId} eq $source->{source_type_id} ) {
-                #$parent_attribute_id = $attribute->{attributeId};
-                #last;
-            #}
-        #}
+        my $resource_type = $self->alloy->api_call(
+            call => "item/$resource_id"
+        )->{item}->{designCode};
+        $parent_attribute_id = $self->alloy->get_parent_attributes($resource_type);
 
-        #unless ( $parent_attribute_id ) {
-            #my $msg = "no parent attribute id found for asset $resource_id with type $resource_type ($source->{source_type_id})";
-            #$self->logger->error($msg);
+        unless ( $parent_attribute_id ) {
+            my $msg = "no parent attribute id found for asset $resource_id with type $resource_type";
+            $self->logger->error($msg);
             #die $msg;
-        #}
-    #}
+        }
+    }
 
     my ( $group, $category ) = split('_', $service->service_code);
     my $resource = {
@@ -213,7 +205,7 @@ sub post_service_request {
         # It's a list so perhaps an inspection can be linked to many
         # assets, and maybe even many different asset types, but for
         # now one is fine.
-        $resource->{parents} = {#
+        $resource->{parents} = {
             $parent_attribute_id => [ $resource_id ],
         };
     } else {
