@@ -188,4 +188,15 @@ sub update_attributes {
     return $attributes;
 }
 
+sub attributes_to_hash {
+    my ($self, $item) = @_;
+
+    my $attributes = {};
+    for my $att ( @{ $item->{attributes} } ) {
+        $attributes->{$att->{attributeCode}} = $att->{value};
+    }
+
+    return $attributes;
+}
+
 1;

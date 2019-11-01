@@ -1,0 +1,97 @@
+{
+  "joinResults": [],
+  "page": 1,
+  "pageSize": 20,
+  "results": [
+    {
+      "itemId": "3027029",
+      "designCode": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+      "collection": "Live",
+      "start": "2019-01-01T00:00:05.123Z",
+      "end": "9999-12-31T23:59:59.999Z",
+      "geometry":{
+        "type": "Point",
+        "coordinates":[-0.89868522337640622, 52.112591554183062]
+      },
+      "icon": "icon-inspection-unknown",
+      "colour": "#99cf22",
+      "attributes":[
+        {
+          "attributeCode": "attributes_tastStatus",
+          "value": [""]
+        },
+        {
+          "attributeCode": "attributes_enquiryInspectionRFS1001181ResponseToCustomer1011096_5d3245dafe2ad806f8dfbb2e",
+          "value": ""
+        },
+        {
+          "attributeCode": "attributes_enquiryInspectionRFS1001181ReasonForClosure1010926_5d3245d8fe2ad806f8dfbb24",
+          "value": [""]
+        }
+      ],
+      "signature": "5d32469bb4e1b90150014305",
+      "title": "INS-34032, 1584451",
+      "subtitle": "Enquiry Inspection RFS"
+    },
+    {
+      "itemId": "3027030",
+      "designCode": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+      "collection": "Live",
+      "start": "2019-01-19T00:00:06.123Z",
+      "end": "9999-12-31T23:59:59.999Z",
+      "geometry":{
+        "type": "Point",
+        "coordinates":[-0.89868522337640622, 52.112591554183062]
+      },
+      "icon": "icon-inspection-unknown",
+      "colour": "#99cf22",
+      "attributes":[
+        {
+          "attributeCode": "attributes_tastStatus",
+          "value": [""]
+        },
+        {
+          "attributeCode": "attributes_enquiryInspectionRFS1001181ResponseToCustomer1011096_5d3245dafe2ad806f8dfbb2e",
+          "value": ""
+        },
+        {
+          "attributeCode": "attributes_enquiryInspectionRFS1001181ReasonForClosure1010926_5d3245d8fe2ad806f8dfbb24",
+          "value": [""]
+        }
+      ],
+      "signature": "5d32469bb4e1b90150014305",
+      "title": "INS-34032, 1584451",
+      "subtitle": "Enquiry Inspection RFS"
+    },
+    {
+      "itemId": "3027031",
+      "designCode": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+      "collection": "Live",
+      "start": "2019-01-01T00:00:07.123Z",
+      "end": "9999-12-31T23:59:59.999Z",
+      "geometry":{
+        "type": "Point",
+        "coordinates":[-0.89868522337640622, 52.112591554183062]
+      },
+      "icon": "icon-inspection-unknown",
+      "colour": "#99cf22",
+      "attributes":[
+        {
+          "attributeCode": "attributes_tastStatus",
+          "value": [""]
+        },
+        {
+          "attributeCode": "attributes_enquiryInspectionRFS1001181ResponseToCustomer1011096_5d3245dafe2ad806f8dfbb2e",
+          "value": ""
+        },
+        {
+          "attributeCode": "attributes_enquiryInspectionRFS1001181ReasonForClosure1010926_5d3245d8fe2ad806f8dfbb24",
+          "value": [""]
+        }
+      ],
+      "signature": "5d32469bb4e1b90150014305",
+      "title": "INS-34032, 1584451",
+      "subtitle": "Enquiry Inspection RFS"
+    }
+  ]
+}
