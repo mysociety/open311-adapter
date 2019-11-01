@@ -1,5 +1,6 @@
 package Open311::Endpoint::Integration::AlloyV2;
 
+use Digest::MD5 qw(md5_hex);
 use Moo;
 use DateTime::Format::W3CDTF;
 use LWP::UserAgent;
@@ -281,58 +282,67 @@ sub get_service_request_updates {
     my $start_time = $w3c->parse_datetime($args->{start_date});
     my $end_time = $w3c->parse_datetime($args->{end_date});
 
-    # updates to inspections
-    my $updates = $self->fetch_updated_resources($self->config->{inspection_resource_name}, $args->{start_date});
-
     my @updates;
 
-    my $sources = $self->alloy->get_sources();
-    my $source = $sources->[0]; # XXX Only one for now!
+    push @updates, $self->_get_inspection_updates($args, $start_time, $end_time);
 
+    return @updates;
+}
+
+sub _get_inspection_updates {
+    my ($self, $args, $start_time, $end_time) = @_;
+
+    my @updates;
+    my $w3c = DateTime::Format::W3CDTF->new;
+
+    my $updates = $self->fetch_updated_resources($self->config->{rfs_design}, $args->{start_date});
+    my $mapping = $self->config->{inspection_attribute_mapping};
     for my $update (@$updates) {
         # we only want updates to RFS inspections
-        next unless $update->{sourceTypeId} eq $source->{source_type_id};
+        next unless $update->{designCode} eq $self->config->{rfs_design};
 
-        my $latest = $w3c->parse_datetime( $update->{version}->{startDate} )->truncate( to => 'second' );
+        my $latest = $w3c->parse_datetime( $update->{start} )->truncate( to => 'second' );
         next unless $latest >= $start_time && $latest <= $end_time;
 
         # We need to fetch all versions that changed in the time wanted
-        my @version_ids = $self->get_versions_of_resource($update->{resourceId});
+        my @version_ids = $self->get_versions_of_resource($update->{itemId});
 
         my $last_description = '';
-        foreach (@version_ids) {
-            my $resource = $self->alloy->api_call(call => "resource/$update->{resourceId}/full?systemVersion=$_");
+        foreach my $date (@version_ids) {
+            # we have to fetch all the updates as we need them to check if the
+            # comments have changed. once we've fetched them we can throw away the
+            # ones that don't match the date range.
+            my $resource = $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
             next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
 
+            $resource = $resource->{item};
             my $status = 'open';
             my $reason_for_closure = '';
             my $description = '';
-            my @attributes = @{$resource->{values} || []};
-            for my $att (@attributes) {
-                # these might be specific to each design so will probably need
-                # some config
+            my $status_code;
+            my $attributes = $self->alloy->attributes_to_hash($resource);
 
-                # status
-                if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{status}) {
-                    $status = $self->inspection_status($att->{value}->{values}[0]->{resourceId});
-                }
+            if ($attributes->{$mapping->{status}}) {
+                $status_code = $attributes->{$mapping->{status}}->[0];
+                $status = $self->inspection_status($status_code);
+            }
 
-                # reason for closure
-                if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{reason_for_closure}) {
-                    $reason_for_closure = $att->{value}->{values}[0] ? $att->{value}->{values}[0]->{resourceId} : '' ;
-                }
+            $reason_for_closure = $attributes->{$mapping->{reason_for_closure}} ?
+                $attributes->{$mapping->{reason_for_closure}}->[0] :
+                '';
 
-                if ($att->{attributeId} == $self->config->{inspection_attribute_mapping}->{inspector_comments}) {
-                    $description = $att->{value};
-                }
+            if ($attributes->{$mapping->{inspector_comments}}) {
+                $description = $attributes->{$mapping->{inspector_comments}};
             }
 
             my $description_to_send = $description ne $last_description ? $description : '';
             $last_description = $description;
 
-            # Now we have the description, can skip if update is not in our timeframe
-            my $update_dt = $w3c->parse_datetime( $resource->{version}->{startDate} )->truncate( to => 'second' );
+            my $update_dt = $w3c->parse_datetime( $date )->truncate( to => 'second' );
             next unless $update_dt >= $start_time && $update_dt <= $end_time;
+
+            (my $id_date = $date) =~ s/\D//g;
+            my $id = $update->{itemId} . "_$id_date";
 
             if ($reason_for_closure) {
                 $status = $self->get_status_with_closure($status, $reason_for_closure);
@@ -341,8 +351,8 @@ sub get_service_request_updates {
             my %args = (
                 status => $status,
                 external_status_code => $reason_for_closure,
-                update_id => $resource->{version}->{usedSystemVersionId},
-                service_request_id => $update->{resourceId},
+                update_id => $resource->{signature},
+                service_request_id => $update->{itemId},
                 description => $description_to_send,
                 updated_datetime => $update_dt,
             );
@@ -351,6 +361,15 @@ sub get_service_request_updates {
         }
     }
 
+    return @updates;
+}
+
+sub foo {
+    my $self = shift;
+    my $args = shift;
+    my $w3c = shift;
+    my @updates;
+    my $updates = [];
     # updates to defects
     my $closure_mapping = $self->config->{inspection_closure_mapping};
     my %reverse_closure_mapping = map { $closure_mapping->{$_} => $_ } keys %{$closure_mapping};
@@ -506,43 +525,51 @@ sub fetch_updated_resources {
 
     my @results;
 
+    my $body_base = {
+        properties =>  {
+            dodiCode => $code,
+            attributes => ["all"],
+        },
+        children => [{
+            type =>  "GreaterThan",
+            children =>  [{
+                type =>  "ItemProperty",
+                properties =>  {
+                    itemPropertyName =>  "lastEditDate"
+                }
+            },
+            {
+                type =>  "DateTime",
+                properties =>  {
+                    value =>  [$start_date]
+                }
+            }]
+        }]
+    };
+
+    my $stats_body = $body_base;
+    $stats_body->{type} = 'MathAggregation';
+    $stats_body->{properties}->{aggregationType} = 'Count';
+
+    my $stats = $self->alloy->api_call(
+        call => "aqs/statistics",
+        body => $stats_body
+    );
+
+    my $result_count = $stats->{result};
+    my $pages = int( $result_count / 20 ) + 1;
+
+    my $query_body = $body_base;
+    $query_body->{type} = 'Query';
+
     my $page = 1;
-    my $pages = 1;
     while ($page <= $pages) {
         my $result = $self->alloy->api_call(
-            call => "search/resource-fetch?page=$page",
-            body => {
-            aqsNode => {
-                type => "FETCH",
-                properties => {
-                    entityType => "SOURCE_TYPE_PROPERTY_VALUE",
-                    entityCode => $code
-                },
-                children => [
-                    {
-                        type => "GREATER_THAN",
-                        children => [
-                            {
-                                type => "RESOURCE_PROPERTY",
-                                properties => {
-                                    resourcePropertyName => "lastEditDate"
-                                }
-                            },
-                            {
-                                type => "DATE",
-                                properties => {
-                                    value => [
-                                        $start_date
-                                    ]
-                                }
-                            }
-                        ]
-                    }
-                ]
-            }
-        });
+            call => "aqs/query",
+            params => { page => $page, pageSize => 20 },
+            body => $query_body
+        );
 
-        $pages = $result->{totalPages};
         $page++;
 
         push @results, @{ $result->{results} }
@@ -615,11 +642,11 @@ sub get_time_for_version {
 sub get_versions_of_resource {
     my ($self, $resource_id) = @_;
 
-    my $versions = $self->alloy->api_call(call => "resource/$resource_id/versions");
+    my $versions = $self->alloy->api_call(call => "item-log/item/$resource_id")->{results};
 
     my @version_ids = ();
     for my $version ( @$versions ) {
-        push @version_ids, $version->{currentSystemVersionId};
+        push @version_ids, $version->{date};
     }
 
     @version_ids = sort(@version_ids);

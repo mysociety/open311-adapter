@@ -91,6 +91,23 @@ $integration->mock('api_call', sub {
         push @sent, $body;
         if ( $call eq 'item' ) {
             $content = '{ "item": { "itemId": 12345 } }';
+        } elsif ( $call eq 'item/12345' ) {
+            $content = '{ "start": "2019-01-01T12:00:00Z" }';
+        } elsif ( $call =~ 'aqs/statistics' ) {
+            $content = '{ "result": 4.0 }';
+        } elsif ( $call =~ 'aqs/query' ) {
+            my $type = $body->{properties}->{dodiCode};
+            my $time = $body->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
+            $content = '{}';
+            if ( $type =~ /DEFECT/i ) {
+            } else {
+                $content = path(__FILE__)->sibling('json/alloyv2/inspect_search.json')->slurp;
+            }
+        } elsif ( $call =~ 'item-log/item/([^/]*)/reconstruct' ) {
+            my $id = $1;
+            my $date = $body->{date};
+            $date =~ s/\D//g;
+            $content = path(__FILE__)->sibling("json/alloyv2/reconstruct_${id}_$date.json")->slurp;
         }
     } else {
         if ( $call eq 'design/designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6' ) {
@@ -99,6 +116,8 @@ $integration->mock('api_call', sub {
             $content = path(__FILE__)->sibling('json/alloyv2/design_resource.json')->slurp;
         } elsif ( $call eq 'item/39dhd38dhdkdnxj' ) {
             $content = '{ "item": { "designCode": "a_design_code" } }';
+        } elsif ( $call =~ 'item-log/item/(.*)$' ) {
+            $content = path(__FILE__)->sibling("json/alloyv2/item_log_$1.json")->slurp;
         } else {
             $content = $responses{$call};
         }
@@ -226,6 +245,62 @@ subtest "create problem with no resource_id" => sub {
             "service_request_id" => 12345
         } ], 'correct json returned';
 
+};
+
+subtest "check fetch updates" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z&end_date=2019-03-01T02:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'investigating',
+        service_request_id => '3027029',
+        description => '',
+        updated_datetime => '2019-01-01T00:22:40Z',
+        update_id => '5d32469bb4e1b90150014306',
+        media_url => '',
+    },
+    {
+        status => 'investigating',
+        service_request_id => '3027029',
+        description => 'This is an updated customer response',
+        updated_datetime => '2019-01-01T00:32:40Z',
+        update_id => '5d32469bb4e1b90150014305',
+        media_url => '',
+    },
+    {
+        status => 'investigating',
+        service_request_id => '3027030',
+        description => '',
+        updated_datetime => '2019-01-01T01:42:40Z',
+        update_id => '5d32469bb4e1b90150014307',
+        media_url => '',
+    },
+    {
+        status => 'not_councils_responsibility',
+        service_request_id => '3027031',
+        description => '',
+        updated_datetime => '2019-01-01T01:43:40Z',
+        update_id => '6d32469bb4e1b90150014305',
+        media_url => '',
+        external_status_code => '01b51bb5c0de101a004154b5',
+    },
+    #{
+        #status => 'fixed',
+        #service_request_id => '4947502',
+        #description => '',
+        #updated_datetime => '2019-02-19T09:11:08Z',
+        #update_id => '271877',
+        #media_url => '',
+        #fixmystreet_id => '10034',
+    #}
+    ], 'correct json returned';
 };
 
 subtest "check fetch service description" => sub {
