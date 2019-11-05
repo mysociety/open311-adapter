@@ -330,25 +330,13 @@ sub _get_inspection_updates {
             next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
 
             $resource = $resource->{item};
-            my $status = 'open';
-            my $reason_for_closure = '';
-            my $description = '';
-            my $status_code;
             my $attributes = $self->alloy->attributes_to_hash($resource);
 
-            if ($attributes->{$mapping->{status}}) {
-                $status_code = $attributes->{$mapping->{status}}->[0];
-                $status = $self->inspection_status($status_code);
-            }
+            my ($status, $reason_for_closure) = $self->_get_inspection_status($attributes, $mapping);
 
-            $reason_for_closure = $attributes->{$mapping->{reason_for_closure}} ?
-                $attributes->{$mapping->{reason_for_closure}}->[0] :
-                '';
-
-            if ($attributes->{$mapping->{inspector_comments}}) {
-                $description = $attributes->{$mapping->{inspector_comments}};
-            }
-
+            # only want to put a description in the update if it's changed so compare
+            # it to the last one.
+            my $description = $attributes->{$mapping->{inspector_comments}} || '';
             my $description_to_send = $description ne $last_description ? $description : '';
             $last_description = $description;
 
@@ -357,10 +345,6 @@ sub _get_inspection_updates {
 
             (my $id_date = $date) =~ s/\D//g;
             my $id = $update->{itemId} . "_$id_date";
-
-            if ($reason_for_closure) {
-                $status = $self->get_status_with_closure($status, $reason_for_closure);
-            }
 
             my %args = (
                 status => $status,
@@ -376,6 +360,26 @@ sub _get_inspection_updates {
     }
 
     return @updates;
+}
+
+sub _get_inspection_status {
+    my ($self, $attributes, $mapping) = @_;
+
+    my $status = 'open';
+    if ($attributes->{$mapping->{status}}) {
+        my $status_code = $attributes->{$mapping->{status}}->[0];
+        $status = $self->inspection_status($status_code);
+    }
+
+    my $reason_for_closure = $attributes->{$mapping->{reason_for_closure}} ?
+        $attributes->{$mapping->{reason_for_closure}}->[0] :
+        '';
+
+    if ($reason_for_closure) {
+        $status = $self->get_status_with_closure($status, $reason_for_closure);
+    }
+
+    return ($status, $reason_for_closure);
 }
 
 sub _get_defect_updates {
