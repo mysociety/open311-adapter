@@ -17,8 +17,8 @@
       "colour": "#99cf22",
       "attributes":[
         {
-          "attributeCode": "attributes_taskStatus",
-          "value": ["1001023"]
+          "attributeCode": "attributes_defectsStatus",
+          "value": ["5c8bdfb98ae862230019dc20"]
         },
         {
           "attributeCode": "attributes_description",
@@ -47,8 +47,8 @@
       "colour": "#99cf22",
       "attributes":[
         {
-          "attributeCode": "attributes_taskStatus",
-          "value": ["1001026"]
+          "attributeCode": "attributes_defectsStatus",
+          "value": ["5c8bdfc88ae862230019dc22"]
         },
         {
           "attributeCode": "attributes_DefectType",
@@ -77,7 +77,7 @@
       "colour": "#99cf22",
       "attributes":[
         {
-          "attributeCode": "attributes_tastStatus",
+          "attributeCode": "attributes_defectsStatus",
           "value": [""]
         },
         {
