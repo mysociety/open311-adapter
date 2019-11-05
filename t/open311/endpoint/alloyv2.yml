@@ -125,7 +125,7 @@
     1000942: { "default": 'Highway Bridges - Damaged/Unsafe', "types": {}, "asset_types": {} }, # Bridge
     1000947: { "default": 'Highway Bridges - Damaged/Unsafe', "types": {}, "asset_types": {} }, # Subway
 
-    1000948: { "default": 'Shelter Damaged', "types": {}, "asset_types": {} }, # Bus shelter
+    'designs_shelterDamaged1000813_5d323d2efe2ad80354bbd71b': { "default": 'Shelter Damaged', "types": {}, "asset_types": {} }, # Bus shelter
     1000796: { "default": 'Sign/Pole Damaged', "types": {}, "asset_types": {} }, # Bus stops
 
     # XXX need to check if asset is a bus stop and not a shelter
@@ -213,7 +213,7 @@
     1000804: { "default": 'Verges - Damaged by Vehicles', "types": {}, "asset_types": {} }, # Embankments and cuttings
     1000808: { "default": 'Verges - Damaged by Vehicles', "types": {}, "asset_types": {} }, # Grassed areas
 
-    1000809: { "default": 'Grit Bin - damaged/replacement', "types": { 1829021: "Grit Bin - empty/refill" }, "asset_types": {} }, # Grit Bins
+    'designs_gritBin193939393_asdhfaiuasdf93d': { "default": 'Grit Bin - damaged/replacement', "types": { 'designs_gritBinEmpty193939393_asdhfaiuasdf93d': "Grit Bin - empty/refill" }, "asset_types": {} }, # Grit Bins
   },
 
   "defect_status_mapping": {
@@ -226,11 +226,11 @@
     #"1002682": "" # "Rejected"
   },
 
-  "defect_resource_name": "DEFECT_STANDARD DEFECT_STANDARD",
+  "defect_resource_name": "designInterfaces_defects",
 
   "defect_attribute_mapping": {
-      "description": 1000594,
-      "status": 1000604,
+      "description": "attributes_description",
+      "status": "attributes_taskStatus",
       "created": 1000603,
       "number": 1003788, # this is the DEF-NNN and not resourceId
       "fixmystreet_id": 1011576,
