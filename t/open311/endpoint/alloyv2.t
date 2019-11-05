@@ -89,10 +89,12 @@ $integration->mock('api_call', sub {
     push @calls, $call;
     if ( $body ) {
         push @sent, $body;
-        if ( $call eq 'item' ) {
+        if ( $call eq 'item/12345' ) {
+            $content = '{ "item": { "signature": "5d32469bb4e1b90150014310" } }';
+        } elsif ( $call eq 'item/123456' ) {
+            $content = '{ "item": { "signature": "6d32469bb4e1b90150014310" } }';
+        } elsif ( $call eq 'item' ) {
             $content = '{ "item": { "itemId": 12345 } }';
-        } elsif ( $call eq 'item/12345' ) {
-            $content = '{ "start": "2019-01-01T12:00:00Z" }';
         } elsif ( $call =~ 'aqs/statistics' ) {
             $content = '{ "result": 4.0 }';
         } elsif ( $call =~ 'aqs/query' ) {
@@ -121,6 +123,8 @@ $integration->mock('api_call', sub {
             $content = '{ "item": { "designCode": "a_design_code" } }';
         } elsif ( $call =~ 'item-log/item/(.*)$' ) {
             $content = path(__FILE__)->sibling("json/alloyv2/item_log_$1.json")->slurp;
+        } elsif ( $call =~ 'item/(\w+)' ) {
+            $content = path(__FILE__)->sibling("json/alloyv2/item_$1.json")->slurp;
         } else {
             $content = $responses{$call};
         }
@@ -304,6 +308,81 @@ subtest "check fetch updates" => sub {
         #fixmystreet_id => '10034',
     #}
     ], 'correct json returned';
+};
+
+subtest "create comment" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request( 
+        POST => '/servicerequestupdates.json', 
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'This is an update',
+        service_request_id => 12345,
+        update_id => 999,
+        status => 'OPEN',
+        updated_datetime => '2019-04-17T14:39:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply $sent,
+    {
+        attributes => [{
+            attributeCode => "attributes_enquiryInspectionRFS1001181UpdatesFromFixMyStreet1014437_5d3245dffe2ad806f8dfbb42",
+            value => "Customer update at 2019-04-17 14:39:00
+This is an update"
+        }],
+        signature => '5d32469bb4e1b9015001430b'
+    },
+    , 'correct json sent';
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => "5d32469bb4e1b90150014310"
+        } ], 'correct json returned';
+};
+
+subtest "update comment" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request( 
+        POST => '/servicerequestupdates.json', 
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'This is an update',
+        service_request_id => 123456,
+        update_id => 999,
+        status => 'OPEN',
+        updated_datetime => '2019-04-17T14:39:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply $sent,
+    {
+        attributes => [{
+            attributeCode => "attributes_enquiryInspectionRFS1001181UpdatesFromFixMyStreet1014437_5d3245dffe2ad806f8dfbb42",
+            value => "Original text
+Customer update at 2019-04-17 14:39:00
+This is an update"
+        }],
+        signature => '5d32469bb4e1b9015001430a',
+    },
+    , 'correct json sent';
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => "6d32469bb4e1b90150014310"
+        } ], 'correct json returned';
 };
 
 subtest "check fetch problem" => sub {
