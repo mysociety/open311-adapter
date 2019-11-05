@@ -100,6 +100,9 @@ $integration->mock('api_call', sub {
             my $time = $body->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
             $content = '{}';
             if ( $type =~ /DEFECT/i ) {
+                if ( $time =~ /2019-01-02/ ) {
+                    $content = path(__FILE__)->sibling('json/alloyv2/defect_search_all.json')->slurp;
+                }
             } else {
                 $content = path(__FILE__)->sibling('json/alloyv2/inspect_search.json')->slurp;
             }
@@ -301,6 +304,50 @@ subtest "check fetch updates" => sub {
         #fixmystreet_id => '10034',
     #}
     ], 'correct json returned';
+};
+
+subtest "check fetch problem" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [{
+      long => 2,
+      requested_datetime => "2019-01-02T11:29:16Z",
+      service_code => "Shelter Damaged",
+      updated_datetime => "2019-01-02T11:29:16Z",
+      service_name => "Shelter Damaged",
+      address_id => "",
+      lat => 1,
+      description => "test",
+      service_request_id => 4947505,
+      zipcode => "",
+      media_url => "",
+      status => "investigating",
+      address => ""
+   },
+   {
+      address_id => "",
+      lat => 1,
+      service_request_id => 4947597,
+      description => "fill",
+      service_name => "Grit Bin - empty/refill",
+      status => "fixed",
+      media_url => "",
+      address => "",
+      zipcode => "",
+      requested_datetime => "2019-01-02T14:44:53Z",
+      long => 2,
+      updated_datetime => "2019-01-02T14:44:53Z",
+      service_code => "Grit Bin - damaged/replacement",
+      service_code => "Grit Bin - empty/refill"
+   }], "correct json returned";
 };
 
 subtest "check fetch service description" => sub {
