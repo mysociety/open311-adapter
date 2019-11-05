@@ -238,40 +238,40 @@ sub post_service_request_update {
     my ($self, $args) = @_;
 
     my $resource_id = $args->{service_request_id};
-    my $inspection = $self->alloy->api_call(call => "resource/$resource_id/full");
+    my $inspection = $self->alloy->api_call(call => "item/$resource_id")->{item};
 
-    my @attributes = @{ $inspection->{values} };
-    my $updates = '';
-    for my $attribute ( @attributes ) {
-        if ($attribute->{attributeId} == $self->config->{inspection_attribute_mapping}->{updates}) {
-            $updates = $attribute->{value};
-        }
-    }
+    my $attributes = $self->alloy->attributes_to_hash($inspection);
+    my $updates = $attributes->{$self->config->{inspection_attribute_mapping}->{updates}} || '';
 
     my $time = DateTime::Format::W3CDTF->new->parse_datetime($args->{updated_datetime});
     my $formatted_time = $time->ymd . " " . $time->hms;
-    $updates .= "\nCustomer update at " . "$formatted_time" . "\n" . $args->{description};
+    my $text = "Customer update at " . "$formatted_time" . "\n" . $args->{description};
+    $updates = $updates ? "$updates\n$text" : $text;
 
     my $updated = {
-        attributes => {
-            $self->config->{inspection_attribute_mapping}->{updates} => $updates
-        },
-        systemVersionId => $inspection->{version}->{resourceSystemVersionId},
+        attributes => [{
+            attributeCode => $self->config->{inspection_attribute_mapping}->{updates},
+            value => $updates
+        }],
+        signature => $inspection->{signature}, # XXX check this is correct
     };
 
     if ( $self->config->{resource_attachment_attribute_id} && @{ $args->{media_url} }) {
-        $updated->{attributes}->{$self->config->{resource_attachment_attribute_id}} = $self->upload_attachments($args);
+        push @{ $updated->{attributes} }, {
+            attributeCode => $updated->{attributes}->{$self->config->{resource_attachment_attribute_id}},
+            value => $self->upload_attachments($args)
+        };
     }
 
     my $update = $self->alloy->api_call(
-        call => "resource/$resource_id",
+        call => "item/$resource_id",
         method => 'PUT',
         body => $updated
     );
 
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
         status => lc $args->{status},
-        update_id => $update->{systemVersionId},
+        update_id => $update->{item}->{signature}, # $args->{service_request_id} . "_$id_date", # XXX check this
     );
 }
 
