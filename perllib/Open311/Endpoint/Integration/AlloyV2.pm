@@ -594,37 +594,6 @@ sub service_request_id_for_resource {
     return $resource->{item}->{itemId};
 }
 
-sub get_time_for_version {
-    my ($self, $resource_id, $version_id) = @_;
-
-    my $versions = $self->alloy->api_call(call => "resource/$resource_id/versions");
-
-    # sometimes we don't seem to get back a matching version number in which case use
-    # the start time of the largest version that is smaller than the one we asked for.
-    # worst case scenario, fall back to the current time.
-    my $max = 0;
-    my $no_version = 1;
-    my $time;
-    for my $version ( @$versions ) {
-        if ($version->{currentSystemVersionId} eq $version_id) {
-            $time = $version->{startDate};
-            $no_version = 0;
-            last;
-        } elsif ( $version->{currentSystemVersionId} > $max && $version->{currentSystemVersionId} < $version_id ) {
-            $time = $version->{startDate};
-            $max = $version->{currentSystemVersionId};
-        }
-    }
-
-    $self->logger->debug("Failed to match version $version_id for resource $resource_id") if $no_version;
-
-    unless ( $time ) {
-        $time = DateTime::Format::W3CDTF->new->format_datetime( DateTime->now() );
-    }
-
-    return $time;
-}
-
 sub get_versions_of_resource {
     my ($self, $resource_id) = @_;
 
@@ -777,37 +746,6 @@ sub process_attributes {
     return $attributes;
 }
 
-sub reproject_coordinates {
-    my ($self, $lon, $lat) = @_;
-
-    my $point = $self->alloy->api_call(
-        call => "projection/point",
-        params => {
-            x => $lon,
-            y => $lat,
-            srcCode => "4326",
-            dstCode => "900913",
-        }
-    );
-
-    return [ $point->{x}, $point->{y} ];
-}
-
-sub deproject_coordinates {
-    my ($self, $lon, $lat) = @_;
-
-    my $point = $self->alloy->api_call(
-        call => "projection/point",
-        params => {
-            x => $lon,
-            y => $lat,
-            dstCode => "4326",
-            srcCode => "900913",
-        }
-    );
-
-    return [ $point->{y}, $point->{x} ];
-}
 
 sub upload_attachments {
     my ($self, $args) = @_;
