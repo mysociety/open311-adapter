@@ -104,6 +104,8 @@ $integration->mock('api_call', sub {
             if ( $type =~ /DEFECT/i ) {
                 if ( $time =~ /2019-01-02/ ) {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search_all.json')->slurp;
+                } else {
+                    $content = path(__FILE__)->sibling('json/alloyv2/defect_search.json')->slurp;
                 }
             } else {
                 $content = path(__FILE__)->sibling('json/alloyv2/inspect_search.json')->slurp;
@@ -298,15 +300,22 @@ subtest "check fetch updates" => sub {
         media_url => '',
         external_status_code => '01b51bb5c0de101a004154b5',
     },
-    #{
-        #status => 'fixed',
-        #service_request_id => '4947502',
-        #description => '',
-        #updated_datetime => '2019-02-19T09:11:08Z',
-        #update_id => '271877',
-        #media_url => '',
-        #fixmystreet_id => '10034',
-    #}
+    {
+        status => 'action_scheduled',
+        service_request_id => '3027032',
+        description => '',
+        updated_datetime => '2019-01-01T01:48:13Z',
+        update_id => '5d324086b4e1b90150f946a0',
+        media_url => '',
+    },
+    {
+        status => 'fixed',
+        service_request_id => '4947502',
+        description => '',
+        updated_datetime => '2019-01-01T01:51:08Z',
+        update_id => '5d324049b4e1b90150f94191',
+        media_url => '',
+    }
     ], 'correct json returned';
 };
 
