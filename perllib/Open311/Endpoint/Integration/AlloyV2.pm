@@ -53,6 +53,13 @@ has integration_class => (
     default => 'Integrations::AlloyV2'
 );
 
+has date_parser => (
+    is => 'ro',
+    default => sub {
+        DateTime::Format::W3CDTF->new;
+    }
+);
+
 has alloy => (
     is => 'lazy',
     default => sub { $_[0]->integration_class->new(config_filename => $_[0]->jurisdiction_id) }
@@ -243,7 +250,7 @@ sub post_service_request_update {
     my $attributes = $self->alloy->attributes_to_hash($inspection);
     my $updates = $attributes->{$self->config->{inspection_attribute_mapping}->{updates}} || '';
 
-    my $time = DateTime::Format::W3CDTF->new->parse_datetime($args->{updated_datetime});
+    my $time = $self->date_to_dt($args->{updated_datetime});
     my $formatted_time = $time->ymd . " " . $time->hms;
     my $text = "Customer update at " . "$formatted_time" . "\n" . $args->{description};
     $updates = $updates ? "$updates\n$text" : $text;
@@ -278,9 +285,8 @@ sub post_service_request_update {
 sub get_service_request_updates {
     my ($self, $args) = @_;
 
-    my $w3c = DateTime::Format::W3CDTF->new;
-    my $start_time = $w3c->parse_datetime($args->{start_date});
-    my $end_time = $w3c->parse_datetime($args->{end_date});
+    my $start_time = $self->date_to_dt($args->{start_date});
+    my $end_time = $self->date_to_dt($args->{end_date});
 
     my @updates;
 
@@ -293,7 +299,6 @@ sub _get_inspection_updates {
     my ($self, $args, $start_time, $end_time) = @_;
 
     my @updates;
-    my $w3c = DateTime::Format::W3CDTF->new;
 
     my $updates = $self->fetch_updated_resources($self->config->{rfs_design}, $args->{start_date});
     my $mapping = $self->config->{inspection_attribute_mapping};
@@ -301,7 +306,7 @@ sub _get_inspection_updates {
         # we only want updates to RFS inspections
         next unless $update->{designCode} eq $self->config->{rfs_design};
 
-        my $latest = $w3c->parse_datetime( $update->{start} )->truncate( to => 'second' );
+        my $latest = $self->date_to_truncated_dt( $update->{start} );
         next unless $latest >= $start_time && $latest <= $end_time;
 
         # We need to fetch all versions that changed in the time wanted
@@ -338,7 +343,7 @@ sub _get_inspection_updates {
             my $description_to_send = $description ne $last_description ? $description : '';
             $last_description = $description;
 
-            my $update_dt = $w3c->parse_datetime( $date )->truncate( to => 'second' );
+            my $update_dt = $self->date_to_truncated_dt( $date );
             next unless $update_dt >= $start_time && $update_dt <= $end_time;
 
             (my $id_date = $date) =~ s/\D//g;
@@ -635,6 +640,18 @@ sub get_versions_of_resource {
 
     @version_ids = sort(@version_ids);
     return @version_ids;
+}
+
+sub date_to_dt {
+    my ($self, $date) = @_;
+
+    return $self->date_parser->parse_datetime($date);
+}
+
+sub date_to_truncated_dt {
+    my ($self, $date) = @_;
+
+    return $self->date_to_dt($date)->truncate( to => 'second' );
 }
 
 sub get_latlong_from_request {
