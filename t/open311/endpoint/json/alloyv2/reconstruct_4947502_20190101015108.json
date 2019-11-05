@@ -1,0 +1,88 @@
+{
+  "item":
+    {
+      "itemId": "4947502",
+      "designCode": "designs_benches1000794_5d32400ffe2ad80354bbdae6",
+      "collection": "Live",
+      "start": "2019-01-01T00:00:00.002Z",
+      "end": "9999-12-31T23:59:59.999Z",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -0.9050079189236898,
+          52.236715671161356
+        ]
+      },
+      "icon": "icon-defect-full",
+      "colour": "#AAC6Df",
+      "attributes": [
+        {
+          "attributeCode": "attributes_defectsDescription",
+          "value": "Broken Northampton Borough Council benches x 2"
+        },
+        {
+          "attributeCode": "attributes_defectsReportedDate",
+          "value": "2019-04-26T06:35:00.000Z"
+        },
+        {
+          "attributeCode": "attributes_defectsStatus",
+          "value": [
+            "5c8bdfc88ae862230019dc22"
+          ]
+        },
+        {
+          "attributeCode": "attributes_defectsDefectNumber",
+          "value": 200842
+        },
+        {
+          "attributeCode": "attributes_benches1000794OriginalDefectNumber1003788_5d324018fe2ad80354bbdaee",
+          "value": "DEF-00200842"
+        },
+        {
+          "attributeCode": "attributes_benches1000794TeamMembers1005709_5d324018fe2ad80354bbdaf3",
+          "value": [
+            "02037ebbc0de101a008fb7bb"
+          ]
+        },
+        {
+          "attributeCode": "attributes_benches1000794DefectType1005710_5d32401afe2ad80354bbdaf8",
+          "value": [
+            "018fae6ac0de101a001be76a"
+          ]
+        },
+        {
+          "attributeCode": "attributes_benches1000794RepairType1005712_5d32401bfe2ad80354bbdafd",
+          "value": [
+            "01854946c0de101a00118246"
+          ]
+        },
+        {
+          "attributeCode": "attributes_benches1000794Priorities1005713_5d32401cfe2ad80354bbdb02",
+          "value": [
+            "01b51bb8c0de101a004154b8"
+          ]
+        },
+        {
+          "attributeCode": "attributes_benches1000794LocationDescription1006378_5d32401efe2ad80354bbdb0c",
+          "value": "On centre island, Black Lion Hill"
+        },
+        {
+          "attributeCode": "attributes_benches1000794PermRepairDescription1006380_5d324020fe2ad80354bbdb16",
+          "value": "Emailed Hub to refer to Northampton Borough Council for renewal/repair"
+        },
+        {
+          "attributeCode": "attributes_benches1000794TreatmentType1007311_5d324021fe2ad80354bbdb1b",
+          "value": [
+            "018fad07c0de101a001be607"
+          ]
+        },
+        {
+          "attributeCode": "attributes_benches1000794ActivityCode1011100_5d324022fe2ad80354bbdb20",
+          "value": "BE"
+        }
+      ],
+      "signature": "5d324049b4e1b90150f94191",
+      "title": "DEF-3400",
+      "subtitle": "Benches"
+    }
+}
