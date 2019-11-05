@@ -176,19 +176,6 @@ sub post_service_request {
 
     my $parent_attribute_id;
 
-    if ( $resource_id ) {
-        ## get the attribute id for the parents so alloy checks in the right place for the asset id
-        my $resource_type = $self->alloy->api_call(
-            call => "item/$resource_id"
-        )->{item}->{designCode};
-        $parent_attribute_id = $self->alloy->get_parent_attributes($resource_type);
-
-        unless ( $parent_attribute_id ) {
-            my $msg = "no parent attribute id found for asset $resource_id with type $resource_type";
-            $self->logger->error($msg);
-            #die $msg;
-        }
-    }
 
     my ( $group, $category ) = split('_', $service->service_code);
     my $resource = {
@@ -206,19 +193,7 @@ sub post_service_request {
         }
     };
 
-    if ( $parent_attribute_id ) {
-        # This is how we link this inspection to a particular asset.
-        # The parent_attribute_id tells Alloy what kind of asset we're
-        # linking to, and the resource_id is the specific asset.
-        # It's a list so perhaps an inspection can be linked to many
-        # assets, and maybe even many different asset types, but for
-        # now one is fine.
-        $resource->{parents} = {
-            $parent_attribute_id => [ $resource_id ],
-        };
-    } else {
-        $resource->{parents} = {};
-    }
+    $self->_set_parent_attribute($resource, $resource_id);
 
     # The Open311 attributes received from FMS may not include all the
     # the attributes we need to fully describe the Alloy resource,
@@ -239,6 +214,39 @@ sub post_service_request {
         service_request_id => $self->service_request_id_for_resource($response)
     );
 
+}
+
+sub _set_parent_attribute {
+    my ($self, $resource, $resource_id) = @_;
+
+    my $parent_attribute_id;
+    if ( $resource_id ) {
+        ## get the attribute id for the parents so alloy checks in the right place for the asset id
+        my $resource_type = $self->alloy->api_call(
+            call => "item/$resource_id"
+        )->{item}->{designCode};
+        $parent_attribute_id = $self->alloy->get_parent_attributes($resource_type);
+
+        unless ( $parent_attribute_id ) {
+            my $msg = "no parent attribute id found for asset $resource_id with type $resource_type";
+            $self->logger->error($msg);
+            die $msg;
+        }
+    }
+
+    if ( $parent_attribute_id ) {
+        # This is how we link this inspection to a particular asset.
+        # The parent_attribute_id tells Alloy what kind of asset we're
+        # linking to, and the resource_id is the specific asset.
+        # It's a list so perhaps an inspection can be linked to many
+        # assets, and maybe even many different asset types, but for
+        # now one is fine.
+        $resource->{parents} = {
+            $parent_attribute_id => [ $resource_id ],
+        };
+    } else {
+        $resource->{parents} = {};
+    }
 }
 
 sub post_service_request_update {
