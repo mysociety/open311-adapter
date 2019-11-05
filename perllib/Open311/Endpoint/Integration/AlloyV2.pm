@@ -454,55 +454,39 @@ sub get_service_requests {
 
     my $requests = $self->fetch_updated_resources($self->config->{defect_resource_name}, $args->{start_date});
     my @requests;
+    my $mapping = $self->config->{defect_attribute_mapping};
     for my $request (@$requests) {
         my %args;
 
         next if $self->is_ignored_category( $request );
 
-        my $has_enquiry_parent = 0;
-        my $parents = $self->alloy->api_call(
-            call => 'resource/' . $request->{resourceId} . '/parents'
-        )->{details}->{parents};
-        for my $parent (@$parents) {
-            next unless $parent->{actualParentSourceTypeId} == $self->config->{defect_inspection_parent_id}; # request for service
-
-            $has_enquiry_parent = 1;
+        my $linked_defect;
+        for my $parent_info (@{ $request->{parents} } ) {
+            $linked_defect = 1 if $parent_info->{attribute} =~ 'Request'; # request for service
         }
-
-        next if $has_enquiry_parent;
+        next if $linked_defect;
 
         my $category = $self->get_defect_category( $request );
         unless ($category) {
-            warn "No category found for defect $request->{resourceId}, source type $request->{sourceTypeId} in " . $self->jurisdiction_id . "\n";
+            warn "No category found for defect $request->{itemId}, source type $request->{designCode} in " . $self->jurisdiction_id . "\n";
             next;
         }
 
         $args{latlong} = $self->get_latlong_from_request($request);
 
         unless ($args{latlong}) {
-            my $geometry = $request->{geometry}->{featureGeom}->{geometry};
+            my $geometry = $request->{geometry};
             $self->logger->error("Defect $request->{resourceId}: don't know how to handle geometry: $geometry->{type}");
             warn "Defect $request->{resourceId}: don't know how to handle geometry: $geometry->{type}\n";
             next;
         }
 
-        my $has_fixmystreet_id;
-        my @attributes = @{$request->{values}};
-        for my $att (@attributes) {
+        my $attributes = $self->alloy->attributes_to_hash($request);
+        $args{description} = $attributes->{$mapping->{description}};
+        $args{status} = $self->defect_status($attributes->{$mapping->{status}}->[0]);
 
-            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{description}) {
-                $args{description}= $att->{value};
-            }
-            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{status}) {
-                $args{status} = $self->defect_status($att->{value});
-            }
-
-            if ($att->{attributeCode} =~ /_FIXMYSTREET_ID$/) {
-                $has_fixmystreet_id = 1 if $att->{value};
-            }
-        }
-
-        next if $has_fixmystreet_id;
+        #XXX check this no longer required
+        next if grep { $_ =~ /_FIXMYSTREET_ID$/ && $attributes->{$_} } keys %{ $attributes };
 
         my $service = Open311::Endpoint::Service->new(
             service_name => $category,
@@ -510,9 +494,9 @@ sub get_service_requests {
         );
         $args{title} = $request->{title};
         $args{service} = $service;
-        $args{service_request_id} = $request->{resourceId};
-        $args{requested_datetime} = DateTime::Format::W3CDTF->new->parse_datetime( $request->{version}->{startDate})->truncate( to => 'second' );
-        $args{updated_datetime} = DateTime::Format::W3CDTF->new->parse_datetime( $request->{version}->{startDate})->truncate( to => 'second' );
+        $args{service_request_id} = $request->{itemId};
+        $args{requested_datetime} = DateTime::Format::W3CDTF->new->parse_datetime( $request->{start} )->truncate( to => 'second' );
+        $args{updated_datetime} = DateTime::Format::W3CDTF->new->parse_datetime( $request->{start} )->truncate( to => 'second' );
 
         push @requests, Open311::Endpoint::Service::Request::ExtendedStatus->new( %args );
     }
@@ -658,14 +642,15 @@ sub get_latlong_from_request {
 
     my $latlong;
 
-    my $geometry = $request->{geometry}->{featureGeom}->{geometry};
+    my $geometry = $request->{geometry};
 
     if ( $geometry->{type} eq 'Point') {
-        $latlong = $self->deproject_coordinates($geometry->{coordinates}[0], $geometry->{coordinates}[1]);
+        # convert from string because the validation expects numbers
+        $latlong = [ map { $_ * 1 } @{ $geometry->{coordinates} } ];
     } elsif ( $geometry->{type} eq 'LineString') {
         my @points = @{ $geometry->{coordinates} };
         my $half = int( @points / 2 );
-        $latlong = $self->deproject_coordinates($points[$half]->[0], $points[$half]->[1]);
+        $latlong = [ $points[$half]->[0], $points[$half]->[1] ];
     } elsif ( $geometry->{type} eq 'Polygon') {
         my @points = @{ $geometry->{coordinates}->[0] };
         my ($max_x, $max_y, $min_x, $min_y) = ($points[0]->[0], $points[0]->[1], $points[0]->[0], $points[0]->[1]);
@@ -678,7 +663,7 @@ sub get_latlong_from_request {
         }
         my $x = $min_x + ( ( $max_x - $min_x ) / 2 );
         my $y = $min_y + ( ( $max_y - $min_y ) / 2 );
-        $latlong = $self->deproject_coordinates($x, $y);
+        $latlong = [ $x, $y ];
     }
 
     return $latlong;
@@ -687,26 +672,26 @@ sub get_latlong_from_request {
 sub is_ignored_category {
     my ($self, $defect) = @_;
 
-    return grep { $defect->{sourceTypeId} eq $_ } @{ $self->config->{ ignored_defect_types } };
+    return grep { $defect->{designCode} eq $_ } @{ $self->config->{ ignored_defect_types } };
 }
 
 sub get_defect_category {
     my ($self, $defect) = @_;
-    my $mapping = $self->config->{defect_sourcetype_category_mapping}->{ $defect->{sourceTypeId} };
+    my $mapping = $self->config->{defect_sourcetype_category_mapping}->{ $defect->{designCode } };
 
     my $category = $mapping->{default};
 
     if ( $mapping->{types} ) {
-        my @attributes = @{$defect->{values}};
+        my @attributes = @{$defect->{attributes}};
         my $type;
 
         for my $att (@attributes) {
-            if ($att->{attributeCode} =~ /DEFECT_TYPE/ ) {
-                $type = $att->{value}->{values}->[0]->{resourceId};
+            if ($att->{attributeCode} =~ /DefectType/ ) {
+                $type = $att->{value}->[0];
             }
         }
 
-        $category = $mapping->{types}->{$type} if $mapping->{types}->{$type};
+        $category = $mapping->{types}->{$type} if $type && $mapping->{types}->{$type};
     }
 
     return $category;
