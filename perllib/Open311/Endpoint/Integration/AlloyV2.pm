@@ -291,6 +291,7 @@ sub get_service_request_updates {
     my @updates;
 
     push @updates, $self->_get_inspection_updates($args, $start_time, $end_time);
+    push @updates, $self->_get_defect_updates($args, $start_time, $end_time);
 
     return @updates;
 }
@@ -369,86 +370,80 @@ sub _get_inspection_updates {
     return @updates;
 }
 
-sub foo {
-    my $self = shift;
-    my $args = shift;
-    my $w3c = shift;
+sub _get_defect_updates {
+    my ( $self, $args, $start_time, $end_time ) = @_;
+
     my @updates;
-    my $updates = [];
     # updates to defects
     my $closure_mapping = $self->config->{inspection_closure_mapping};
     my %reverse_closure_mapping = map { $closure_mapping->{$_} => $_ } keys %{$closure_mapping};
-    $updates = $self->fetch_updated_resources($self->config->{defect_resource_name}, $args->{start_date});
+
+    my $mapping = $self->config->{defect_attribute_mapping};
+
+    my $updates = $self->fetch_updated_resources($self->config->{defect_resource_name}, $args->{start_date});
     for my $update (@$updates) {
         next if $self->is_ignored_category( $update );
 
-        my $status = 'open';
-        my $description = '';
-        my $fms_id = '';
         my $linked_defect;
-        my @attributes = @{$update->{values}};
-        for my $att (@attributes) {
-            # these might be specific to each design so will probably need
-            # some config
-            # TODO: check if we are pulling back in description. It's a mandatory field in Alloy
-            # so I suspect we should not be.
-            #if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{description}) {
-                #$description = $att->{value};
-            #}
+        my $attributes = $self->alloy->attributes_to_hash($update);
 
-            # status
-            if ($att->{attributeId} == $self->config->{defect_attribute_mapping}->{status}) {
-                $status = $self->defect_status($att->{value});
-            }
+        my $service_request_id = $update->{itemId};
 
-            if ($att->{attributeCode} =~ /_FIXMYSTREET_ID$/) {
-                $linked_defect = 1;
-                $fms_id = $att->{value};
-            }
+        # XXX check no longer required
+        my $fms_id;
+        if (my @ids = grep { $_ =~ /StreetDoctorID/ && $attributes->{$_} } keys %{ $attributes } ) {
+            $fms_id = $ids[0];
         }
-
-        my $service_request_id = $update->{resourceId};
-        my $parents = $self->alloy->api_call(
-            call => 'resource/' . $update->{resourceId} . '/parents'
-        )->{details}->{parents};
 
         # if it has a parent that is an enquiry get the resource id of the inspection and use that
         # as the external id so updates are added to the report that created the inspection
-        for my $parent (@$parents) {
-            next unless $parent->{actualParentSourceTypeId} == $self->config->{defect_inspection_parent_id}; # request for service
-
-            $linked_defect = 1;
-            $service_request_id = $parent->{parentResId};
-            $fms_id = undef;
+        for my $attribute (keys %$attributes) {
+            if ( $attribute =~ /DefectInspection/) { # request for service
+                $linked_defect = 1;
+                $service_request_id = $attributes->{$attribute}->[0];
+                $fms_id = undef;
+                last;
+            }
         }
 
         # we don't care about linked defects until they have been scheduled
+        my $status = $self->defect_status($attributes->{$mapping->{status}});
         next if $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
 
-        my $update_dt = $w3c->parse_datetime( $update->{version}->{startDate} )->truncate( to => 'second' );
+        my @version_ids = $self->get_versions_of_resource($update->{itemId});
+        foreach my $date (@version_ids) {
 
-        my %args = (
-            status => $status,
-            update_id => $update->{version}->{resourceSystemVersionId},
-            service_request_id => $service_request_id,
-            description => $description,
-            updated_datetime => $update_dt,
-        );
+            my $update_dt = $self->date_to_truncated_dt($date);
+            my $resource = $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
+            next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
 
-        # we need to set this to stop phantom updates being produced. This happens because
-        # when an inspection is closed it always sets an external_status_code which we never
-        # unset. Then when updates arrive from defects with no external_status_code the template
-        # fetching code at FixMyStreet sees that the external_status_code has changed and fetches
-        # the template. This means we always get an update even if nothing has changed. So, set
-        # this to the external_status_code used when an inspection is marked for raising as a
-        # defect. Only do this for 'action_scheduled' thouogh as otherwise the template lookup
-        # will fail as it will be looking for status + ext code which won't match.
-        if ( $status eq 'action_scheduled' && ( $fms_id || $linked_defect ) ) {
-            $args{external_status_code} = $reverse_closure_mapping{'action_scheduled'};
+            $resource = $resource->{item};
+            my $attributes = $self->alloy->attributes_to_hash($resource);
+            my $status = $self->defect_status($attributes->{$mapping->{status}});
+
+            my %args = (
+                status => $status,
+                update_id => $resource->{signature},
+                service_request_id => $service_request_id,
+                description => '',
+                updated_datetime => $update_dt,
+            );
+
+            # we need to set this to stop phantom updates being produced. This happens because
+            # when an inspection is closed it always sets an external_status_code which we never
+            # unset. Then when updates arrive from defects with no external_status_code the template
+            # fetching code at FixMyStreet sees that the external_status_code has changed and fetches
+            # the template. This means we always get an update even if nothing has changed. So, set
+            # this to the external_status_code used when an inspection is marked for raising as a
+            # defect. Only do this for 'action_scheduled' thouogh as otherwise the template lookup
+            # will fail as it will be looking for status + ext code which won't match.
+            if ( $status eq 'action_scheduled' && ( $fms_id || $linked_defect ) ) {
+                $args{external_status_code} = $reverse_closure_mapping{'action_scheduled'};
+            }
+            $args{fixmystreet_id} = $fms_id if $fms_id;
+
+            push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
         }
-        $args{fixmystreet_id} = $fms_id if $fms_id;
-
-        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
 
     return @updates;
@@ -500,8 +495,8 @@ sub get_service_requests {
         $args{title} = $request->{title};
         $args{service} = $service;
         $args{service_request_id} = $request->{itemId};
-        $args{requested_datetime} = DateTime::Format::W3CDTF->new->parse_datetime( $request->{start} )->truncate( to => 'second' );
-        $args{updated_datetime} = DateTime::Format::W3CDTF->new->parse_datetime( $request->{start} )->truncate( to => 'second' );
+        $args{requested_datetime} = $self->date_to_truncated_dt( $request->{start} );
+        $args{updated_datetime} = $self->date_to_truncated_dt( $request->{start} );
 
         push @requests, Open311::Endpoint::Service::Request::ExtendedStatus->new( %args );
     }
@@ -561,6 +556,7 @@ sub fetch_updated_resources {
 
         $page++;
 
+        next unless $result->{results};
         push @results, @{ $result->{results} }
     }
 
@@ -584,6 +580,7 @@ sub get_status_with_closure {
 sub defect_status {
     my ($self, $status) = @_;
 
+    $status = $status->[0] if ref $status eq 'ARRAY';
     return $self->config->{defect_status_mapping}->{$status} || 'open';
 }
 

@@ -129,7 +129,7 @@
     1000796: { "default": 'Sign/Pole Damaged', "types": {}, "asset_types": {} }, # Bus stops
 
     # XXX need to check if asset is a bus stop and not a shelter
-    1000794: { "default": 'Shelter Damaged', "types": {}, "asset_types": {} }, # Benches
+    'designs_benches1000794_5d32400ffe2ad80354bbdae6': { "default": 'Shelter Damaged', "types": {}, "asset_types": {} }, # Benches
 
     1000797: { "default": 'Loose / Raised/Sunken', "types": {}, "asset_types": {} }, # Covers, Grating, Frames & Boxes
 
@@ -217,20 +217,22 @@
   },
 
   "defect_status_mapping": {
-    "1001022": "open", #     "Reported"
-    "1001023": "investigating", # "Waiting For Inspection"
-    "1001024": "investigating", # "Confirmed"
-    "1001025": "action_scheduled", # "Order Raised"
-    "1001026": "fixed", # "Remedied"
-    #"1001027": "" # "Found and Forwarded"
-    #"1002682": "" # "Rejected"
+    "5c8bdfb28ae862230019dc1e": "open", #     "Reported"
+    "5c8bdfb58ae862230019dc1f": "investigating", # "Waiting For Inspection"
+    "5c8bdfb98ae862230019dc20": "investigating", # "Confirmed"
+    "5c8bdfc18ae862230019dc21": "action_scheduled", # "Order Raised"
+    "5c8bdfc88ae862230019dc22": "fixed", # "Remedied"
+    #"5c8bdfe08ae862230019dc24": "" # no action required
+    #"5c8bdff68ae862230019dc25": "" # superseded
+    #"5c8bdfdb8ae862230019dc23": "" # "Found and Forwarded"
+    #"5d485225fe2ad809d85a9981": "" # "Rejected"
   },
 
   "defect_resource_name": "designInterfaces_defects",
 
   "defect_attribute_mapping": {
       "description": "attributes_description",
-      "status": "attributes_taskStatus",
+      "status": "attributes_defectsStatus",
       "created": 1000603,
       "number": 1003788, # this is the DEF-NNN and not resourceId
       "fixmystreet_id": 1011576,
