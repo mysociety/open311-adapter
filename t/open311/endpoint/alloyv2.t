@@ -39,7 +39,7 @@ sub _build_config_file { path(__FILE__)->sibling("alloyv2.yml")->stringify }
 package Open311::Endpoint::Integration::UK::Dummy;
 use Path::Tiny;
 use Moo;
-extends 'Open311::Endpoint::Integration::AlloyV2';
+extends 'Open311::Endpoint::Integration::UK::Northamptonshire::AlloyV2';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
     $args{jurisdiction_id} = 'dummy';
@@ -93,6 +93,8 @@ $integration->mock('api_call', sub {
             $content = '{ "item": { "signature": "5d32469bb4e1b90150014310" } }';
         } elsif ( $call eq 'item/123456' ) {
             $content = '{ "item": { "signature": "6d32469bb4e1b90150014310" } }';
+        } elsif ( $call eq 'item' && $body->{designCode} eq 'designs_fMSContacts1001214_5d321178fe2ad80354bbc0a7' ) {
+            $content = '{ "item": { "itemId": 708823 } }';
         } elsif ( $call eq 'item' ) {
             $content = '{ "item": { "itemId": 12345 } }';
         } elsif ( $call =~ 'aqs/statistics' ) {
@@ -106,6 +108,11 @@ $integration->mock('api_call', sub {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search_all.json')->slurp;
                 } else {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search.json')->slurp;
+                }
+            } elsif ($type eq 'designs_fMSContacts1001214_5d321178fe2ad80354bbc0a7') {
+                my $search = $body->{children}->[0]->{children}->[0]->{properties}->{value}->[0];
+                if ( $search eq 'exists@example.com' ) {
+                    $content = '{ "page": 1, "results": [ { "itemId": 708824 } ] }';
                 }
             } else {
                 $content = path(__FILE__)->sibling('json/alloyv2/inspect_search.json')->slurp;
@@ -166,15 +173,14 @@ subtest "create basic problem" => sub {
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
-
     # order these so comparison works
     $sent->{attributes} = [ sort { $a->{attributeCode} cmp $b->{attributeCode} } @{ $sent->{attributes} } ];
     is_deeply $sent,
     {
     attributes => [
-        #{ attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => 'Category' },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => [6183644] },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
-        #{ attributeCode  => 'attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29', value => [ 708823 ] },
+        { attributeCode  => 'attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29', value => [ 708823 ] },
         { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
@@ -208,7 +214,7 @@ subtest "create problem with no resource_id" => sub {
         address_string => '22 Acacia Avenue',
         first_name => 'Bob',
         last_name => 'Mould',
-        email => 'test@example.com',
+        email => 'exists@example.com',
         description => 'description',
         lat => '50',
         long => '0.1',
@@ -230,9 +236,9 @@ subtest "create problem with no resource_id" => sub {
     is_deeply $sent,
     {
     attributes => [
-        #{ attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => 'Category' },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => [6183644] },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
-        #{ attributeCode  => 'attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29', value => [ 708823 ] },
+        { attributeCode  => 'attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29', value => [ 708824 ] },
         { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
