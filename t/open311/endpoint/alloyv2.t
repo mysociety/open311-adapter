@@ -114,6 +114,8 @@ $integration->mock('api_call', sub {
                 if ( $search eq 'exists@example.com' ) {
                     $content = '{ "page": 1, "results": [ { "itemId": 708824 } ] }';
                 }
+            } elsif ($type eq 'designs_listFixMyStreetCategories1001257_5d3210e1fe2ad806f8df98c1') {
+                $content = path(__FILE__)->sibling('json/alloyv2/categories_search.json')->slurp;
             } else {
                 $content = path(__FILE__)->sibling('json/alloyv2/inspect_search.json')->slurp;
             }
@@ -178,7 +180,7 @@ subtest "create basic problem" => sub {
     is_deeply $sent,
     {
     attributes => [
-        { attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => [6183644] },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => [ '01d221dcc0de101a005e5adc' ] },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
         { attributeCode  => 'attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29', value => [ 708823 ] },
         { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
@@ -236,7 +238,7 @@ subtest "create problem with no resource_id" => sub {
     is_deeply $sent,
     {
     attributes => [
-        { attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => [6183644] },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => ['01d221dcc0de101a005e5adc'] },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
         { attributeCode  => 'attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29', value => [ 708824 ] },
         { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
