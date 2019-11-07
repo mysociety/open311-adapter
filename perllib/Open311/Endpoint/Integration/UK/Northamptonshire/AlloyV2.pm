@@ -31,7 +31,7 @@ sub process_attributes {
 
     # For category we use the group and not the category
     my ( $group, $category ) = split('_', $args->{service_code});
-    my $group_code = $self->config->{service_whitelist}->{$group}->{resourceId};
+    my $group_code = $self->_find_category_code($group);
     push @$attributes, {
         attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{category},
         value => [ $group_code ],
@@ -146,6 +146,25 @@ sub _create_contact {
         call => "item",
         body => $contact
     );
+}
+
+sub _find_category_code {
+    my ($self, $category) = @_;
+
+    my $results = $self->alloy->api_call(
+        call => "aqs/query",
+        body => {
+            type => "Query",
+            properties => {
+                dodiCode => $self->config->{category_list_code},
+                collectionCode => "Live"
+            },
+        }
+    );
+
+    for my $cat ( @{ $results->{results} } ) {
+        return $cat->{itemId} if $cat->{title} eq $category;
+    }
 }
 
 1;
