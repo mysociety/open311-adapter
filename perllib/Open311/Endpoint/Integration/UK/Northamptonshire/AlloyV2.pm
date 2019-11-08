@@ -71,32 +71,30 @@ sub _find_contact {
         return undef;
     }
 
-    my $results = $self->alloy->api_call(
-        call => "aqs/query",
-        body => {
-            type => "Query",
-            properties => {
-                dodiCode => $self->config->{contact}->{code},
-                collectionCode => "Live"
-            },
-            children => [
-                {
-                    type => "GlobalAttributeSearch",
-                    children=> [
-                        {
-                            type => "String",
-                            properties => {
-                                value => [$search_term]
-                            }
-                        }
-                    ]
-                }
-            ]
+    my $body = {
+        properties => {
+            dodiCode => $self->config->{contact}->{code},
+            collectionCode => "Live"
         },
-    );
+        children => [
+            {
+                type => "GlobalAttributeSearch",
+                children=> [
+                    {
+                        type => "String",
+                        properties => {
+                            value => [$search_term]
+                        }
+                    }
+                ]
+            }
+        ]
+    };
 
-    return undef unless $results->{results};
-    return $results->{results}->[0];
+    my $results = $self->alloy->search($body);
+
+    return undef unless @$results;
+    return $results->[0];
 }
 
 sub _create_contact {
@@ -151,10 +149,7 @@ sub _create_contact {
 sub _find_category_code {
     my ($self, $category) = @_;
 
-    my $results = $self->alloy->api_call(
-        call => "aqs/query",
-        body => {
-            type => "Query",
+    my $results = $self->alloy->search( {
             properties => {
                 dodiCode => $self->config->{category_list_code},
                 collectionCode => "Live"
@@ -162,7 +157,7 @@ sub _find_category_code {
         }
     );
 
-    for my $cat ( @{ $results->{results} } ) {
+    for my $cat ( @{ $results } ) {
         return $cat->{itemId} if $cat->{title} eq $category;
     }
 }
