@@ -199,4 +199,40 @@ sub attributes_to_hash {
     return $attributes;
 }
 
+sub search {
+    my ($self, $body_base) = @_;
+
+    my $stats_body = { %$body_base };
+    $stats_body->{type} = 'MathAggregation';
+    $stats_body->{properties}->{aggregationType} = 'Count';
+
+    my $stats = $self->api_call(
+        call => "aqs/statistics",
+        body => $stats_body
+    );
+
+    my $result_count = $stats->{result};
+    my $pages = int( $result_count / 20 ) + 1;
+
+    my $query_body = $body_base;
+    $query_body->{type} = 'Query';
+
+    my @results;
+    my $page = 1;
+    while ($page <= $pages) {
+        my $result = $self->api_call(
+            call => "aqs/query",
+            params => { page => $page, pageSize => 20 },
+            body => $query_body
+        );
+
+        $page++;
+
+        next unless $result->{results};
+        push @results, @{ $result->{results} }
+    }
+
+    return \@results;
+}
+
 1;

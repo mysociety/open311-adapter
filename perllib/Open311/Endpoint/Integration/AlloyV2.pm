@@ -543,36 +543,7 @@ sub fetch_updated_resources {
         }]
     };
 
-    my $stats_body = $body_base;
-    $stats_body->{type} = 'MathAggregation';
-    $stats_body->{properties}->{aggregationType} = 'Count';
-
-    my $stats = $self->alloy->api_call(
-        call => "aqs/statistics",
-        body => $stats_body
-    );
-
-    my $result_count = $stats->{result};
-    my $pages = int( $result_count / 20 ) + 1;
-
-    my $query_body = $body_base;
-    $query_body->{type} = 'Query';
-
-    my $page = 1;
-    while ($page <= $pages) {
-        my $result = $self->alloy->api_call(
-            call => "aqs/query",
-            params => { page => $page, pageSize => 20 },
-            body => $query_body
-        );
-
-        $page++;
-
-        next unless $result->{results};
-        push @results, @{ $result->{results} }
-    }
-
-    return \@results;
+    return $self->alloy->search( $body_base );
 }
 
 sub inspection_status {
