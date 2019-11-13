@@ -34,6 +34,15 @@ has memcache => (
     },
 );
 
+sub detect_type {
+    my ($self, $photo) = @_;
+    return 'image/jpeg' if $photo =~ /^\x{ff}\x{d8}/;
+    return 'image/png' if $photo =~ /^\x{89}\x{50}/;
+    return 'image/tiff' if $photo =~ /^II/;
+    return 'image/gif' if $photo =~ /^GIF/;
+    return '';
+}
+
 sub api_call {
     my ($self, %args) = @_;
     my $call = $args{call};
@@ -53,8 +62,9 @@ sub api_call {
     if ($args{is_file}) {
         $request = HTTP::Request::Common::POST(
             $uri,
-            Content_Type => 'form-data',
-            Content => [ file => [undef, $args{params}->{'model.name'}, Content => $body] ]
+            Content_Type => $self->detect_type($body),
+            'content-disposition' => "attachment; filename=\"$args{filename}\"",
+            Content => $body
         );
     } elsif ($body) {
         $request->content_type('application/json; charset=UTF-8');
