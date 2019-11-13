@@ -2,6 +2,7 @@ package Open311::Endpoint::Integration::AlloyV2;
 
 use Digest::MD5 qw(md5_hex);
 use Moo;
+use Try::Tiny;
 use DateTime::Format::W3CDTF;
 use LWP::UserAgent;
 use Types::Standard ':all';
@@ -203,17 +204,71 @@ sub post_service_request {
     # This may be overridden by a subclass for council-specific things.
     $resource->{attributes} = $self->process_attributes($source, $args);
 
+    # XXX try this first so we bail if we can't upload the files
+    my $files = [];
+    if ( $self->config->{resource_attachment_attribute_id} && @{$args->{media_url}}) {
+        $files = $self->upload_attachments($args);
+    }
+
     # post it up
     my $response = $self->alloy->api_call(
         call => "item",
         body => $resource
     );
 
+    my $item_id = $self->service_request_id_for_resource($response);
+
+    # Upload any photos to Alloy and link them to the new resource
+    # via the appropriate attribute
+    if (@$files) {
+        $self->_add_attachments_to_item($files, $item_id, $self->config->{resource_attachment_attribute_id});
+    }
+
     # create a new Request and return it
     return $self->new_request(
-        service_request_id => $self->service_request_id_for_resource($response)
+        service_request_id => $item_id
     );
 
+}
+
+sub _add_attachments_to_item {
+    my ($self, $files, $item_id, $attribute_id) = @_;
+
+    my $item = $self->alloy->api_call(call => "item/$item_id");
+    my $updated = {
+        attributes => [{
+            attributeCode => $attribute_id,
+            value => $files
+        }],
+        signature => $item->{item}->{signature}
+    };
+
+    try {
+        my $update = $self->alloy->api_call(
+            call => "item/$item_id",
+            method => 'PUT',
+            body => $updated
+        );
+    } catch {
+        # if we fail to update this then we shouldn't fall over as we want to avoid
+        # creating duplicates of the report. However, if it's a signature mismatch
+        # then try again in case it's been updated in the meantime.
+        if ( $_ =~ /ItemSignatureMismatch/ ) {
+            my $item = $self->alloy->api_call(call => "item/$item_id");
+            $updated->{signature} = $item->{item}->{signature};
+            try {
+                my $update = $self->alloy->api_call(
+                    call => "item/$item_id",
+                    method => 'PUT',
+                    body => $updated
+                );
+            } catch {
+                warn $_;
+            }
+        } else {
+            warn $_;
+        }
+    }
 }
 
 sub _set_parent_attribute {
@@ -720,15 +775,21 @@ sub process_attributes {
 
     $attributes = \@remapped;
 
-    # Upload any photos to Alloy and link them to the new resource
-    # via the appropriate attribute
-    if ( $self->config->{resource_attachment_attribute_id} && $args->{media_url}) {
-        $attributes->{$self->config->{resource_attachment_attribute_id}} = $self->upload_attachments($args);
-    }
-
     return $attributes;
 }
 
+
+sub _get_attachments {
+    my ($self, $urls) = @_;
+
+    $self->logger->debug(np  $urls);
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+    my @photos = map {
+        $ua->get($_);
+    } @$urls;
+
+    return @photos;
+}
 
 sub upload_attachments {
     my ($self, $args) = @_;
@@ -736,11 +797,7 @@ sub upload_attachments {
     # grab the URLs and download its content
     my $media_urls = $args->{media_url};
 
-    # Grab each photo from FMS
-    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
-    my @photos = map {
-        $ua->get($_);
-    } @$media_urls;
+    my @photos = $self->_get_attachments($args->{media_url});
 
     my $folder_id = $self->config->{attachment_folder_id};
 
@@ -748,22 +805,13 @@ sub upload_attachments {
     my @resource_ids = map {
         $self->alloy->api_call(
             call => "file",
-            params => {
-                'model.folderId' => $folder_id,
-                'model.name' => $_->filename
-            },
+            filename => $_->filename,
             body=> $_->content,
             is_file => 1
-        )->{resourceId};
+        )->{fileItemId};
     } @photos;
 
-    # return a list of the form
-    my @commands = map { {
-        command => "add",
-        resourceId => $_,
-    } } @resource_ids;
-
-    return \@commands;
+    return \@resource_ids;
 }
 
 1;
