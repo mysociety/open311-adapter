@@ -33,6 +33,9 @@ has is_success => (
 package Integrations::AlloyV2::Dummy;
 use Path::Tiny;
 use Moo;
+use HTTP::Response;
+use HTTP::Headers;
+
 extends 'Integrations::AlloyV2';
 sub _build_config_file { path(__FILE__)->sibling("alloyv2.yml")->stringify }
 
@@ -48,6 +51,12 @@ around BUILDARGS => sub {
 };
 has integration_class => (is => 'ro', default => 'Integrations::AlloyV2::Dummy');
 sub service_request_content { '/open311/service_request_extended' }
+
+sub _get_attachments {
+    my $h = HTTP::Headers->new;
+    $h->header('Content-Disposition' => 'filename: "file.jpg"');
+    return HTTP::Response->new(200, 'OK', $h, "\x{ff}\x{d8}this is data");
+}
 
 package main;
 
@@ -75,8 +84,7 @@ my %responses = (
     }',
 );
 
-my @sent;
-my @calls;
+my (@sent, %sent, @calls);
 
 my $integration = Test::MockModule->new('Integrations::AlloyV2');
 $integration->mock('api_call', sub {
@@ -84,10 +92,16 @@ $integration->mock('api_call', sub {
     my $call = $args{call};
     my $params = $args{params};
     my $body = $args{body};
+    my $is_file = $args{is_file};
 
     my $content = '[]';
     push @calls, $call;
-    if ( $body ) {
+    if ( $is_file ) {
+        $sent{$call} = $body;
+        push @sent, $body;
+        return { fileItemId => 'fileid' };
+    } elsif ( $body ) {
+        $sent{$call} = $body;
         push @sent, $body;
         if ( $call eq 'item/12345' ) {
             $content = '{ "item": { "signature": "5d32469bb4e1b90150014310" } }';
@@ -143,7 +157,14 @@ $integration->mock('api_call', sub {
 
     $content ||= '[]';
 
-    my $result = decode_json(encode_utf8($content));
+    my $result;
+    eval {
+    $result = decode_json(encode_utf8($content));
+    };
+    if ($@) {
+        warn $content;
+        return decode_json('[]');
+    }
     return $result;
 });
 
@@ -178,6 +199,75 @@ subtest "create basic problem" => sub {
     # order these so comparison works
     $sent->{attributes} = [ sort { $a->{attributeCode} cmp $b->{attributeCode} } @{ $sent->{attributes} } ];
     is_deeply $sent,
+    {
+    attributes => [
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => [ '01d221dcc0de101a005e5adc' ] },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
+        { attributeCode  => 'attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29', value => [ 708823 ] },
+        { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
+    ],
+    designCode => 'designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6',
+    geometry => {
+        coordinates => [
+            0.1,
+            50
+        ],
+        type => "Point"
+    },
+    parents => { "attribute_design_code" => [ '39dhd38dhdkdnxj' ] },
+    }
+    , 'correct json sent';
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => 12345
+        } ], 'correct json returned';
+
+};
+
+subtest "create problem with file" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request( 
+        POST => '/requests.json', 
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        service_code => 'Kerbs_Missing',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        media_url => 'http://example.org/photo/1.jpeg',
+        'attribute[description]' => 'description',
+        'attribute[title]' => '1',
+        'attribute[report_url]' => 'http://localhost/1',
+        'attribute[asset_resource_id]' => '39dhd38dhdkdnxj',
+        'attribute[easting]' => 1,
+        'attribute[northing]' => 2,
+        'attribute[category]' => 'Kerbs_Missing',
+        'attribute[fixmystreet_id]' => 1,
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is $sent{file}, "\x{ff}\x{d8}this is data", "file content ok";
+
+    is_deeply $sent{'item/12345'},
+    {
+        attributes => [
+            { attributeCode => 'attributes_filesAttachableAttachments', value => [ 'fileid' ] }
+        ],
+        signature => '5d32469bb4e1b9015001430b',
+    };
+
+    # order these so comparison works
+    $sent{item}->{attributes} = [ sort { $a->{attributeCode} cmp $b->{attributeCode} } @{ $sent{item}->{attributes} } ];
+    is_deeply $sent{item},
     {
     attributes => [
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => [ '01d221dcc0de101a005e5adc' ] },

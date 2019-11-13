@@ -6,7 +6,7 @@
   "defect_inspection_parent_id": 1001181,
   "irg_config_code": "ASSET_INSPECTIONS",
   "attachment_folder_id": 52,
-  "resource_attachment_attribute_id": 0,
+  "resource_attachment_attribute_id": "attributes_filesAttachableAttachments",
 
   "service_attribute_overrides": {
   },
