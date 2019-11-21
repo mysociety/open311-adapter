@@ -704,15 +704,6 @@ subtest "check fetch service metadata" => sub {
             description => "Asset resource ID",
             automated => 'hidden_field',
           },
-          {
-            variable => 'false',
-            code => "emergency",
-            datatype => "text",
-            required => 'false',
-            datatype_description => '',
-            order => 9,
-            description => "This is an emergency",
-          },
         ]
     }, 'correct json returned';
 };
