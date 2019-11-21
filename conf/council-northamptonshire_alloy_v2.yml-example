@@ -1,0 +1,221 @@
+{
+  "api_key": "",
+  "api_url": "https://alloy-api.yotta.co.uk/api/",
+  "source_type_property_name": "",
+  "source_type_id_whitelist": [
+    1234,
+  ],
+
+  "defect_inspection_parent_id": "",
+  "irg_config_code": "",
+  # id of folder to upload images to
+  "attachment_folder_id": 1,
+  # id of attribute to use for image list
+  "resource_attachment_attribute_id": 1,
+
+  # List of categories/subcategories
+  "service_whitelist": {
+    "Highway Bridges": {
+      # resourceId is the value to use for the category attribute
+      "resourceId": 10000000,
+      "Damaged/Unsafe": "Structures"
+    },
+    "Bus Stops": {
+      "resourceId": 10000001,
+      "Shelter Damaged": "Bus Stop",
+      "Sign/Pole Damaged": "Bus Stop"
+    },
+    "Drain Covers": {
+      "resourceId": 10000002,
+      "Loose / Raised / Sunken": "Carriageway",
+      "Broken / Missing": "Carriageway"
+    }
+  },
+
+  # Allows Open311 service attribute parameters to be overridden,
+  # e.g. to make specific attributes required, or not required,
+  # server_set to be set etc.
+  # Keys correspond to the service attribute's code (i.e. the Alloy attribute
+  # id), and the contents of the
+  # hash will be merged into the Attribute->new call.
+  # This example shows how we'd make easting/northings hidden in the FMS UI
+  "service_attribute_overrides": {
+    "11223344": { # EASTING
+      "automated": "server_set",
+    },
+    "11223345": { # NORTHING
+      "automated": "server_set",
+    },
+  },
+
+  # When POSTing new resources to Alloy, certain attributes may need
+  # to be hardcoded and not based on anything we've received from FMS
+  # in the service request. This config key will be merged into the
+  # "attributes" key in the JSON that gets posted to /api/resource.
+  # NB this will currently be sent for all resources regardless of
+  # design/source type.
+  # This example shows how we set a simple string attribute, as well as
+  # an attribute that requires a JSON object
+  "resource_attribute_defaults": {
+    # This sets "STATUS" to "Pending"
+    "12345": [
+      {
+        "command": "add",
+        "resourceId": 1
+      }
+    ],
+  },
+
+  # open311-adapter asks FMS for the problem title and description
+  # in attributes as defined in O::E::Service::UKCouncil::Alloy,
+  # which should be sent to Alloy in specific attribute fields
+  # in the resource. Rather than let the FMS cobrand's open311_config
+  # method put these values in the attributes, which would require
+  # FMS to know about specific Alloy attribute IDs, handle this mapping
+  # on this end.
+  # NB: This will override any resource_attribute_defaults if present.
+  # TODO: These currently apply to all source types/designs.
+  "request_to_resource_attribute_mapping": {
+    "title": 1234567, # summary
+    "description": 1234568, # explanation
+  },
+
+  # There are some Alloy resource attributes which we never want to include
+  # in our Open311 services - they may be irrelevant, or have values
+  # calculated at the time the resource is POSTed to Alloy.
+  # List these Alloy attribute IDs here.
+  "ignored_attributes": [
+    0987655, # Reported DateTime - current time is used
+  ],
+
+
+  # Alloy doesn't seem to natively have a way to indicate the time
+  # that a resource was created, and instead stores the report datetime
+  # in a resource attribute. This attribute varies by council, so
+  # specify it here so the code can fill it in when creating a new
+  # resource. This timestamp is in ISO 8601 format, hooray.
+  # NB this can be omitted to disable this behaviour, but if present here
+  # it should also be included in ignored_attributes above.
+  # TODO: don't require this to be in ignored_attributes
+  "created_datetime_attribute_id": 0987655,
+
+  # maps the value of the status to a FMS status
+  "inspection_status_mapping": {
+    "1": "open", # proposed
+    "2": "investigating", # issued to contractor
+    "4": "investigating", # in progress
+    # "3": "" # on hold
+    "6": "closed" # closed
+    # "8": "" # cancelled
+  },
+
+  # when a report in Alloy is closed it can have a closure reason
+  # which modifies the default closed status.
+  "inspection_closure_mapping": {
+    4281523: 'in_progress', # works instructed
+    4281524: 'no_further_action', # no action necessary
+    4281525: 'not_councils_responsibility', # outside NCC control
+    4281526: 'no_further_action', # highways to monitor
+  },
+
+  # used to search for updated inspections
+  "inspection_resource_name": "INSPECTION_STANDARD INSPECTION_STANDARD",
+
+
+  # when fetching updated defects or new defects we want to ignore some
+  # of them as they should not be displayed on FMS
+  "ignored_defect_types": [
+      1000963,
+      1000967,
+      1000957,
+      1000958
+  ],
+
+  # mapping of a defect type in Alloy to the category to display it under on
+  # FixMyStreet. There is a default for the source type of the defect that can
+  # then be modified by the defect type attribute.
+  #
+  # asset_types is unused at the moment
+  "defect_sourcetype_category_mapping": {
+    1000797: { "default": 'Loose / Raised/Sunken', "types": {}, "asset_types": {} }, # Covers, Grating, Frames & Boxes
+    1000803: { "default": 'Blocked Ditch', "types": { 1828847: "Blocked Ditch Causing Flooding" }, "asset_types": {} }, # Ditches
+  },
+
+
+  # defect statuses are different from inspection statuses so require a different
+  # mapping
+  "defect_status_mapping": {
+    "1001022": "open", #     "Reported"
+    "1001023": "investigating", # "Waiting For Inspection"
+    "1001024": "investigating", # "Confirmed"
+    "1001025": "action_scheduled", # "Order Raised"
+    "1001026": "fixed", # "Remedied"
+    #"1001027": "" # "Found and Forwarded"
+    #"1002682": "" # "Rejected"
+  },
+
+  # used to search for updated defects
+  "defect_resource_name": "DEFECT_STANDARD DEFECT_STANDARD",
+
+  # map defect attributes to FMS attributes
+  "defect_attribute_mapping": {
+      "description": 1000594,
+      "status": 1000604,
+      "created": 1000603,
+      "number": 1003788, # this is the DEF-NNN and not resourceId
+      "fixmystreet_id": 1011576,
+  },
+
+
+  # Northamptonshire-specific configuration for finding/creating Contact
+  # resources which are attached to Inspections.
+  "contact": {
+    # When searching for a Contact, tell the search engine what kind of
+    # resource we're looking for
+    "search_entity_code": "",
+
+    # The attribute to match against when searching for a Contact
+    "search_attribute_code": "",
+
+    # If we have to create a new Contact resource, the source type to
+    # create it under.
+    "source_id": 123456,
+
+    # When creating new Contact resources there are some attribute values
+    # which are the same every time
+    "attribute_defaults": {
+        # Has the contact accepted storage of their details? Must be true.
+        "138947123": true,
+
+        # Alloy logs which user created this Contact and ticked the
+        # acceptance tickbox above.
+        # We could get the resourceId of our own Alloy user from
+        # the API each time, but it doesn't change so seems fine to include
+        # here in the config, and save an API call.
+        "3128132098": [
+            {
+                "command": "add",
+                "resourceId": 187123789
+            }
+        ]
+    },
+
+    # This is the id of the attribute which stores the datetime
+    # when the user accepted storage of their contact details.
+    # We *could* use a hardcoded value for this, but might as well
+    # use the current datetime so there's an indicator of when a user's
+    # details were added to the system.
+    "acceptance_datetime_attribute": 3089472340897,
+
+    # Controls how the fields map from the incoming open311 service
+    # request params to the Alloy Contact attribute fields.
+    "attribute_mapping": {
+      "first_name": 13089132490,
+      "last_name": 324583129,
+      "phone": 345089345,
+      "email": 3546098345,
+    }
+  }
+
+
+}
