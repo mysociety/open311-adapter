@@ -764,7 +764,6 @@ sub process_attributes {
 sub _get_attachments {
     my ($self, $urls) = @_;
 
-    $self->logger->debug(np  $urls);
     my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
     my @photos = map {
         $ua->get($_);
