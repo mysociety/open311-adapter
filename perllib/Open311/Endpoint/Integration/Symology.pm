@@ -163,7 +163,7 @@ sub process_service_request_args {
             $request = { %$request, %{$_->{output}} };
         }
     }
-    
+
     my $customer = {
         name => $args->{first_name} . " " . $args->{last_name},
         email => $args->{email},
