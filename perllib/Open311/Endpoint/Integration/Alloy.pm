@@ -305,15 +305,12 @@ sub get_service_request_updates {
         # we only want updates to RFS inspections
         next unless $update->{sourceTypeId} eq $source->{source_type_id};
 
-        my $latest = $w3c->parse_datetime( $update->{version}->{startDate} )->truncate( to => 'second' );
-        next unless $latest >= $start_time && $latest <= $end_time;
-
         # We need to fetch all versions that changed in the time wanted
-        my @version_ids = $self->get_versions_of_resource($update->{resourceId});
+        my @versions = $self->get_versions_of_resource($update->{resourceId});
 
         my $last_description = '';
-        foreach (@version_ids) {
-            my $resource = $self->alloy->api_call(call => "resource/$update->{resourceId}/full?systemVersion=$_");
+        foreach (@versions) {
+            my $resource = $self->alloy->api_call(call => "resource/$update->{resourceId}/full?systemVersion=$_->{id}");
             next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
 
             my $status = 'open';
@@ -349,7 +346,7 @@ sub get_service_request_updates {
             $last_description = $description;
 
             # Now we have the description, can skip if update is not in our timeframe
-            my $update_dt = $w3c->parse_datetime( $resource->{version}->{startDate} )->truncate( to => 'second' );
+            my $update_dt = $w3c->parse_datetime( $_->{date} )->truncate( to => 'second' );
             next unless $update_dt >= $start_time && $update_dt <= $end_time;
 
             if ($reason_for_closure) {
@@ -633,13 +630,13 @@ sub get_versions_of_resource {
 
     my $versions = $self->alloy->api_call(call => "resource/$resource_id/versions");
 
-    my @version_ids = ();
+    my @versions = ();
     for my $version ( @$versions ) {
-        push @version_ids, $version->{currentSystemVersionId};
+        push @versions, { id => $version->{currentSystemVersionId}, date => $version->{startDate} };
     }
 
-    @version_ids = sort(@version_ids);
-    return @version_ids;
+    @versions = sort { $a->{id} <=> $b->{id} } @versions;
+    return @versions;
 }
 
 sub get_latlong_from_request {
