@@ -19,7 +19,7 @@ with 'Role::Logger';
 
 use Integrations::Uniform;
 use Open311::Endpoint::Service::Attribute;
-use Open311::Endpoint::Service::UKCouncil;
+use Open311::Endpoint::Service::UKCouncil::Uniform;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 
 has jurisdiction_id => ( is => 'ro' );
@@ -123,7 +123,7 @@ sub services {
 }
 
 sub service_class {
-    'Open311::Endpoint::Service::UKCouncil';
+    'Open311::Endpoint::Service::UKCouncil::Uniform';
 }
 
 sub log_and_die {
@@ -154,7 +154,7 @@ sub process_service_request_args {
 
     # We need to bump some values up from the attributes hashref to
     # the $args passed
-    foreach (qw/fixmystreet_id easting northing/) {
+    foreach (qw/fixmystreet_id easting northing uprn/) {
         if (defined $args->{attributes}->{$_}) {
             $request->{$_} = delete $args->{attributes}->{$_};
         }

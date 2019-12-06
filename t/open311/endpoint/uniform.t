@@ -225,9 +225,19 @@ subtest "GET service" => sub {
           {
              "datatype_description" => "",
              "variable" => "true",
+             "description" => "UPRN reference",
+             "automated" => "hidden_field",
+             "required" => "false",
+             "order" => 4,
+             "code" => "uprn",
+             "datatype" => "string"
+          },
+          {
+             "datatype_description" => "",
+             "variable" => "true",
              "description" => "Where?",
              "required" => "true",
-             "order" => 4,
+             "order" => 5,
              "code" => "LOC",
              "datatype" => "singlevaluelist",
              values => [
