@@ -221,6 +221,7 @@ sub SOAP::Serializer::as_SubmittedGeneralServiceRequestType {
         },
         ComplaintType => $value->{service_code}, # SRRECTYPE
         SubmittedSiteLocation => {
+            UPRN => $value->{uprn},
             MapEast => $value->{easting},
             MapNorth => $value->{northing},
         },
