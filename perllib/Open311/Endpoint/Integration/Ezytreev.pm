@@ -38,11 +38,6 @@ sub services {
     return @services;
 }
 
-sub service {
-    my ($self, $service_code, $args) = @_;
-    return first { $_->service_code eq $service_code } $self->services($args);
-}
-
 sub post_service_request {
     my ($self, $service, $args) = @_;
     die "abstract method post_service_request not implemented";
