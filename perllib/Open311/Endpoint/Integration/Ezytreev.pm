@@ -2,6 +2,7 @@ package Open311::Endpoint::Integration::Ezytreev;
 
 use Moo;
 use Integrations::Ezytreev;
+use Open311::Endpoint::Service::UKCouncil::Ezytreev;
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
@@ -17,9 +18,23 @@ has ezytreev => (
     default => sub { $_[0]->integration_class->new(config_filename => $_[0]->jurisdiction_id) }
 );
 
+has category_mapping => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{category_mapping} }
+);
+
 sub services {
     my $self = shift;
-    my @services = ();
+    my $services = $self->category_mapping;
+    my @services = map {
+        my $name = $services->{$_}{name};
+        my $service = Open311::Endpoint::Service::UKCouncil::Ezytreev->new(
+            service_name => $name,
+            service_code => $_,
+            description => $name,
+            $services->{$_}{group} ? (group => $services->{$_}{group}) : (),
+      );
+    } keys %$services;
     return @services;
 }
 
