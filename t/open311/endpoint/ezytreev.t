@@ -4,12 +4,16 @@ use warnings;
 use Test::More;
 use Test::MockModule;
 use Test::LongString;
+use JSON::MaybeXS;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
 my $ezytreev_mock = Test::MockModule->new('Open311::Endpoint::Integration::Ezytreev');
-$ezytreev_mock->mock(config => sub {
+$ezytreev_mock->mock(endpoint_config => sub {
     {
+        endpoint_url => 'http://example.com/',
+        username => 'user',
+        password => 'pass',
         category_mapping => {
             FallenTree => {
                 name => "Fallen/damaged tree or branch",
@@ -160,6 +164,38 @@ subtest "GET service" => sub {
   <service_code>FallenTree</service_code>
 </service_definition>
 XML
+};
+
+my $lwp = Test::MockModule->new('LWP::UserAgent');
+$lwp->mock(request => sub {
+    my ($ua, $req) = @_;
+    return HTTP::Response->new(200, 'OK', [], '1001') if $req->uri =~ /UpdateEnquiry/;
+});
+
+subtest "POST service request OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'FallenTree',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[easting]' => 100,
+        'attribute[northing]' => 100,
+        'attribute[fixmystreet_id]' => 1001,
+        'attribute[description]' => "",
+        'attribute[report_url]' => "",
+        'attribute[title]' => "",
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => "ezytreev-1001"
+        } ], 'correct json returned';
 };
 
 done_testing;

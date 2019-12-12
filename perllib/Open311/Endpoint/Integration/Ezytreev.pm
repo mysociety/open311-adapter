@@ -1,12 +1,31 @@
 package Open311::Endpoint::Integration::Ezytreev;
 
 use Moo;
+use LWP::UserAgent;
+use HTTP::Request::Common;
+use JSON::MaybeXS;
+use Path::Tiny;
+use YAML::XS qw(LoadFile);
+
 use Integrations::Ezytreev;
 use Open311::Endpoint::Service::UKCouncil::Ezytreev;
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
-with 'Open311::Endpoint::Role::ConfigFile';
+with 'Role::Logger';
+
+has endpoint_config => ( is => 'lazy' );
+
+sub _build_endpoint_config {
+    my $self = shift;
+    my $config_file = path(__FILE__)->parent(5)->realpath->child('conf/council-' . $self->jurisdiction_id . '.yml');
+    my $conf = LoadFile($config_file);
+    return $conf;
+}
+
+has jurisdiction_id => (
+    is => 'ro',
+);
 
 has integration_class => (
     is => 'ro',
@@ -20,7 +39,7 @@ has ezytreev => (
 
 has category_mapping => (
     is => 'lazy',
-    default => sub { $_[0]->config->{category_mapping} }
+    default => sub { $_[0]->endpoint_config->{category_mapping} }
 );
 
 sub services {
@@ -40,7 +59,42 @@ sub services {
 
 sub post_service_request {
     my ($self, $service, $args) = @_;
-    die "abstract method post_service_request not implemented";
+    die "No such service" unless $service;
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+    my $url = $self->endpoint_config->{endpoint_url} . "UpdateEnquiry";
+
+    my $body = {
+        CRMXRef => "fms:" . $args->{attributes}->{fixmystreet_id},
+        EnquiryDescription => $args->{description},
+        Forename => $args->{first_name},
+        Surname => $args->{last_name},
+        Category => "T",  # Always T, the actual category goes into EnquiryType below
+        EnquiryType => $args->{service_code},
+        TelHome => $args->{phone},
+        EmailAddress => $args->{email},
+        EnquiryOX => $args->{attributes}->{easting},
+        EnquiryOY => $args->{attributes}->{northing},
+        TreeCodes => $args->{attributes}->{tree_code},
+    };
+    my $request = POST $url,
+        'Content-Type' => 'application/json',
+        Accept => 'application/json',
+        Content => encode_json($body);
+    $request->authorization_basic(
+        $self->endpoint_config->{username}, $self->endpoint_config->{password});
+
+    my $response = $ua->request($request);
+    if ($response->is_success) {
+        $self->logger->debug($response->content);
+        # Enquiry ID is the body of the response
+        my $enquiry_id = $response->content;
+        $enquiry_id =~ s/^\s+|\s+$//g;
+        return $self->new_request(
+            service_request_id => "ezytreev-" . $enquiry_id,
+        );
+    } else {
+        die "Failed to send report to ezytreev";
+    }
 }
 
 sub get_service_requests {
