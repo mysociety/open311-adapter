@@ -6,6 +6,8 @@ use HTTP::Request::Common;
 use JSON::MaybeXS;
 use Path::Tiny;
 use YAML::XS qw(LoadFile);
+use Digest::MD5 qw(md5_hex);
+use DateTime::Format::W3CDTF;
 
 use Integrations::Ezytreev;
 use Open311::Endpoint::Service::UKCouncil::Ezytreev;
@@ -40,6 +42,11 @@ has ezytreev => (
 has category_mapping => (
     is => 'lazy',
     default => sub { $_[0]->endpoint_config->{category_mapping} }
+);
+
+has reverse_status_mapping => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{reverse_status_mapping} }
 );
 
 sub services {
@@ -97,9 +104,48 @@ sub post_service_request {
     }
 }
 
-sub get_service_requests {
+sub get_service_request_updates {
     my ($self, $args) = @_;
-    die "abstract method get_service_requests not implemented";
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+    my $url = $self->endpoint_config->{endpoint_url} . "GetEnquiryChanges";
+    my $request = GET $url, Accept => 'application/json';
+    $request->authorization_basic(
+        $self->endpoint_config->{username}, $self->endpoint_config->{password});
+
+    my $response = $ua->request($request);
+    if ($response->is_success) {
+        $self->logger->debug($response->content);
+        my @updates;
+        my $enquiry_changes = decode_json($response->content);
+        my $w3c = DateTime::Format::W3CDTF->new;
+        foreach my $enquiry (@$enquiry_changes) {
+            # Ignore updates on enquiries that weren't created by FMS
+            next unless substr($enquiry->{CRMXRef}, 0, 4) eq 'fms:';
+            my $status = $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}};
+            if (!$status) {
+                warn "Missing reverse status mapping for EnquiryStatus Code $enquiry->{EnquiryStatusCode} (EnquiryNumber $enquiry->{EnqRef})\n";
+                $status = "open";
+            }
+            my $enquiry_id = $enquiry->{EnqRef};
+            my $digest = md5_hex($enquiry->{EnquiryStatusCode} . '_' . $enquiry->{StatusDate});
+            my $enquiry_date = substr($enquiry->{StatusDate}, 0, 10);
+            my $dt = $w3c->parse_datetime($enquiry_date . "T" . $enquiry->{StatusTime} . "Z");
+            my $status_description = $enquiry->{EnquiryStatusDescription};
+            $status_description =~ s/^\s+|\s+$//g;
+            my %update_args = (
+                status => $status,
+                update_id => $digest,
+                service_request_id => "ezytreev-" . $enquiry->{EnqRef},
+                description => $status_description,
+                updated_datetime => $dt,
+            );
+
+            push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(%update_args);
+        }
+        return @updates;
+    } else {
+        die "Failed to get report updates from ezytreev";
+    }
 }
 
 sub get_service_request {
