@@ -8,6 +8,7 @@ use Path::Tiny;
 use YAML::XS qw(LoadFile);
 use Digest::MD5 qw(md5_hex);
 use DateTime::Format::W3CDTF;
+use MIME::Base64 qw(encode_base64);
 
 use Integrations::Ezytreev;
 use Open311::Endpoint::Service::UKCouncil::Ezytreev;
@@ -74,9 +75,10 @@ sub post_service_request {
     die "No such service" unless $service;
     my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
     my $url = $self->endpoint_config->{endpoint_url} . "UpdateEnquiry";
+    my $crm_xref = "fms:" . $args->{attributes}->{fixmystreet_id};
 
     my $body = {
-        CRMXRef => "fms:" . $args->{attributes}->{fixmystreet_id},
+        CRMXRef => $crm_xref,
         EnquiryDescription => $args->{description},
         Forename => $args->{first_name},
         Surname => $args->{last_name},
@@ -101,6 +103,29 @@ sub post_service_request {
         # Enquiry ID is the body of the response
         my $enquiry_id = $response->content;
         $enquiry_id =~ s/^\s+|\s+$//g;
+        my $upload_url = $self->endpoint_config->{endpoint_url} . "UploadEnquiryDocumentBase64";
+
+        foreach my $media_url (@{$args->{media_url}}) {
+            my $photo = $ua->get($media_url);
+            my $body = {
+                CRMXRef => $crm_xref,
+                FileName => $photo->filename,
+                Description => "Photo from problem reporter.",
+                FileBase64 => encode_base64($photo->content),
+            };
+            my $request = POST $upload_url,
+                'Content-Type' => 'application/json',
+                Accept => 'application/json',
+                Content => encode_json($body);
+            $request->authorization_basic(
+                $self->endpoint_config->{username}, $self->endpoint_config->{password});
+            my $response = $ua->request($request);
+            if (!$response->is_success) {
+                $self->logger->warn("Error sending photo: $media_url");
+                next;
+            }
+        }
+
         return $self->new_request(
             service_request_id => "ezytreev-" . $enquiry_id,
         );
