@@ -41,6 +41,7 @@ $endpoint = Open311::Endpoint::Integration::UK::Bexley->new;
     'Open311::Endpoint::Integration::UK::Bexley::Symology' => 'bexley_symology',
     'Open311::Endpoint::Integration::UK::Bexley::ConfirmGrounds' => 'bexley_confirm_grounds',
     'Open311::Endpoint::Integration::UK::Bexley::ConfirmTrees' => 'bexley_confirm_trees',
+    'Open311::Endpoint::Integration::UK::Bexley::Uniform' => 'bexley_uniform',
 );
 
 foreach ($endpoint->plugins) {
