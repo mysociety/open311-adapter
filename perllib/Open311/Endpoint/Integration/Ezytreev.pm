@@ -44,6 +44,11 @@ has category_mapping => (
     default => sub { $_[0]->endpoint_config->{category_mapping} }
 );
 
+has forward_status_mapping => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{forward_status_mapping} }
+);
+
 has reverse_status_mapping => (
     is => 'lazy',
     default => sub { $_[0]->endpoint_config->{reverse_status_mapping} }
@@ -148,9 +153,41 @@ sub get_service_request_updates {
     }
 }
 
-sub get_service_request {
-    my ($self, $service_request_id, $args) = @_;
-    die "abstract method get_service_request not implemented";
+sub post_service_request_update {
+    my ($self, $args) = @_;
+
+    my $status_code = $self->forward_status_mapping->{$args->{status}};
+
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+    my $url = $self->endpoint_config->{endpoint_url} . "UpdateEnquiry";
+
+    my $body = {
+        CRMXRef => "fms:" . $args->{service_request_id_ext},
+        EnquiryStatusCode => $status_code,
+        StatusInfo => $args->{description},
+    };
+
+    my $request = POST $url,
+        'Content-Type' => 'application/json',
+        Accept => 'application/json',
+        Content => encode_json($body);
+    $request->authorization_basic(
+        $self->endpoint_config->{username}, $self->endpoint_config->{password});
+
+    my $response = $ua->request($request);
+    if ($response->is_success) {
+        $self->logger->debug($response->content);
+        # Enquiry ID is the body of the response
+        my $enquiry_id = $response->content;
+        $enquiry_id =~ s/^\s+|\s+$//g;
+        return Open311::Endpoint::Service::Request::Update::mySociety->new(
+            service_request_id => "ezytreev-" . $response->content,
+            status => lc $args->{status},
+            update_id => $args->{update_id},
+        );
+    } else {
+        die "Failed to send update to ezytreev";
+    }
 }
 
 __PACKAGE__->run_if_script;
