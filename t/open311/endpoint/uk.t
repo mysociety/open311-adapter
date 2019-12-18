@@ -18,7 +18,6 @@ my %config_filenames = (
     'Open311::Endpoint::Integration::UK::Lincolnshire' => 'lincolnshire_confirm',
     'Open311::Endpoint::Integration::UK::Northamptonshire' => 'northamptonshire_alloy',
     'Open311::Endpoint::Integration::UK::Oxfordshire' => 'oxfordshire',
-    'Open311::Endpoint::Integration::UK::Peterborough' => 'peterborough_confirm',
     'Open311::Endpoint::Integration::UK::Rutland' => 'rutland',
 );
 
@@ -42,6 +41,23 @@ $endpoint = Open311::Endpoint::Integration::UK::Bexley->new;
     'Open311::Endpoint::Integration::UK::Bexley::ConfirmGrounds' => 'bexley_confirm_grounds',
     'Open311::Endpoint::Integration::UK::Bexley::ConfirmTrees' => 'bexley_confirm_trees',
     'Open311::Endpoint::Integration::UK::Bexley::Uniform' => 'bexley_uniform',
+);
+
+foreach ($endpoint->plugins) {
+    my $integ = $_->get_integration;
+    my $name = delete $config_filenames{ref($_)};
+    is $integ->config_filename, $name;
+    is basename($integ->config_file), "council-$name.yml";
+}
+
+is_deeply \%config_filenames, {};
+
+use_ok('Open311::Endpoint::Integration::UK::Peterborough');
+
+$endpoint = Open311::Endpoint::Integration::UK::Peterborough->new;
+
+%config_filenames = (
+    'Open311::Endpoint::Integration::UK::Peterborough::Confirm' => 'peterborough_confirm',
 );
 
 foreach ($endpoint->plugins) {

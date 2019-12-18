@@ -1,12 +1,20 @@
 package Open311::Endpoint::Integration::UK::Peterborough;
 
 use Moo;
-extends 'Open311::Endpoint::Integration::Confirm';
+extends 'Open311::Endpoint::Integration::Multi';
 
-around BUILDARGS => sub {
-    my ($orig, $class, %args) = @_;
-    $args{jurisdiction_id} = 'peterborough_confirm';
-    return $class->$orig(%args);
-};
+use Module::Pluggable
+    search_path => ['Open311::Endpoint::Integration::UK::Peterborough'],
+    instantiate => 'new';
 
-1;
+has jurisdiction_id => (
+    is => 'ro',
+    default => 'peterborough',
+);
+
+has integration_without_prefix => (
+    is => 'ro',
+    default => 'Confirm',
+);
+
+__PACKAGE__->run_if_script;
