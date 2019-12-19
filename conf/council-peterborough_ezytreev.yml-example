@@ -1,0 +1,10 @@
+endpoint_url: ""
+username: ""
+password: ""
+forward_status_mapping: {}
+reverse_status_mapping: {}
+category_mapping:
+  categoryA:
+    name: "Category A"
+  categoryB:
+    name: "Category B"
