@@ -33,6 +33,10 @@ has ezytreev => (
     default => sub { Integrations::Ezytreev->new(config_filename => $_[0]->jurisdiction_id) }
 );
 
+sub get_integration {
+    return $_[0]->ezytreev;
+}
+
 has category_mapping => (
     is => 'lazy',
     default => sub { $_[0]->endpoint_config->{category_mapping} }
