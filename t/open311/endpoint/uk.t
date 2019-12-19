@@ -58,6 +58,7 @@ $endpoint = Open311::Endpoint::Integration::UK::Peterborough->new;
 
 %config_filenames = (
     'Open311::Endpoint::Integration::UK::Peterborough::Confirm' => 'peterborough_confirm',
+    'Open311::Endpoint::Integration::UK::Peterborough::Ezytreev' => 'peterborough_ezytreev',
 );
 
 foreach ($endpoint->plugins) {
