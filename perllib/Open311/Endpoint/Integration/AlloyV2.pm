@@ -99,6 +99,22 @@ has service_whitelist => (
     }
 );
 
+has reverse_whitelist => (
+    is => 'lazy',
+    default => sub {
+        my $self = shift;
+        my %reverse_whitelist;
+        for my $group (sort keys %{ $self->service_whitelist }) {
+            my $whitelist = $self->service_whitelist->{$group};
+            for my $subcategory (sort keys %{ $whitelist }) {
+                next if $subcategory eq 'resourceId';
+                $reverse_whitelist{$subcategory} = $group;
+            }
+        }
+        return \%reverse_whitelist;
+    }
+);
+
 sub services {
     my $self = shift;
 
@@ -530,6 +546,12 @@ sub get_service_requests {
             next;
         }
 
+        my $cat_service = $self->service($category);
+        unless ($cat_service) {
+            warn "No service found for defect $request->{itemId}, category $category in " . $self->jurisdiction_id . "\n";
+            next;
+        }
+
         $args{latlong} = $self->get_latlong_from_request($request);
 
         unless ($args{latlong}) {
@@ -715,7 +737,11 @@ sub get_defect_category {
         $category = $mapping->{types}->{$type} if $type && $mapping->{types}->{$type};
     }
 
-    return $category;
+    return '' unless $category;
+
+    my $group = $self->reverse_whitelist->{$category} || '';
+
+    return "${group}_$category";
 }
 
 sub process_attributes {
