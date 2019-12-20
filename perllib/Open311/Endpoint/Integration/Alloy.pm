@@ -468,8 +468,15 @@ sub get_service_requests {
         next if $has_enquiry_parent;
 
         my $category = $self->get_defect_category( $request );
+        (my $service_name = $category) =~ s/^.*_//;
         unless ($category) {
             warn "No category found for defect $request->{resourceId}, source type $request->{sourceTypeId} in " . $self->jurisdiction_id . "\n";
+            next;
+        }
+
+        my $category_service = $self->service($category);
+        unless ($category_service) {
+            warn "No matching service for $category for defect $request->{resourceId} in " . $self->jurisdiction_id . "\n";
             next;
         }
 
@@ -501,7 +508,7 @@ sub get_service_requests {
         next if $has_fixmystreet_id;
 
         my $service = Open311::Endpoint::Service->new(
-            service_name => $category,
+            service_name => $service_name,
             service_code => $category,
         );
         $args{title} = $request->{title};
@@ -695,7 +702,19 @@ sub get_defect_category {
         $category = $mapping->{types}->{$type} if $mapping->{types}->{$type};
     }
 
-    return $category;
+    return '' unless $category;
+
+    my %reverse_whitelist;
+    for my $group (sort keys %{ $self->service_whitelist }) {
+        my $whitelist = $self->service_whitelist->{$group};
+        for my $subcategory (sort keys %{ $whitelist }) {
+            next if $subcategory eq 'resourceId';
+            $reverse_whitelist{$subcategory} = $group;
+        }
+    }
+
+    my $cat_group = $reverse_whitelist{$category} || '';
+    return $cat_group . '_' . $category;
 }
 
 sub process_attributes {

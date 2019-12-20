@@ -59,6 +59,7 @@ use Test::More;
 use Test::LongString;
 use Test::MockModule;
 use Test::MockTime ':all';
+use Test::Warn;
 use Encode;
 
 use Open311::Endpoint;
@@ -433,9 +434,19 @@ This is an update"
 
 subtest "check fetch problem" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
-    my $res = $endpoint->run_test_request(
-      GET => '/requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
-    );
+    my $res;
+    warnings_like {
+        $res = $endpoint->run_test_request(
+          GET => '/requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
+        );
+    }
+    [
+        qr/No category found for defect 4947502, source type 1000807 in alloy/,
+        qr{No matching service for _Stile-Damaged/Missing for defect 4947503},
+        qr/No category found for defect 4947596.*1000815 in alloy.*/,
+        qr/No category found for defect 4947670.*1000815 in alloy.*/,
+    ],
+    "warning issued for missing category";
 
     my $sent = pop @sent;
     ok $res->is_success, 'valid request'
@@ -445,7 +456,7 @@ subtest "check fetch problem" => sub {
     [{
       long => 1,
       requested_datetime => "2019-01-02T11:29:16Z",
-      service_code => "Shelter Damaged",
+      service_code => "Bus Stops_Shelter Damaged",
       updated_datetime => "2019-01-02T11:29:16Z",
       service_name => "Shelter Damaged",
       address_id => "",
@@ -470,8 +481,7 @@ subtest "check fetch problem" => sub {
       requested_datetime => "2019-01-02T14:44:53Z",
       long => 1,
       updated_datetime => "2019-01-02T14:44:53Z",
-      service_code => "Grit Bin - damaged/replacement",
-      service_code => "Grit Bin - empty/refill"
+      service_code => "Winter_Grit Bin - empty/refill",
    }], "correct json returned";
 };
 
@@ -547,6 +557,24 @@ subtest "check fetch service description" => sub {
         group => "Kerbs",
         service_name => "Missing",
         description => "Missing"
+    },
+    {
+        service_code => 'Winter_Grit Bin - damaged/replacement',
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        group => "Winter",
+        service_name => "Grit Bin - damaged/replacement",
+        description => "Grit Bin - damaged/replacement"
+    },
+    {
+        service_code => 'Winter_Grit Bin - empty/refill',
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        group => "Winter",
+        service_name => "Grit Bin - empty/refill",
+        description => "Grit Bin - empty/refill"
     } ], 'correct json returned';
 };
 
