@@ -62,6 +62,11 @@
       "Damaged/Loose": { "emergency": 0 },
       "Missing": { "emergency": 1 },
     },
+    "Winter": {
+      "resourceId": 6183645,
+      "Grit Bin - empty/refill": { "emergency": 0 },
+      "Grit Bin - damaged/replacement": { "emergency": 0 },
+    },
   },
 
   "emergency_text": "This is an emergency",
@@ -165,7 +170,7 @@
     1000813: { "default": 'Damaged/Loose', "types": {}, "asset_types": {} },
     1000822: { "default": 'Damaged / Missing / Facing Wrong Way', "types": {}, "asset_types": {} },
     1000818: { "default": 'Road Markings - Worn/Faded', "types": {}, "asset_types": {} },
-    1001028: { "default": 'Stile-Damaged/Missing', "types": {}, "asset_types": {} },
+    1000808: { "default": 'Stile-Damaged/Missing', "types": {}, "asset_types": {} },
     1001057: { "default": 'Damaged Speed Humps', "types": {}, "asset_types": {} },
     1000949: { "default": 'Fallen Tree', "types": {}, "asset_types": {} },
     1001035: { "default": 'Sign/Waymarking - Damaged/Missing', "types": {}, "asset_types": {} },
