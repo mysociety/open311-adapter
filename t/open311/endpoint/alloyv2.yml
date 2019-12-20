@@ -33,6 +33,11 @@
       "Damaged/Loose": { "emergency": 0 },
       "Missing": { "emergency": 1 },
     },
+    "Winter": {
+      "resourceId": 6183645,
+      "Grit Bin - empty/refill": { "emergency": 0 },
+      "Grit Bin - damaged/replacement": { "emergency": 1 },
+    },
   },
 
         "emergency_text": "This is an emergency",
