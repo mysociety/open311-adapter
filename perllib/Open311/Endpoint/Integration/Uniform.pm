@@ -233,7 +233,8 @@ sub get_service_request_updates {
     my $end_time = $w3c->parse_datetime($args->{end_date});
 
     $self->logon;
-    my $result = $self->get_integration->GetChangedServiceRequestRefVals($args->{start_date});
+    my $result = eval { $self->get_integration->GetChangedServiceRequestRefVals($args->{start_date}) };
+    return unless $result;
     $result = $result->method;
     return unless $result;
 
@@ -250,7 +251,8 @@ sub get_service_request_updates {
     my @updates;
     foreach (@$requests) {
         # RequestType is GENERAL
-        my $request = $self->_get_request($_->{ReferenceValue});
+        my $request = eval { $self->_get_request($_->{ReferenceValue}) };
+        next unless $request;
         my $code = $request->{AdministrationDetails}->{StatusCode} || '';
         my $closing_code = $request->{AdministrationDetails}->{ClosingActionCode} || '';
 
@@ -279,8 +281,8 @@ sub _get_request {
     my ($self, $id) = @_;
     my $request = $self->get_integration->GetGeneralServiceRequestByReferenceValue($id);
     $request = $request->result;
-    $self->log_and_die("No such request") unless $request;
-    return $request;
+    return $request if ref $request;
+    $self->logger->error('No such request');
 }
 
 sub _get_visits {
