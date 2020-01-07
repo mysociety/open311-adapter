@@ -8,19 +8,22 @@ use JSON::MaybeXS;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
-my $ezytreev_mock = Test::MockModule->new('Open311::Endpoint::Integration::Ezytreev');
-$ezytreev_mock->mock(endpoint_config => sub {
-    {
-        endpoint_url => 'http://example.com/',
-        username => 'user',
-        password => 'pass',
-        category_mapping => {
-            FallenTree => {
-                name => "Fallen/damaged tree or branch",
-            },
+my $endpoint_config = {
+    endpoint_url => 'http://example.com/',
+    username => 'user',
+    password => 'pass',
+    category_mapping => {
+        FallenTree => {
+            name => "Fallen/damaged tree or branch",
         },
-    }
-});
+    },
+};
+
+my $ezytreev_open311_mock = Test::MockModule->new('Open311::Endpoint::Integration::Ezytreev');
+$ezytreev_open311_mock->mock(endpoint_config => sub { $endpoint_config });
+
+my $ezytreev_mock = Test::MockModule->new('Integrations::Ezytreev');
+$ezytreev_mock->mock(config => sub { $endpoint_config });
 
 use Open311::Endpoint::Integration::Ezytreev;
 
@@ -157,6 +160,16 @@ subtest "GET service" => sub {
       <datatype_description></datatype_description>
       <description>Closest address</description>
       <order>10</order>
+      <required>false</required>
+      <variable>true</variable>
+    </attribute>
+    <attribute>
+      <automated>hidden_field</automated>
+      <code>tree_code</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>Tree code</description>
+      <order>11</order>
       <required>false</required>
       <variable>true</variable>
     </attribute>
