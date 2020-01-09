@@ -41,8 +41,11 @@ my $endpoint_config = {
         },
     },
     reverse_status_mapping => {
-        T5 => 'investigating'
-    }
+        T5 => 'investigating',
+    },
+    forward_status_mapping => {
+        FIXED => 'T8',
+    },
 };
 
 my $ezytreev_open311_mock = Test::MockModule->new('Open311::Endpoint::Integration::Ezytreev');
@@ -249,6 +252,25 @@ subtest 'GET service request updates OK' => sub {
                 updated_datetime => "2020-01-09T12:00:00Z",
             }
         ], 'correct json returned';
+};
+
+subtest 'POST service request update OK' => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        status => 'FIXED',
+        service_request_id_ext => '571',
+        description => '[Customer FMS update] Test update',
+        update_id => '42',
+        updated_datetime => '2020-01-09T12:00:00Z',
+        api_key => 'test',
+        service_request_id => 'ezytreev-1001',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [{ update_id => '42' }],
+        'correct json returned';
 };
 
 done_testing;
