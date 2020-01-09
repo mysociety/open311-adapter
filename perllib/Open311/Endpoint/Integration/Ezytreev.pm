@@ -1,16 +1,14 @@
 package Open311::Endpoint::Integration::Ezytreev;
 
-use LWP::UserAgent;
-use HTTP::Request::Common;
 use JSON::MaybeXS;
 use Path::Tiny;
 use YAML::XS qw(LoadFile);
 use Digest::MD5 qw(md5_hex);
 use DateTime::Format::W3CDTF;
-use MIME::Base64 qw(encode_base64);
 
 use Integrations::Ezytreev;
 use Open311::Endpoint::Service::UKCouncil::Ezytreev;
+use Open311::Endpoint::Service::Request::Update::mySociety;
 
 use Moo;
 extends 'Open311::Endpoint';
@@ -126,7 +124,6 @@ sub get_service_request_updates {
             warn "Missing reverse status mapping for EnquiryStatus Code $enquiry->{EnquiryStatusCode} (EnquiryNumber $enquiry->{EnqRef})\n";
             $status = "open";
         }
-        my $enquiry_id = $enquiry->{EnqRef};
 
         # TODO: Put this back once ezytreev have fixed the issue with
         # the time always being midnight.

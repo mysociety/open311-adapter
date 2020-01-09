@@ -4,9 +4,32 @@ use warnings;
 use Test::More;
 use Test::MockModule;
 use Test::LongString;
+use Test::MockTime ':all';
 use JSON::MaybeXS;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
+
+set_fixed_time('2020-01-09T12:00:00Z');
+
+my $lwp = Test::MockModule->new('LWP::UserAgent');
+$lwp->mock(request => sub {
+    my ($ua, $req) = @_;
+    if ($req->uri =~ /UpdateEnquiry/) {
+        return HTTP::Response->new(200, 'OK', [], '1001');
+    } elsif($req->uri =~ /GetEnquiryChanges/) {
+        return HTTP::Response->new(200, 'OK', [], encode_json(
+            [
+                {
+                    CRMXRef => 'fms:571             ',
+                    EnquiryStatusCode => 'T5',
+                    EnqRef => '1001',
+                    StatusDate => '2020-01-09T00:00:00',
+                    EnquiryStatusDescription => 'Works ordered            ',
+                }
+            ]
+        ));
+    }
+});
 
 my $endpoint_config = {
     endpoint_url => 'http://example.com/',
@@ -17,6 +40,9 @@ my $endpoint_config = {
             name => "Fallen/damaged tree or branch",
         },
     },
+    reverse_status_mapping => {
+        T5 => 'investigating'
+    }
 };
 
 my $ezytreev_open311_mock = Test::MockModule->new('Open311::Endpoint::Integration::Ezytreev');
@@ -179,12 +205,6 @@ subtest "GET service" => sub {
 XML
 };
 
-my $lwp = Test::MockModule->new('LWP::UserAgent');
-$lwp->mock(request => sub {
-    my ($ua, $req) = @_;
-    return HTTP::Response->new(200, 'OK', [], '1001') if $req->uri =~ /UpdateEnquiry/;
-});
-
 subtest "POST service request OK" => sub {
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
@@ -209,6 +229,26 @@ subtest "POST service request OK" => sub {
         [ {
             "service_request_id" => "ezytreev-1001"
         } ], 'correct json returned';
+};
+
+subtest 'GET service request updates OK' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json'
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [
+            {
+                media_url => '',
+                status => "investigating",
+                update_id => "af10aee6415302e1cb8379be2bf3faa5",
+                description => "Works ordered",
+                service_request_id => "ezytreev-1001",
+                updated_datetime => "2020-01-09T12:00:00Z",
+            }
+        ], 'correct json returned';
 };
 
 done_testing;
