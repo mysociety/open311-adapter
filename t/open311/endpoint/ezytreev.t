@@ -23,7 +23,7 @@ $lwp->mock(request => sub {
                     CRMXRef => 'fms:571             ',
                     EnquiryStatusCode => 'T5',
                     EnqRef => '1001',
-                    StatusDate => '2020-01-09T00:00:00',
+                    StatusDate => '2020-01-09T11:30:42Z',
                     EnquiryStatusDescription => 'Works ordered            ',
                 }
             ]
@@ -246,10 +246,10 @@ subtest 'GET service request updates OK' => sub {
             {
                 media_url => '',
                 status => "investigating",
-                update_id => "af10aee6415302e1cb8379be2bf3faa5",
+                update_id => "01d1c79737b6d3dea4809ed68d4eeac7",
                 description => "Works ordered",
                 service_request_id => "ezytreev-1001",
-                updated_datetime => "2020-01-09T12:00:00Z",
+                updated_datetime => "2020-01-09T11:30:42Z",
             }
         ], 'correct json returned';
 };

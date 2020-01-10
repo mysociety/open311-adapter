@@ -124,13 +124,8 @@ sub get_service_request_updates {
             warn "Missing reverse status mapping for EnquiryStatus Code $enquiry->{EnquiryStatusCode} (EnquiryNumber $enquiry->{EnqRef})\n";
             $status = "open";
         }
-
-        # TODO: Put this back once ezytreev have fixed the issue with
-        # the time always being midnight.
-        # my $dt = $w3c->parse_datetime($enquiry->{StatusDate} . "Z");
-        my $dt = DateTime->now();
-
-        my $digest = md5_hex($enquiry->{EnquiryStatusCode} . '_' . $dt);
+        my $dt = $w3c->parse_datetime($enquiry->{StatusDate});
+        my $digest = md5_hex($enquiry->{EnqRef} . $enquiry->{EnquiryStatusCode} . $dt);
         my $status_description = $enquiry->{EnquiryStatusDescription};
         $status_description =~ s/^\s+|\s+$//g;
         my %update_args = (
