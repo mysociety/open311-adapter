@@ -36,8 +36,10 @@ my $endpoint_config = {
     username => 'user',
     password => 'pass',
     category_mapping => {
-        FallenTree => {
+        fallen_tree => {
             name => "Fallen/damaged tree or branch",
+            group => "Trees",
+            code => "FallenTree",
         },
         TreeDebris => {
             name => "Tree debris",
@@ -73,7 +75,7 @@ subtest "GET services" => sub {
 <services>
   <service>
     <description>Fallen/damaged tree or branch</description>
-    <group></group>
+    <group>Trees</group>
     <keywords></keywords>
     <metadata>true</metadata>
     <service_code>FallenTree</service_code>

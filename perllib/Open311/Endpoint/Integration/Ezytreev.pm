@@ -52,12 +52,13 @@ sub services {
     my $self = shift;
     my $services = $self->category_mapping;
     my @services = map {
-        my $name = $services->{$_}{name};
+        my $spec = $services->{$_};
+        my $name = $spec->{name};
         my $service = Open311::Endpoint::Service::UKCouncil::Ezytreev->new(
             service_name => $name,
-            service_code => $_,
+            service_code => $spec->{code},
             description => $name,
-            $services->{$_}{group} ? (group => $services->{$_}{group}) : (),
+            $spec->{group} ? (group => $spec->{group}) : (),
       );
     } sort keys %$services;
     return @services;
