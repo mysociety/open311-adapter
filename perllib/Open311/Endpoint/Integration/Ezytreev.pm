@@ -121,7 +121,8 @@ sub get_service_request_updates {
         next unless substr($enquiry->{CRMXRef}, 0, 4) eq 'fms:';
         my $status = $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}};
         if (!$status) {
-            warn "Missing reverse status mapping for EnquiryStatus Code $enquiry->{EnquiryStatusCode} (EnquiryNumber $enquiry->{EnqRef})\n";
+            $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code " .
+                "$enquiry->{EnquiryStatusCode} (EnquiryNumber $enquiry->{EnqRef})\n");
             $status = "open";
         }
         my $dt = $w3c->parse_datetime($enquiry->{StatusDate});
@@ -155,7 +156,8 @@ sub post_service_request_update {
     if ($status_code) {
         $body->{EnquiryStatusCode} = $status_code;
     } else {
-        warn "Missing forward status mapping for $args->{status} (service_request_id_ext: $args->{service_request_id_ext})\n";
+        $self->logger->warn("Missing forward status mapping for $args->{status} " .
+            "(service_request_id_ext: $args->{service_request_id_ext})\n");
     }
 
     my $response = $self->ezytreev->update_enquiry($body);
