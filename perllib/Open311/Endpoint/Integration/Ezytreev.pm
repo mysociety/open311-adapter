@@ -162,6 +162,19 @@ sub post_service_request_update {
 
     die "Failed to send update to ezytreev" unless $response->is_success;
 
+    # Now deal with photos.
+    foreach my $media_url (@{$args->{media_url}}) {
+        my $response = $self->ezytreev->upload_enquiry_document({
+            crm_xref => $crm_xref,
+            media_url => $media_url,
+        });
+
+        if (!$response->is_success) {
+            $self->logger->warn("Error sending photo: $media_url");
+            next;
+        }
+    }
+
     # Enquiry ID is the body of the response
     my $enquiry_id = $response->content;
     $enquiry_id =~ s/^\s+|\s+$//g;
