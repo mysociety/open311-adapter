@@ -143,13 +143,23 @@ sub get_service_request_updates {
 sub post_service_request_update {
     my ($self, $args) = @_;
 
+    my $crm_xref = "fms:" . $args->{service_request_id_ext};
+
+    my $body = {
+        CRMXRef => $crm_xref,
+        StatusInfo => $args->{description},
+    };
+
     my $status_code = $self->forward_status_mapping->{$args->{status}};
 
-    my $response = $self->ezytreev->update_enquiry({
-        CRMXRef => "fms:" . $args->{service_request_id_ext},
-        EnquiryStatusCode => $status_code,
-        StatusInfo => $args->{description},
-    });
+    if ($status_code) {
+        $body->{EnquiryStatusCode} = $status_code;
+    } else {
+        warn "Missing forward status mapping for $args->{status} (service_request_id_ext: $args->{service_request_id_ext})\n";
+    }
+
+    my $response = $self->ezytreev->update_enquiry($body);
+
     die "Failed to send update to ezytreev" unless $response->is_success;
 
     # Enquiry ID is the body of the response
