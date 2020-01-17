@@ -44,6 +44,46 @@ sub process_attributes {
 
 }
 
+sub get_request_description {
+    my ($self, $desc, $req) = @_;
+
+    my $cat = $self->get_defect_category($req);
+    $cat =~ s/^.*_//;
+
+    my $priority;
+    my @attributes = @{$req->{values}};
+
+    for my $att (@attributes) {
+        if ($att->{attributeCode} =~ /PRIORITIES/ ) {
+            $priority = $att->{value}->{values}->[0]->{resourceId};
+        }
+    }
+
+    if ($priority) {
+        my $priority_details = $self->alloy->api_call(
+            call => "resource/$priority"
+        );
+
+        my $timescale = $priority_details->{title};
+        $timescale =~ s/P\d+, P\d+ - (.*)/$1/;
+
+        my %reverse_whitelist;
+        for my $group (sort keys %{ $self->service_whitelist }) {
+            my $whitelist = $self->service_whitelist->{$group};
+            for my $subcategory (sort keys %{ $whitelist }) {
+                next if $subcategory eq 'resourceId';
+                $reverse_whitelist{$subcategory} = $group;
+            }
+        }
+
+        my $group = $reverse_whitelist{$cat} || '';
+
+        $desc = "Our Inspector has identified a $group defect at this location and has issued a works ticket to repair under the $cat category. We aim to complete this work within the next $timescale.";
+    }
+
+    return $desc;
+}
+
 sub _find_or_create_contact {
     my ($self, $args) = @_;
 

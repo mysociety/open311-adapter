@@ -524,6 +524,8 @@ sub get_service_requests {
 
         next if $has_fixmystreet_id;
 
+        $args{description} = $self->get_request_description($args{description}, $request);
+
         my $service = Open311::Endpoint::Service->new(
             service_name => $service_name,
             service_code => $category,
@@ -692,6 +694,12 @@ sub get_latlong_from_request {
     }
 
     return $latlong;
+}
+
+sub get_request_description {
+    my ($self, $desc) = @_;
+
+    return $desc;
 }
 
 sub is_ignored_category {
