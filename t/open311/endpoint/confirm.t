@@ -10,7 +10,7 @@ use Moo;
 extends 'Open311::Endpoint::Integration::Confirm';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
-    $args{jurisdiction_id} = 'dummy';
+    $args{jurisdiction_id} = 'confirm_dummy';
     $args{config_file} = path(__FILE__)->sibling("confirm.yml")->stringify;
     return $class->$orig(%args);
 };
@@ -22,12 +22,12 @@ use Moo;
 extends 'Open311::Endpoint::Integration::Confirm';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
-    $args{jurisdiction_id} = 'dummy_omit_logged';
+    $args{jurisdiction_id} = 'confirm_dummy_omit_logged';
     $args{config_file} = path(__FILE__)->sibling("confirm_omit_logged.yml")->stringify;
     return $class->$orig(%args);
 };
 has integration_class => (is => 'ro', default => 'Integrations::Confirm::Dummy');
-sub jurisdiction_id { return 'dummy_omit_logged'; }
+sub jurisdiction_id { return 'confirm_dummy_omit_logged'; }
 
 package Open311::Endpoint::Integration::UK::DummyPrivate;
 use Path::Tiny;
@@ -35,7 +35,7 @@ use Moo;
 extends 'Open311::Endpoint::Integration::Confirm';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
-    $args{jurisdiction_id} = 'dummy_private';
+    $args{jurisdiction_id} = 'confirm_dummy_private';
     $args{config_file} = path(__FILE__)->sibling("confirm_private.yml")->stringify;
     return $class->$orig(%args);
 };
@@ -47,7 +47,7 @@ use Moo;
 extends 'Open311::Endpoint::Integration::Confirm';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
-    $args{jurisdiction_id} = 'dummy_private_services';
+    $args{jurisdiction_id} = 'confirm_dummy_private_services';
     $args{config_file} = path(__FILE__)->sibling("confirm_private_services.yml")->stringify;
     return $class->$orig(%args);
 };
@@ -432,7 +432,7 @@ subtest 'GET reports' => sub {
     my $res;
     stderr_is {
         $res = $endpoint->run_test_request(
-            GET => '/requests.xml?jurisdiction_id=dummy&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
+            GET => '/requests.xml?jurisdiction_id=confirm_dummy&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
         );
     } "no easting/northing for Enquiry 2004\nno easting/northing for Enquiry 2005\n", 'Warnings about invalid locations output';
     ok $res->is_success, 'valid request' or diag $res->content;
@@ -468,7 +468,7 @@ subtest 'GET reports - private' => sub {
     my $res;
     stderr_is {
         $res = $endpoint->run_test_request(
-          GET => '/requests.xml?jurisdiction_id=dummy_private&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
+          GET => '/requests.xml?jurisdiction_id=confirm_dummy_private&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
         );
     } "no easting/northing for Enquiry 2004\nno easting/northing for Enquiry 2005\n", 'Warnings about invalid locations output';
     ok $res->is_success, 'valid request' or diag $res->content;
@@ -502,7 +502,7 @@ XML
 $endpoint = Open311::Endpoint::Integration::UK::DummyPrivateServices->new;
 
 subtest "GET Service List - private services" => sub {
-    my $res = $endpoint->run_test_request( GET => '/services.xml?jurisdiction_id=dummy_private_services' );
+    my $res = $endpoint->run_test_request( GET => '/services.xml?jurisdiction_id=confirm_dummy_private_services' );
     ok $res->is_success, 'xml success';
     my $expected = <<XML;
 <?xml version="1.0" encoding="utf-8"?>
@@ -528,7 +528,7 @@ subtest 'GET reports - private services' => sub {
     my $res;
     stderr_is {
         $res = $endpoint->run_test_request(
-          GET => '/requests.xml?jurisdiction_id=dummy_private_services&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
+          GET => '/requests.xml?jurisdiction_id=confirm_dummy_private_services&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
         );
     } "no easting/northing for Enquiry 2004\nno easting/northing for Enquiry 2005\n", 'Warnings about invalid locations output';
     ok $res->is_success, 'valid request' or diag $res->content;

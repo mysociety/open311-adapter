@@ -16,7 +16,7 @@ use Moo;
 extends 'Open311::Endpoint::Integration::Confirm';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
-    $args{jurisdiction_id} = 'dummy';
+    $args{jurisdiction_id} = 'confirm_upload';
     $args{config_data} = '
 service_whitelist:
   Flooding & Drainage:

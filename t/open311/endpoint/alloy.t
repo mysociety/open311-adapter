@@ -42,7 +42,7 @@ use Moo;
 extends 'Open311::Endpoint::Integration::Alloy';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
-    $args{jurisdiction_id} = 'dummy';
+    $args{jurisdiction_id} = 'alloy';
     $args{config_file} = path(__FILE__)->sibling("alloy.yml")->stringify;
     return $class->$orig(%args);
 };
