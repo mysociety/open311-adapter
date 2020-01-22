@@ -37,5 +37,11 @@ has fixmystreet_id => (
     isa => Maybe[Str],
 );
 
+has extras => (
+    is => 'ro',
+    isa => HashRef[ Str ],
+    default => sub{ {} },
+);
+
 
 1;

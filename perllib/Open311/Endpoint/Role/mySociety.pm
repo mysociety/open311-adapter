@@ -215,6 +215,11 @@ sub format_updates {
                             updated_datetime
                         /
                     ),
+                    (
+                        ( $update->can('extras') && %{ $update->extras } ) ?
+                        ( extras => { map { $_ => $update->extras->{$_} } keys %{ $update->extras } } )
+                        : ()
+                    ),
                 }
             } @updates
         ]
@@ -278,6 +283,10 @@ sub learn_additional_types {
                 external_status_code => '//str',
                 customer_reference => '//str',
                 fixmystreet_id => '//str',
+                extras => {
+                    type => '//map',
+                    values => '//str',
+                }
             },
         }
     );
