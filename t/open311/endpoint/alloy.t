@@ -134,6 +134,10 @@ $integration->mock('api_call', sub {
             $content = path(__FILE__)->sibling('json/alloy/resource_3027030_v271881.json')->slurp;
         } elsif ( $call eq 'resource/3027031/full?systemVersion=271883' ) {
             $content = path(__FILE__)->sibling('json/alloy/resource_3027031_v271883.json')->slurp;
+        } elsif ( $call eq 'resource/745874' ) {
+            $content = '{ "title": "P1, P1 - 24 hours" }';
+        } elsif ( $call eq 'resource/745875' ) {
+            $content = '{ "title": "P2, P2 - 7 days" }';
         } elsif ( $call eq 'resource/1' ) {
             $content = '{ "sourceTypeId": 800 }';
         } elsif ( $call eq 'source-type/800/linked-source-types' ) {
@@ -349,6 +353,7 @@ subtest "check fetch updates" => sub {
         update_id => '271877',
         media_url => '',
         fixmystreet_id => '10034',
+        extras => { priority => 'P1, P1 - 24 hours' },
     } ], 'correct json returned';
 };
 
@@ -381,6 +386,7 @@ subtest "check fetch multiple updates" => sub {
         media_url => '',
         fixmystreet_id => '10034',
         external_status_code => 4281523,
+        extras => { priority => 'P1, P1 - 24 hours' },
     },
     {
         status => 'action_scheduled',
@@ -390,6 +396,7 @@ subtest "check fetch multiple updates" => sub {
         update_id => '271884',
         media_url => '',
         external_status_code => 4281523,
+        extras => { priority => 'P2, P2 - 7 days' },
     },
 ], 'correct json returned';
 };

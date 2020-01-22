@@ -374,6 +374,7 @@ sub get_service_request_updates {
         next if $self->is_ignored_category( $update );
 
         my $status = 'open';
+        my $priority;
         my $description = '';
         my $fms_id = '';
         my $linked_defect;
@@ -395,6 +396,10 @@ sub get_service_request_updates {
             if ($att->{attributeCode} =~ /_FIXMYSTREET_ID$/) {
                 $linked_defect = 1;
                 $fms_id = $att->{value};
+            }
+
+            if ($att->{attributeCode} =~ /_PRIORITIES/) {
+                $priority = $att->{value}->{values}->[0]->{resourceId};
             }
         }
 
@@ -425,6 +430,14 @@ sub get_service_request_updates {
             description => $description,
             updated_datetime => $update_dt,
         );
+
+        if ($priority) {
+            my $priority_details = $self->alloy->api_call(
+                call => "resource/$priority"
+            );
+
+            $args{extras} = { priority => $priority_details->{title} || $priority };
+        }
 
         # we need to set this to stop phantom updates being produced. This happens because
         # when an inspection is closed it always sets an external_status_code which we never
@@ -502,6 +515,10 @@ sub get_service_requests {
 
             if ($att->{attributeCode} =~ /_FIXMYSTREET_ID$/) {
                 $has_fixmystreet_id = 1 if $att->{value};
+            }
+
+            if ($att->{attributeCode} =~ /_PRIORITIES/) {
+                $args{extras} = {priority => $att->{value}->{values}->[0]->{resourceId}};
             }
         }
 
