@@ -25,6 +25,30 @@ $lwp->mock(request => sub {
                     EnqRef => '1001',
                     StatusDate => '2020-01-09T11:30:42Z',
                     EnquiryStatusDescription => 'Works ordered            ',
+                    StatusHistory => [
+                        {
+                            EnquiryStatusCode => 'T1',
+                            EnquiryStatusDescription => 'Enquiry received',
+                            EnquiryStatusID => 6001,
+                            PriorityCode => '',
+                            PriorityDescription => '',
+                            StatusByID => 'CRM',
+                            StatusByName => 'CRM System',
+                            StatusDate => '2020-01-09T11:30:42Z',
+                            StatusInfo => 'Enquiry received from CRM system',
+                        },
+                        {
+                            EnquiryStatusCode => 'T5',
+                            EnquiryStatusDescription => 'Works ordered',
+                            EnquiryStatusID => 6014,
+                            PriorityCode => '',
+                            PriorityDescription => '',
+                            StatusByID => 'ENQ',
+                            StatusByName => 'Enquiry System Test',
+                            StatusDate => '2020-01-10T13:18:00Z',
+                            StatusInfo => '',
+                        }
+                    ]
                 }
             ]
         ));
@@ -258,10 +282,10 @@ subtest 'GET service request updates OK' => sub {
             {
                 media_url => '',
                 status => "investigating",
-                update_id => "01d1c79737b6d3dea4809ed68d4eeac7",
+                update_id => "ezytreev-update-6014",
                 description => "Works ordered",
                 service_request_id => "ezytreev-1001",
-                updated_datetime => "2020-01-09T11:30:42Z",
+                updated_datetime => "2020-01-10T13:18:00Z",
             }
         ], 'correct json returned';
 };

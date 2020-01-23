@@ -119,24 +119,27 @@ sub get_service_request_updates {
     foreach my $enquiry (@$enquiry_changes) {
         # Ignore updates on enquiries that weren't created by FMS
         next unless substr($enquiry->{CRMXRef}, 0, 4) eq 'fms:';
-        my $status = $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}};
-        if (!$status) {
-            $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code " .
-                "$enquiry->{EnquiryStatusCode} (EnquiryNumber $enquiry->{EnqRef})\n");
-            $status = "open";
+        foreach my $enquiry_status (@{$enquiry->{StatusHistory}}) {
+            # Ignore updates created by FMS
+            next if $enquiry_status->{StatusByName} eq 'CRM System';
+            my $status = $self->reverse_status_mapping->{$enquiry_status->{EnquiryStatusCode}};
+            if (!$status) {
+                $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code " .
+                    "$enquiry_status->{EnquiryStatusCode} (EnquiryStatusID $enquiry_status->{EnquiryStatusID})\n");
+                $status = "open";
+            }
+            my $dt = $w3c->parse_datetime($enquiry_status->{StatusDate});
+            my $status_description = $enquiry_status->{EnquiryStatusDescription};
+            $status_description =~ s/^\s+|\s+$//g;
+            my %update_args = (
+                status => $status,
+                update_id => "ezytreev-update-" . $enquiry_status->{EnquiryStatusID},
+                service_request_id => "ezytreev-" . $enquiry->{EnqRef},
+                description => $status_description,
+                updated_datetime => $dt,
+            );
+            push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(%update_args);
         }
-        my $dt = $w3c->parse_datetime($enquiry->{StatusDate});
-        my $digest = md5_hex($enquiry->{EnqRef} . $enquiry->{EnquiryStatusCode} . $dt);
-        my $status_description = $enquiry->{EnquiryStatusDescription};
-        $status_description =~ s/^\s+|\s+$//g;
-        my %update_args = (
-            status => $status,
-            update_id => $digest,
-            service_request_id => "ezytreev-" . $enquiry->{EnqRef},
-            description => $status_description,
-            updated_datetime => $dt,
-        );
-        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(%update_args);
     }
     return @updates;
 }
