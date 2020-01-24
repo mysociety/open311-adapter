@@ -286,6 +286,7 @@ subtest 'GET service request updates OK' => sub {
                 description => "Works ordered",
                 service_request_id => "ezytreev-1001",
                 updated_datetime => "2020-01-10T13:18:00Z",
+                external_status_code => "T5",
             }
         ], 'correct json returned';
 };

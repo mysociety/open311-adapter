@@ -137,6 +137,7 @@ sub get_service_request_updates {
                 service_request_id => "ezytreev-" . $enquiry->{EnqRef},
                 description => $status_description,
                 updated_datetime => $dt,
+                external_status_code => $enquiry_status->{EnquiryStatusCode},
             );
             push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(%update_args);
         }
