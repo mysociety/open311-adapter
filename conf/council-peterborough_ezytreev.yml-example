@@ -3,6 +3,7 @@ username: ""
 password: ""
 forward_status_mapping: {}
 reverse_status_mapping: {}
+statuses_to_show_notes_for: []
 category_mapping:
   categoryA:
     name: "Category A"
