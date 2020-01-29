@@ -59,6 +59,17 @@ $lwp->mock(request => sub {
                             StatusDate => '2020-01-12T14:54:00Z',
                             StatusInfo => 'Some private notes about this update',
                         },
+                        {
+                            EnquiryStatusCode => 'T5',
+                            EnquiryStatusDescription => 'Works ordered',
+                            EnquiryStatusID => 6016,
+                            PriorityCode => '',
+                            PriorityDescription => '',
+                            StatusByID => 'ENQ',
+                            StatusByName => 'Enquiry System Test',
+                            StatusDate => '2020-01-12T15:00:00Z',
+                            StatusInfo => 'Enquiry created/attached to order item 5312',
+                        }
                     ]
                 }
             ]
