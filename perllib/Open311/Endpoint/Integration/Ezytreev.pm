@@ -134,6 +134,11 @@ sub get_service_request_updates {
             # Ignore updates created by FMS
             next if $enquiry_status->{StatusByName} eq 'CRM System';
 
+            # Ignore updates that relate to creating/attaching order items as
+            # these result in duplicate status updates appearing for the same
+            # status code.
+            next if $enquiry_status->{StatusInfo} =~ m#^Enquiry created/attached to order item \d+#;
+
             my $status_code = $enquiry_status->{EnquiryStatusCode};
             my $status = $self->reverse_status_mapping->{$status_code};
             if (!$status) {
