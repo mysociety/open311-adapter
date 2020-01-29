@@ -46,8 +46,19 @@ $lwp->mock(request => sub {
                             StatusByID => 'ENQ',
                             StatusByName => 'Enquiry System Test',
                             StatusDate => '2020-01-10T13:18:00Z',
-                            StatusInfo => '',
-                        }
+                            StatusInfo => 'Some public notes about this update',
+                        },
+                        {
+                            EnquiryStatusCode => '4A',
+                            EnquiryStatusDescription => 'No further action: problem on private land',
+                            EnquiryStatusID => 6015,
+                            PriorityCode => '',
+                            PriorityDescription => '',
+                            StatusByID => 'ENQ',
+                            StatusByName => 'Enquiry System Test',
+                            StatusDate => '2020-01-12T14:54:00Z',
+                            StatusInfo => 'Some private notes about this update',
+                        },
                     ]
                 }
             ]
@@ -69,10 +80,12 @@ my $endpoint_config = {
     },
     reverse_status_mapping => {
         T5 => 'investigating',
+        '4A' => 'no_further_action',
     },
     forward_status_mapping => {
         FIXED => 'T8',
     },
+    statuses_to_show_notes_for => [qw(T1 T2 T3 T4 T5 T6 T7 T8)],
 };
 
 my $ezytreev_open311_mock = Test::MockModule->new('Open311::Endpoint::Integration::Ezytreev');
@@ -283,10 +296,19 @@ subtest 'GET service request updates OK' => sub {
                 media_url => '',
                 status => "investigating",
                 update_id => "ezytreev-update-6014",
-                description => "Works ordered",
+                description => "Some public notes about this update",
                 service_request_id => "ezytreev-1001",
                 updated_datetime => "2020-01-10T13:18:00Z",
                 external_status_code => "T5",
+            },
+            {
+                media_url => '',
+                status => "no_further_action",
+                update_id => "ezytreev-update-6015",
+                description => "No further action: problem on private land",
+                service_request_id => "ezytreev-1001",
+                updated_datetime => "2020-01-12T14:54:00Z",
+                external_status_code => "4A",
             }
         ], 'correct json returned';
 };

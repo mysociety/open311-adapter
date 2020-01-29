@@ -52,6 +52,13 @@ has reverse_status_mapping => (
     default => sub { $_[0]->endpoint_config->{reverse_status_mapping} }
 );
 
+has statuses_to_show_notes_for => (
+    is => 'lazy',
+    default => sub {
+        return { map { $_ => 1 } @{$_[0]->endpoint_config->{statuses_to_show_notes_for}} };
+    }
+);
+
 sub services {
     my $self = shift;
     my $services = $self->category_mapping;
@@ -133,13 +140,21 @@ sub get_service_request_updates {
                 $status = "open";
             }
             my $dt = $w3c->parse_datetime($enquiry_status->{StatusDate});
-            my $status_description = $enquiry_status->{EnquiryStatusDescription};
-            $status_description =~ s/^\s+|\s+$//g;
+
+            my $description;
+            if ($self->statuses_to_show_notes_for->{$enquiry_status->{EnquiryStatusCode}}) {
+                $description = $enquiry_status->{StatusInfo};
+            } else {
+                my $status_description = $enquiry_status->{EnquiryStatusDescription};
+                $status_description =~ s/^\s+|\s+$//g;
+                $description = $status_description;
+            }
+
             my %update_args = (
                 status => $status,
                 update_id => "ezytreev-update-" . $enquiry_status->{EnquiryStatusID},
                 service_request_id => "ezytreev-" . $enquiry->{EnqRef},
-                description => $status_description,
+                description => $description,
                 updated_datetime => $dt,
                 external_status_code => $enquiry_status->{EnquiryStatusCode},
             );
