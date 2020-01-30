@@ -133,16 +133,18 @@ sub get_service_request_updates {
         foreach my $enquiry_status (@{$enquiry->{StatusHistory}}) {
             # Ignore updates created by FMS
             next if $enquiry_status->{StatusByName} eq 'CRM System';
-            my $status = $self->reverse_status_mapping->{$enquiry_status->{EnquiryStatusCode}};
+
+            my $status_code = $enquiry_status->{EnquiryStatusCode};
+            my $status = $self->reverse_status_mapping->{$status_code};
             if (!$status) {
                 $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code " .
-                    "$enquiry_status->{EnquiryStatusCode} (EnquiryStatusID $enquiry_status->{EnquiryStatusID})\n");
+                    "$status_code (EnquiryStatusID $enquiry_status->{EnquiryStatusID})\n");
                 $status = "open";
             }
             my $dt = $w3c->parse_datetime($enquiry_status->{StatusDate});
 
             my $description;
-            if ($self->statuses_to_show_notes_for->{$enquiry_status->{EnquiryStatusCode}}) {
+            if ($self->statuses_to_show_notes_for->{$status_code}) {
                 $description = $enquiry_status->{StatusInfo};
             } else {
                 my $status_description = $enquiry_status->{EnquiryStatusDescription};
@@ -156,7 +158,7 @@ sub get_service_request_updates {
                 service_request_id => "ezytreev-" . $enquiry->{EnqRef},
                 description => $description,
                 updated_datetime => $dt,
-                external_status_code => $enquiry_status->{EnquiryStatusCode},
+                external_status_code => $status_code,
             );
             push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(%update_args);
         }
