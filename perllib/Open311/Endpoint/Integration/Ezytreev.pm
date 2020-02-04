@@ -148,13 +148,10 @@ sub get_service_request_updates {
             }
             my $dt = $w3c->parse_datetime($enquiry_status->{StatusDate});
 
-            my $description;
+            # Default to blank description so automated response template can be used in FMS.
+            my $description = "";
             if ($self->statuses_to_show_notes_for->{$status_code}) {
                 $description = $enquiry_status->{StatusInfo};
-            } else {
-                my $status_description = $enquiry_status->{EnquiryStatusDescription};
-                $status_description =~ s/^\s+|\s+$//g;
-                $description = $status_description;
             }
 
             my %update_args = (
