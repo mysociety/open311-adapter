@@ -97,6 +97,8 @@ $integration->mock('api_call', sub {
                     $content = path(__FILE__)->sibling('json/alloy/defect_search_all.json')->slurp;
                 }
             }
+        } elsif ( $call eq 'resource/12345' ) {
+            $content = '{ "systemVersionId": 8011 }';
         }
     } else {
         if ( $call eq 'reference/value-type' ) {
@@ -117,6 +119,8 @@ $integration->mock('api_call', sub {
             $content = '{ "details": { "parents": [ {"actualParentSourceTypeId": 1001181, "parentResId": 3027030 } ] } }';
         } elsif ( $call =~ m#resource/[0-9]*/parents# ) {
             $content = '{ "details": { "parents": [] } }';
+        } elsif ( $call eq 'resource/12345/full' ) {
+            $content = '{ "resourceId": 12345, "values": [ { "attributeId": 1013262, "value": "Original text" } ], "version": { "currentSystemVersionId": 8001, "resourceSystemVersionId": 8000 } }';
         } else {
             $content = $responses{$call};
         }
@@ -169,6 +173,44 @@ subtest "check fetch problem" => sub {
       updated_datetime => "2019-01-02T14:44:53Z",
       service_code => "Winter_Grit Bin - empty/refill"
    }], "correct json returned";
+};
+
+subtest "create comment" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request( 
+        POST => '/servicerequestupdates.json', 
+        jurisdiction_id => 'dummyncc',
+        api_key => 'test',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'This is an update',
+        service_request_id => 12345,
+        update_id => 999,
+        status => 'OPEN',
+        updated_datetime => '2019-04-17T14:39:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply $sent,
+    {
+    attributes =>         {
+        1013262 => "Original text
+Customer Bob Mould [test\@example.com] update at 2019-04-17 14:39:00
+This is an update"
+    },
+    systemVersionId => 8000
+    }
+    , 'correct json sent';
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => 8011
+        } ], 'correct json returned';
+
 };
 
 restore_time();

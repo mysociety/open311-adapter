@@ -259,9 +259,7 @@ sub post_service_request_update {
         }
     }
 
-    my $time = DateTime::Format::W3CDTF->new->parse_datetime($args->{updated_datetime});
-    my $formatted_time = $time->ymd . " " . $time->hms;
-    $updates .= "\nCustomer update at " . "$formatted_time" . "\n" . $args->{description};
+    $updates = $self->_generate_update($args, $updates);
 
     my $updated = {
         attributes => {
@@ -284,6 +282,16 @@ sub post_service_request_update {
         status => lc $args->{status},
         update_id => $update->{systemVersionId},
     );
+}
+
+sub _generate_update {
+    my ($self, $args, $updates) = @_;
+
+    my $time = DateTime::Format::W3CDTF->new->parse_datetime($args->{updated_datetime});
+    my $formatted_time = $time->ymd . " " . $time->hms;
+    $updates .= "\nCustomer update at " . "$formatted_time" . "\n" . $args->{description};
+
+    return $updates;
 }
 
 sub get_service_request_updates {

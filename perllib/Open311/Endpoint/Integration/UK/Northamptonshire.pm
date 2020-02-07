@@ -191,4 +191,22 @@ sub _create_contact {
     );
 }
 
+sub _generate_update {
+    my ($self, $args, $updates) = @_;
+
+    my @contacts = map { $args->{$_} } grep { $args->{$_} } qw/ email phone /;
+    my $time = DateTime::Format::W3CDTF->new->parse_datetime($args->{updated_datetime});
+    my $formatted_time = $time->ymd . " " . $time->hms;
+    $updates .= sprintf(
+        "\nCustomer %s %s [%s] update at %s\n%s",
+        $args->{first_name},
+        $args->{last_name},
+        join(',', @contacts),
+        $formatted_time,
+        $args->{description}
+    );
+
+    return $updates;
+}
+
 1;
