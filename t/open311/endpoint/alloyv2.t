@@ -42,7 +42,7 @@ sub _build_config_file { path(__FILE__)->sibling("alloyv2.yml")->stringify }
 package Open311::Endpoint::Integration::UK::Dummy;
 use Path::Tiny;
 use Moo;
-extends 'Open311::Endpoint::Integration::UK::Northamptonshire::AlloyV2';
+extends 'Open311::Endpoint::Integration::UK::NorthamptonshireAlloyV2';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
     $args{jurisdiction_id} = 'dummy';
