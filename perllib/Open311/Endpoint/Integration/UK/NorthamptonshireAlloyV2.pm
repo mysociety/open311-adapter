@@ -1,4 +1,4 @@
-package Open311::Endpoint::Integration::UK::Northamptonshire::AlloyV2;
+package Open311::Endpoint::Integration::UK::NorthamptonshireAlloyV2;
 
 use Moo;
 extends 'Open311::Endpoint::Integration::AlloyV2';
