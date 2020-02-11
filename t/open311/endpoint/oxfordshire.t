@@ -154,6 +154,10 @@ for my $test (
         test_desc => 'create problem with no usrn',
         usrn => undef,
     },
+    {
+        test_desc => 'create problem with feature_id',
+        feature_id => 100,
+    },
 ) {
     subtest $test->{test_desc} => sub {
         set_fixed_time('2014-01-01T12:00:00Z');
@@ -179,6 +183,7 @@ for my $test (
         );
 
         $post_args{ 'attribute[usrn]' } = $args->{usrn} if $args->{usrn};
+        $post_args{ 'attribute[feature_id]' } = $args->{feature_id} if $args->{feature_id};
         my $res = $endpoint->run_test_request( POST => '/requests.json', %post_args );
 
         my $sent = pop @sent;

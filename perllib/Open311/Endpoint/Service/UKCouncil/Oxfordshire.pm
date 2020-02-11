@@ -43,7 +43,7 @@ has '+attributes' => (
             variable => 0, # set by server
             datatype => 'string',
             required => 0,
-            automated => 'server_set',
+            automated => 'hidden_field',
             description => 'usrn',
         ),
         Open311::Endpoint::Service::Attribute->new(
@@ -78,22 +78,15 @@ has '+attributes' => (
             automated => 'server_set',
             description => 'service_type',
         ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'feature_id',
+            variable => 0, # set by server
+            datatype => 'string',
+            required => 0,
+            automated => 'hidden_field',
+            description => 'feature_id',
+        ),
     ] },
-);
-
-has internal_attributes => (
-  is => 'ro',
-  default => sub { {
-      external_id => 1,
-      title => 1,
-      description => 1,
-      closest_address => 1,
-      usrn => 1,
-      easting => 1,
-      northing => 1,
-      service_detail => 1,
-      service_type => 1,
-  } },
 );
 
 1;
