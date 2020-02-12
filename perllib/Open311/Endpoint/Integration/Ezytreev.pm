@@ -142,9 +142,9 @@ sub get_service_request_updates {
             my $status_code = $enquiry_status->{EnquiryStatusCode};
             my $status = $self->reverse_status_mapping->{$status_code};
             if (!$status) {
-                $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code " .
-                    "$status_code (EnquiryStatusID $enquiry_status->{EnquiryStatusID})\n");
-                $status = "open";
+                $self->logger->warn("Missing reverse status mapping for EnquiryStatusCode: " .
+                    "'$status_code'; Enquiry ref: $enquiry->{EnqRef}; EnquiryStatusID: $enquiry_status->{EnquiryStatusID}; ignoring\n");
+                next;
             }
             my $dt = $w3c->parse_datetime($enquiry_status->{StatusDate});
 
