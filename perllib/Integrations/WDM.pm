@@ -164,6 +164,14 @@ sub get_updates {
     return $updates;
 }
 
+sub map_status {
+    my ($self, $status) = @_;
+
+    if ($self->config->{status_map}->{$status}) {
+        $status = $self->config->{status_map}->{$status};
+    }
+    return $status;
+}
 
 sub soap_post {
     my ($self, $url, $method, $tag_name, $data) = @_;

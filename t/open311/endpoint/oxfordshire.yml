@@ -6,5 +6,8 @@
         "type": "POT_type",
         "detail": "POT_detail"
       }
+    },
+    "status_map": {
+      "mapped_status": "in_progress"
     }
 }

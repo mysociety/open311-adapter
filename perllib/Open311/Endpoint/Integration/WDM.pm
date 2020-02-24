@@ -88,6 +88,7 @@ sub get_service_request_updates {
         $customer_reference =~ s/\s*$//;
         my $status = lc $update->{STATUS};
         $status =~ s/ /_/g;
+        $status = $self->get_integration->map_status($status);
 
         my %args = (
             status => $status,
