@@ -763,20 +763,12 @@ sub process_attributes {
     # Some of the Open311 service attributes need remapping to Alloy resource
     # attributes according to the config...
     my $remapping = $self->config->{request_to_resource_attribute_mapping} || {};
-    #my @remapped;
-    #for my $key ( keys %$remapping ) {
-        #push @remapped, {
-            #attributeCode => $remapping->{$key},
-            #value => $args->{attributes}->{$key}
-        #}
-    #}
 
     my @remapped = @{ $self->alloy->update_attributes( $args->{attributes}, $remapping, []) };
 
     # service code is a special case
     my ( $group, $category ) = split('_', $args->{service_code});
     my $group_code = $self->config->{service_whitelist}->{$group}->{resourceId};
-    #$remapped->{$remapping->{category}} = [ { resourceId => $group_code, command => "add" } ];
 
 
     # Set the creation time for this resource to the current timestamp.
