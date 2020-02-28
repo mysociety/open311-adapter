@@ -209,6 +209,21 @@ sub attributes_to_hash {
     return $attributes;
 }
 
+sub design_attributes_to_hash {
+    my ($self, $item) = @_;
+
+    my $attributes = {};
+    for my $att ( @{ $item->{design}->{attributes} } ) {
+        $attributes->{$att->{name}} = {
+            code => $att->{code},
+            linked_code => $att->{options}->{code}
+        }
+    }
+
+    return $attributes;
+}
+
+
 sub search {
     my ($self, $body_base, $skip_count) = @_;
 
