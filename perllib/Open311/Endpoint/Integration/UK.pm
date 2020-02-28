@@ -100,7 +100,9 @@ sub confirm_upload {
         next unless $integ->isa('Integrations::Confirm');
 
         my $dir = $integ->config->{uploads_dir};
-        next unless $dir;
+        # If the dir doesn't exist then it just means no files have been
+        # uploaded yet, so carry on with the next plugin.
+        next unless $dir && -d $dir;
         $dir = path($dir);
 
         foreach ($dir->children( qr/\.json$/ )) {
