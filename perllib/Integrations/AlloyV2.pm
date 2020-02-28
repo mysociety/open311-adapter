@@ -210,16 +210,19 @@ sub attributes_to_hash {
 }
 
 sub search {
-    my ($self, $body_base) = @_;
+    my ($self, $body_base, $skip_count) = @_;
 
-    my $stats_body = { %$body_base };
-    $stats_body->{type} = 'MathAggregation';
-    $stats_body->{properties}->{aggregationType} = 'Count';
+    my $stats = { result => 1 };
+    unless ($skip_count) {
+        my $stats_body = { %$body_base };
+        $stats_body->{type} = 'MathAggregation';
+        $stats_body->{properties}->{aggregationType} = 'Count';
 
-    my $stats = $self->api_call(
-        call => "aqs/statistics",
-        body => $stats_body
-    );
+        $stats = $self->api_call(
+            call => "aqs/statistics",
+            body => $stats_body
+        );
+    }
 
     my $result_count = $stats->{result};
     my $pages = int( $result_count / 20 ) + 1;
