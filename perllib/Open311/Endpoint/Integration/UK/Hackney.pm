@@ -144,6 +144,11 @@ sub _create_contact {
     # phone cannot be null;
     $args->{phone} ||= '';
 
+    # XXX should use the created time of the report?
+    my $now = DateTime->now();
+    my $created_time = DateTime::Format::W3CDTF->new->format_datetime($now);
+    $args->{created} = $created_time;
+
     # include the defaults which map to themselves in the mapping
     my $remapping = {
         %{$self->config->{contact}->{attribute_mapping}},
