@@ -12,11 +12,32 @@ use Open311::Endpoint::Integration::UK;
 
 # Need to override the endpoint config, bit fiddly
 package Open311::Endpoint::Integration::UK::Dummy;
+
+use Moo;
+extends 'Open311::Endpoint::Integration::Multi';
+
+use Module::Pluggable
+    search_path => ['Open311::Endpoint::Integration::UK::Dummy'],
+    instantiate => 'new';
+
+has jurisdiction_id => (
+    is => 'ro',
+    default => 'dummy',
+);
+
+has integration_without_prefix => (
+    is => 'ro',
+    default => 'Confirm',
+);
+
+package Open311::Endpoint::Integration::UK::Dummy::Confirm;
+
 use Moo;
 extends 'Open311::Endpoint::Integration::Confirm';
+
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
-    $args{jurisdiction_id} = 'confirm_upload';
+    $args{jurisdiction_id} = 'dummy_confirm';
     $args{config_data} = '
 service_whitelist:
   Flooding & Drainage:
@@ -34,7 +55,7 @@ my $open311 = Test::MockModule->new('Integrations::Confirm');
 $open311->mock(config => sub {
     {
         web_url => 'http://www.example.org/web',
-        uploads_dir => $uploads_dir,
+        uploads_dir => $uploads_dir->child($_[0]->config_filename),
         tenant_id => 'dummy',
         server_timezone => 'Europe/London',
     }
@@ -100,15 +121,19 @@ subtest "POST OK with uploads" => sub {
     ok $res->is_success, 'valid request' or diag $res->content;
 
     is_deeply decode_json($res->content), [ { "service_request_id" => 2001 } ], 'correct json returned';
-    my $data = decode_json($uploads_dir->child('2001.json')->slurp_utf8);
+    my $data = decode_json($uploads_dir->child('dummy_confirm', '2001.json')->slurp_utf8);
     is_deeply $data->{media_url}, [ 'http://example.com/image/1', 'http://example.com/image/2' ];
     is path($data->{uploads}->[0])->basename, $a_file->basename, 'Correct file name stored';
-    is $uploads_dir->child('2001', $a_file->basename)->exists, 1, 'Uploaded file copied to right place';
+    is $uploads_dir->child('dummy_confirm', '2001', $a_file->basename)->exists, 1, 'Uploaded file copied to right place';
 };
 
 subtest 'And test the uploading' => sub {
+    use Open311::Endpoint::Integration::UK;
+
     my $uk = Open311::Endpoint::Integration::UK->new;
     $uk->confirm_upload;
+    is $uploads_dir->child('dummy_confirm', '2001')->exists, undef, 'Uploaded files deleted';
+    is $uploads_dir->child('dummy_confirm', '2001.json')->exists, undef, 'Upload metadata deleted';
     # Tests are in the LWP UA mock above
 };
 

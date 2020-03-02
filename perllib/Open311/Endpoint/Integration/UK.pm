@@ -95,23 +95,33 @@ sub post_service_request_update {
 sub confirm_upload {
     my $self = shift;
     foreach ($self->plugins) {
-        next unless $_->can('get_integration');
-        my $integ = $_->get_integration;
-        next unless $integ->isa('Integrations::Confirm');
+        my $integs = [];
+        if ( $_->can('get_integration') ) {
+            push(@$integs, $_->get_integration) if $_->get_integration->isa('Integrations::Confirm');
+        }
+        if ($_->isa('Open311::Endpoint::Integration::Multi')) {
+            foreach ($_->plugins) {
+                if ( $_->can('get_integration') ) {
+                    push(@$integs, $_->get_integration) if $_->get_integration->isa('Integrations::Confirm');
+                }
+            }
+        }
+        next unless @$integs;
+        foreach my $integ (@$integs) {
+            my $dir = $integ->config->{uploads_dir};
+            # If the dir doesn't exist then it just means no files have been
+            # uploaded yet, so carry on with the next plugin.
+            next unless $dir && -d $dir;
+            $dir = path($dir);
 
-        my $dir = $integ->config->{uploads_dir};
-        # If the dir doesn't exist then it just means no files have been
-        # uploaded yet, so carry on with the next plugin.
-        next unless $dir && -d $dir;
-        $dir = path($dir);
-
-        foreach ($dir->children( qr/\.json$/ )) {
-            my $id = $_->basename('.json');
-            my $data = decode_json($_->slurp_utf8);
-            my $success = $integ->upload_enquiry_documents($id, $data);
-            if ($success) {
-                $dir->child($id)->remove_tree; # Files for upload
-                $_->remove;
+            foreach ($dir->children( qr/\.json$/ )) {
+                my $id = $_->basename('.json');
+                my $data = decode_json($_->slurp_utf8);
+                my $success = $integ->upload_enquiry_documents($id, $data);
+                if ($success) {
+                    $dir->child($id)->remove_tree; # Files for upload
+                    $_->remove;
+                }
             }
         }
     }
