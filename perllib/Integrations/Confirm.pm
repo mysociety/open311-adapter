@@ -497,6 +497,11 @@ sub upload_enquiry_documents {
 
     my @photos = map {
         my $photo = $self->ua->get($_);
+        unless ( $photo->is_success ) {
+            my $msg = "[Confirm::upload_enquiry_documents] Couldn't fetch photo from URL $_ : " . $photo->status_line;
+            $self->logger->warn($msg);
+            warn $msg;
+        }
         {
             documentName => $photo->filename,
             documentNotes => "Photo from problem reporter.",
