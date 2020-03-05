@@ -44,6 +44,7 @@
 
   # Some resource attributes always have the same values when sent to Alloy
   "resource_attribute_defaults": {
+    "attributes_workflowActionPatchLinkAttributeCode": "FixMyStreet",
   },
 
   # open311-adapter asks FMS for the problem title and description
