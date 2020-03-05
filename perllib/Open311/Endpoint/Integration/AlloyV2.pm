@@ -738,44 +738,33 @@ sub get_defect_category {
 sub process_attributes {
     my ($self, $source, $args) = @_;
 
-    # Make a clone of the received attributes so we can munge them around
-    my $attributes = { %{ $args->{attributes} } };
-
-    # We don't want to send all the received Open311 attributes to Alloy
-    foreach (qw/report_url fixmystreet_id northing easting asset_resource_id title description category/) {
-        delete $attributes->{$_};
-    }
-
     # TODO: Right now this applies defaults regardless of the source type
     # This is OK whilst we have a single design, but we might need to
     # have source-type-specific defaults when multiple designs are in use.
     my $defaults = $self->config->{resource_attribute_defaults} || {};
+    my @defaults = map { { value => $defaults->{$_}, attributeCode => $_} } keys %$defaults;
 
     # Some of the Open311 service attributes need remapping to Alloy resource
     # attributes according to the config...
     my $remapping = $self->config->{request_to_resource_attribute_mapping} || {};
 
-    my @remapped = @{ $self->alloy->update_attributes( $args->{attributes}, $remapping, []) };
-
-    # service code is a special case
-    my ( $group, $category ) = split('_', $args->{service_code});
-    my $group_code = $self->config->{service_whitelist}->{$group}->{resourceId};
-
+    my @remapped = (
+        @defaults,
+        @{ $self->alloy->update_attributes( $args->{attributes}, $remapping, []) }
+    );
 
     # Set the creation time for this resource to the current timestamp.
     # TODO: Should this take the 'confirmed' field from FMS?
     if ( $self->config->{created_datetime_attribute_id} ) {
         my $now = DateTime->now();
         my $created_time = DateTime::Format::W3CDTF->new->format_datetime($now);
-        push @remapped, { 
+        push @remapped, {
             attributeCode => $self->config->{created_datetime_attribute_id},
             value => $created_time
         };
     }
 
-    $attributes = \@remapped;
-
-    return $attributes;
+    return \@remapped;
 }
 
 
