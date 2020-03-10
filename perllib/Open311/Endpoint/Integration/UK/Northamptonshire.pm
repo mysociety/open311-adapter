@@ -84,6 +84,17 @@ sub get_request_description {
     return $desc;
 }
 
+sub process_update_state {
+    my ($self, $status, $reason_for_closure) = @_;
+
+    if ( $status eq 'further_investigation' ) {
+        $status = 'investigating';
+        $reason_for_closure = 'further'
+    }
+
+    return ($status, $reason_for_closure);
+}
+
 sub _find_or_create_contact {
     my ($self, $args) = @_;
 

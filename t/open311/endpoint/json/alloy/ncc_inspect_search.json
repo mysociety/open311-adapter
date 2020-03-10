@@ -1,0 +1,107 @@
+{
+  "totalHits": 1,
+  "searchTime": 294,
+  "page": 1,
+  "totalPages": 1,
+  "results": [
+    {
+      "colour": "#DF412C",
+      "geometry": {
+        "digiLength": null,
+        "lod16BboxIntMaxX": -210,
+        "lod16BboxIntMaxY": -11206,
+        "lod16BboxIntMinX": -210,
+        "lod16BboxIntMinY": -11207,
+        "featureGeom": {
+          "type": "Feature",
+          "id": "3027029",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [
+              [
+                -128047.3,
+                6852412.2
+              ],
+              [
+                -128014,
+                6852447.9
+              ]
+            ]
+          },
+          "properties": {},
+          "crs": {
+            "properties": {
+              "name": "EPSG:900913"
+            },
+            "type": "name"
+          }
+        }
+      },
+      "itemId": 3099981,
+      "resourceId": 3027029,
+      "sourceId": 2320,
+      "sourceTypeId": 1001181,
+      "title": "INS-00009033",
+      "values": [
+        {
+          "attributeId": 1003787,
+          "attributeCode": "GRP_INSPECTION_STANDARD_ATT_INSPECTION_NUMBER",
+          "value": "INS-00009033"
+        },
+        {
+          "attributeId": 1011096,
+          "attributeCode": "GRP_INSPECTION_STANDARD_ATT_INSPECTION_-_ENQUIRY_-_REQUEST_FOR_SERVICE_RESPONSE_TO_CUSTOMER",
+          "value": "This is a customer response"
+        },
+        {
+          "attributeId": 1001546,
+          "attributeCode": "GRP_PROJECT_TASK_ATT_PROJECT_TASK_STATUS",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 298204,
+                "resourceId": 9,
+                "sourceId": null
+              }
+            ]
+          }
+        },
+        {
+          "attributeId": 1001825,
+          "attributeCode": "GRP_INSPECTION_STANDARD_ATT_TEAM",
+          "value": {
+            "parentReferenceContainerId": null,
+            "systemVersion": {
+              "allReferencesId": null,
+              "allResourcesId": null,
+              "childSummaryId": null
+            },
+            "values": [
+              {
+                "referenceId": 291702,
+                "resourceId": 743500,
+                "sourceId": null
+              }
+            ]
+          }
+        }
+      ],
+      "version": {
+        "currentSystemVersionId": 271882,
+        "endDate": "9999-12-31T00:00:00.000Z",
+        "endSystemVersionId": null,
+        "resourceSystemVersionId": 271882,
+        "startDate": "2019-01-01T00:32:40Z",
+        "startSystemVersionId": 268108,
+        "usedDate": "2019-02-19T18:19:14.543Z",
+        "usedSystemVersionId": 271882
+      }
+    }
+  ]
+}

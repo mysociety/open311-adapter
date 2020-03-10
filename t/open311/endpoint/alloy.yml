@@ -150,8 +150,9 @@
     "2": "investigating", # issued to contractor
     "4": "investigating", # in progress
     # "3": "" # on hold
-    "6": "closed" # closed
+    "6": "closed", # closed
     # "8": "" # cancelled
+    "9": "further_investigation" # re issued
   },
 
   "inspection_closure_mapping": {

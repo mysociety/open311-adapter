@@ -95,7 +95,13 @@ $integration->mock('api_call', sub {
             if ( $type =~ /DEFECT/ ) {
                 if ( $time =~ /2019-01-02/ ) {
                     $content = path(__FILE__)->sibling('json/alloy/defect_search_all.json')->slurp;
+                } else {
+                    $content = '{"totalPages": 1, "results":[]}';
                 }
+            } elsif ( $type =~ /INSPECT/ ) {
+                $content = path(__FILE__)->sibling('json/alloy/ncc_inspect_search.json')->slurp;
+            } else {
+                $content = '{"totalPages": 1, "results":[]}';
             }
         } elsif ( $call eq 'resource/12345' ) {
             $content = '{ "systemVersionId": 8011 }';
@@ -121,6 +127,14 @@ $integration->mock('api_call', sub {
             $content = '{ "details": { "parents": [] } }';
         } elsif ( $call eq 'resource/12345/full' ) {
             $content = '{ "resourceId": 12345, "values": [ { "attributeId": 1013262, "value": "Original text" } ], "version": { "currentSystemVersionId": 8001, "resourceSystemVersionId": 8000 } }';
+        } elsif ( $call eq 'resource/3027029/versions' ) {
+            $content = path(__FILE__)->sibling('json/alloy/resource_versions.json')->slurp;
+        } elsif ( $call eq 'resource/3027029/full?systemVersion=272125' ) {
+            $content = path(__FILE__)->sibling('json/alloy/ncc_resource_3027029_v272125.json')->slurp;
+        } elsif ( $call eq 'source-type' ) {
+            $content = path(__FILE__)->sibling('json/alloy/source_type.json')->slurp;
+        } elsif ( $call eq 'source' ) {
+            $content = path(__FILE__)->sibling('json/alloy/source.json')->slurp;
         } else {
             $content = $responses{$call};
         }
@@ -211,6 +225,28 @@ This is an update"
             "update_id" => 8011
         } ], 'correct json returned';
 
+};
+
+subtest "further investigation updates" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z&end_date=2019-03-01T02:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'investigating',
+        external_status_code => 'further',
+        service_request_id => '3027029',
+        description => 'This is a customer response',
+        updated_datetime => '2019-01-01T00:32:40Z',
+        update_id => '271882',
+        media_url => '',
+    } ], 'correct json returned';
 };
 
 restore_time();

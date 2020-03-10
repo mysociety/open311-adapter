@@ -350,6 +350,8 @@ sub get_service_request_updates {
                 $reason_for_closure = '';
             }
 
+            ($status, $reason_for_closure) = $self->process_update_state($status, $reason_for_closure);
+
             my $description_to_send = $description ne $last_description ? $description : '';
             $last_description = $description;
 
@@ -604,6 +606,12 @@ sub inspection_status {
     my ($self, $status) = @_;
 
     return $self->config->{inspection_status_mapping}->{$status} || 'open';
+}
+
+sub process_update_state {
+    my ($self, $status, $reason_for_closure) = @_;
+
+    return ($status, $reason_for_closure);
 }
 
 sub get_status_with_closure {
