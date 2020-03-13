@@ -495,6 +495,7 @@ sub get_service_request_updates {
                 ($status_log->{StatusLogNotes} || "") :
                 "";
             my $status = $self->reverse_status_mapping->{$status_log->{EnquiryStatusCode}};
+            next if $status && $status eq 'IGNORE';
             if (!$status) {
                 print STDERR "Missing reverse status mapping for EnquiryStatus Code $status_log->{EnquiryStatusCode} (EnquiryNumber $enquiry->{EnquiryNumber})\n";
                 $status = "open";
