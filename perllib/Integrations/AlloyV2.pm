@@ -130,7 +130,7 @@ sub get_parent_attributes {
 
     for my $att ( @{ $design->{design}->{attributes} } ) {
         $self->logger->debug($att->{name});
-        if ( $att->{name} eq 'Inspection - Enquiry - Request for Service' ) {
+        if ( $att->{name} eq $self->config->{parent_attribute_name} ) {
             return $att->{code};
         }
     }
