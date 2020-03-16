@@ -47,6 +47,8 @@
     "attributes_workflowActionPatchLinkAttributeCode": "FixMyStreet",
   },
 
+  "parent_attribute_name": "Inspection - Enquiry - Request for Service",
+
   # open311-adapter asks FMS for the problem title and description
   # in attributes as defined in O::E::Service::UKCouncil::Alloy,
   # which should be sent to Alloy in specific attribute fields
