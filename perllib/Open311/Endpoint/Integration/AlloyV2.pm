@@ -374,11 +374,7 @@ sub _get_inspection_updates {
     my $updates = $self->fetch_updated_resources($self->config->{rfs_design}, $args->{start_date});
     my $mapping = $self->config->{inspection_attribute_mapping};
     for my $update (@$updates) {
-        # we only want updates to RFS inspections
-        next unless $update->{designCode} eq $self->config->{rfs_design};
-
-        my $latest = $self->date_to_truncated_dt( $update->{start} );
-        next unless $latest >= $start_time && $latest <= $end_time;
+        next unless $self->_accept_updated_resource($update, $start_time, $end_time);
 
         # We need to fetch all versions that changed in the time wanted
         my @version_ids = $self->get_versions_of_resource($update->{itemId});
@@ -422,6 +418,13 @@ sub _get_inspection_updates {
     }
 
     return @updates;
+}
+
+sub _accept_updated_resource {
+    my ($self, $update) = @_;
+
+    # we only want updates to RFS inspections
+    return 1 if $update->{designCode} eq $self->config->{rfs_design};
 }
 
 sub _get_inspection_status {
