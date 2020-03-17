@@ -240,6 +240,8 @@ sub search {
     }
 
     my $result_count = $stats->{result};
+    return [] unless $result_count;
+
     my $pages = int( $result_count / 20 ) + 1;
 
     my $query_body = $body_base;
