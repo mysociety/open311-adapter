@@ -54,6 +54,13 @@ sub process_attributes {
     # a matching contact
     my $contact_resource_id = $self->_find_or_create_contact($args);
 
+    # Unlike Northants, Hackney has an item for each category (not group)
+    my $group_code = $self->_find_category_code($args->{service_code});
+    push @$attributes, {
+        attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{category},
+        value => [ $group_code ],
+    };
+
     # Attach the caller to the inspection attributes
     push @$attributes, {
         attributeCode => $self->config->{contact}->{attribute_id},
