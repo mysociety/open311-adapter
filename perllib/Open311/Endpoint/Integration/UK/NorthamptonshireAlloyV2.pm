@@ -146,22 +146,6 @@ sub _create_contact {
     );
 }
 
-sub _find_category_code {
-    my ($self, $category) = @_;
-
-    my $results = $self->alloy->search( {
-            properties => {
-                dodiCode => $self->config->{category_list_code},
-                collectionCode => "Live"
-            },
-        }
-    );
-
-    for my $cat ( @{ $results } ) {
-        return $cat->{itemId} if $cat->{title} eq $category;
-    }
-}
-
 sub _accept_updated_resource {
     my ($self, $update, $start_time, $end_time) = @_;
 
