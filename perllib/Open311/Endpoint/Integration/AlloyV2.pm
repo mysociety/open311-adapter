@@ -805,4 +805,20 @@ sub upload_attachments {
     return \@resource_ids;
 }
 
+sub _find_category_code {
+    my ($self, $category) = @_;
+
+    my $results = $self->alloy->search( {
+            properties => {
+                dodiCode => $self->config->{category_list_code},
+                collectionCode => "Live"
+            },
+        }
+    );
+
+    for my $cat ( @{ $results } ) {
+        return $cat->{itemId} if $cat->{title} eq $category;
+    }
+}
+
 1;
