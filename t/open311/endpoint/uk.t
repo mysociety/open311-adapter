@@ -13,6 +13,7 @@ my %config_filenames = (
     'Open311::Endpoint::Integration::UK::BANES' => 'banes_confirm',
     'Open311::Endpoint::Integration::UK::Buckinghamshire' => 'buckinghamshire_confirm',
     'Open311::Endpoint::Integration::UK::CheshireEast' => 'cheshireeast_confirm',
+    'Open311::Endpoint::Integration::UK::EastSussex' => 'eastsussex_salesforce',
     'Open311::Endpoint::Integration::UK::Hounslow' => 'hounslow_confirm',
     'Open311::Endpoint::Integration::UK::IslandRoads' => 'island_roads_confirm',
     'Open311::Endpoint::Integration::UK::Lincolnshire' => 'lincolnshire_confirm',
