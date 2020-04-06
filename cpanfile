@@ -9,6 +9,7 @@ requires 'IO::Socket::SSL', '2.056';
 # Application
 requires 'Cache::Memcached';
 requires 'Carp';
+requires 'Crypt::JWT';
 requires 'Data::Dumper';
 requires 'Data::Rx';
 requires 'DateTime', '1.38';
