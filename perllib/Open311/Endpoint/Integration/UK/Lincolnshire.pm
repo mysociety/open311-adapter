@@ -24,5 +24,11 @@ sub process_service_request_args {
     return $args;
 }
 
+sub photo_filter {
+    my ($self, $doc) = @_;
+    my $filename = $doc->{fileName} || '';
+    my $notes = $doc->{documentNotes} || '';
+    return $filename =~ /jpe?g/i && $notes =~ /after/i;
+}
 
 1;

@@ -13,4 +13,9 @@ service_whitelist:
 reverse_status_mapping:
   DUP: duplicate
   INP: in_progress
+  FIX: fixed
+completion_statuses:
+  - FIX
+base_url: http://example.com/
+web_url: http://example.org/web/api
 cutoff_enquiry_date: 2018-04-12T12:00:00
