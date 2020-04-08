@@ -119,6 +119,10 @@ $open311->mock(perform_request => sub {
           return { OperationResponse => { GetEnquiryStatusChangesResponse => { UpdatedEnquiry => [
               { EnquiryNumber => 2020, EnquiryStatusLog => [ { EnquiryLogNumber => 5, StatusLogNotes => 'Secret status log notes', LogEffectiveTime => '2019-10-23T12:00:00Z', LoggedTime => '2019-10-23T12:00:00Z', EnquiryStatusCode => 'INP' } ] },
           ] } } };
+        } elsif ($req{LoggedTimeFrom} eq '2022-10-23T01:00:00+01:00' && $req{LoggedTimeTo} eq '2022-10-24T01:00:00+01:00') {
+          return { OperationResponse => { GetEnquiryStatusChangesResponse => { UpdatedEnquiry => [
+              { EnquiryNumber => 2020, EnquiryStatusLog => [ { EnquiryLogNumber => 5, StatusLogNotes => 'Secret status log notes', LogEffectiveTime => '2019-10-23T12:00:00Z', LoggedTime => '2019-10-23T12:00:00Z', EnquiryStatusCode => 'FIX' } ] },
+          ] } } };
         } else {
           return { OperationResponse => { GetEnquiryStatusChangesResponse => { UpdatedEnquiry => [
               { EnquiryNumber => 2001, EnquiryStatusLog => [ { EnquiryLogNumber => 3, LogEffectiveTime => '2018-03-01T12:00:00Z', LoggedTime => '2018-03-01T12:00:00Z', EnquiryStatusCode => 'INP' } ] },
@@ -474,6 +478,24 @@ XML
     or diag $res->content;
 };
 
+subtest "fetching of completion photos" => sub {
+    my $lwp = Test::MockModule->new('LWP::UserAgent');
+    $lwp->mock(request => sub {
+        my ($ua, $req) = @_;
+        return HTTP::Response->new(200, 'OK', [], '{"access_token":"123","expires_in":3600}') if $req->uri =~ /oauth\/token/;
+        return HTTP::Response->new(200, 'OK', [], '{"primaryJobNumber":"432"}') if $req->uri =~ /enquiries\/2020/;
+        return HTTP::Response->new(200, 'OK', [], '{"documents":[
+            {"documentNo":1,"fileName":"photo1.jpeg","documentNotes":"Before"},
+            {"documentNo":2,"fileName":"photo2.jpeg","documentNotes":"After"}
+            ]}') if $req->uri =~ /jobs\/432/;
+    });
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.xml?start_date=2022-10-23T00:00:00Z&end_date=2022-10-24T00:00:00Z',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+    contains_string $res->content, '<media_url>http://example.com/photo/completion?jurisdiction_id=confirm_dummy&amp;job=432&amp;photo=1</media_url>';
+};
+
 $endpoint = Open311::Endpoint::Integration::UK::DummyPrivate->new;
 
 subtest 'GET reports - private' => sub {
@@ -581,4 +603,5 @@ subtest "StatusLogNotes shouldn't appear in updates" => sub {
     contains_string $res->content, '<update_id>2020_5</update_id>';
     lacks_string $res->content, 'Secret status log notes';
 };
+
 done_testing;

@@ -1,5 +1,7 @@
 package Integrations::Confirm;
 
+use v5.14;
+use warnings;
 use SOAP::Lite;
 use Exporter;
 use DateTime::Format::W3CDTF;
@@ -70,6 +72,16 @@ has 'customer_type_code' => (
 has 'server_timezone' => (
     is => 'lazy',
     default => sub { $_[0]->config->{server_timezone} }
+);
+
+has completion_statuses => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{completion_statuses} || [] }
+);
+
+has base_url => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{base_url}  }
 );
 
 has oauth_token => (
@@ -507,20 +519,50 @@ sub upload_enquiry_documents {
         centralDocLinks => [ @photos, @uploads ]
     };
 
-    my $token = $self->oauth_token;
-    return unless $token;
+    $self->web_api_call("/centralEnquiries",
+        Content_Type => 'application/json',
+        Content => encode_json($body))
+        or return;
+    return 1;
+}
+
+sub web_api_call {
+    my ($self, $url, %headers) = @_;
+    my $token = $self->oauth_token or return;
     my ($username, $password, $tenant) = $self->credentials;
-    my $url = $self->config->{web_url} . $tenant . "/centralEnquiries";
-    my $req = POST $url,
-        AccessToken => $token,
-        'Content-Type' => 'application/json',
-        Content => encode_json($body);
-    my $response = $self->ua->request($req);
+    my $full_url = $self->config->{web_url} . $tenant . $url;
+    my $method = $headers{Content} ? 'post' : 'get';
+    my $response = $self->ua->$method($full_url, AccessToken => $token, %headers);
     unless ($response->is_success) {
-        $self->logger->warn("Couldn't post files to Confirm: " . $response->content);
+        $self->logger->warn("Couldn't fetch $url: " . $response->content);
         return;
     };
-    return 1;
+    return $response;
+}
+
+sub json_web_api_call {
+    my ($self, $url, %headers) = @_;
+    $headers{Content_Type} = 'application/json';
+    my $response = $self->web_api_call($url, %headers) or return;
+    return decode_json($response->content);
+}
+
+sub job_id_for_enquiry {
+    my ($self, $enquiry_id) = @_;
+    my $data = $self->json_web_api_call("/enquiries/$enquiry_id");
+    return $data->{primaryJobNumber};
+}
+
+sub documents_for_job {
+    my ($self, $job_id) = @_;
+    my $data = $self->json_web_api_call("/jobs/$job_id");
+    return $data->{documents} || [];
+}
+
+sub get_job_photo {
+    my ($self, $job_id, $photo_id) = @_;
+    my $response = $self->web_api_call("/documents/0/JOB/$job_id/$photo_id");
+    return ( $response->header('Content-Type'), $response->decoded_content );
 }
 
 1;

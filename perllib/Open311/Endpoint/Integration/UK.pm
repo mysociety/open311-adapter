@@ -3,6 +3,7 @@ package Open311::Endpoint::Integration::UK;
 use Moo;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
+with 'Open311::Endpoint::Role::CompletionPhotos';
 
 use Types::Standard ':all';
 use Module::Pluggable

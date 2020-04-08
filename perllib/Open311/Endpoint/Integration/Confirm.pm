@@ -478,6 +478,8 @@ sub get_service_request_updates {
         $args->{end_date}
     );
 
+    my %completion_statuses = map { $_ => 1} @{ $integ->completion_statuses };
+
     my @updates = ();
 
     for my $enquiry (@$enquiries) {
@@ -498,6 +500,13 @@ sub get_service_request_updates {
                 $status = "open";
             }
 
+            my $media_urls;
+            if ($completion_statuses{$status_log->{EnquiryStatusCode}}) {
+                # This enquiry has been marked as complete by this update;
+                # see if there's a photo.
+                $media_urls = $self->photo_urls_for_update($enquiry_id);
+            }
+
             push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
                 status => $status,
                 update_id => $update_id,
@@ -505,10 +514,32 @@ sub get_service_request_updates {
                 description => $description,
                 updated_datetime => $ts,
                 external_status_code => $status_log->{EnquiryStatusCode},
+                $media_urls ? ( media_url => $media_urls ) : (),
             );
         }
     }
     return @updates;
+}
+
+sub photo_filter {
+    my ($self, $doc) = @_;
+    return $doc->{fileName} =~ /jpe?g/i;
+}
+
+sub photo_urls_for_update {
+    my ($self, $enquiry_id) = @_;
+    my $integ = $self->get_integration;
+
+    my $job_id = $integ->job_id_for_enquiry($enquiry_id) or return;
+    my $documents = $integ->documents_for_job($job_id) or return;
+
+    my @ids = map { $_->{documentNo} } grep { $self->photo_filter($_) } @$documents;
+    return unless @ids;
+
+    my $jurisdiction_id = $self->jurisdiction_id;
+    my @urls = map { $integ->config->{base_url} . "photo/completion?jurisdiction_id=$jurisdiction_id&job=$job_id&photo=$_" } @ids;
+
+    return \@urls;
 }
 
 sub services {
@@ -823,6 +854,15 @@ sub _wrap_services {
     }
 
     return @services;
+}
+
+sub get_completion_photo {
+    my ($self, $args) = @_;
+
+    my ($content_type, $content) = $self->get_integration->get_job_photo($args->{job}, $args->{photo});
+    return [ 404, [ 'Content-type', 'text/plain' ], [ 'Not found' ] ] unless $content;
+
+    return [ 200, [ 'Content-type', $content_type ], [ $content ] ];
 }
 
 
