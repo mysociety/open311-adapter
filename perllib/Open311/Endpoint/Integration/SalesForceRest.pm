@@ -59,7 +59,33 @@ sub post_service_request {
     my ($self, $service, $args) = @_;
     die "No such service" unless $service;
 
-    my $new_id = $self->integration->post_request($service, $args);
+    my $defaults = $self->get_integration->config->{field_defaults};
+    my $mapping = $self->get_integration->config->{field_map};
+    my $map = { map { $mapping->{$_} => $args->{$_} } keys %$mapping };
+
+    my $req = {
+        %$defaults,
+        %$map
+    };
+
+    my $user_id = $self->_get_user($args);
+
+    die "Failed to get user id" unless $user_id;
+
+    $req->{ $mapping->{title} } = $args->{attributes}->{group} || $service->groups->[0];
+    $req->{ $mapping->{group} } = $args->{attributes}->{group} || $service->groups->[0];
+    $req->{ $mapping->{account} } = $user_id;
+
+    # most categories use a type and a sub type which map to
+    # group and service code. Some though just have a type in
+    # which case group and service code are the same so delete
+    # the service code and only send the group.
+    if ( scalar( @{ $service->{groups} } ) == 1
+         && $service->groups->[0] eq $service->service_code ) {
+        delete $req->{ $mapping->{service_code} };
+    }
+
+    my $new_id = $self->get_integration->post_request($service, $req);
 
     my $request = $self->new_request(
         service_request_id => $new_id,
@@ -107,6 +133,32 @@ sub service {
     );
 
     return $service;
+}
+
+sub _get_user {
+    my ($self, $args) = @_;
+
+    my $id;
+
+    my $results = $self->get_integration->find_user( $args->{email} );
+
+    if ($results->{searchRecords}->[0]) {
+        $id = $results->{searchRecords}->[0]->{Id};
+    } else {
+        # create record here
+        my $defaults = $self->get_integration->config->{account_defaults};
+        my $mapping = $self->get_integration->config->{account_map};
+        my $map = { map { $mapping->{$_} => $args->{$_} } keys %$mapping };
+
+        my $account = {
+            %$defaults,
+            %$map
+        };
+
+        $id = $self->get_integration->post_user( $account );
+    }
+
+    return $id;
 }
 
 __PACKAGE__->run_if_script;

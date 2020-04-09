@@ -54,6 +54,10 @@ my $endpoint = Open311::Endpoint::Integration::SalesForceRest->new( jurisdiction
 
 my %responses = (
     'GET describe ' => path(__FILE__)->parent(1)->realpath->child('services.json')->slurp,
+    'POST Case ' => '{ "success": true, "id": 1 }',
+    'POST Account ' => '{ "success": true, "id": 2 }',
+    'GET  q=test@example.com&sobject=Account&Account.fields=PersonEmail' => '{ "searchRecords": [ { "Id": 1 } ] }',
+    'GET  q=new@example.com&sobject=Account&Account.fields=PersonEmail' => '{ "searchRecords": [ ] }',
 );
 
 my @sent;
@@ -67,9 +71,9 @@ $integration->mock('_get_response', sub {
     my ($self, $req) = @_;
     (my $path = $req->uri->path) =~ s{.*/}{};
     my $key = sprintf '%s %s %s', $req->method, $path, $req->uri->query || '';
-    my $content = '[]';
+    push @sent, $req->content if $key =~ /^POST/;
 
-    $content = $responses{$key};
+    my $content = $responses{$key} || '[]';
 
     my $result = decode_json(encode_utf8($content));
     if ( ref $result eq 'ARRAY' && $result->[0]->{errorCode} ) {
@@ -98,6 +102,123 @@ subtest "converts validFrom correctly" => sub {
     ) {
         is_deeply Integrations::SalesForceRest::_get_pos($test->{in}), $test->{out}, "converts correctly";
     }
+};
+
+subtest "check simple post" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        jurisdiction_id => 'eastsussex_salesforce',
+        api_key => 'test',
+        service_code => 'Directional Signs',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        'attribute[group]' => 'Signs',
+        'attribute[fixmystreet_id]' => 1,
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($sent), {
+        Type => 'Signs',
+        Sub_Type__c => 'Directional Signs',
+        Description => 'description',
+        Latitude => 50,
+        Longitude => 0.1,
+        Subject => 'Signs',
+        CreatedDate => undef,
+        Location_Description__c => '22 Acacia Avenue',
+        AccountId => 1,
+        Origin => 'FMS',
+    }, 'correct request sent';
+
+    is_deeply decode_json($res->content), [ { service_request_id => 1 } ], 'correct return';
+};
+
+subtest "post for a single group item" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        jurisdiction_id => 'eastsussex_salesforce',
+        api_key => 'test',
+        service_code => 'Bridges, Walls & Tunnels',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        'attribute[group]' => 'Bridges, Walls & Tunnels',
+        'attribute[fixmystreet_id]' => 1,
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($sent), {
+        Type => 'Bridges, Walls & Tunnels',
+        Description => 'description',
+        Latitude => 50,
+        Longitude => 0.1,
+        Subject => 'Bridges, Walls & Tunnels',
+        CreatedDate => undef,
+        Location_Description__c => '22 Acacia Avenue',
+        AccountId => 1,
+        Origin => 'FMS',
+    }, 'correct request sent';
+
+    is_deeply decode_json($res->content), [ { service_request_id => 1 } ], 'correct return';
+};
+
+subtest "post that creates an account" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        jurisdiction_id => 'eastsussex_salesforce',
+        api_key => 'test',
+        service_code => 'Directional Signs',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'new@example.com',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        'attribute[group]' => 'Signs',
+        'attribute[fixmystreet_id]' => 1,
+    );
+
+    my ($report, $account) = (pop @sent, pop @sent);
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($account), {
+        FirstName => 'Bob',
+        LastName => 'Mould',
+        PersonEmail => 'new@example.com',
+        Type => 'Member of Public',
+    }, 'correct account sent';
+
+    is_deeply decode_json($report), {
+        Type => 'Signs',
+        Sub_Type__c => 'Directional Signs',
+        Description => 'description',
+        Latitude => 50,
+        Longitude => 0.1,
+        Subject => 'Signs',
+        CreatedDate => undef,
+        Location_Description__c => '22 Acacia Avenue',
+        AccountId => 2,
+        Origin => 'FMS',
+    }, 'correct request sent';
+
+    is_deeply decode_json($res->content), [ { service_request_id => 1 } ], 'correct return';
 };
 
 subtest "check fetch service description" => sub {
