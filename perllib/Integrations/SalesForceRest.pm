@@ -128,7 +128,7 @@ sub _send_request {
 
     my $content = decode_json($response->content);
 
-    unless ($response->code == 200) {
+    unless ($response->code == 200 || $response->code == 201) {
         my $message = $response->message;
         my $code = $response->code;
         if (ref $content eq 'ARRAY' and $content->[0]->{errorCode}) {
@@ -146,39 +146,30 @@ sub _send_request {
     return $content;
 }
 
+sub create_object {
+    my ($self, $object_name, $args) = @_;
+
+    my $response = $self->post($self->endpoint_url . 'sobjects/' . $object_name, encode_json($args));
+
+    return $response->{id};
+}
+
 sub post_request {
     my ($self, $service, $args) = @_;
 
-    # POST /vXX.X/sobjects/Case
-    my $name = join(' ', ($args->{first_name}, $args->{last_name}));
+    return $self->create_object('Case', $args);
+}
 
-    my $formatter = DateTime::Format::Strptime->new(pattern => '%FT%T%z');
-    my $date = $formatter->format_datetime(DateTime->now());
+sub post_user {
+    my ($self, $account) = @_;
 
-    my $values = {
-    };
+    return $self->create_object( 'Account', $account );
+}
 
-    # add category specific attributes
-    for my $extra (keys %{ $args->{attributes} } ) {
-        unless (exists $service->internal_attributes->{$extra}) {
-            $values->{$extra} = $args->{attributes}->{$extra};
-        }
-    }
+sub find_user {
+    my ($self, $email) = @_;
 
-    $values->{contact_phone__c} = $args->{phone} if $args->{phone};
-    $values->{contact_email__c} = $args->{email} if $args->{email};
-
-    if ($args->{media_url}->[0]) {
-        $values->{photos} = $args->{media_url};
-    }
-
-    my $data = [ $values ];
-
-    my $json = encode_json($data);
-
-    my $response = $self->post($self->requests_endpoint, encode_json($data));
-
-    return $response->[0]->{Id};
+    return $self->search( 'Account', 'PersonEmail', $email );
 }
 
 sub get_services {
@@ -193,7 +184,7 @@ sub get_services {
     my ($type, $subtype);
     for my $prop ( @{ $case->{fields} } ) {
         $type = $prop if $prop->{name} eq $self->config->{field_map}->{group};
-        $subtype = $prop if $prop->{name} eq $self->config->{field_map}->{category};
+        $subtype = $prop if $prop->{name} eq $self->config->{field_map}->{service_code};
         last if $type && $subtype;
     }
 
@@ -268,12 +259,9 @@ sub _get_pos {
     my $len = length($bytes) * 8;
     my $pos_map = unpack("B$len", $bytes);
     my @pos;
-    my $pos = 0;
-    foreach (split /1/i, $pos_map) {
-        $pos += length;
-        next if $pos == length $pos_map;
-        push @pos, $pos;
-        $pos++;
+
+    for (my $pos=0; $pos<length $pos_map; $pos++) {
+        push @pos, $pos if substr($pos_map, $pos, 1) == 1;
     }
 
     return \@pos;
