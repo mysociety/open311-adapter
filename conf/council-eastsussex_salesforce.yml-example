@@ -1,0 +1,25 @@
+{
+  client_id: '',
+  login_url: '',
+  username: '',
+  private_key: '',
+  auth_url: '',
+  endpoint: '',
+
+  service_object: "",
+
+  service_blacklist: [
+  ],
+
+  field_map: {
+  },
+
+  field_defaults: {
+  },
+
+  account_map: {
+  },
+
+  account_defaults: {
+  }
+}
