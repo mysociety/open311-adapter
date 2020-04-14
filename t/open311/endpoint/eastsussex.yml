@@ -46,4 +46,23 @@
   account_defaults: {
     Type: 'Member of Public'
   },
+
+  extra_questions: {
+    category_map: {
+      "signQuestions": [ 'Tourist Signs', 'Sign Posts' ],
+    },
+    questions: {
+      "signQuestions": [
+        {
+          question: "What is the problem with the sign?",
+          answers: [
+            "dirty",
+            "broken",
+            [ "incorrect", "sign is incorrect" ]
+          ]
+        }
+      ]
+    }
+  },
+
 }

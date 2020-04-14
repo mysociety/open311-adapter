@@ -324,7 +324,7 @@ subtest "check fetch service description" => sub {
     } ], 'correct json returned';
 };
 
-subtest "check fetch service description" => sub {
+subtest "check fetch service description with no questions" => sub {
     my $res = $endpoint->run_test_request(
       GET => '/services/Warning Signs.json?jurisdiction_id=eastsussex_salesforce',
     );
