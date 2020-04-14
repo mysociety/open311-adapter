@@ -53,7 +53,10 @@ $soap_lite->mock(call => sub {
         my @request = $args[1]->value;
         is $request[0], '2019-09-25T00:00:00Z';
         return SOAP::Result->new(method => { RefVals => [
-            { ReferenceValue => 1 }, { ReferenceValue => 2 }, { ReferenceValue => 3 }
+            { ReferenceValue => 1, RequestType => 'GENERAL' },
+            { ReferenceValue => 2, RequestType => 'GENERAL' },
+            { ReferenceValue => 3, RequestType => 'GENERAL' },
+            { ReferenceValue => 4, RequestType => 'FOOD' },
         ] });
     } elsif ($args[0] eq 'GetGeneralServiceRequestByReferenceValue') {
         my @request = $args[1]->value;

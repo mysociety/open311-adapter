@@ -250,7 +250,7 @@ sub get_service_request_updates {
     $requests = [ $requests ] unless ref $requests eq 'ARRAY';
     my @updates;
     foreach (@$requests) {
-        # RequestType is GENERAL
+        next unless $_->{RequestType} eq 'GENERAL';
         my $request = eval { $self->_get_request($_->{ReferenceValue}) };
         next unless $request;
         my $code = $request->{AdministrationDetails}->{StatusCode} || '';
