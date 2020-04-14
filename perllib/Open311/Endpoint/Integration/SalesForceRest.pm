@@ -132,6 +132,30 @@ sub service {
         groups => $meta->{groups},
     );
 
+    my $map = $self->get_integration->config->{extra_questions}->{category_map};
+    my $question_map = { map { my $k = $_; map { $_ => $k } @{ $map->{$k} } } keys %$map };
+
+    if ( $question_map->{$id} ) {
+        my $questions =  $self->get_integration->config->{extra_questions}->{questions}->{$question_map->{$id}};
+        for my $q ( @$questions ) {
+            next unless $q->{question};
+            (my $code = $q->{question}) =~ s/ /_/g;
+            $code =~ s/[^a-zA-Z_]//g;
+            my $attribs = {
+                code => lc $code,
+                description => $q->{question},
+                required => 0,
+                datatype => 'string',
+            };
+            if ($q->{answers}) {
+                $attribs->{datatype} = 'singlevaluelist';
+                $attribs->{values} = { map { ref $_ eq 'ARRAY' ? ( $_->[0] => $_->[1] ) : ( $_ => $_ ) } @{ $q->{answers} } };
+            }
+
+            push @{ $service->attributes }, Open311::Endpoint::Service::Attribute->new($attribs);
+        }
+    }
+
     return $service;
 }
 
