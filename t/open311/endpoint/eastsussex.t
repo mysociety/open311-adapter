@@ -53,11 +53,12 @@ use Integrations::SalesForceRest;
 my $endpoint = Open311::Endpoint::Integration::SalesForceRest->new( jurisdiction_id => 'eastsussex_salesforce' );
 
 my %responses = (
-    'GET describe ' => path(__FILE__)->parent(1)->realpath->child('services.json')->slurp,
+    'GET Case/describe ' => path(__FILE__)->parent(1)->realpath->child('services.json')->slurp,
+    'GET Case/1 ' => path(__FILE__)->parent(1)->realpath->child('case_1.json')->slurp,
     'POST Case ' => '{ "success": true, "id": 1 }',
     'POST Account ' => '{ "success": true, "id": 2 }',
-    'GET  q=test@example.com&sobject=Account&Account.fields=PersonEmail' => '{ "searchRecords": [ { "Id": 1 } ] }',
-    'GET  q=new@example.com&sobject=Account&Account.fields=PersonEmail' => '{ "searchRecords": [ ] }',
+    'GET parameterizedSearch/ q=test@example.com&sobject=Account&Account.fields=PersonEmail' => '{ "searchRecords": [ { "Id": 1 } ] }',
+    'GET parameterizedSearch/ q=new@example.com&sobject=Account&Account.fields=PersonEmail' => '{ "searchRecords": [ ] }',
 );
 
 my @sent;
@@ -69,7 +70,7 @@ $integration->mock('_build_config_file', sub {
 $integration->mock('credentials', sub { 'thisarecredentials' });
 $integration->mock('_get_response', sub {
     my ($self, $req) = @_;
-    (my $path = $req->uri->path) =~ s{.*/}{};
+    (my $path = $req->uri->path) =~ s{.*sobjects/}{};
     my $key = sprintf '%s %s %s', $req->method, $path, $req->uri->query || '';
     push @sent, $req->content if $key =~ /^POST/;
 
@@ -138,7 +139,7 @@ subtest "check simple post" => sub {
         Origin => 'FMS',
     }, 'correct request sent';
 
-    is_deeply decode_json($res->content), [ { service_request_id => 1 } ], 'correct return';
+    is_deeply decode_json($res->content), [ { service_request_id => '00123456' } ], 'correct return';
 };
 
 subtest "post for a single group item" => sub {
@@ -174,7 +175,7 @@ subtest "post for a single group item" => sub {
         Origin => 'FMS',
     }, 'correct request sent';
 
-    is_deeply decode_json($res->content), [ { service_request_id => 1 } ], 'correct return';
+    is_deeply decode_json($res->content), [ { service_request_id => '00123456' } ], 'correct return';
 };
 
 subtest "post that creates an account" => sub {
@@ -218,7 +219,7 @@ subtest "post that creates an account" => sub {
         Origin => 'FMS',
     }, 'correct request sent';
 
-    is_deeply decode_json($res->content), [ { service_request_id => 1 } ], 'correct return';
+    is_deeply decode_json($res->content), [ { service_request_id => '00123456' } ], 'correct return';
 };
 
 subtest "check fetch service description" => sub {

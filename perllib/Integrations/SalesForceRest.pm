@@ -197,6 +197,12 @@ sub post_attachment {
     return $response->{id};
 }
 
+sub get_case {
+    my ($self, $case_id) = @_;
+
+    return $self->get($self->endpoint_url . "sobjects/Case/$case_id");
+}
+
 sub get_services {
     my ($self, $args) = @_;
 
