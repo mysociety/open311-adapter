@@ -96,8 +96,10 @@ sub post_service_request {
         }
     }
 
+    my $case = $self->get_integration->get_case($new_id);
+
     my $request = $self->new_request(
-        service_request_id => $new_id,
+        service_request_id => $case->{CaseNumber},
     );
 
     return $request;

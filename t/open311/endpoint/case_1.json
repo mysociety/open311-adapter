@@ -1,0 +1,12 @@
+{
+  "attributes": {
+    "type": "Case",
+    "url": "/services/data/v48.0/sobjects/Case/1"
+  },
+  "Id": "1",
+  "IsDeleted": false,
+  "MasterRecordId": null,
+  "CaseNumber": "00123456",
+  "ContactId": null,
+  "AccountId": "1"
+}
