@@ -11,6 +11,7 @@ use Integrations::SalesForceRest;
 
 use DateTime::Format::Strptime;
 use Types::Standard ':all';
+use Try::Tiny;
 
 sub service_request_content {
     '/open311/service_request_extended'
@@ -86,6 +87,14 @@ sub post_service_request {
     }
 
     my $new_id = $self->get_integration->post_request($service, $req);
+
+    if ( $args->{media_url} ) {
+        try {
+            my $photo_id = $self->_add_attachment( $new_id, $args->{media_url} );
+        } catch {
+            warn "failed to upload photo for report $new_id: $_\n";
+        }
+    }
 
     my $request = $self->new_request(
         service_request_id => $new_id,
@@ -183,6 +192,23 @@ sub _get_user {
     }
 
     return $id;
+}
+
+sub _add_attachment {
+    my ($self, $id, $media_urls) = @_;
+
+    # Grab each photo from FMS
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+    my @photos = map {
+        $ua->get($_);
+    } @$media_urls;
+
+    # upload the file to the folder, with a FMS-related name
+    my @resource_ids = map {
+        $self->get_integration->post_attachment($id, $_);
+    } @photos;
+
+    return \@resource_ids;
 }
 
 __PACKAGE__->run_if_script;

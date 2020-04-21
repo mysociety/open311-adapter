@@ -172,6 +172,31 @@ sub find_user {
     return $self->search( 'Account', 'PersonEmail', $email );
 }
 
+sub post_attachment {
+    my ($self, $id, $file) = @_;
+
+    my $args = encode_json( {
+        ParentId => $id,
+        Name => $file->filename,
+    } );
+
+    my $uri = $self->endpoint_url . 'sobjects/Attachment';
+
+    my $request = HTTP::Request::Common::POST(
+        $uri,
+        Content_Type => 'form-data',
+        Content => [
+            details => [ undef, undef, 'Content-Type' => 'application/json', Content => $args ],
+            Body => [undef, $file->filename, 'Content-Type' => $file->header('Content-Type'), Content => $file->content]
+        ]
+    );
+    $request->header(Authorization => 'Bearer ' . $self->credentials);
+
+    my $response = $self->_send_request($request);
+
+    return $response->{id};
+}
+
 sub get_services {
     my ($self, $args) = @_;
 
