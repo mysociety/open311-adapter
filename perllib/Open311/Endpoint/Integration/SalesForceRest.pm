@@ -133,7 +133,8 @@ sub services {
 
         next unless scalar @{ $service->{groups} };
 
-        next unless grep { $self->whitelist->{$_} } @{ $service->{groups} };
+        my @groups = grep { $self->whitelist->{$_} } @{ $service->{groups} };
+        next unless @groups;
 
 
         next if $self->blacklist->{$service->{value}};
@@ -142,7 +143,7 @@ sub services {
             service_name => $service->{label},
             description => $service->{label},
             service_code => $service->{value},
-            groups => $self->_rename_groups( $service->{groups} ),
+            groups => $self->_rename_groups( \@groups ),
         );
 
         push @service_types, $service;
@@ -155,12 +156,13 @@ sub service {
     my ($self, $id, $args) = @_;
 
     my $meta = $self->get_integration->get_service($id, $args);
+    my @groups = grep { $self->whitelist->{$_} } @{ $meta->{groups} };
 
     my $service = Open311::Endpoint::Service::UKCouncil::Salesforce->new(
         service_name => $meta->{label},
         description => $meta->{label},
         service_code => $meta->{value},
-        groups => $self->_rename_groups( $meta->{groups} ),
+        groups => $self->_rename_groups( \@groups ),
     );
 
     my $map = $self->get_integration->config->{extra_questions}->{category_map};
