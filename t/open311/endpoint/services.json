@@ -237,6 +237,13 @@
         {
           "active": true,
           "defaultValue": false,
+          "label": "Workmanship",
+          "validFor": "QAAA",
+          "value": "Workmanship"
+        },
+        {
+          "active": true,
+          "defaultValue": false,
           "label": "Warning Signs",
           "validFor": "QAAA",
           "value": "Warning Signs"
@@ -252,7 +259,7 @@
           "active": true,
           "defaultValue": false,
           "label": "Workmanship",
-          "validFor": "BAAA",
+          "validFor": "gAAA",
           "value": "Workmanship"
         }
       ],

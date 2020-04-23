@@ -40,6 +40,19 @@ has blacklist => (
     }
 );
 
+has group_service_blacklist => (
+    is => 'lazy',
+    default => sub {
+        my $self = shift;
+        my %blacklist;
+        my $blacklist = $self->get_integration->config->{group_service_blacklist};
+        for my $group ( keys %$blacklist ) {
+            $blacklist{$group} = { map { $_ => 1 } @{ $blacklist->{$group} } };
+        }
+        return \%blacklist;
+    }
+);
+
 has whitelist => (
     is => 'lazy',
     default => sub {
@@ -114,9 +127,14 @@ sub services {
 
     my @service_types;
     for my $service ( @services ) {
+        # remove any groups that are blacklisted for this service in
+        # cases where one service name is in multiple groups
+        $service->{groups} = [ grep { !$self->group_service_blacklist->{ $_ }->{ $service->{label} } } @{ $service->{groups} } ];
+
         next unless scalar @{ $service->{groups} };
 
         next unless grep { $self->whitelist->{$_} } @{ $service->{groups} };
+
 
         next if $self->blacklist->{$service->{value}};
 
