@@ -367,7 +367,7 @@ subtest "check fetch service description" => sub {
         metadata => 'true',
         type => "realtime",
         keywords => "",
-        groups => [ "Roadworks" ]
+        groups => [ "Abandoned Vehicle" ]
     },
     {
         service_code => "Bridges, Walls & Tunnels",

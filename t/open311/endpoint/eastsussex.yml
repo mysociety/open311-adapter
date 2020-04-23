@@ -26,6 +26,10 @@
     'Our Roadworks': 'Roadworks',
   },
 
+  group_service_blacklist: {
+      "Signs": [ "Workmanship" ]
+  },
+
   field_map: {
     group: "Type",
     service_code: "Sub_Type__c",
