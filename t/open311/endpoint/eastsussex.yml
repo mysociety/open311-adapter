@@ -11,6 +11,7 @@
   service_whitelist: [
     "Abandoned Vehicle",
     "Bridges, Walls & Tunnels",
+    "Our Roadworks",
     "Signs",
   ],
 
@@ -20,6 +21,10 @@
     "Staff Contact",
     "Claim",
   ],
+
+  group_name_map: {
+    'Our Roadworks': 'Roadworks',
+  },
 
   field_map: {
     group: "Type",

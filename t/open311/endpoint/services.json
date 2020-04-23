@@ -89,6 +89,13 @@
           "label": "Media Enquiries",
           "validFor": null,
           "value": "Media Enquiries"
+        },
+        {
+          "active": true,
+          "defaultValue": false,
+          "label": "Our Roadworks",
+          "validFor": null,
+          "value": "Our Roadworks"
         }
       ],
       "polymorphicForeignKey": false,
@@ -233,6 +240,20 @@
           "label": "Warning Signs",
           "validFor": "QAAA",
           "value": "Warning Signs"
+        },
+        {
+          "active": true,
+          "defaultValue": false,
+          "label": "Traffic Management",
+          "validFor": "BAAA",
+          "value": "Traffic Management"
+        },
+        {
+          "active": true,
+          "defaultValue": false,
+          "label": "Workmanship",
+          "validFor": "BAAA",
+          "value": "Workmanship"
         }
       ],
       "polymorphicForeignKey": false,

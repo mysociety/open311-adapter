@@ -178,6 +178,43 @@ subtest "post for a single group item" => sub {
     is_deeply decode_json($res->content), [ { service_request_id => '00123456' } ], 'correct return';
 };
 
+subtest "post with renamed group" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        jurisdiction_id => 'eastsussex_salesforce',
+        api_key => 'test',
+        service_code => 'Workmanship',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        'attribute[group]' => 'Roadworks',
+        'attribute[fixmystreet_id]' => 1,
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($sent), {
+        Type => 'Our Roadworks',
+        Sub_Type__c => 'Workmanship',
+        Description => 'description',
+        Latitude => 50,
+        Longitude => 0.1,
+        Subject => 'Our Roadworks',
+        CreatedDate => undef,
+        Location_Description__c => '22 Acacia Avenue',
+        AccountId => 1,
+        Origin => 'FMS',
+    }, 'correct request sent';
+
+    is_deeply decode_json($res->content), [ { service_request_id => '00123456' } ], 'correct return';
+};
+
 subtest "post that creates an account" => sub {
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
@@ -313,6 +350,24 @@ subtest "check fetch service description" => sub {
         type => "realtime",
         keywords => "",
         groups => [ "Signs" ]
+    },
+    {
+        service_code => "Traffic Management",
+        service_name => "Traffic Management",
+        description => "Traffic Management",
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        groups => [ "Roadworks" ]
+    },
+    {
+        service_code => "Workmanship",
+        service_name => "Workmanship",
+        description => "Workmanship",
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        groups => [ "Roadworks" ]
     },
     {
         service_code => "Bridges, Walls & Tunnels",
