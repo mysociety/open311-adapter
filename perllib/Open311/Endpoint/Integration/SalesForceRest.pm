@@ -73,8 +73,10 @@ sub post_service_request {
 
     die "Failed to get user id" unless $user_id;
 
-    $req->{ $mapping->{title} } = $args->{attributes}->{group} || $service->groups->[0];
-    $req->{ $mapping->{group} } = $args->{attributes}->{group} || $service->groups->[0];
+    my $group = $self->_revert_group_name( $args->{attributes}->{group} || $service->groups->[0] );
+
+    $req->{ $mapping->{title} } = $group;
+    $req->{ $mapping->{group} } = $group;
     $req->{ $mapping->{account} } = $user_id;
 
     # most categories use a type and a sub type which map to
@@ -122,7 +124,7 @@ sub services {
             service_name => $service->{label},
             description => $service->{label},
             service_code => $service->{value},
-            groups => $service->{groups},
+            groups => $self->_rename_groups( $service->{groups} ),
         );
 
         push @service_types, $service;
@@ -140,7 +142,7 @@ sub service {
         service_name => $meta->{label},
         description => $meta->{label},
         service_code => $meta->{value},
-        groups => $meta->{groups},
+        groups => $self->_rename_groups( $meta->{groups} ),
     );
 
     my $map = $self->get_integration->config->{extra_questions}->{category_map};
@@ -168,6 +170,38 @@ sub service {
     }
 
     return $service;
+}
+
+# next two functions are to enable us to user more user friendly names on
+# FixMyStreet. They map a Type name to a user friendly name for services
+# and then enable that to be reversed when creating a Case.
+# This does rely on us not renaming two groups to the same thing.
+sub _rename_groups {
+    my ($self, $groups) = @_;
+
+    my $map = $self->get_integration->config->{group_name_map};
+
+    return $groups unless $map;
+
+    $groups = [
+        map {
+            $map->{$_} || $_
+        } @{ $groups }
+    ];
+
+    return $groups;
+}
+
+sub _revert_group_name {
+    my ($self, $group) = @_;
+
+    my $map = $self->get_integration->config->{group_name_map};
+
+    return $group unless $map;
+
+    my %reverse_map = reverse %$map;
+
+    return $reverse_map{$group} || $group;
 }
 
 sub _get_user {
