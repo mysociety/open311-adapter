@@ -399,7 +399,7 @@ subtest "check fetch service description with no questions" => sub {
         service_code => "Warning Signs",
         attributes => [
           {
-            variable => 'false',
+            variable => 'true',
             code => "asset_id",
             datatype => "string",
             required => 'false',
@@ -409,7 +409,7 @@ subtest "check fetch service description with no questions" => sub {
             automated => 'hidden_field',
           },
           {
-            variable => 'false',
+            variable => 'true',
             code => "group",
             datatype => "string",
             required => 'false',
@@ -446,7 +446,7 @@ subtest "check fetch service description with questions" => sub {
         service_code => "Tourist Signs",
         attributes => [
           {
-            variable => 'false',
+            variable => 'true',
             code => "asset_id",
             datatype => "string",
             required => 'false',
@@ -456,7 +456,7 @@ subtest "check fetch service description with questions" => sub {
             automated => 'hidden_field',
           },
           {
-            variable => 'false',
+            variable => 'true',
             code => "group",
             datatype => "string",
             required => 'false',
