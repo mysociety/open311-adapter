@@ -41,6 +41,7 @@
     address_string: "Location_Description__c",
     account: "AccountId",
     contact: "ContactId",
+    asset: "AssetId",
   },
 
   field_defaults: {

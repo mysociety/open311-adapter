@@ -93,6 +93,12 @@ sub post_service_request {
     $req->{ $mapping->{account} } = $user->{id};
     $req->{ $mapping->{contact} } = $user->{contact_id};
 
+    if ( $args->{attributes}->{asset_id} ) {
+        $req->{ $mapping->{asset} } = $args->{attributes}->{asset_id};
+    } else {
+        delete $req->{ $mapping->{asset} };
+    }
+
     # most categories use a type and a sub type which map to
     # group and service code. Some though just have a type in
     # which case group and service code are the same so delete
