@@ -144,6 +144,46 @@ subtest "check simple post" => sub {
     is_deeply decode_json($res->content), [ { service_request_id => '00123456' } ], 'correct return';
 };
 
+subtest "post that includes an asset id" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        jurisdiction_id => 'eastsussex_salesforce',
+        api_key => 'test',
+        service_code => 'Directional Signs',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        'attribute[group]' => 'Signs',
+        'attribute[asset_id]' => '123445',
+        'attribute[fixmystreet_id]' => 1,
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($sent), {
+        Type => 'Signs',
+        Sub_Type__c => 'Directional Signs',
+        Description => 'description',
+        Latitude => 50,
+        Longitude => 0.1,
+        Subject => 'Signs',
+        CreatedDate => undef,
+        Location_Description__c => '22 Acacia Avenue',
+        AccountId => 1,
+        AssetId => 123445,
+        ContactId => 2,
+        Origin => 'FMS',
+    }, 'correct request sent';
+
+    is_deeply decode_json($res->content), [ { service_request_id => '00123456' } ], 'correct return';
+};
+
 subtest "post for a single group item" => sub {
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
