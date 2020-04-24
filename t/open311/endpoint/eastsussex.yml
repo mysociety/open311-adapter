@@ -40,6 +40,7 @@
     date: "CreatedDate",
     address_string: "Location_Description__c",
     account: "AccountId",
+    contact: "ContactId",
   },
 
   field_defaults: {
