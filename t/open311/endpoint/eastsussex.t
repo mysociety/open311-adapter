@@ -55,10 +55,11 @@ my $endpoint = Open311::Endpoint::Integration::SalesForceRest->new( jurisdiction
 my %responses = (
     'GET Case/describe ' => path(__FILE__)->parent(1)->realpath->child('services.json')->slurp,
     'GET Case/1 ' => path(__FILE__)->parent(1)->realpath->child('case_1.json')->slurp,
+    'GET Account/2 ' => '{ "Id": 2, "PersonContactId": 3 }',
     'POST Case ' => '{ "success": true, "id": 1 }',
     'POST Account ' => '{ "success": true, "id": 2 }',
-    'GET parameterizedSearch/ q=test@example.com&sobject=Account&Account.fields=PersonEmail' => '{ "searchRecords": [ { "Id": 1 } ] }',
-    'GET parameterizedSearch/ q=new@example.com&sobject=Account&Account.fields=PersonEmail' => '{ "searchRecords": [ ] }',
+    'GET parameterizedSearch/ q=test@example.com&sobject=Account&Account.fields=PersonEmail,PersonContactId' => '{ "searchRecords": [ { "Id": 1, "PersonContactId": 2 } ] }',
+    'GET parameterizedSearch/ q=new@example.com&sobject=Account&Account.fields=PersonEmail,PersonContactId' => '{ "searchRecords": [ ] }',
 );
 
 my @sent;
@@ -136,6 +137,7 @@ subtest "check simple post" => sub {
         CreatedDate => undef,
         Location_Description__c => '22 Acacia Avenue',
         AccountId => 1,
+        ContactId => 2,
         Origin => 'FMS',
     }, 'correct request sent';
 
@@ -172,6 +174,7 @@ subtest "post for a single group item" => sub {
         CreatedDate => undef,
         Location_Description__c => '22 Acacia Avenue',
         AccountId => 1,
+        ContactId => 2,
         Origin => 'FMS',
     }, 'correct request sent';
 
@@ -209,6 +212,7 @@ subtest "post with renamed group" => sub {
         CreatedDate => undef,
         Location_Description__c => '22 Acacia Avenue',
         AccountId => 1,
+        ContactId => 2,
         Origin => 'FMS',
     }, 'correct request sent';
 
@@ -253,6 +257,7 @@ subtest "post that creates an account" => sub {
         CreatedDate => undef,
         Location_Description__c => '22 Acacia Avenue',
         AccountId => 2,
+        ContactId => 3,
         Origin => 'FMS',
     }, 'correct request sent';
 

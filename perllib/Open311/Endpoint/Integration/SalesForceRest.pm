@@ -82,15 +82,16 @@ sub post_service_request {
         %$map
     };
 
-    my $user_id = $self->_get_user($args);
+    my $user = $self->_get_user($args);
 
-    die "Failed to get user id" unless $user_id;
+    die "Failed to get user id" unless $user;
 
     my $group = $self->_revert_group_name( $args->{attributes}->{group} || $service->groups->[0] );
 
     $req->{ $mapping->{title} } = $group;
     $req->{ $mapping->{group} } = $group;
-    $req->{ $mapping->{account} } = $user_id;
+    $req->{ $mapping->{account} } = $user->{id};
+    $req->{ $mapping->{contact} } = $user->{contact_id};
 
     # most categories use a type and a sub type which map to
     # group and service code. Some though just have a type in
@@ -227,27 +228,34 @@ sub _revert_group_name {
 sub _get_user {
     my ($self, $args) = @_;
 
-    my $id;
-
     my $results = $self->get_integration->find_user( $args->{email} );
 
+    my $obj = {};
     if ($results->{searchRecords}->[0]) {
-        $id = $results->{searchRecords}->[0]->{Id};
+        $obj = {
+            id => $results->{searchRecords}->[0]->{Id},
+            contact_id => $results->{searchRecords}->[0]->{PersonContactId},
+        };
     } else {
         # create record here
         my $defaults = $self->get_integration->config->{account_defaults};
         my $mapping = $self->get_integration->config->{account_map};
         my $map = { map { $mapping->{$_} => $args->{$_} } keys %$mapping };
 
-        my $account = {
+        my $args = {
             %$defaults,
             %$map
         };
 
-        $id = $self->get_integration->post_user( $account );
+        my $account = $self->get_integration->post_user( $args );
+
+        $obj = {
+            id => $account->{Id},
+            contact_id => $account->{PersonContactId},
+        };
     }
 
-    return $id;
+    return $obj;
 }
 
 sub _add_attachment {

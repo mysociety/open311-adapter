@@ -163,13 +163,15 @@ sub post_request {
 sub post_user {
     my ($self, $account) = @_;
 
-    return $self->create_object( 'Account', $account );
+    my $id = $self->create_object( 'Account', $account );
+
+    return $self->get($self->endpoint_url . "sobjects/Account/$id");
 }
 
 sub find_user {
     my ($self, $email) = @_;
 
-    return $self->search( 'Account', 'PersonEmail', $email );
+    return $self->search( 'Account', 'PersonEmail,PersonContactId', $email );
 }
 
 sub post_attachment {
