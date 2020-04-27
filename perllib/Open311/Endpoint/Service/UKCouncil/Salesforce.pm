@@ -7,7 +7,7 @@ sub _build_attributes {
     return [
         Open311::Endpoint::Service::Attribute->new(
             code => 'asset_id',
-            variable => 0, # set by server
+            variable => 1, # set by server
             datatype => 'string',
             required => 0,
             automated => 'hidden_field',
@@ -15,7 +15,7 @@ sub _build_attributes {
         ),
         Open311::Endpoint::Service::Attribute->new(
             code => 'group',
-            variable => 0, # set by server
+            variable => 1, # set by server
             datatype => 'string',
             required => 0,
             automated => 'hidden_field',
