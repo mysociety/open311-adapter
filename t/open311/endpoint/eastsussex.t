@@ -525,12 +525,12 @@ subtest "check fetch service description with questions" => sub {
             description => "What is the problem with the sign?",
             values => [
                 {
-                    name => "broken",
-                    key => "broken",
-                },
-                {
                     name => "dirty",
                     key => "dirty",
+                },
+                {
+                    name => "broken",
+                    key => "broken",
                 },
                 {
                     name => "sign is incorrect",

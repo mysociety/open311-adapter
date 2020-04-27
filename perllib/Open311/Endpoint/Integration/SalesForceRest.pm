@@ -190,6 +190,7 @@ sub service {
             if ($q->{answers}) {
                 $attribs->{datatype} = 'singlevaluelist';
                 $attribs->{values} = { map { ref $_ eq 'ARRAY' ? ( $_->[0] => $_->[1] ) : ( $_ => $_ ) } @{ $q->{answers} } };
+                $attribs->{values_sorted} = [ map {  ref $_ eq 'ARRAY' ? $_->[0] : $_ } @{ $q->{answers} } ] if $q->{maintain_order};
             }
 
             push @{ $service->attributes }, Open311::Endpoint::Service::Attribute->new($attribs);
