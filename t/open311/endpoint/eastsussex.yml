@@ -66,6 +66,7 @@
       "signQuestions": [
         {
           question: "What is the problem with the sign?",
+          maintain_order: 1,
           answers: [
             "dirty",
             "broken",
