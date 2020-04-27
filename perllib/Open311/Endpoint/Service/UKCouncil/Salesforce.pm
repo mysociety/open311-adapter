@@ -29,6 +29,14 @@ sub _build_attributes {
             automated => 'server_set',
             description => 'external system ID',
         ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'closest_address',
+            variable => 0, # set by server
+            datatype => 'string',
+            required => 0,
+            automated => 'server_set',
+            description => 'closest_address',
+        ),
     ];
 }
 

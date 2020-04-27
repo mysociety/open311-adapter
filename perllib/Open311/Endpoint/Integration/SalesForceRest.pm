@@ -99,6 +99,8 @@ sub post_service_request {
         delete $req->{ $mapping->{asset} };
     }
 
+    $self->_add_closest_address($req, $args, $mapping);
+
     # most categories use a type and a sub type which map to
     # group and service code. Some though just have a type in
     # which case group and service code are the same so delete
@@ -263,6 +265,14 @@ sub _get_user {
     }
 
     return $obj;
+}
+
+sub _add_closest_address {
+    my ($self, $req, $args, $mapping) = @_;
+
+    my ($address) = $args->{attributes}->{closest_address} =~ /Nearest[^:]*: (.+)$/m;
+
+    $req->{ $mapping->{address_string} } = $address
 }
 
 sub _add_attachment {
