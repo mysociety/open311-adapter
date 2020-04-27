@@ -30,6 +30,15 @@ subtest "GET Service List" => sub {
     <type>realtime</type>
   </service>
   <service>
+    <description>Sorted Pothole Repairs Service</description>
+    <group>highways</group>
+    <keywords>deep,hole,wow</keywords>
+    <metadata>true</metadata>
+    <service_code>SPOT</service_code>
+    <service_name>Sorted Pothole Repairs</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
     <description>Bin Enforcement Service</description>
     <group>sanitation</group>
     <keywords>bin</keywords>
@@ -52,6 +61,14 @@ CONTENT
                "metadata" => "true",
                "description" => "Pothole Repairs Service",
                "service_code" => "POT"
+            }, {
+               "keywords" => "deep,hole,wow",
+               "group" => "highways",
+               "service_name" => "Sorted Pothole Repairs",
+               "type" => "realtime",
+               "metadata" => "true",
+               "description" => "Sorted Pothole Repairs Service",
+               "service_code" => "SPOT"
             }, {
                "keywords" => "bin",
                "group" => "sanitation",
@@ -151,6 +168,93 @@ CONTENT
         }, 'json structure ok';
 };
 
+
+subtest "GET Service Definition with non standard values order" => sub {
+    my $res = $endpoint->run_test_request( GET => '/services/SPOT.xml' );
+    ok $res->is_success, 'xml success',
+        or diag $res->content;
+    is_string $res->content, <<CONTENT, 'xml string ok';
+<?xml version="1.0" encoding="utf-8"?>
+<service_definition>
+  <attributes>
+    <attribute>
+      <code>depth</code>
+      <datatype>number</datatype>
+      <datatype_description>an integer</datatype_description>
+      <description>depth of pothole, in centimetres</description>
+      <order>1</order>
+      <required>true</required>
+      <variable>true</variable>
+    </attribute>
+    <attribute>
+      <code>shape</code>
+      <datatype>singlevaluelist</datatype>
+      <datatype_description>square | circle | triangle</datatype_description>
+      <description>shape of the pothole</description>
+      <order>2</order>
+      <required>false</required>
+      <values>
+        <value>
+          <name>Circle</name>
+          <key>circle</key>
+        </value>
+        <value>
+          <name>Triangle</name>
+          <key>triangle</key>
+        </value>
+        <value>
+          <name>Square</name>
+          <key>square</key>
+        </value>
+      </values>
+      <variable>true</variable>
+    </attribute>
+  </attributes>
+  <service_code>SPOT</service_code>
+</service_definition>
+CONTENT
+
+    $res = $endpoint->run_test_request( GET => '/services/SPOT.json' );
+    ok $res->is_success, 'json success';
+    is_deeply decode_json($res->content),
+        {
+            "service_code" => "SPOT",
+            "attributes" => [
+                {
+                    "order" => 1,
+                    "code" => "depth",
+                    "required" => "true",
+                    "variable" => "true",
+                    "datatype_description" => "an integer",
+                    "description" => "depth of pothole, in centimetres",
+                    "datatype" => "number",
+                },
+                {
+                    "order" => 2,
+                    "code" => "shape",
+                    "variable" => "true",
+                    "datatype_description" => "square | circle | triangle",
+                    "description" => "shape of the pothole",
+                    "required" => "false",
+                    "datatype" => "singlevaluelist",
+                    "values" => [
+                        {
+                            "name" => "Circle",
+                            "key" => "circle"
+                        },
+                        {
+                            "name" => "Triangle",
+                            "key" => "triangle"
+                        },
+                        {
+                            "name" => "Square",
+                            "key" => "square"
+                        },
+                    ],
+               }
+            ],
+        }, 'json structure ok';
+};
 subtest "POST Service Request validation" => sub {
     my $res = $endpoint->run_test_request( 
         POST => '/requests.json', 
