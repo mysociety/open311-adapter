@@ -70,6 +70,17 @@ has values => (
     }
 );
 
+has values_sorted => (
+    is => 'ro',
+    isa => ArrayRef,
+    default => sub { [] },
+    handles_via => 'Array',
+    handles => {
+        get_sorted_values => 'elements',
+        has_sorted_values => 'count',
+    }
+);
+
 sub schema_definition {
     my $self = shift;
 

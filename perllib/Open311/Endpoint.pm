@@ -407,7 +407,7 @@ sub GET_Service_Definition {
                                         key => $key, 
                                         name => $name,
                                     }
-                                } sort { $a->[0] cmp $b->[0] } $attribute->values_kv
+                                } $self->service_attribute_values( $attribute )
                             ]) : (),
                         map { $_ => $attribute->$_ } 
                             qw/ code datatype datatype_description description /,
@@ -417,6 +417,16 @@ sub GET_Service_Definition {
         },
     };
     return $service_definition;
+}
+
+sub service_attribute_values {
+    my ( $self, $attribute ) = @_;
+
+    if ( $attribute->has_sorted_values ) {
+        return map { [ $_ => $attribute->values->{$_} ] } $attribute->get_sorted_values;
+    } else {
+        return sort { $a->[0] cmp $b->[0] } $attribute->values_kv;
+    }
 }
 
 sub POST_Service_Request_input_schema {
