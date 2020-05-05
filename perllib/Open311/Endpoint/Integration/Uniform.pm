@@ -320,8 +320,10 @@ sub post_service_request_update {
 
     # The visits are not always in the order added...
     my $visit_id;
+    (my $desc = $args->{description}) =~ s/\s+/ /g;
     foreach (@$visits) {
-        if ($_->{OfficerCode} eq 'EHCALL' && $_->{VisitTypeCode} eq 'EHCUR' && $_->{Comments} eq $args->{description} && $_->{ScheduledDateOfVisit} eq $args->{updated_datetime}) {
+        $_->{Comments} =~ s/\s+/ /g;
+        if ($_->{OfficerCode} eq 'EHCALL' && $_->{VisitTypeCode} eq 'EHCUR' && $_->{Comments} eq $desc && $_->{ScheduledDateOfVisit} eq $args->{updated_datetime}) {
             $visit_id = $_->{ReferenceValue};
             last;
         }

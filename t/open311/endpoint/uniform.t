@@ -97,7 +97,7 @@ $soap_lite->mock(call => sub {
                     ReferenceValue => '12/00034/GCOMP',
                     # This is the visit about to be added, here so the action can then be added to it...
                     Visits => { Visit => [ {
-                        Comments => 'This is the update',
+                        Comments => "This is the update\nwith a newline",
                         OfficerCode => 'EHCALL',
                         VisitTypeCode => 'EHCUR',
                         ScheduledDateOfVisit => '2019-10-22T17:21:34',
@@ -307,7 +307,7 @@ subtest 'post update' => sub {
     my $res = $endpoint->run_test_request(
         POST => '/servicerequestupdates.json',
         api_key => 'test',
-        description => "This is the update",
+        description => "This is the update\r\nwith a newline",
         service_request_id => '12/00034/AB',
         status => 'OPEN',
         first_name => 'Bob',
