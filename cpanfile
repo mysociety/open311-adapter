@@ -37,6 +37,7 @@ requires 'Web::Simple';
 requires 'YAML::XS';
 requires 'YAML::Logic';
 requires 'Log::Dispatch';
+requires 'Tie::IxHash';
 
 # Modules used by the test suite
 requires 'LWP::Protocol::PSGI';
