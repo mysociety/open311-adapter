@@ -457,6 +457,13 @@ sub POST_Service_Request_input_schema {
         $attributes{ $section }{ $key } = $def;
     }
 
+    if ($service->allow_any_attributes) {
+        for my $key (grep { /^attribute\[\w+\]$/ } keys %$args) {
+            $attributes{optional}{$key} = '//str'
+                unless $attributes{required}{$key};
+        }
+    }
+
     # we have to supply at least one of these, but can supply more
     my @address_options = (
         { lat => '//num', long => '//num' },
