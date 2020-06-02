@@ -33,14 +33,14 @@ sub _build_attributes {
         Open311::Endpoint::Service::Attribute->new(
             code => "category",
             description => "Category",
-            datatype => "text",
+            datatype => "string",
             required => 1,
             automated => 'server_set',
         ),
         Open311::Endpoint::Service::Attribute->new(
             code => "asset_resource_id",
             description => "Asset resource ID",
-            datatype => "text",
+            datatype => "string",
             required => 1,
             automated => 'hidden_field',
         ),

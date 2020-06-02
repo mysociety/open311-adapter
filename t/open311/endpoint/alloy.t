@@ -661,7 +661,7 @@ subtest "check fetch service metadata" => sub {
           {
             variable => 'true',
             code => "category",
-            datatype => "text",
+            datatype => "string",
             required => 'true',
             datatype_description => '',
             order => 7,
@@ -671,7 +671,7 @@ subtest "check fetch service metadata" => sub {
           {
             variable => 'true',
             code => "asset_resource_id",
-            datatype => "text",
+            datatype => "string",
             required => 'true',
             datatype_description => '',
             order => 8,

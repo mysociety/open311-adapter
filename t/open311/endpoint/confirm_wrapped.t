@@ -186,7 +186,7 @@ subtest "GET wrapped Service List Description" => sub {
     <attribute>
       <automated>hidden_field</automated>
       <code>site_code</code>
-      <datatype>text</datatype>
+      <datatype>string</datatype>
       <datatype_description></datatype_description>
       <description>Site code</description>
       <order>9</order>

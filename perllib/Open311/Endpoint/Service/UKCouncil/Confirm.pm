@@ -43,7 +43,7 @@ sub _build_attributes {
         Open311::Endpoint::Service::Attribute->new(
             code => "site_code",
             description => "Site code",
-            datatype => "text",
+            datatype => "string",
             required => 0,
             automated => 'hidden_field',
         ),
