@@ -1,0 +1,104 @@
+<ServiceRequests_Types_GetResponse xmlns="http://bartec-systems.com/">
+      <ServiceRequests_Types_GetResult RecordCount="int" xmlns="http://www.bartec-systems.com/ServiceRequests_Types_Get.xsd">
+        <ServiceType>
+          <ID xmlns="http://www.bartec-systems.com">1</ID>
+          <Name xmlns="http://www.bartec-systems.com">Leaf Removal</Name>
+          <Description xmlns="http://www.bartec-systems.com">Leaf Removal</Description>
+          <AppointmentCount xmlns="http://www.bartec-systems.com">1</AppointmentCount>
+          <ServiceClass xmlns="http://www.bartec-systems.com">
+            <ID>1</ID>
+            <Name>Street Cleansing</Name>
+            <Description>Street Cleansing</Description>
+            <Category>General</Category>
+            <ExtendedDataRecordType xsi:nil="true" />
+            <Mobile>false</Mobile>
+            <Private>false</Private>
+            <RecordStamp xsi:nil="true" />
+            <ExtendedDataRecordDefinitionID>1</ExtendedDataRecordDefinitionID>
+          </ServiceClass>
+          <DefaultCrew xmlns="http://www.bartec-systems.com">
+            <ID>1</ID>
+            <CrewNumber>2</CrewNumber>
+            <WorkGroup xsi:nil="true" />
+            <Description>A Crew</Description>
+            <DefaultSize>2</DefaultSize>
+            <StartTime></StartTime>
+            <EndTime></EndTime>
+            <WorkingMinutes>60</WorkingMinutes>
+            <NonworkingMinutes>30</NonworkingMinutes>
+            <RecordStamp xsi:nil="true" />
+          </DefaultCrew>
+          <DefaultLandType xmlns="http://www.bartec-systems.com">
+            <ID>2</ID>
+            <Name>Lant Type</Name>
+            <RecordStamp xsi:nil="true" />
+          </DefaultLandType>
+          <DefaultSLA xmlns="http://www.bartec-systems.com">
+            <ID>2</ID>
+            <Name>An SLA</Name>
+            <Description>An SLA</Description>
+            <Period>7 days</Period>
+            <NormaliseTime></NormaliseTime>
+            <JeopardyPeriod></JeopardyPeriod>
+            <WorkingHours>true</WorkingHours>
+            <RecordStamp xsi:nil="true" />
+          </DefaultSLA>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>A User</AddedBy>
+            <DateAdded></DateAdded>
+            <Comments></Comments>
+          </RecordStamp>
+          <ExtendedDataRecordDefinitionID xmlns="http://www.bartec-systems.com">2</ExtendedDataRecordDefinitionID>
+        </ServiceType>
+        <ServiceType>
+          <ID xmlns="http://www.bartec-systems.com">2</ID>
+          <Name xmlns="http://www.bartec-systems.com">Street Sweeping</Name>
+          <Description xmlns="http://www.bartec-systems.com">Street Sweeping</Description>
+          <AppointmentCount xmlns="http://www.bartec-systems.com">1</AppointmentCount>
+          <ServiceClass xmlns="http://www.bartec-systems.com">
+            <ID>1</ID>
+            <Name>Street Cleansing</Name>
+            <Description>Street Cleansing</Description>
+            <Category>General</Category>
+            <ExtendedDataRecordType xsi:nil="true" />
+            <Mobile>false</Mobile>
+            <Private>false</Private>
+            <RecordStamp xsi:nil="true" />
+            <ExtendedDataRecordDefinitionID>1</ExtendedDataRecordDefinitionID>
+          </ServiceClass>
+          <DefaultCrew xmlns="http://www.bartec-systems.com">
+            <ID>1</ID>
+            <CrewNumber>2</CrewNumber>
+            <WorkGroup xsi:nil="true" />
+            <Description>A Crew</Description>
+            <DefaultSize>2</DefaultSize>
+            <StartTime></StartTime>
+            <EndTime></EndTime>
+            <WorkingMinutes>60</WorkingMinutes>
+            <NonworkingMinutes>30</NonworkingMinutes>
+            <RecordStamp xsi:nil="true" />
+          </DefaultCrew>
+          <DefaultLandType xmlns="http://www.bartec-systems.com">
+            <ID>2</ID>
+            <Name>Lant Type</Name>
+            <RecordStamp xsi:nil="true" />
+          </DefaultLandType>
+          <DefaultSLA xmlns="http://www.bartec-systems.com">
+            <ID>2</ID>
+            <Name>An SLA</Name>
+            <Description>An SLA</Description>
+            <Period>7 days</Period>
+            <NormaliseTime></NormaliseTime>
+            <JeopardyPeriod></JeopardyPeriod>
+            <WorkingHours>true</WorkingHours>
+            <RecordStamp xsi:nil="true" />
+          </DefaultSLA>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>A User</AddedBy>
+            <DateAdded></DateAdded>
+            <Comments></Comments>
+          </RecordStamp>
+          <ExtendedDataRecordDefinitionID xmlns="http://www.bartec-systems.com">2</ExtendedDataRecordDefinitionID>
+        </ServiceType>
+     </ServiceRequests_Types_GetResult>
+ </ServiceRequests_Types_GetResponse>

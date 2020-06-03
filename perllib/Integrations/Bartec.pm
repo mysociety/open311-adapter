@@ -13,6 +13,7 @@ use HTTP::Request::Common;
 use MIME::Base64 qw(encode_base64 decode_base64);
 use Path::Tiny;
 use SOAP::Lite;
+use Try::Tiny;
 
 
 with 'Role::Config';
@@ -89,6 +90,14 @@ sub _methods {
                 SOAP::Data->new(name => 'password', type => 'string'),
             ],
         },
+        'ServiceRequests_Types_Get' => {
+            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            soapaction => 'http://bartec-systems.com/ServiceRequests_Types_Get',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [
+                SOAP::Data->new(name => 'token', type => 'string'),
+            ],
+        },
     };
 }
 
@@ -155,6 +164,30 @@ sub Authenticate {
         is_success => 1,
         token => $response->{Token}->{TokenString},
     };
+}
+
+sub _wrapper {
+    my ($self, $method) = (shift, shift);
+    my $response;
+
+    my @params = @_;
+    try {
+        $response = $self->_call( { method=> $method, args => \@params } );
+
+        my $error = $response->{Errors};
+        die $error if $error && $error->{Message} eq 'Invalid Token';
+    } catch {
+        $self->memcache->delete('token');
+        $response = $self->_call({ method => $method, args => \@params });
+    };
+
+    return $response;
+}
+
+
+sub ServiceRequests_Types_Get {
+    my $self = shift;
+    return $self->_wrapper('ServiceRequests_Types_Get', @_);
 
 }
 
