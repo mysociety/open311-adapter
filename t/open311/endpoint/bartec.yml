@@ -1,0 +1,5 @@
+username: username
+password: password
+
+allowed_services:
+  - Leaf Removal

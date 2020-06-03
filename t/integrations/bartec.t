@@ -94,4 +94,50 @@ EOF
     is_deeply $response, $expected, 'returns an error';
 };
 
+subtest 'Authentication token expired' => sub {
+    my $soap = Test::MockModule->new('SOAP::Lite');
+    $soap->mock(
+        call => sub {
+            my ($self, $method) = @_;
+            my $xml;
+
+            if ($method->name eq 'Authenticate') {
+                $xml .= <<'EOF';
+<AuthenticateResponse xmlns="http://bartec-systems.com/">
+  <AuthenticateResult xmlns="http://www.bartec-systems.com">
+    <Token><TokenString>ABC=</TokenString></Token>
+    <Errors />
+  </AuthenticateResult>
+</AuthenticateResponse>
+EOF
+
+            } else {
+                $xml .= <<'EOF';
+<ServiceRequests_Types_GetResponse xmlns="http://bartec-systems.com/">
+  <ServiceRequests_Types_GetResult RecordCount="0" xmlns="http://www.bartec-systems.com/ServiceRequests_Get.xsd">
+    <Errors>
+       <Result xmlns="http://www.bartec-systems.com">1</Result>
+       <Message xmlns="http://www.bartec-systems.com">Invalid Token</Message>
+    </Errors>
+  </ServiceRequests_Types_GetResult>
+</ServiceRequests_Types_GetResponse>
+EOF
+            }
+            my $full_xml = gen_full_response($xml);
+            my $env      = SOAP::Deserializer->deserialize($full_xml);
+            return $env;
+        }
+    );
+
+    my $response = $integration->ServiceRequests_Types_Get;
+    my $expected = {
+      Errors => {
+          Message => 'Invalid Token',
+          Result => 1
+      }
+    };
+
+    is_deeply $response, $expected, 'returns an error';
+};
+
 done_testing;
