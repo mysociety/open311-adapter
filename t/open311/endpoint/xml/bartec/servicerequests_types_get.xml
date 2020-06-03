@@ -17,7 +17,7 @@
             <ExtendedDataRecordDefinitionID>1</ExtendedDataRecordDefinitionID>
           </ServiceClass>
           <DefaultCrew xmlns="http://www.bartec-systems.com">
-            <ID>1</ID>
+            <ID>11</ID>
             <CrewNumber>2</CrewNumber>
             <WorkGroup xsi:nil="true" />
             <Description>A Crew</Description>
@@ -29,12 +29,12 @@
             <RecordStamp xsi:nil="true" />
           </DefaultCrew>
           <DefaultLandType xmlns="http://www.bartec-systems.com">
-            <ID>2</ID>
+            <ID>12</ID>
             <Name>Lant Type</Name>
             <RecordStamp xsi:nil="true" />
           </DefaultLandType>
           <DefaultSLA xmlns="http://www.bartec-systems.com">
-            <ID>2</ID>
+            <ID>13</ID>
             <Name>An SLA</Name>
             <Description>An SLA</Description>
             <Period>7 days</Period>
