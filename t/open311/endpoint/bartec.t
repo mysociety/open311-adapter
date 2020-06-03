@@ -82,14 +82,161 @@ subtest "check fetch service description" => sub {
     [
     {
         service_code => "1",
-        service_name => "Leaf Removal",
-        description => "Leaf Removal",
-        metadata => 'false',
+        service_name => "Leaf removal",
+        description => "Leaf removal",
+        metadata => 'true',
         type => "realtime",
         keywords => "",
-        groups => [ "Street Cleansing" ]
+        groups => [ "Street cleansing" ]
     },
     ],
+    'correct services returned';
+};
+
+subtest "check fetch service" => sub {
+    my $res = $endpoint->run_test_request(
+      GET => '/services/1.json?jurisdiction_id=bartec',
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    {
+        service_code => "1",
+        attributes => [
+          {
+            variable => 'false',
+            code => "easting",
+            datatype => "number",
+            required => 'true',
+            datatype_description => '',
+            order => 1,
+            description => "easting",
+            automated => 'server_set',
+          },
+          {
+            variable => 'false',
+            code => "northing",
+            datatype => "number",
+            required => 'true',
+            datatype_description => '',
+            order => 2,
+            description => "northing",
+            automated => 'server_set',
+          },
+          {
+            variable => 'false',
+            code => "fixmystreet_id",
+            datatype => "string",
+            required => 'true',
+            datatype_description => '',
+            order => 3,
+            description => "external system ID",
+            automated => 'server_set',
+          },
+          {
+            variable => 'true',
+            code => "report_url",
+            datatype => "string",
+            required => 'true',
+            datatype_description => '',
+            order => 4,
+            description => "Report URL",
+            automated => 'server_set',
+          },
+          {
+            variable => 'true',
+            code => "title",
+            datatype => "string",
+            required => 'true',
+            datatype_description => '',
+            order => 5,
+            description => "Title",
+            automated => 'server_set',
+          },
+          {
+            variable => 'true',
+            code => "description",
+            datatype => "text",
+            required => 'true',
+            datatype_description => '',
+            order => 6,
+            description => "Description",
+            automated => 'server_set',
+          },
+          {
+            variable => 'true',
+            code => "asset_details",
+            datatype => "text",
+            required => 'false',
+            datatype_description => '',
+            order => 7,
+            description => "Asset information",
+            automated => 'hidden_field',
+          },
+          {
+            variable => 'true',
+            code => "site_code",
+            datatype => "text",
+            required => 'false',
+            datatype_description => '',
+            order => 8,
+            description => "Site code",
+            automated => 'hidden_field',
+          },
+          {
+            variable => 'true',
+            code => "central_asset_id",
+            datatype => "string",
+            required => 'false',
+            datatype_description => '',
+            order => 9,
+            description => "Central Asset ID",
+            automated => 'hidden_field',
+          },
+          {
+            variable => 'true',
+            code => "closest_address",
+            datatype => "string",
+            required => 'false',
+            datatype_description => '',
+            order => 10,
+            description => "Closest address",
+            automated => 'server_set',
+          },
+          {
+            variable => 'true',
+            code => "postcode",
+            datatype => "string",
+            required => 'false',
+            datatype_description => '',
+            order => 11,
+            description => "postcode",
+            automated => 'server_set',
+          },
+          {
+            variable => 'true',
+            code => "street",
+            datatype => "string",
+            required => 'false',
+            datatype_description => '',
+            order => 12,
+            description => "Closest street",
+            automated => 'server_set',
+          },
+          {
+            variable => 'true',
+            code => "house_no",
+            datatype => "string",
+            required => 'false',
+            datatype_description => '',
+            order => 13,
+            description => "Closest house number",
+            automated => 'server_set',
+          },
+        ]
+    },
     'correct services returned';
 };
 

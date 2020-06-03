@@ -224,7 +224,13 @@ sub _wrapper {
 
 sub ServiceRequests_Types_Get {
     my $self = shift;
-    return $self->_wrapper('ServiceRequests_Types_Get', @_);
+    my $types = $self->memcache->get('ServiceRequests_Types_Get');
+    unless ($types) {
+        $types = $self->_wrapper('ServiceRequests_Types_Get', @_);
+        $self->memcache->set('ServiceRequests_Types_Get', $types, 1800);
+    }
+
+    return $types;
 }
 
 sub ServiceRequests_Updates_Get {

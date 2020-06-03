@@ -11,6 +11,8 @@ extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 with 'Role::Logger';
 
+use Open311::Endpoint::Service::UKCouncil::Bartec;
+
 has jurisdiction_id => (
     is => 'ro',
 );
@@ -46,7 +48,9 @@ sub services {
     my $services = $self->get_integration->ServiceRequests_Types_Get;
     $services = ref $services->{ServiceType} eq 'ARRAY' ? $services->{ServiceType} : [ $services->{ServiceType} ];
     my @services = map {
-        my $service = Open311::Endpoint::Service->new(
+        $_->{Description} =~ s/(.)(.*)/\U$1\L$2/;
+        $_->{ServiceClass}->{Description} =~ s/(.)(.*)/\U$1\L$2/;
+        my $service = Open311::Endpoint::Service::UKCouncil::Bartec->new(
             service_name => $_->{Description},
             service_code => $_->{ID},
             description => $_->{Description},
@@ -54,6 +58,14 @@ sub services {
       );
     } grep { $self->allowed_services->{uc $_->{Description}} } @$services;
     return @services;
+}
+
+sub service {
+    my ($self, $id, $args) = @_;
+
+    my @services = grep { $_->service_code eq $id } $self->services;
+
+    return $services[0];
 }
 
 __PACKAGE__->run_if_script;
