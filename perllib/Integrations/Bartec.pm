@@ -98,6 +98,43 @@ sub _methods {
                 SOAP::Data->new(name => 'token', type => 'string'),
             ],
         },
+        'ServiceRequests_Updates_Get' => {
+            endpoint   => 'https://collapi.bartec-systems.com/API-R152/CollectiveAPI.asmx',
+            soapaction => 'http://bartec-systems.com/ServiceRequests_Updates_Get',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [
+                SOAP::Data->new(name => 'bar:token', type => 'string'),
+                SOAP::Data->new(name => 'bar:LastUpdated', type => 'dateTime'),
+            ],
+        },
+        'ServiceRequests_History_Get' => {
+            endpoint   => 'https://collapi.bartec-systems.com/API-R152/CollectiveAPI.asmx',
+            soapaction => 'http://bartec-systems.com/ServiceRequests_History_Get',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [
+                SOAP::Data->new(name => 'bar:token', type => 'string'),
+                SOAP::Data->new(name => 'bar:ServiceRequestID', type => 'int'),
+                #SOAP::Data->new(name => 'bar:ID', type => 'int'),
+                SOAP::Data->new(name => 'bar:Date', type => 'dateTime'),
+            ],
+        },
+        'ServiceRequests_Get' => {
+            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            soapaction => 'http://bartec-systems.com/ServiceRequests_Get',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [
+                SOAP::Data->new(name => 'token', type => 'string'),
+                SOAP::Data->new(name => 'ServiceCode', type => 'string'),
+            ],
+        },
+        'ServiceRequests_Statuses_Get' => {
+            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            soapaction => 'http://bartec-systems.com/ServiceRequests_Statuses_Get',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [
+                SOAP::Data->new(name => 'token', type => 'string'),
+            ],
+        },
     };
 }
 
@@ -188,7 +225,26 @@ sub _wrapper {
 sub ServiceRequests_Types_Get {
     my $self = shift;
     return $self->_wrapper('ServiceRequests_Types_Get', @_);
+}
 
+sub ServiceRequests_Updates_Get {
+    my $self = shift;
+    return $self->_wrapper('ServiceRequests_Updates_Get', @_);
+}
+
+sub ServiceRequests_History_Get {
+    my $self = shift;
+    return $self->_wrapper('ServiceRequests_History_Get', @_);
+}
+
+sub ServiceRequests_Get {
+    my $self = shift;
+    return $self->_wrapper('ServiceRequests_Get', @_);
+}
+
+sub ServiceRequests_Statuses_Get {
+    my $self = shift;
+    return $self->_wrapper('ServiceRequests_Statuses_Get', @_);
 }
 
 1;
