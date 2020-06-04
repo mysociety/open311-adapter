@@ -1,0 +1,47 @@
+    <Premises_GetResponse xmlns="http://bartec-systems.com/">
+      <Premises_GetResult xmlns="http://www.bartec-systems.com/Premises_Get.xsd" RecordCount="1">
+        <Premises>
+          <UPRN xmlns="http://www.bartec-systems.com">987654321</UPRN>
+          <USRN xmlns="http://www.bartec-systems.com">123456789</USRN>
+          <Address xmlns="http://www.bartec-systems.com">
+            <Address1/>
+            <Address2>79</Address2>
+            <Street>A STREET</Street>
+            <Locality></Locality>
+            <Town>PETERBOROUGH</Town>
+            <PostCode>PE2 5TJ</PostCode>
+          </Address>
+          <UserLabel xmlns="http://www.bartec-systems.com"/>
+          <Ward xmlns="http://www.bartec-systems.com">
+            <ID>2520</ID>
+            <WardCode>E05010818</WardCode>
+            <Name>Orton Longueville</Name>
+            <RecordStamp>
+              <AddedBy>dbo</AddedBy>
+              <DateAdded>2018-11-12T13:53:01.53</DateAdded>
+            </RecordStamp>
+          </Ward>
+          <Parish xmlns="http://www.bartec-systems.com">
+            <ID>14145</ID>
+            <ParishCode>00JA016</ParishCode>
+            <Name>Orton Longueville</Name>
+            <RecordStamp>
+              <AddedBy>dbo</AddedBy>
+              <DateAdded>2018-11-12T13:52:44.71</DateAdded>
+            </RecordStamp>
+          </Parish>
+          <Location xmlns="http://www.bartec-systems.com">
+            <BNG Easting="516077.972837897" Northing="295052.04781655"/>
+            <Metric Latitude="52.540930" Longitude="-0.289832"/>
+          </Location>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>dbo</AddedBy>
+            <DateAdded>2018-11-12T14:22:23.3</DateAdded>
+          </RecordStamp>
+        </Premises>
+        <Errors>
+          <Result xmlns="http://www.bartec-systems.com">0</Result>
+          <Message xmlns="http://www.bartec-systems.com"/>
+        </Errors>
+      </Premises_GetResult>
+    </Premises_GetResponse>

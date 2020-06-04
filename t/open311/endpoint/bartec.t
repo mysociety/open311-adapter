@@ -1,30 +1,14 @@
-package Integrations::Bartec::Dummy;
-use Path::Tiny;
-use Moo;
-extends 'Integrations::Bartec';
-sub _build_config_file { path(__FILE__)->sibling('bartec.yml')->stringify }
-
-sub get_integration {
-    my $self = shift;
-    my $integ = 'Integrations::Bartec::Dummy';
-    $integ = $integ->on_fault(sub {
-        my($soap, $res) = @_;
-        die ref $res ? $res->faultstring : $soap->transport->status, "\n";
-    });
-    $integ->config_filename('dummy');
-    return $integ;
-}
-
-package main;
-
 use strict; use warnings;
 
 use Test::More;
 use Test::LongString;
 use Test::MockModule;
+use Test::MockTime ':all';
 use Test::Output;
 use JSON::MaybeXS;
 use Path::Tiny;
+use SOAP::Lite;
+use SOAP::Transport::HTTP;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
@@ -44,6 +28,9 @@ my %responses = (
   </AuthenticateResult>
 </AuthenticateResponse>',
     ServiceRequests_Types_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_types_get.xml')->slurp,
+    ServiceRequests_Create => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_create.xml')->slurp,
+    ServiceRequests_Statuses_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_status_get.xml')->slurp,
+    Premises_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/get_premises.xml')->slurp,
 );
 
 sub gen_full_response {
@@ -61,12 +48,18 @@ EOF
     return $xml;
 }
 
-my $soap = Test::MockModule->new('SOAP::Lite');
-$soap->mock(call => sub {
-        my ($self, $call) = @_;
+my %sent;
 
-        my $xml = gen_full_response( $responses{$call} );
-        return SOAP::Deserializer->deserialize($xml);
+my $t = SOAP::Transport::HTTP::Client->new();
+my $transport = Test::MockModule->new('SOAP::Transport::HTTP::Client', no_auto => 1);
+$transport->mock(send_receive => sub {
+        my $self = shift;
+        my %args = @_;
+
+        (my $action = $args{action}) =~ s#http://bartec-systems.com/##;
+        $action =~ s/"//g;
+        $sent{$action} = $args{envelope};
+        return gen_full_response( $responses{$action} );
     }
 );
 
@@ -238,6 +231,61 @@ subtest "check fetch service" => sub {
         ]
     },
     'correct services returned';
+};
+
+subtest "check send basic report" => sub {
+    set_fixed_time('2020-06-17T16:28:30Z');
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        jurisdiction_id => 'bartec',
+        api_key => 'test',
+        service_code => '1',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        'attribute[fixmystreet_id]' => 1,
+        'attribute[northing]' => 1,
+        'attribute[easting]' => 1,
+        'attribute[description]' => 1,
+        'attribute[report_url]' => 1,
+        'attribute[title]' => 1,
+        'attribute[street]' => 'a street',
+        'attribute[postcode]' => 'AB1 1BA',
+    );
+
+    my $sent = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Create} );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply $sent->body->{ServiceRequests_Create}, {
+        DateRequested => '2020-06-17T17:28:30+01:00',
+        token => 'ABC=',
+        UPRN => 987654321,
+        ServiceTypeID => 1,
+        ServiceStatusID => 2276,
+        CrewID => 11,
+        LandTypeID => 12,
+        SLAID => 13,
+        serviceLocationDescription => 'description',
+        ServiceRequest_Location => {
+            Metric => {
+                Longitude => 0.1,
+                Latitude => 50,
+            }
+        },
+        #source => 'FixMyStreet',
+        ExternalReference => 1,
+        reporterContact => {
+            Forename => 'Bob',
+            Surname => 'Mould',
+            Email => 'test@example.com',
+        }
+    }, 'correct request sent';
+
+    is_deeply decode_json($res->content), [ { service_request_id => '0001' } ], 'correct return';
 };
 
 done_testing;

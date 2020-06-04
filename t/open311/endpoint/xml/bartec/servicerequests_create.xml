@@ -1,0 +1,7 @@
+<ServiceRequests_CreateResponse xmlns="http://bartec-systems.com/">
+      <ServiceRequests_CreateResult RecordCount="int" xmlns="http://www.bartec-systems.com/ServiceRequests_Types_Get.xsd">
+        <ServiceRequests_Create>
+        </ServiceRequests_Create>
+        <ServiceCode>0001</ServiceCode>
+     </ServiceRequests_CreateResult>
+ </ServiceRequests_CreateResponse>

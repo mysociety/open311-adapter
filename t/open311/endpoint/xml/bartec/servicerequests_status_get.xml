@@ -1,0 +1,96 @@
+    <ServiceRequests_Statuses_GetResponse xmlns="http://bartec-systems.com/">
+      <ServiceRequests_Statuses_GetResult xmlns="http://www.bartec-systems.com/ServiceRequests_Statuses_Get.xsd" RecordCount="496">
+        <ServiceStatus>
+          <ID xmlns="http://www.bartec-systems.com">2274</ID>
+          <Status xmlns="http://www.bartec-systems.com">PENDING</Status>
+          <SequenceNumber xmlns="http://www.bartec-systems.com">0</SequenceNumber>
+          <ServiceTypeID xmlns="http://www.bartec-systems.com">1</ServiceTypeID>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>bartec</AddedBy>
+            <DateAdded>2019-02-22T16:11:11.953</DateAdded>
+            <Comments/>
+          </RecordStamp>
+        </ServiceStatus>
+        <ServiceStatus>
+          <ID xmlns="http://www.bartec-systems.com">2275</ID>
+          <Status xmlns="http://www.bartec-systems.com">INTERVENTION</Status>
+          <SequenceNumber xmlns="http://www.bartec-systems.com">1</SequenceNumber>
+          <ServiceTypeID xmlns="http://www.bartec-systems.com">1</ServiceTypeID>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>bartec</AddedBy>
+            <DateAdded>2019-02-22T16:11:11.953</DateAdded>
+            <Comments/>
+          </RecordStamp>
+        </ServiceStatus>
+        <ServiceStatus>
+          <ID xmlns="http://www.bartec-systems.com">2276</ID>
+          <Status xmlns="http://www.bartec-systems.com">OPEN</Status>
+          <SequenceNumber xmlns="http://www.bartec-systems.com">2</SequenceNumber>
+          <ServiceTypeID xmlns="http://www.bartec-systems.com">1</ServiceTypeID>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>bartec</AddedBy>
+            <DateAdded>2019-02-22T16:11:11.953</DateAdded>
+            <Comments/>
+          </RecordStamp>
+        </ServiceStatus>
+        <ServiceStatus>
+          <ID xmlns="http://www.bartec-systems.com">2277</ID>
+          <Status xmlns="http://www.bartec-systems.com">ASSIGNED</Status>
+          <SequenceNumber xmlns="http://www.bartec-systems.com">3</SequenceNumber>
+          <ServiceTypeID xmlns="http://www.bartec-systems.com">1</ServiceTypeID>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>bartec</AddedBy>
+            <DateAdded>2019-02-22T16:11:11.953</DateAdded>
+            <Comments/>
+          </RecordStamp>
+        </ServiceStatus>
+        <ServiceStatus>
+          <ID xmlns="http://www.bartec-systems.com">2278</ID>
+          <Status xmlns="http://www.bartec-systems.com">IN PROGRESS</Status>
+          <SequenceNumber xmlns="http://www.bartec-systems.com">4</SequenceNumber>
+          <ServiceTypeID xmlns="http://www.bartec-systems.com">1</ServiceTypeID>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>bartec</AddedBy>
+            <DateAdded>2019-02-22T16:11:11.953</DateAdded>
+            <Comments/>
+          </RecordStamp>
+        </ServiceStatus>
+        <ServiceStatus>
+          <ID xmlns="http://www.bartec-systems.com">2279</ID>
+          <Status xmlns="http://www.bartec-systems.com">UNABLE TO COMPLETE</Status>
+          <SequenceNumber xmlns="http://www.bartec-systems.com">5</SequenceNumber>
+          <ServiceTypeID xmlns="http://www.bartec-systems.com">1</ServiceTypeID>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>bartec</AddedBy>
+            <DateAdded>2019-02-22T16:11:11.953</DateAdded>
+            <Comments/>
+          </RecordStamp>
+        </ServiceStatus>
+        <ServiceStatus>
+          <ID xmlns="http://www.bartec-systems.com">2280</ID>
+          <Status xmlns="http://www.bartec-systems.com">CLOSED</Status>
+          <SequenceNumber xmlns="http://www.bartec-systems.com">6</SequenceNumber>
+          <ServiceTypeID xmlns="http://www.bartec-systems.com">1</ServiceTypeID>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>bartec</AddedBy>
+            <DateAdded>2019-02-22T16:11:11.953</DateAdded>
+            <Comments/>
+          </RecordStamp>
+        </ServiceStatus>
+        <ServiceStatus>
+          <ID xmlns="http://www.bartec-systems.com">2281</ID>
+          <Status xmlns="http://www.bartec-systems.com">CANCELLED</Status>
+          <SequenceNumber xmlns="http://www.bartec-systems.com">7</SequenceNumber>
+          <ServiceTypeID xmlns="http://www.bartec-systems.com">1</ServiceTypeID>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>bartec</AddedBy>
+            <DateAdded>2019-02-22T16:11:11.953</DateAdded>
+            <Comments/>
+          </RecordStamp>
+        </ServiceStatus>
+        <Errors>
+          <Result xmlns="http://www.bartec-systems.com">0</Result>
+          <Message xmlns="http://www.bartec-systems.com"/>
+        </Errors>
+      </ServiceRequests_Statuses_GetResult>
+    </ServiceRequests_Statuses_GetResponse>

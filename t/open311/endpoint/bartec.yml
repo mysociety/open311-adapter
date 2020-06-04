@@ -3,3 +3,16 @@ password: password
 
 allowed_services:
   - Leaf Removal
+
+field_defaults:
+  Source: FixMyStreet
+
+status_map:
+  OPEN: open
+  PENDING: investigating
+  INTERVENTION: in_progress
+  ASSIGNED: in_progress
+  CANCELLED: closed
+  'UNABLE TO COMPLETE': closed
+  CLOSED: closed
+  'IN PROGRESS': in_progress

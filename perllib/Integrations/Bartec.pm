@@ -1,6 +1,6 @@
 package Integrations::Bartec;
 
-use SOAP::Lite;
+use SOAP::Lite; # +trace => [ transport => \&log_message ]; # for debug
 use Exporter;
 use DateTime::Format::W3CDTF;
 use Carp ();
@@ -60,6 +60,15 @@ has memcache => (
     },
 );
 
+sub log_message {
+    my ($msg) = @_;
+
+    my $l = Open311::Endpoint::Logger->new;
+    if ( ref($msg) eq 'HTTP::Request' || ref($msg) eq 'HTTP::Response' ) {
+        $l->debug($msg->content);
+    }
+}
+
 has token => (
     is => 'lazy',
     default => sub {
@@ -76,6 +85,42 @@ has token => (
             $self->memcache->set('token', $token, 300);
         }
         return $token;
+    }
+);
+
+has status_map => (
+    is => 'lazy',
+    default => sub {
+        my $self = shift;
+        my $statuses = $self->ServiceRequests_Statuses_Get;
+        my %map;
+        for my $status ( @{ $statuses->{ServiceStatus} } ) {
+            $map{ $status->{ServiceTypeID} } ||= {};
+            my $fms_status = $self->config->{status_map}->{ $status->{Status} };
+            next unless $fms_status;
+            $map{ $status->{ServiceTypeID} }->{$fms_status} = $status->{ID};
+        }
+
+        return \%map;
+    }
+);
+
+has service_defaults => (
+    is => 'lazy',
+    default => sub {
+        my $self = shift;
+        my $services = $self->ServiceRequests_Types_Get;
+
+        my %defaults;
+        for my $service ( @{ $services->{ServiceType} } ) {
+            $defaults{ $service->{ID} } = {
+                CrewID => $service->{DefaultCrew}->{ID},
+                SLAID => $service->{DefaultSLA}->{ID},
+                LandTypeID => $service->{DefaultLandType}->{ID},
+            };
+        }
+
+        return \%defaults;
     }
 );
 
@@ -123,6 +168,12 @@ sub _methods {
                 #SOAP::Data->new(name => 'bar:ID', type => 'int'),
                 SOAP::Data->new(name => 'bar:Date', type => 'dateTime'),
             ],
+        },
+        'ServiceRequests_Create' => {
+            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            soapaction => 'http://bartec-systems.com/ServiceRequests_Create',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [],
         },
         'ServiceRequests_Get' => {
             endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
@@ -210,10 +261,11 @@ sub Authenticate {
 }
 
 sub _wrapper {
-    my ($self, $method) = (shift, shift);
+    my ($self, $method, $no_token) = (shift, shift, shift);
     my $response;
 
     my @params = @_;
+    unshift @params, $self->token unless $no_token;
     try {
         $response = $self->_call( { method=> $method, args => \@params } );
 
@@ -258,24 +310,72 @@ sub Premises_Get {
     return $r;
 }
 
+sub ServiceRequests_Create {
+    my ($self, $service, $values) = @_;
+
+    my $dt = DateTime->now(time_zone => 'Europe/London');
+    my $time = DateTime::Format::W3CDTF->new->format_datetime($dt);
+
+    my $status_id = $self->status_map->{$values->{service_code}}->{open};
+
+    my %req = (
+        token => $self->token,
+        #appointmentReservationID => undef,
+        UPRN => $values->{uprn}, # 100090180415,
+        ServiceStatusID => $status_id,
+        DateRequested => $time,
+        ServiceTypeID => $values->{service_code},
+        serviceLocationDescription => $values->{description},
+        ServiceRequest_Location => {
+            Metric => {
+                ns => 'http://www.bartec-systems.com',
+                Latitude => $values->{lat} * 1,
+                Longitude => $values->{long} * 1,
+            },
+        },
+        #source => $values->{Source},
+        ExternalReference => $values->{attributes}->{fixmystreet_id},
+        reporterContact => {
+            Forename => { ns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd', value => $values->{first_name} },
+            Surname => { ns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd', value => $values->{last_name} },
+            Email => { ns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd', value => $values->{email} },
+        },
+    );
+
+    my %data = (
+        %{ $self->service_defaults->{$values->{service_code} } },
+        %req
+    );
+
+    my $elem = SOAP::Data->value( make_soap_structure( %data ) );
+
+    return $self->_wrapper('ServiceRequests_Create', 1, $elem);
+}
+
 sub ServiceRequests_Updates_Get {
     my $self = shift;
-    return $self->_wrapper('ServiceRequests_Updates_Get', @_);
+    return $self->_wrapper('ServiceRequests_Updates_Get', 0, @_);
 }
 
 sub ServiceRequests_History_Get {
     my $self = shift;
-    return $self->_wrapper('ServiceRequests_History_Get', @_);
+    return $self->_wrapper('ServiceRequests_History_Get', 0, @_);
 }
 
 sub ServiceRequests_Get {
     my $self = shift;
-    return $self->_wrapper('ServiceRequests_Get', @_);
+    return $self->_wrapper('ServiceRequests_Get', 0, @_);
 }
 
 sub ServiceRequests_Statuses_Get {
     my $self = shift;
-    return $self->_wrapper('ServiceRequests_Statuses_Get', @_);
+    my $statuses = $self->memcache->get('ServiceRequests_Statuses_Get');
+    unless ($statuses) {
+        $statuses = $self->_wrapper('ServiceRequests_Statuses_Get', 0, @_);
+        $self->memcache->set('ServiceRequests_Statuses_Get', $statuses, 1800);
+    }
+
+    return $statuses;
 }
 
 sub make_soap_structure {
