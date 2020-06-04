@@ -68,4 +68,33 @@ sub service {
     return $services[0];
 }
 
+sub post_service_request {
+    my ($self, $service, $args) = @_;
+    die "No such service" unless $service;
+
+    my $integ = $self->get_integration;
+    my $config = $integ->config;
+
+    my $premises = $integ->Premises_Get(
+        $args->{attributes}->{site_code}, $args->{attributes}->{postcode}, $args->{attributes}->{house_no}, $args->{attributes}->{street}
+    );
+    if ($premises) {
+        my $result = ref $premises->{Premises} eq 'ARRAY' ? $premises->{Premises}->[0] : $premises->{Premises};
+        $args->{uprn} = $result->{UPRN};
+    }
+    my $defaults = $config->{field_defaults} || {};
+    my $req = {
+        %$defaults,
+        %$args
+    };
+
+    my $res = $integ->ServiceRequests_Create($service, $req);
+    die "failed to send" unless $res->{ServiceCode};
+    return $self->new_request(
+        service_request_id => $res->{ServiceCode}
+    );
+
+
+}
+
 __PACKAGE__->run_if_script;
