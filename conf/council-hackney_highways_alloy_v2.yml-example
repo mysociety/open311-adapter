@@ -13,6 +13,8 @@
   "service_whitelist": {
   },
 
+  "default_category_attribute_value": "",
+
   "resource_attribute_defaults": {
   },
 

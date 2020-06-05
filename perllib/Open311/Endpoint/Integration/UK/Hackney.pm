@@ -54,8 +54,12 @@ sub process_attributes {
     # a matching contact
     my $contact_resource_id = $self->_find_or_create_contact($args);
 
-    # Unlike Northants, Hackney has an item for each category (not group)
-    my $group_code = $self->_find_category_code($args->{service_code});
+    # Unlike Northants, Hackney has an item for each category (not group).
+    # Not every category on the FMS side has a matching attribute value in Alloy,
+    # so the default_category_attribute_value config value is used when the
+    # service code doesn't exist in category_list_code, because a value is
+    # required by Alloy.
+    my $group_code = $self->_find_category_code($args->{service_code}) || $self->config->{default_category_attribute_value};
     push @$attributes, {
         attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{category},
         value => [ $group_code ],
