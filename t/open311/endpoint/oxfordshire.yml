@@ -7,6 +7,11 @@
         "detail": "POT_detail"
       }
     },
+    "defect_mapping": {
+        "category": { "Kerbing": 4 },
+        "type": { "Damaged": 37 },
+        "detail": { "Small": 25 }
+    },
     "status_map": {
       "mapped_status": "in_progress"
     }

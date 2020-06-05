@@ -61,6 +61,15 @@ my %responses = (
           </soap:Body>
         </soap:Envelope>
     ',
+    'SOAP CreateInstruction' => '
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <CreateInstructionResponse xmlns="http://www.wdm.co.uk/remedy/">
+              <CreateInstructionResult>OK</CreateInstructionResult>
+            </CreateInstructionResponse>
+          </soap:Body>
+        </soap:Envelope>
+    ',
     'SOAP CreateEnquiry' => '
         <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
           <soap:Body>
@@ -650,6 +659,58 @@ subtest "post update" => sub {
     is_deeply decode_json($res->content),
     [ {
         update_id => '1234',
+    } ], 'correct json returned';
+};
+
+subtest "post update that is a defect" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'oxfordshire',
+        api_key => 'test',
+        service_request_id => "wdm2345",
+        updated_datetime => "2014-01-01T12:00:00Z",
+        update_id => 2345,
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'This is an update',
+        status => 'INVESTIGATING',
+        'attribute[raise_defect]' => 1,
+        'attribute[easting]' => 400,
+        'attribute[northing]' => 300,
+        'attribute[usrn]' => 40066632,
+        'attribute[extra_details]' => 'foo TM1 S&F 200x200',
+        'attribute[defect_location_description]' => 'Location',
+        'attribute[defect_item_category]' => 'Kerbing',
+        'attribute[defect_item_type]' => 'Damaged',
+        'attribute[defect_item_detail]' => 'Small',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is $sent->{content}, '<wdminstruction>
+  <comments>foo TM1 S&amp;F 200x200</comments>
+  <easting>400</easting>
+  <external_system_reference>wdm2345</external_system_reference>
+  <instruction_time>01/01/2014 12:00</instruction_time>
+  <item_category_uid>4</item_category_uid>
+  <item_detail_uid>25</item_detail_uid>
+  <item_type_uid>37</item_type_uid>
+  <location_description>Location</location_description>
+  <northing>300</northing>
+  <response_time_uid>73</response_time_uid>
+  <usrn>40066632</usrn>
+</wdminstruction>
+',
+    'correct xml sent';
+
+    is_deeply decode_json($res->content),
+    [ {
+        update_id => '2345',
     } ], 'correct json returned';
 };
 

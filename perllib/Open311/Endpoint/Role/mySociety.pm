@@ -104,8 +104,9 @@ sub GET_Service_Request_Updates {
 }
 
 sub POST_Service_Request_Update_input_schema {
-    my $self = shift;
-    return {
+    my ($self, $args) = @_;
+
+    my $attributes = {
         type => '//rec',
         required => {
             $self->get_jurisdiction_id_required_clause,
@@ -130,6 +131,15 @@ sub POST_Service_Request_Update_input_schema {
             service_code => $self->get_identifier_type('service_code'),
         }
     };
+
+    # Allow attributes through for Oxfordshire XXX
+    if (($args->{jurisdiction_id} || '') eq 'oxfordshire') {
+        for my $key (grep { /^attribute\[\w+\]$/ } keys %$args) {
+            $attributes->{optional}{$key} = '//str';
+        }
+    }
+
+    return $attributes;
 }
 
 sub POST_Service_Request_Update_output_schema {
@@ -155,6 +165,13 @@ sub POST_Service_Request_Update_output_schema {
 
 sub POST_Service_Request_Update {
     my ($self, $args) = @_;
+
+    for my $k (keys %$args) {
+        if ($k =~ /^attribute\[(\w+)\]$/) {
+            my $value = delete $args->{$k};
+            $args->{attributes}{$1} = $value;
+        }
+    }
 
     my $service_request_update = $self->post_service_request_update( $args );
 

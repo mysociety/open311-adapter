@@ -65,6 +65,10 @@ sub post_service_request_update {
 
     my $response = $self->get_integration->post_update($args);
 
+    if ($args->{attributes}{raise_defect}) {
+        $self->get_integration->raise_defect($args);
+    }
+
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
         status => lc $args->{status},
         service_request_id => $args->{service_request_id},
