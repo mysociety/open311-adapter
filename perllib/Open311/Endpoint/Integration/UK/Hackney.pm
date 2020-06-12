@@ -9,6 +9,15 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
+has '+group_in_service_code' => (
+    is => 'ro',
+    default => 0
+);
+
+sub service_request_content {
+    '/open311/service_request_extended'
+}
+
 # basic services creating without setting up attributes from Alloy
 sub services {
     my $self = shift;
