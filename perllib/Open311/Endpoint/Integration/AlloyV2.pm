@@ -559,8 +559,8 @@ sub get_service_requests {
 
         unless ($args{latlong}) {
             my $geometry = $request->{geometry};
-            $self->logger->error("Defect $request->{resourceId}: don't know how to handle geometry: $geometry->{type}");
-            warn "Defect $request->{resourceId}: don't know how to handle geometry: $geometry->{type}\n";
+            $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry->{type}");
+            warn "Defect $request->{itemId}: don't know how to handle geometry: $geometry->{type}\n";
             next;
         }
 
