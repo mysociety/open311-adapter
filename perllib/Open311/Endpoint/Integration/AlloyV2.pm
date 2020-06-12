@@ -683,11 +683,20 @@ sub get_latlong_from_request {
 
     if ( $geometry->{type} eq 'Point') {
         # convert from string because the validation expects numbers
-        $latlong = [ map { $_ * 1 } @{ $geometry->{coordinates} } ];
+        my ($x, $y) = map { $_ * 1 } @{ $geometry->{coordinates} };
+        $latlong = [$y, $x];
     } elsif ( $geometry->{type} eq 'LineString') {
         my @points = @{ $geometry->{coordinates} };
         my $half = int( @points / 2 );
-        $latlong = [ $points[$half]->[0], $points[$half]->[1] ];
+        $latlong = [ $points[$half]->[1], $points[$half]->[0] ];
+    } elsif ( $geometry->{type} eq 'MultiLineString') {
+        my @points;
+        my @segments = @{ $geometry->{coordinates} };
+        for my $segment (@segments) {
+            push @points, @$segment;
+        }
+        my $half = int( @points / 2 );
+        $latlong = [ $points[$half]->[1], $points[$half]->[0] ];
     } elsif ( $geometry->{type} eq 'Polygon') {
         my @points = @{ $geometry->{coordinates}->[0] };
         my ($max_x, $max_y, $min_x, $min_y) = ($points[0]->[0], $points[0]->[1], $points[0]->[0], $points[0]->[1]);

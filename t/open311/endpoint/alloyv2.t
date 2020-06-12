@@ -515,13 +515,13 @@ subtest "check fetch problem" => sub {
 
     is_deeply decode_json($res->content),
     [{
-      long => 1,
+      long => 2,
       requested_datetime => "2019-01-02T11:29:16Z",
       service_code => "Bus Stops_Shelter Damaged",
       updated_datetime => "2019-01-02T11:29:16Z",
       service_name => "Bus Stops_Shelter Damaged",
       address_id => "",
-      lat => 2,
+      lat => 1,
       description => "test",
       service_request_id => 4947505,
       zipcode => "",
@@ -531,7 +531,7 @@ subtest "check fetch problem" => sub {
    },
    {
       address_id => "",
-      lat => 2,
+      lat => 1,
       service_request_id => 4947597,
       description => "fill",
       service_name => "Winter_Grit Bin - empty/refill",
@@ -540,7 +540,7 @@ subtest "check fetch problem" => sub {
       address => "",
       zipcode => "",
       requested_datetime => "2019-01-02T14:44:53Z",
-      long => 1,
+      long => 2,
       updated_datetime => "2019-01-02T14:44:53Z",
       service_code => "Winter_Grit Bin - empty/refill"
    }], "correct json returned";
