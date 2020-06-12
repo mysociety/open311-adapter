@@ -71,6 +71,11 @@ has config => (
     default => sub { $_[0]->alloy->config }
 );
 
+has group_in_service_code => (
+    is => 'ro',
+    default => 1
+);
+
 sub get_integration {
     return $_[0]->alloy;
 }
@@ -581,7 +586,9 @@ sub get_service_requests {
         $args{requested_datetime} = $self->date_to_truncated_dt( $request->{start} );
         $args{updated_datetime} = $self->date_to_truncated_dt( $request->{start} );
 
-        push @requests, Open311::Endpoint::Service::Request::ExtendedStatus->new( %args );
+        my $request = $self->new_request( %args );
+
+        push @requests, $request;
     }
 
     return @requests;
@@ -741,6 +748,7 @@ sub get_defect_category {
     }
 
     return '' unless $category;
+    return $category unless $self->group_in_service_code;
 
     my $group = $self->reverse_whitelist->{$category} || '';
 
