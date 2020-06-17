@@ -90,6 +90,12 @@ sub _methods {
                 SOAP::Data->new(name => 'password', type => 'string'),
             ],
         },
+        'Premises_Get' => {
+            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            soapaction => 'http://bartec-systems.com/Premises_Get',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [],
+        },
         'ServiceRequests_Types_Get' => {
             endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
             soapaction => 'http://bartec-systems.com/ServiceRequests_Types_Get',
@@ -233,6 +239,25 @@ sub ServiceRequests_Types_Get {
     return $types;
 }
 
+sub Premises_Get {
+    my ($self, $uprn, $postcode, $address, $street) = @_;
+
+    my %req = (
+        token => $self->token,
+        UPRN => undef,
+        USRN => $uprn,
+        ParentUPRN => undef,
+        #Postcode => $postcode,
+        Address2 => $address,
+        Street => uc $street,
+    );
+
+    my $elem = SOAP::Data->value( make_soap_structure( %req ) );
+
+    my $r = $self->_wrapper('Premises_Get', 1, $elem);
+    return $r;
+}
+
 sub ServiceRequests_Updates_Get {
     my $self = shift;
     return $self->_wrapper('ServiceRequests_Updates_Get', @_);
@@ -251,6 +276,41 @@ sub ServiceRequests_Get {
 sub ServiceRequests_Statuses_Get {
     my $self = shift;
     return $self->_wrapper('ServiceRequests_Statuses_Get', @_);
+}
+
+sub make_soap_structure {
+    my @out;
+    for (my $i=0; $i<@_; $i+=2) {
+        my $name = $_[$i]; # =~ /:/ ? $_[$i] : "$namespace:$_[$i]";
+        my $v = $_[$i+1];
+        if (ref $v eq 'HASH') {
+            if ( $v->{attr} ) {
+                my $d = SOAP::Data->name($name);
+                $d->attr($v->{attr});
+                push @out, $d;
+            } else {
+                my $d;
+                if ( $v->{ns} ) {
+                    my $ns = $v->{ns};
+                    delete $v->{ns};
+                    if ( $v->{value} ) {
+                        $d = SOAP::Data->name($name => $v->{value});
+                    } else {
+                        $d = SOAP::Data->name($name => \SOAP::Data->value(make_soap_structure(%$v)));
+                    }
+                    $d->attr( { xmlns => $ns } );
+                } else {
+                    $d = SOAP::Data->name($name => \SOAP::Data->value(make_soap_structure(%$v)));
+                }
+                push @out, $d;
+            }
+        } elsif (ref $v eq 'ARRAY') {
+            push @out, map { SOAP::Data->name($name => \SOAP::Data->value(make_soap_structure(%$_))) } @$v;
+        } else {
+            push @out, SOAP::Data->name($name => $v);
+        }
+    }
+    return @out;
 }
 
 1;
