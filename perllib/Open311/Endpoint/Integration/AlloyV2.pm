@@ -716,7 +716,7 @@ sub get_latlong_from_request {
         }
         my $x = $min_x + ( ( $max_x - $min_x ) / 2 );
         my $y = $min_y + ( ( $max_y - $min_y ) / 2 );
-        $latlong = [ $x, $y ];
+        $latlong = [ $y, $x ];
     }
 
     return $latlong;
