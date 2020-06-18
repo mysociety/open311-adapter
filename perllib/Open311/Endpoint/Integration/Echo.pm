@@ -14,6 +14,7 @@ with 'Role::Logger';
 use Integrations::Echo;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::UKCouncil::Echo;
+use Open311::Endpoint::Service::Request::Update;
 
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
@@ -161,6 +162,16 @@ sub process_service_request_args {
     };
 
     return $request;
+}
+
+sub post_service_request_update {
+    my ($self, $args) = @_;
+
+    my $response = $self->get_integration->PerformEventAction($args);
+    return Open311::Endpoint::Service::Request::Update->new(
+        status => lc $args->{status},
+        update_id => $response->{EventActionGuid},
+    );
 }
 
 1;

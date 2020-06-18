@@ -123,6 +123,25 @@ sub PostEvent {
     $self->call('PostEvent', event => $data);
 }
 
+sub PerformEventAction {
+    my ($self, $args) = @_;
+    my $ref = ixhash(
+        Key => 'Id',
+        Type => 'Event',
+        Value => [ { 'msArray:anyType' => $args->{service_request_id} }, ],
+    );
+    my $action = ixhash(
+        ActionTypeId => 3,
+        Data => { ExtensibleDatum => ixhash(
+            DatatypeId => 1,
+            Value => $args->{description},
+        ) },
+        EventRef => $ref,
+    );
+    $self->call('PerformEventAction', action => $action);
+
+}
+
 sub ixhash {
     tie (my %data, 'Tie::IxHash', @_);
     return \%data;
