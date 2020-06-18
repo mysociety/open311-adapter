@@ -190,7 +190,6 @@ sub post_service_request {
     my $parent_attribute_id;
 
 
-    my ( $group, $category ) = split('_', $service->service_code);
     my $resource = {
         # This appears to be shared amongst all asset types for now,
         # as everything is based off one design.
