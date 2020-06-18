@@ -112,6 +112,19 @@ $soap_lite->mock(call => sub {
                 { Id => 1008, Name => "Notes" },
             ] },
         });
+    } elsif ($method eq 'PerformEventAction') {
+        my @params = ${$args[3]->value}->value;
+        my $action_type_id = $params[0]->value;
+        is $action_type_id, 3;
+        my @data = ${${$params[1]->value}->value->value}->value;
+        my $text = $data[1]->value;
+        is $text, 'This is the text of the update';
+        my @ref = ${$params[2]->value}->value;
+        is $ref[1]->value, 'Event';
+        is ${$ref[2]->value}->value->value->value, 'test-12345';
+        return SOAP::Result->new(result => {
+            EventActionGuid => 'action-1234',
+        });
     } else {
         is $method, 'UNKNOWN';
     }
@@ -258,6 +271,25 @@ subtest "POST general enquiry OK" => sub {
     is_deeply decode_json($res->content),
         [ {
             "service_request_id" => '1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST update OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        update_id => '678',
+        updated_datetime => '2020-06-18T12:00:00Z',
+        service_request_id => 'test-12345',
+        status => 'OPEN',
+        description => 'This is the text of the update',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => 'action-1234',
         } ], 'correct json returned';
 };
 
