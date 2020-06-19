@@ -150,23 +150,23 @@ sub _methods {
             ],
         },
         'ServiceRequests_Updates_Get' => {
-            endpoint   => 'https://collapi.bartec-systems.com/API-R152/CollectiveAPI.asmx',
+            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
             soapaction => 'http://bartec-systems.com/ServiceRequests_Updates_Get',
             namespace  => 'http://bartec-systems.com/',
             parameters => [
-                SOAP::Data->new(name => 'bar:token', type => 'string'),
-                SOAP::Data->new(name => 'bar:LastUpdated', type => 'dateTime'),
+                SOAP::Data->new(name => 'token', type => 'string'),
+                SOAP::Data->new(name => 'LastUpdated', type => 'dateTime'),
             ],
         },
         'ServiceRequests_History_Get' => {
-            endpoint   => 'https://collapi.bartec-systems.com/API-R152/CollectiveAPI.asmx',
+            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
             soapaction => 'http://bartec-systems.com/ServiceRequests_History_Get',
             namespace  => 'http://bartec-systems.com/',
             parameters => [
-                SOAP::Data->new(name => 'bar:token', type => 'string'),
-                SOAP::Data->new(name => 'bar:ServiceRequestID', type => 'int'),
+                SOAP::Data->new(name => 'token', type => 'string'),
+                SOAP::Data->new(name => 'ServiceRequestID', type => 'int'),
                 #SOAP::Data->new(name => 'bar:ID', type => 'int'),
-                SOAP::Data->new(name => 'bar:Date', type => 'dateTime'),
+                SOAP::Data->new(name => 'Date', type => 'dateTime'),
             ],
         },
         'ServiceRequests_Create' => {
