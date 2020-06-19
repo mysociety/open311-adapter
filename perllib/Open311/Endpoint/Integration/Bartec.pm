@@ -75,13 +75,8 @@ sub post_service_request {
     my $integ = $self->get_integration;
     my $config = $integ->config;
 
-    my $premises = $integ->Premises_Get(
-        $args->{attributes}->{site_code}, $args->{attributes}->{postcode}, $args->{attributes}->{house_no}, $args->{attributes}->{street}
-    );
-    if ($premises) {
-        my $result = ref $premises->{Premises} eq 'ARRAY' ? $premises->{Premises}->[0] : $premises->{Premises};
-        $args->{uprn} = $result->{UPRN};
-    }
+    $args->{uprn} = $self->get_nearest_uprn($args);
+
     my $defaults = $config->{field_defaults} || {};
     my $req = {
         %$defaults,
@@ -93,8 +88,146 @@ sub post_service_request {
     return $self->new_request(
         service_request_id => $res->{ServiceCode}
     );
-
-
 }
+
+sub get_nearest_uprn {
+    my ($self, $args) = @_;
+
+    my $conf = $self->get_integration->config;
+
+    my $uprn;
+
+    my $lookup_type = $conf->{uprn_lookup}->{ $args->{service_code } };
+    if ( $lookup_type && $lookup_type eq 'USRN' && $args->{attributes}->{site_code} ) {
+        $uprn = $self->get_uprn_for_street( $args->{attributes}->{site_code} );
+    } else {
+        $uprn = $self->get_uprn_for_location( $args );
+    }
+
+    return $uprn;
+}
+
+
+sub get_uprn_for_street {
+    my ($self, $usrn) = @_;
+
+    my $uprn;
+
+    my $premises = $self->get_integration->Premises_Get({
+        usrn => $usrn,
+    });
+
+    if (ref $premises->{Premises} eq 'ARRAY') {
+        for my $p ( @{ $premises->{Premises} } ) {
+            next unless $p->{Address}->{Address1} eq 'STREET RECORD';
+
+            return $p->{UPRN};
+        }
+    }
+}
+
+sub get_uprn_for_location {
+    my ($self, $args) = @_;
+
+    my $bbox = $self->bbox_from_coords( $args->{lat}, $args->{long} );
+
+    my $premises = $self->get_integration->Premises_Get({
+        bbox => $bbox,
+        usrn => $args->{attributes}->{site_code},
+        postcode => $args->{attributes}->{postcode},
+        address => $args->{attributes}->{house_no},
+        street => $args->{attributes}->{street}
+    });
+
+    my $uprn;
+    my $address_matches = $self->get_integration->config->{address_match}->{ $args->{service_code} };
+    # if we've got more than one result loop over them to get the closest
+    if (ref $premises->{Premises} eq 'ARRAY') {
+        my $matches = { all => { uprn => '', min => 999 }, address => { uprn => '', min => 999 } };
+        my $i = 1;
+
+        # we need to loop over it this way in order to access the attributes
+        # but also count where we are so we can get the value of the matching
+        # premises.
+        for my $result ( $premises->{SOM}->dataof('//Premises/Location/Metric') ) {
+            my ($lat, $lon) = ( $result->attr->{Latitude}, $result->attr->{Longitude} );
+            my $dist = $self->distance_haversine( [ $lat, $lon ], [ $args->{lat}, $args->{long} ] );
+
+            my $p = $premises->{SOM}->valueof("//Premises_GetResult/[$i]");
+            if ( grep { $p->{Address}->{Address1} =~ /$_/ } @$address_matches ) {
+                if ( $dist < $matches->{address}->{min} ) {
+                    $matches->{address}->{min} = $dist;
+                    $matches->{address}->{uprn} = $p->{UPRN};
+                }
+            } elsif ( $dist < $matches->{all}->{min} ) {
+                $matches->{all}->{min} = $dist;
+                $matches->{all}->{uprn} = $p->{UPRN};
+            }
+            $i++;
+        }
+        $uprn = $matches->{address}->{uprn} ? $matches->{address}->{uprn} : $matches->{all}->{uprn};
+    } else {
+        $uprn = $premises->{Premises}->{UPRN};
+    }
+
+    return $uprn;
+}
+
+# generate a rough 100m square bounding box centred on the report
+sub bbox_from_coords {
+    my ($self, $lat, $long) = @_;
+
+    # roughly 50 meters
+    my $lat_delta = 0.000438;
+    my $lon_delta = 0.000736;
+
+    my $max_lat = $lat + $lat_delta;
+    my $min_lat = $lat - $lat_delta;
+
+    my $max_lon = $long + $lon_delta;
+    my $min_lon = $long - $lon_delta;
+
+    return { max => { lat => $max_lat, lon => $max_lon }, min => { lat => $min_lat, lon => $min_lon } };
+}
+
+
+# maths utility functions
+sub deg2rad { my $degrees = shift; return ($degrees / 180) * 3.14159265358979; }
+sub asin { atan2($_[0], sqrt(1 - $_[0] * $_[0])) }
+
+=for comment
+    Calculate the great circle distance between two points 
+    on the earth (specified in decimal degrees)
+    Haversine
+    formula: 
+        a = sin²(Δφ/2) + cos φ1 ⋅ cos φ2 ⋅ sin²(Δλ/2)
+                        _   ____
+        c = 2 ⋅ atan2( √a, √(1−a) )
+        d = R ⋅ c
+
+    where   φ is latitude, λ is longitude, R is earth’s radius (mean radius = 6,371km);
+            note that angles need to be in radians to pass to trig functions!
+=cut
+
+sub distance_haversine {
+    my ($self, $p1, $p2) = @_;
+    my ($lat1, $lon1) = @$p1;
+    my ($lat2, $lon2) = @$p2;
+
+    my $r = 6371; # km - earths's radius
+
+    # convert decimal degrees to radians
+    ($lat1, $lon1, $lat2, $lon2)  = map { deg2rad( $_ ) } ($lat1, $lon1, $lat2, $lon2);
+
+    # haversine formula 
+    my $dlon = $lon2 - $lon1;
+    my $dlat = $lat2 - $lat1;
+
+    $a = sin($dlat/2)**2 + cos($lat1) * cos($lat2) * sin($dlon/2)**2;
+    my $c = 2 * asin(sqrt($a));
+    my $d = $r * $c;
+    return $d;
+}
+
 
 __PACKAGE__->run_if_script;

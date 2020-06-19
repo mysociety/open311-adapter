@@ -16,3 +16,10 @@ status_map:
   'UNABLE TO COMPLETE': closed
   CLOSED: closed
   'IN PROGRESS': in_progress
+
+uprn_lookup:
+  200: USRN
+
+address_match:
+  100:
+    - OPEN SPACE
