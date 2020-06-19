@@ -39,6 +39,70 @@
             <DateAdded>2018-11-12T14:22:23.3</DateAdded>
           </RecordStamp>
         </Premises>
+        <Premises>
+          <UPRN xmlns="http://www.bartec-systems.com">987654321</UPRN>
+          <USRN xmlns="http://www.bartec-systems.com">123456789</USRN>
+          <Address xmlns="http://www.bartec-systems.com">
+            <Address1>STREET RECORD</Address1>
+            <Address2></Address2>
+            <Street>A STREET</Street>
+            <Locality></Locality>
+            <Town>PETERBOROUGH</Town>
+            <PostCode>PE2 5TJ</PostCode>
+          </Address>
+          <Location xmlns="http://www.bartec-systems.com">
+            <BNG Easting="516077.972837897" Northing="295052.04781655"/>
+            <Metric Latitude="52.540931" Longitude="-0.289832"/>
+          </Location>
+        </Premises>
+        <Premises>
+          <UPRN xmlns="http://www.bartec-systems.com">987654323</UPRN>
+          <USRN xmlns="http://www.bartec-systems.com">323456789</USRN>
+          <Address xmlns="http://www.bartec-systems.com">
+            <Address1>OPEN SPACE</Address1>
+            <Address2></Address2>
+            <Street>A STREET</Street>
+            <Locality></Locality>
+            <Town>PETERBOROUGH</Town>
+            <PostCode>PE2 5TJ</PostCode>
+          </Address>
+          <Location xmlns="http://www.bartec-systems.com">
+            <BNG Easting="516077.972837897" Northing="295052.04781655"/>
+            <Metric Latitude="52.540940" Longitude="-0.289834"/>
+          </Location>
+        </Premises>
+        <Premises>
+          <UPRN xmlns="http://www.bartec-systems.com">100000101</UPRN>
+          <USRN xmlns="http://www.bartec-systems.com">423456789</USRN>
+          <Address xmlns="http://www.bartec-systems.com">
+            <Address1/>
+            <Address2>82</Address2>
+            <Street>A STREET</Street>
+            <Locality></Locality>
+            <Town>PETERBOROUGH</Town>
+            <PostCode>PE2 5TJ</PostCode>
+          </Address>
+          <Location xmlns="http://www.bartec-systems.com">
+            <BNG Easting="516077.972837897" Northing="295052.04781655"/>
+            <Metric Latitude="52.540935" Longitude="-0.28937"/>
+          </Location>
+        </Premises>
+        <Premises>
+          <UPRN xmlns="http://www.bartec-systems.com">987654325</UPRN>
+          <USRN xmlns="http://www.bartec-systems.com">523456789</USRN>
+          <Address xmlns="http://www.bartec-systems.com">
+            <Address1/>
+            <Address2>83</Address2>
+            <Street>A STREET</Street>
+            <Locality></Locality>
+            <Town>PETERBOROUGH</Town>
+            <PostCode>PE2 5TJ</PostCode>
+          </Address>
+          <Location xmlns="http://www.bartec-systems.com">
+            <BNG Easting="516077.972837897" Northing="295052.04781655"/>
+            <Metric Latitude="52.540960" Longitude="-0.289842"/>
+          </Location>
+        </Premises>
         <Errors>
           <Result xmlns="http://www.bartec-systems.com">0</Result>
           <Message xmlns="http://www.bartec-systems.com"/>

@@ -244,14 +244,15 @@ subtest "check send basic report" => sub {
         last_name => 'Mould',
         email => 'test@example.com',
         description => 'description',
-        lat => '50',
-        long => '0.1',
+        lat => '52.540930',
+        long => '-0.289832',
         'attribute[fixmystreet_id]' => 1,
         'attribute[northing]' => 1,
         'attribute[easting]' => 1,
         'attribute[description]' => 1,
         'attribute[report_url]' => 1,
         'attribute[title]' => 1,
+        'attribute[house_no]' => '14',
         'attribute[street]' => 'a street',
         'attribute[postcode]' => 'AB1 1BA',
     );
@@ -272,8 +273,8 @@ subtest "check send basic report" => sub {
         serviceLocationDescription => 'description',
         ServiceRequest_Location => {
             Metric => {
-                Longitude => 0.1,
-                Latitude => 50,
+                Longitude => -0.289832,
+                Latitude => 52.540930,
             }
         },
         #source => 'FixMyStreet',
@@ -286,6 +287,74 @@ subtest "check send basic report" => sub {
     }, 'correct request sent';
 
     is_deeply decode_json($res->content), [ { service_request_id => '0001' } ], 'correct return';
+};
+
+subtest 'get address from bounding box' => sub {
+    my $uprn = $endpoint->get_nearest_uprn({
+            long => -0.28938,
+            lat => 52.540936,
+            service_code => 1,
+            attributes => {
+                site_code => 123456789
+            },
+    });
+
+    my $get_prem_obj = SOAP::Deserializer->deserialize( $sent{Premises_Get} );
+    my $point1 = $get_prem_obj->dataof('//Point1/Metric');
+    my $point2 = $get_prem_obj->dataof('//Point2/Metric');
+
+    is $point1->attr->{Latitude}, 52.541374, "point 1 longitude correct";
+    is $point1->attr->{Longitude}, -0.290116, "point 1 latitude correct";
+    is $point2->attr->{Latitude}, 52.540498, "point 2 longitude correct";
+    is $point2->attr->{Longitude}, -0.288644, "point 2 latitude correct";
+
+    my $get_prem_req = $get_prem_obj->body->{Premises_Get};
+
+    is_deeply $get_prem_req, {
+        token => 'ABC=',
+        UPRN => undef,
+        Bounds => {
+            Point1 => { Metric => '' },
+            Point2 => { Metric => '' },
+        }
+    }, "sent bounding box";
+
+    is $uprn, 100000101, "got correct uprn";
+};
+
+subtest 'get open space address from bounding box' => sub {
+    my $uprn = $endpoint->get_nearest_uprn({
+            long => -0.28938,
+            lat => 52.540936,
+            service_code => 100,
+            attributes => {
+                site_code => 123456789
+            },
+    });
+
+    is $uprn, 987654323 , "got correct uprn";
+};
+
+subtest 'get uprn for usrn' => sub {
+    my $uprn = $endpoint->get_nearest_uprn({
+            long => -0.28938,
+            lat => 52.540936,
+            service_code => 200,
+            attributes => {
+                site_code => 123456789
+            },
+    });
+
+    my $get_prem_obj = SOAP::Deserializer->deserialize( $sent{Premises_Get} );
+    my $get_prem_req = $get_prem_obj->body->{Premises_Get};
+
+    is_deeply $get_prem_req, {
+        token => 'ABC=',
+        UPRN => undef,
+        USRN => 123456789,
+    }, "only used USRN in request";
+
+    is $uprn,987654321 , "got correct uprn";
 };
 
 done_testing;

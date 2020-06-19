@@ -216,7 +216,9 @@ sub _call {
     my @parameters = $self->_setup_soap_params($endpoint, $args->{method}, $name, $args->{args});
 
     my $som = $endpoint->call(SOAP::Data->name($name)->attr({ xmlns => $method{namespace} }), @parameters);
-    UNIVERSAL::isa($som => 'SOAP::SOM') ? wantarray ? $som->paramsall : $som->result : $som;
+    my $res = $som->result;
+    $res->{SOM} = $som;
+    return $res;
 }
 
 sub _setup_soap_params {
@@ -285,6 +287,7 @@ sub ServiceRequests_Types_Get {
     my $types = $self->memcache->get('ServiceRequests_Types_Get');
     unless ($types) {
         $types = $self->_wrapper('ServiceRequests_Types_Get', @_);
+        delete $types->{SOM};
         $self->memcache->set('ServiceRequests_Types_Get', $types, 1800);
     }
 
@@ -292,16 +295,46 @@ sub ServiceRequests_Types_Get {
 }
 
 sub Premises_Get {
-    my ($self, $uprn, $postcode, $address, $street) = @_;
+    my ($self, $args) = @_;
 
-    my %req = (
+    my %base = (
         token => $self->token,
         UPRN => undef,
-        USRN => $uprn,
-        ParentUPRN => undef,
-        #Postcode => $postcode,
-        Address2 => $address,
-        Street => uc $street,
+    );
+
+    my %params;
+    if ( $args->{bbox} ) {
+        my $bbox = $args->{bbox};
+        %params = (
+            Bounds => {
+                # top left
+                Point1 => {
+                    ns => 'http://www.bartec-systems.com',
+                    Metric => { attr => { Latitude => $bbox->{max}->{lat}, Longitude => $bbox->{min}->{lon} } }
+                },
+                # bottom right
+                Point2 => {
+                    ns => 'http://www.bartec-systems.com',
+                    Metric => { attr => { Latitude => $bbox->{min}->{lat}, Longitude => $bbox->{max}->{lon} } }
+                }
+            }
+        );
+    } elsif ( $args->{usrn} && !$args->{address} && !$args->{street} ) {
+        %params = (
+            USRN => $args->{usrn},
+        );
+    } else {
+        %params = (
+            USRN => $args->{usrn},
+            ParentUPRN => undef,
+            Address2 => $args->{address} ? '%' . $args->{address} . '%' : '',
+            Street => uc $args->{street},
+        );
+    }
+
+    my %req = (
+        %base,
+        %params
     );
 
     my $elem = SOAP::Data->value( make_soap_structure( %req ) );
@@ -320,8 +353,7 @@ sub ServiceRequests_Create {
 
     my %req = (
         token => $self->token,
-        #appointmentReservationID => undef,
-        UPRN => $values->{uprn}, # 100090180415,
+        UPRN => $values->{uprn},
         ServiceStatusID => $status_id,
         DateRequested => $time,
         ServiceTypeID => $values->{service_code},
@@ -372,6 +404,7 @@ sub ServiceRequests_Statuses_Get {
     my $statuses = $self->memcache->get('ServiceRequests_Statuses_Get');
     unless ($statuses) {
         $statuses = $self->_wrapper('ServiceRequests_Statuses_Get', 0, @_);
+        delete $statuses->{SOM};
         $self->memcache->set('ServiceRequests_Statuses_Get', $statuses, 1800);
     }
 
