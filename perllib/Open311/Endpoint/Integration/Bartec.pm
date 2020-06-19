@@ -12,6 +12,7 @@ with 'Open311::Endpoint::Role::mySociety';
 with 'Role::Logger';
 
 use Open311::Endpoint::Service::UKCouncil::Bartec;
+use Open311::Endpoint::Service::Request::Update::mySociety;
 
 has jurisdiction_id => (
     is => 'ro',
@@ -229,5 +230,35 @@ sub distance_haversine {
     return $d;
 }
 
+sub get_service_request_updates {
+    my ($self, $args) = @_;
+
+    my $w3c = DateTime::Format::W3CDTF->new;
+
+    my $response = $self->get_integration->ServiceRequests_Updates_Get($args->{start_date});
+
+    my @updates;
+    my $updates = ref $response->{ServiceRequest_Updates} eq 'ARRAY' ? $response->{ServiceRequest_Updates} : [ $response->{ServiceRequests_Updates} ] ;
+    for my $update ( @$updates ) {
+        my $history = $self->get_integration->ServiceRequests_History_Get( $update->{ServiceRequestID}, $args->{start_date} );
+
+        next unless $history->{ServiceRequest_History};
+        my $entries = ref $history->{ServiceRequest_History} eq 'ARRAY' ? $history->{ServiceRequest_History} : [ $history->{ServiceRequest_History} ];
+
+        for my $entry ( @$entries ) {
+            my %args = (
+                status => $self->get_integration->config->{status_map}->{ $entry->{ServiceStatusName} },
+                update_id => $entry->{id},
+                service_request_id => $entry->{ServiceCode},
+                description => '',
+                updated_datetime => $w3c->parse_datetime( $entry->{DateChanged} )->truncate( to => 'second')->set_time_zone('Europe/London'),
+            );
+
+            push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new ( %args );
+        }
+
+    }
+    return @updates;
+}
 
 __PACKAGE__->run_if_script;

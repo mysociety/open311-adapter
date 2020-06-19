@@ -31,6 +31,8 @@ my %responses = (
     ServiceRequests_Create => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_create.xml')->slurp,
     ServiceRequests_Statuses_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_status_get.xml')->slurp,
     Premises_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/get_premises.xml')->slurp,
+    ServiceRequests_History_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_history_get.xml')->slurp,
+    ServiceRequests_Updates_Get =>  path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_updates_get.xml')->slurp,
 );
 
 sub gen_full_response {
@@ -355,6 +357,47 @@ subtest 'get uprn for usrn' => sub {
     }, "only used USRN in request";
 
     is $uprn,987654321 , "got correct uprn";
+};
+
+subtest 'fetch updates' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?jurisdiction_id=bartec&start_date=2020-06-19T10:00:00Z&end_date=2020-06-19T12:00:00Z'
+    );
+
+    my $sent_updates = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Updates_Get} );
+    my $sent_history = SOAP::Deserializer->deserialize( $sent{ServiceRequests_History_Get} );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply $sent_updates->body->{ServiceRequests_Updates_Get}, {
+        token => 'ABC=',
+        LastUpdated => '2020-06-19T10:00:00Z',
+    }, 'correct fetch updates request sent';
+
+    is_deeply $sent_history->body->{ServiceRequests_History_Get}, {
+        token => 'ABC=',
+        ServiceRequestID => '51388',
+        Date => '2020-06-19T10:00:00Z',
+    }, 'correct fetch history request sent';
+
+    is_deeply decode_json($res->content), [
+        {
+            update_id =>228025,
+            service_request_id =>'SR00051627',
+            status =>'open',
+            updated_datetime => '2020-06-17T09:47:26+01:00',
+            description =>'',
+            media_url =>'',
+        },
+        {
+            update_id =>228025,
+            service_request_id =>'SR00051627',
+            status =>'open',
+            updated_datetime => '2020-06-17T09:47:26+01:00',
+            description =>'',
+            media_url =>'',
+        }
+    ], 'correct return';
 };
 
 done_testing;

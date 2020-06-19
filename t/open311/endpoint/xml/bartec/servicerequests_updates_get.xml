@@ -1,0 +1,28 @@
+    <ServiceRequests_Updates_GetResponse xmlns="http://bartec-systems.com/">
+      <ServiceRequests_Updates_GetResult xmlns="http://www.bartec-systems.com/ServiceRequests_Updates_Get.xsd" RecordCount="11">
+        <ServiceRequest_Updates RecordCount="0">
+          <ServiceRequestID>51389</ServiceRequestID>
+          <ServiceCode>SR00051688</ServiceCode>
+          <JobReference/>
+          <ServiceCategory>General</ServiceCategory>
+          <ServiceClass>WASTE</ServiceClass>
+          <ServiceType>GW BIN OPERATION</ServiceType>
+          <DateAdded>0001-01-01T00:00:00</DateAdded>
+          <DateChanged>2020-06-19T15:04:56.007</DateChanged>
+        </ServiceRequest_Updates>
+        <ServiceRequest_Updates RecordCount="0">
+          <ServiceRequestID>51388</ServiceRequestID>
+          <ServiceCode>SR00051687</ServiceCode>
+          <JobReference>843</JobReference>
+          <ServiceCategory>General</ServiceCategory>
+          <ServiceClass>WASTE</ServiceClass>
+          <ServiceType>GW NEW SUBSCRIPTION</ServiceType>
+          <DateAdded>0001-01-01T00:00:00</DateAdded>
+          <DateChanged>2020-06-19T15:04:56.317</DateChanged>
+        </ServiceRequest_Updates>
+        <Errors>
+          <Result xmlns="http://www.bartec-systems.com">0</Result>
+          <Message xmlns="http://www.bartec-systems.com"/>
+        </Errors>
+      </ServiceRequests_Updates_GetResult>
+    </ServiceRequests_Updates_GetResponse>
