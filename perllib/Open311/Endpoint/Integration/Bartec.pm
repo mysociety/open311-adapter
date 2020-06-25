@@ -3,6 +3,7 @@ package Open311::Endpoint::Integration::Bartec;
 use JSON::MaybeXS;
 use Path::Tiny;
 use YAML::XS qw(LoadFile);
+use MIME::Base64;
 
 use Integrations::Bartec;
 
@@ -86,6 +87,14 @@ sub post_service_request {
 
     my $res = $integ->ServiceRequests_Create($service, $req);
     die "failed to send" unless $res->{ServiceCode};
+
+
+
+    if ( @{ $args->{media_url} }) {
+        my $sr = $integ->ServiceRequests_Get( $res->{ServiceCode} );
+        $self->upload_attachments($sr->{ServiceRequest}->{id}, $args); # XXX not sure ServiceCode is correct
+    }
+
     return $self->new_request(
         service_request_id => $res->{ServiceCode}
     );
@@ -259,6 +268,37 @@ sub get_service_request_updates {
 
     }
     return @updates;
+}
+
+sub upload_attachments {
+    my ($self, $request_id, $args) = @_;
+
+    # grab the URLs and download its content
+    my $photos = $self->_get_photos( $args->{media_url} );
+
+    for my $photo ( @$photos ) {
+        (my $photo_id = $photo->filename) =~ s/^\d+\.(\d+)\..*$/$1/;
+        $photo_id = $args->{attributes}->{fixmystreet_id} . $photo_id;
+        $self->get_integration->Service_Request_Document_Create({
+            srid => $request_id,
+            id => $photo_id + 1,
+            name => $photo->filename,
+            content => MIME::Base64::encode_base64( $photo->content, '' )
+        });
+
+    }
+}
+
+sub _get_photos {
+    my ($self, $urls) = @_;
+
+    # Grab each photo from FMS
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+    my @photos = map {
+        $ua->get($_);
+    } @$urls;
+
+    return \@photos;
 }
 
 __PACKAGE__->run_if_script;
