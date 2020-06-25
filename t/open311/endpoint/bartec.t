@@ -33,6 +33,8 @@ my %responses = (
     Premises_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/get_premises.xml')->slurp,
     ServiceRequests_History_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_history_get.xml')->slurp,
     ServiceRequests_Updates_Get =>  path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_updates_get.xml')->slurp,
+    ServiceRequests_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_get.xml')->slurp,
+    Service_Request_Document_Create => '<Service_Request_Document_CreateResult />',
 );
 
 sub gen_full_response {
@@ -62,6 +64,14 @@ $transport->mock(send_receive => sub {
         $action =~ s/"//g;
         $sent{$action} = $args{envelope};
         return gen_full_response( $responses{$action} );
+    }
+);
+
+my $i = Test::MockModule->new('Open311::Endpoint::Integration::Bartec');
+$i->mock('_get_photos', sub {
+        my $h = HTTP::Headers->new;
+        $h->header( 'Content-Disposition' => 'attachment; filename="1.1.jpg"' );
+        return [ HTTP::Response->new( 200, 'OK', $h, 'content' ) ];
     }
 );
 
@@ -259,11 +269,12 @@ subtest "check send basic report" => sub {
         'attribute[postcode]' => 'AB1 1BA',
     );
 
-    my $sent = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Create} );
+    is $sent{ServiceRequests_Get}, undef, "skip servicerequests_get if no photo";
+    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Create} );
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
-    is_deeply $sent->body->{ServiceRequests_Create}, {
+    is_deeply $create_req->body->{ServiceRequests_Create}, {
         DateRequested => '2020-06-17T17:28:30+01:00',
         token => 'ABC=',
         UPRN => 987654321,
@@ -287,6 +298,84 @@ subtest "check send basic report" => sub {
             Email => 'test@example.com',
         }
     }, 'correct request sent';
+
+    is_deeply decode_json($res->content), [ { service_request_id => '0001' } ], 'correct return';
+};
+
+subtest "check send report with a photo" => sub {
+    set_fixed_time('2020-06-17T16:28:30Z');
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        jurisdiction_id => 'bartec',
+        api_key => 'test',
+        service_code => '1',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'description',
+        lat => '52.540930',
+        long => '-0.289832',
+        'attribute[fixmystreet_id]' => 1,
+        'attribute[northing]' => 1,
+        'attribute[easting]' => 1,
+        'attribute[description]' => 1,
+        'attribute[report_url]' => 1,
+        'attribute[title]' => 1,
+        'attribute[house_no]' => '14',
+        'attribute[street]' => 'a street',
+        'attribute[postcode]' => 'AB1 1BA',
+        media_url => 'http://example.com/1.1.jpg',
+    );
+
+    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Create} );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply $create_req->body->{ServiceRequests_Create}, {
+        DateRequested => '2020-06-17T17:28:30+01:00',
+        token => 'ABC=',
+        UPRN => 987654321,
+        ServiceTypeID => 1,
+        ServiceStatusID => 2276,
+        CrewID => 11,
+        LandTypeID => 12,
+        SLAID => 13,
+        serviceLocationDescription => 'description',
+        ServiceRequest_Location => {
+            Metric => {
+                Longitude => -0.289832,
+                Latitude => 52.540930,
+            }
+        },
+        #source => 'FixMyStreet',
+        ExternalReference => 1,
+        reporterContact => {
+            Forename => 'Bob',
+            Surname => 'Mould',
+            Email => 'test@example.com',
+        }
+    }, 'correct request sent';
+
+    my $sr_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Get} );
+    is_deeply $sr_sent->body->{ServiceRequests_Get}, {
+        token => 'ABC=',
+        ServiceCode => '0001',
+    }, "correct request for servicerequests_get";
+
+    my $sr_doc = SOAP::Deserializer->deserialize( $sent{Service_Request_Document_Create} );
+    is_deeply $sr_doc->body->{Service_Request_Document_Create}, {
+        token => 'ABC=',
+        Public => 'true',
+        ServiceRequestID => '0001',
+        DateTaken => '2020-06-17T17:28:30+01:00',
+        Comment => 'Photo uploaded from FixMyStreet',
+        AttachedDocument => {
+            FileExtension => 'jpg',
+            ID => '12',
+            Name => '1.1.jpg',
+            Document => 'Y29udGVudA==',
+        }
+    }, "correct request to create photo";
 
     is_deeply decode_json($res->content), [ { service_request_id => '0001' } ], 'correct return';
 };

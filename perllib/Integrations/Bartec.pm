@@ -10,7 +10,6 @@ use Open311::Endpoint::Logger;
 use JSON::MaybeXS;
 use LWP::UserAgent;
 use HTTP::Request::Common;
-use MIME::Base64 qw(encode_base64 decode_base64);
 use Path::Tiny;
 use SOAP::Lite;
 use Try::Tiny;
@@ -175,9 +174,24 @@ sub _methods {
             namespace  => 'http://bartec-systems.com/',
             parameters => [],
         },
+        'Service_Request_Document_Create' => {
+            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            soapaction => 'http://bartec-systems.com/Service_Request_Document_Create',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [],
+        },
         'ServiceRequests_Get' => {
             endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
             soapaction => 'http://bartec-systems.com/ServiceRequests_Get',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [
+                SOAP::Data->new(name => 'token', type => 'string'),
+                SOAP::Data->new(name => 'ServiceCode', type => 'string'),
+            ],
+        },
+        'ServiceRequests_Detail_Get' => {
+            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            soapaction => 'http://bartec-systems.com/ServiceRequests_Detail_Get',
             namespace  => 'http://bartec-systems.com/',
             parameters => [
                 SOAP::Data->new(name => 'token', type => 'string'),
@@ -203,6 +217,8 @@ sub endpoint {
        ->default_ns($args->{namespace})
        ->on_action(sub{qq!"$args->{soapaction}"!});
     $endpoint->autotype(0);
+    $endpoint->serializer->register_ns('http://bartec-systems.com/', 'bar1');
+    $endpoint->serializer->register_ns('http://www.bartec-systems.com', 'bar2');
 
     return $endpoint;
 }
@@ -384,6 +400,31 @@ sub ServiceRequests_Create {
     return $self->_wrapper('ServiceRequests_Create', 1, $elem);
 }
 
+sub Service_Request_Document_Create {
+    my ($self, $args) = @_;
+
+    my $dt = DateTime->now(time_zone => 'Europe/London');
+    my $time = DateTime::Format::W3CDTF->new->format_datetime($dt);
+
+    my %req = (
+        'bar1:token' => $self->token,
+        'bar1:ServiceRequestID' => $args->{srid},
+        'bar1:Public' => 'true',
+        'bar1:DateTaken' => $time,
+        'bar1:Comment' => 'Photo uploaded from FixMyStreet',
+        'bar1:AttachedDocument' => {
+            'bar2:FileExtension' => 'jpg',
+            'bar2:ID' => $args->{id},
+            'bar2:Name' => $args->{name},
+            'bar2:Document' => $args->{content},
+        }
+    );
+
+    my $elem = SOAP::Data->value( make_soap_structure( %req ) );
+
+    return $self->_wrapper('Service_Request_Document_Create', 1, $elem);
+}
+
 sub ServiceRequests_Updates_Get {
     my $self = shift;
     return $self->_wrapper('ServiceRequests_Updates_Get', 0, @_);
@@ -397,6 +438,11 @@ sub ServiceRequests_History_Get {
 sub ServiceRequests_Get {
     my $self = shift;
     return $self->_wrapper('ServiceRequests_Get', 0, @_);
+}
+
+sub ServiceRequests_Detail_Get {
+    my $self = shift;
+    return $self->_wrapper('ServiceRequests_Detail_Get', 0, @_);
 }
 
 sub ServiceRequests_Statuses_Get {
