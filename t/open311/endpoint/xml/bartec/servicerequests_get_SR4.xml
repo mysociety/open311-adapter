@@ -1,0 +1,81 @@
+    <ServiceRequests_GetResponse xmlns="http://bartec-systems.com/">
+      <ServiceRequests_GetResult xmlns="http://www.bartec-systems.com/ServiceRequests_Get.xsd" RecordCount="1">
+        <ServiceRequest>
+          <id xmlns="http://www.bartec-systems.com">51393</id>
+          <ServiceCode xmlns="http://www.bartec-systems.com">SR4</ServiceCode>
+          <Premises xmlns="http://www.bartec-systems.com">
+            <UPRN>10000000004</UPRN>
+            <USRN>20000004</USRN>
+            <Address>
+              <Address1/>
+              <Address2>34</Address2>
+              <Street>A STREET</Street>
+              <Locality>NEIGHBOURHOOD</Locality>
+              <Town>PETERBOROUGH</Town>
+              <PostCode>PE7 8GE</PostCode>
+            </Address>
+            <Location>
+              <BNG Easting="517572.970437695" Northing="295392.962529791"/>
+              <Metric Latitude="51.543673" Longitude="-0.268678"/>
+            </Location>
+            <RecordStamp>
+              <AddedBy>dbo</AddedBy>
+              <DateAdded>2018-11-12T14:22:23.3</DateAdded>
+            </RecordStamp>
+          </Premises>
+          <ServiceLocation xmlns="http://www.bartec-systems.com">
+            <BNG Easting="537574.431717046" Northing="245405.572821964"/>
+            <Metric Latitude="52.843786" Longitude="-0.367652"/>
+          </ServiceLocation>
+          <DateRequested xmlns="http://www.bartec-systems.com">2020-06-23T16:17:00</DateRequested>
+          <ServiceType xmlns="http://www.bartec-systems.com">
+            <ID>271</ID>
+            <Name>LEAF REMOVAL</Name>
+            <Description>LEAF REMOVAL</Description>
+            <AppointmentCount>0</AppointmentCount>
+            <ServiceClass>
+              <ID>84</ID>
+              <Name>EMPTY BIN</Name>
+              <Description>EMPTY BIN</Description>
+              <Category>General</Category>
+              <Mobile>false</Mobile>
+              <Private>false</Private>
+              <RecordStamp>
+                <DateAdded>0001-01-01T00:00:00</DateAdded>
+              </RecordStamp>
+              <ExtendedDataRecordDefinitionID xsi:nil="true"/>
+            </ServiceClass>
+            <ExtendedDataRecordDefinitionID xsi:nil="true"/>
+          </ServiceType>
+          <ServiceStatus xmlns="http://www.bartec-systems.com">
+            <ID>2644</ID>
+            <Status>ASSIGNED</Status>
+            <SequenceNumber>2</SequenceNumber>
+            <ServiceTypeID>270</ServiceTypeID>
+          </ServiceStatus>
+          <ExternalReference xmlns="http://www.bartec-systems.com"></ExternalReference>
+          <SLA xmlns="http://www.bartec-systems.com">
+            <ID>35</ID>
+            <Name>SLA - 1 Working Day</Name>
+            <Description>SLA - 1 Working Day</Description>
+            <JeopardyPeriod>         4 Hours</JeopardyPeriod>
+            <WorkingHours>false</WorkingHours>
+            <SLAStatus>OK</SLAStatus>
+            <BreachTime>0001-01-01T00:00:00</BreachTime>
+            <JeopardyTime>2020-06-23T19:17:00</JeopardyTime>
+          </SLA>
+          <LicenceApplication xmlns="http://www.bartec-systems.com">
+            <PaymentType/>
+            <WebPageType/>
+          </LicenceApplication>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>a_user</AddedBy>
+            <DateAdded>2020-06-23T16:17:31.397</DateAdded>
+          </RecordStamp>
+        </ServiceRequest>
+        <Errors>
+          <Result xmlns="http://www.bartec-systems.com">0</Result>
+          <Message xmlns="http://www.bartec-systems.com"/>
+        </Errors>
+      </ServiceRequests_GetResult>
+    </ServiceRequests_GetResponse>

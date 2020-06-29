@@ -14,6 +14,7 @@ with 'Role::Logger';
 
 use Open311::Endpoint::Service::UKCouncil::Bartec;
 use Open311::Endpoint::Service::Request::Update::mySociety;
+use Open311::Endpoint::Service::Request::ExtendedStatus;
 
 has jurisdiction_id => (
     is => 'ro',
@@ -268,6 +269,55 @@ sub get_service_request_updates {
 
     }
     return @updates;
+}
+
+sub get_service_requests {
+    my ($self, $args) = @_;
+
+    my $w3c = DateTime::Format::W3CDTF->new;
+
+    my $response = $self->get_integration->ServiceRequests_Updates_Get($args->{start_date});
+
+    my @requests;
+
+    my $updates = ref $response->{ServiceRequest_Updates} eq 'ARRAY' ? $response->{ServiceRequest_Updates} : [ $response->{ServiceRequests_Updates} ] ;
+    for my $update ( @$updates ) {
+        my $res = $self->get_integration->ServiceRequests_Get( $update->{ServiceCode} );
+
+        next unless $res;
+        my $sr = $res->{ServiceRequest};
+        # if it's got an external reference it's an FixMyStreet report. And ignore reports
+        # that are in any state other than open as it's assumed they are not new.
+        next if $sr->{ExternalReference} or not $sr->{ServiceStatus}->{Status} eq 'OPEN';
+
+        my $service_name = $sr->{ServiceType}->{Description};
+        next unless $self->allowed_services->{uc $service_name};
+        $service_name = "\u\L$service_name";
+
+        my $location = $res->{SOM}->dataof('//ServiceLocation/Metric');
+
+        my $date = $w3c->parse_datetime( $sr->{DateRequested} )->truncate( to => 'second' );
+        $date->set_time_zone('Europe/London');
+        my %args = (
+            service_request_id => $sr->{ServiceCode},
+            requested_datetime => $date,
+            updated_datetime => $date,
+
+            status => 'open',
+            latlong => [ $location->attr->{Latitude}, $location->attr->{Longitude} ],
+        );
+
+        my $service = Open311::Endpoint::Service->new(
+            service_name => $service_name,
+            service_code => $sr->{ServiceType}->{ID},
+        );
+
+        $args{service} = $service;
+
+        push @requests, Open311::Endpoint::Service::Request::ExtendedStatus->new( %args );
+    }
+
+    return @requests;
 }
 
 sub upload_attachments {

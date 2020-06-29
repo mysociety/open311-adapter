@@ -1,0 +1,5 @@
+<ServiceRequests_GetResponse>
+  <ServiceRequests_GetResult>
+    <ServiceRequest><id>0001</id></ServiceRequest>
+  </ServiceRequests_GetResult>
+</ServiceRequests_GetResponse>

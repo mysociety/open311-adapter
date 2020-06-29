@@ -20,6 +20,25 @@ $integration->mock('_build_config_file', sub {
     path(__FILE__)->sibling('bartec.yml');
 });
 
+sub ServiceRequests_Updates_Get {
+    my %args = @_;
+
+    my ($date) = $args{envelope} =~ /<LastUpdated [^>]*>([^>]*)</;
+    $date =~ s/(\d+)-(\d+)-(\d+)T.*/$1$2$3/;
+    my $path = "xml/bartec/servicerequests_updates_get_$date.xml";
+
+    return path(__FILE__)->parent(1)->realpath->child($path)->slurp;
+}
+
+sub ServiceRequests_Get {
+    my %args = @_;
+
+    my ($id) = $args{envelope} =~ /<ServiceCode[^>]*>([^>]*)</;
+    my $path = "xml/bartec/servicerequests_get_$id.xml";
+
+    return path(__FILE__)->parent(1)->realpath->child($path)->slurp,
+}
+
 my %responses = (
     Authenticate => '<AuthenticateResponse xmlns="http://bartec-systems.com/">
   <AuthenticateResult xmlns="http://www.bartec-systems.com">
@@ -32,8 +51,8 @@ my %responses = (
     ServiceRequests_Statuses_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_status_get.xml')->slurp,
     Premises_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/get_premises.xml')->slurp,
     ServiceRequests_History_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_history_get.xml')->slurp,
-    ServiceRequests_Updates_Get =>  path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_updates_get.xml')->slurp,
-    ServiceRequests_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_get.xml')->slurp,
+    ServiceRequests_Updates_Get =>  \&ServiceRequests_Updates_Get,
+    ServiceRequests_Get => \&ServiceRequests_Get,
     Service_Request_Document_Create => '<Service_Request_Document_CreateResult />',
 );
 
@@ -60,10 +79,16 @@ $transport->mock(send_receive => sub {
         my $self = shift;
         my %args = @_;
 
+
         (my $action = $args{action}) =~ s#http://bartec-systems.com/##;
         $action =~ s/"//g;
         $sent{$action} = $args{envelope};
-        return gen_full_response( $responses{$action} );
+
+        my $resp = $responses{$action};
+        if ( ref $resp eq 'CODE' ) {
+            $resp = $resp->(%args);
+        }
+        return gen_full_response( $resp );
     }
 );
 
@@ -489,6 +514,36 @@ subtest 'fetch updates' => sub {
             media_url =>'',
         }
     ], 'correct return';
+};
+
+subtest 'fetch_requests' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.json?jurisdiction_id=bartec&start_date=2020-06-20T10:00:00Z&end_date=2020-06-20T12:00:00Z'
+    );
+
+    my $sent_updates = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Updates_Get} );
+    my $sent_get = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Get} );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+
+    is_deeply decode_json($res->content), [
+        {
+            lat => "52.543786",
+            long => "-0.567652",
+            address_id => "",
+            service_request_id => "SR2",
+            address => "",
+            requested_datetime => "2020-06-23T16:17:00+01:00",
+            updated_datetime => "2020-06-23T16:17:00+01:00",
+            media_url => "",
+            status => "open",
+            service_name => "Leaf removal",
+            zipcode => "",
+            service_code => "271"
+        }
+    ], 'correct list of requests';
 };
 
 done_testing;
