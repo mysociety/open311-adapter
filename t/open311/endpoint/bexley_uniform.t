@@ -56,12 +56,13 @@ $soap_lite->mock(call => sub {
             { ReferenceValue => 1, RequestType => 'GENERAL' },
             { ReferenceValue => 2, RequestType => 'GENERAL' },
             { ReferenceValue => 3, RequestType => 'GENERAL' },
-            { ReferenceValue => 4, RequestType => 'FOOD' },
+            { ReferenceValue => 4, RequestType => 'GENERAL' },
+            { ReferenceValue => 5, RequestType => 'FOOD' },
         ] });
     } elsif ($args[0] eq 'GetGeneralServiceRequestByReferenceValue') {
         my @request = $args[1]->value;
-        like $request[0], qr/^[123]$/;
-        my %cac = ( 1 => '', 2 => 'NFA', 3 => 'DUPR' );
+        like $request[0], qr/^[1234]$/;
+        my %cac = ( 1 => '', 2 => 'NFA', 3 => 'DUPR', 4 => 'NAP' );
         return SOAP::Result->new(result => {
             AdministrationDetails => {
                 StatusCode => $request[0] == 1 ? '4_INV' : '8_CLO',
@@ -144,6 +145,13 @@ subtest 'fetching an update' => sub {
             "media_url" => "",
             "service_request_id" => 3,
             "update_id" => "3_73785740",
+            "updated_datetime" => "2019-09-25T02:00:00Z",
+            "description" => ""
+        }, {
+            "status" => "no_further_action",
+            "media_url" => "",
+            "service_request_id" => 4,
+            "update_id" => "4_3fae3984",
             "updated_datetime" => "2019-09-25T02:00:00Z",
             "description" => ""
         }
