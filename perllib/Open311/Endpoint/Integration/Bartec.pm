@@ -49,7 +49,7 @@ sub get_integration {
 sub services {
     my $self = shift;
     my $services = $self->get_integration->ServiceRequests_Types_Get;
-    $services = ref $services->{ServiceType} eq 'ARRAY' ? $services->{ServiceType} : [ $services->{ServiceType} ];
+    $services = $self->_coerce_to_array( $services, 'ServiceType' );
     my @services = map {
         $_->{Description} =~ s/(.)(.*)/\U$1\L$2/;
         $_->{ServiceClass}->{Description} =~ s/(.)(.*)/\U$1\L$2/;
@@ -248,12 +248,12 @@ sub get_service_request_updates {
     my $response = $self->get_integration->ServiceRequests_Updates_Get($args->{start_date});
 
     my @updates;
-    my $updates = ref $response->{ServiceRequest_Updates} eq 'ARRAY' ? $response->{ServiceRequest_Updates} : [ $response->{ServiceRequests_Updates} ] ;
+    my $updates = $self->_coerce_to_array( $response, 'ServiceRequest_Updates' );
     for my $update ( @$updates ) {
         my $history = $self->get_integration->ServiceRequests_History_Get( $update->{ServiceRequestID}, $args->{start_date} );
 
         next unless $history->{ServiceRequest_History};
-        my $entries = ref $history->{ServiceRequest_History} eq 'ARRAY' ? $history->{ServiceRequest_History} : [ $history->{ServiceRequest_History} ];
+        my $entries = $self->_coerce_to_array( $history, 'ServiceRequest_History' );
 
         for my $entry ( @$entries ) {
             my %args = (
@@ -280,7 +280,7 @@ sub get_service_requests {
 
     my @requests;
 
-    my $updates = ref $response->{ServiceRequest_Updates} eq 'ARRAY' ? $response->{ServiceRequest_Updates} : [ $response->{ServiceRequests_Updates} ] ;
+    my $updates = $self->_coerce_to_array( $response, 'ServiceRequest_Updates' );
     for my $update ( @$updates ) {
         my $res = $self->get_integration->ServiceRequests_Get( $update->{ServiceCode} );
 
@@ -349,6 +349,14 @@ sub _get_photos {
     } @$urls;
 
     return \@photos;
+}
+
+sub _coerce_to_array {
+    my ( $self, $ref, $key ) = @_;
+
+    $ref = ref $ref->{$key} eq 'ARRAY' ? $ref->{$key} : [ $ref->{$key} ] ;
+
+    return $ref;
 }
 
 __PACKAGE__->run_if_script;
