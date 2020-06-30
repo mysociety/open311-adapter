@@ -325,12 +325,12 @@ sub Premises_Get {
             Bounds => {
                 # top left
                 Point1 => {
-                    ns => 'http://www.bartec-systems.com',
+                    attr => { xmlns => 'http://www.bartec-systems.com' },
                     Metric => { attr => { Latitude => $bbox->{max}->{lat}, Longitude => $bbox->{min}->{lon} } }
                 },
                 # bottom right
                 Point2 => {
-                    ns => 'http://www.bartec-systems.com',
+                    attr => { xmlns => 'http://www.bartec-systems.com' },
                     Metric => { attr => { Latitude => $bbox->{min}->{lat}, Longitude => $bbox->{max}->{lon} } }
                 }
             }
@@ -376,7 +376,7 @@ sub ServiceRequests_Create {
         serviceLocationDescription => $values->{description},
         ServiceRequest_Location => {
             Metric => {
-                ns => 'http://www.bartec-systems.com',
+                attr => { xmlns => 'http://www.bartec-systems.com' },
                 Latitude => $values->{lat} * 1,
                 Longitude => $values->{long} * 1,
             },
@@ -384,10 +384,10 @@ sub ServiceRequests_Create {
         #source => $values->{Source},
         ExternalReference => $values->{attributes}->{fixmystreet_id},
         reporterContact => {
-            Forename => { ns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd', value => $values->{first_name} },
-            Surname => { ns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd', value => $values->{last_name} },
-            Email => { ns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd', value => $values->{email} },
-            ReporterType => { ns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd', value => $values->{ReporterType} },
+            Forename => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => $values->{first_name} },
+            Surname => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => $values->{last_name} },
+            Email => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd'} , value => $values->{email} },
+            ReporterType => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd'}, value => $values->{ReporterType} },
         },
     );
 
@@ -461,29 +461,16 @@ sub ServiceRequests_Statuses_Get {
 sub make_soap_structure {
     my @out;
     for (my $i=0; $i<@_; $i+=2) {
-        my $name = $_[$i]; # =~ /:/ ? $_[$i] : "$namespace:$_[$i]";
+        my $name = $_[$i];
         my $v = $_[$i+1];
         if (ref $v eq 'HASH') {
-            if ( $v->{attr} ) {
-                my $d = SOAP::Data->name($name);
-                $d->attr($v->{attr});
-                push @out, $d;
-            } else {
-                my $d;
-                if ( $v->{ns} ) {
-                    my $ns = $v->{ns};
-                    delete $v->{ns};
-                    if ( $v->{value} ) {
-                        $d = SOAP::Data->name($name => $v->{value});
-                    } else {
-                        $d = SOAP::Data->name($name => \SOAP::Data->value(make_soap_structure(%$v)));
-                    }
-                    $d->attr( { xmlns => $ns } );
-                } else {
-                    $d = SOAP::Data->name($name => \SOAP::Data->value(make_soap_structure(%$v)));
-                }
-                push @out, $d;
-            }
+            my $attr = delete $v->{attr};
+            my $value = delete $v->{value};
+
+            my $d = SOAP::Data->name($name => $value ? $value : \SOAP::Data->value(make_soap_structure(%$v)));
+
+            $d->attr( $attr ) if $attr;
+            push @out, $d;
         } elsif (ref $v eq 'ARRAY') {
             push @out, map { SOAP::Data->name($name => \SOAP::Data->value(make_soap_structure(%$_))) } @$v;
         } else {
