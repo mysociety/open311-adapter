@@ -387,6 +387,7 @@ sub ServiceRequests_Create {
             Forename => { ns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd', value => $values->{first_name} },
             Surname => { ns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd', value => $values->{last_name} },
             Email => { ns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd', value => $values->{email} },
+            ReporterType => { ns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd', value => $values->{ReporterType} },
         },
     );
 

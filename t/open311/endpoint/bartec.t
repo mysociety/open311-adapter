@@ -296,6 +296,7 @@ subtest "check send basic report" => sub {
             Forename => 'Bob',
             Surname => 'Mould',
             Email => 'test@example.com',
+            ReporterType => 'Public',
         }
     }, 'correct request sent';
 
@@ -353,6 +354,7 @@ subtest "check send report with a photo" => sub {
             Forename => 'Bob',
             Surname => 'Mould',
             Email => 'test@example.com',
+            ReporterType => 'Public',
         }
     }, 'correct request sent';
 
