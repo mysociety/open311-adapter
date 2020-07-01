@@ -354,6 +354,8 @@ sub _get_photos {
 sub _coerce_to_array {
     my ( $self, $ref, $key ) = @_;
 
+    return [] unless $ref->{$key};
+
     $ref = ref $ref->{$key} eq 'ARRAY' ? $ref->{$key} : [ $ref->{$key} ] ;
 
     return $ref;

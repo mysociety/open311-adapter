@@ -1,0 +1,8 @@
+    <ServiceRequests_Updates_GetResponse xmlns="http://bartec-systems.com/">
+      <ServiceRequests_Updates_GetResult xmlns="http://www.bartec-systems.com/ServiceRequests_Updates_Get.xsd" RecordCount="11">
+        <Errors>
+          <Result xmlns="http://www.bartec-systems.com">0</Result>
+          <Message xmlns="http://www.bartec-systems.com"/>
+        </Errors>
+      </ServiceRequests_Updates_GetResult>
+    </ServiceRequests_Updates_GetResponse>
