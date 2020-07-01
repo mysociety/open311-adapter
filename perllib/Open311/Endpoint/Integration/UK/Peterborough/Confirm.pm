@@ -9,4 +9,6 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
+sub get_service_requests { return (); }
+
 1;
