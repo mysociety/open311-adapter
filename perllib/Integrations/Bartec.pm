@@ -373,7 +373,7 @@ sub ServiceRequests_Create {
         ServiceStatusID => $status_id,
         DateRequested => $time,
         ServiceTypeID => $values->{service_code},
-        serviceLocationDescription => $values->{description},
+        serviceLocationDescription => $values->{attributes}->{title} . "\n\n" . $values->{attributes}->{description},
         ServiceRequest_Location => {
             Metric => {
                 attr => { xmlns => 'http://www.bartec-systems.com' },
