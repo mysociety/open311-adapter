@@ -524,6 +524,16 @@ subtest 'fetch_requests' => sub {
     my $sent_updates = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Updates_Get} );
     my $sent_get = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Get} );
 
+    is_deeply $sent_updates->body->{ServiceRequests_Updates_Get}, {
+        token => 'ABC=',
+        LastUpdated => '2020-06-20T10:00:00Z',
+    }, 'correct fetch updates request sent';
+
+    is_deeply $sent_get->body->{ServiceRequests_Get}, {
+        token => 'ABC=',
+        ServiceCode => 'SR4',
+    }, 'correct fetch history request sent';
+
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
@@ -544,6 +554,25 @@ subtest 'fetch_requests' => sub {
             service_code => "271"
         }
     ], 'correct list of requests';
+};
+
+subtest 'fetch_requests with no results' => sub {
+    %sent = ();
+
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.json?jurisdiction_id=bartec&start_date=2020-06-21T10:00:00Z&end_date=2020-06-21T12:00:00Z'
+    );
+
+    my $sent_updates = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Updates_Get} );
+    my $sent_get = $sent{ServiceRequests_Get};
+
+    is $sent_get, undef, 'no attempt to get a request';
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+
+    is_deeply decode_json($res->content), [ ], 'empty list of requests';
 };
 
 done_testing;
