@@ -1,0 +1,23 @@
+    <ServiceRequests_Notes_Types_GetResponse xmlns="http://bartec-systems.com/">
+      <ServiceRequests_Notes_Types_GetResult xmlns="http://www.bartec-systems.com/ServiceRequests_Notes_Types_Get.xsd" RecordCount="17">
+        <ServiceNoteType>
+          <ID xmlns="http://www.bartec-systems.com">1</ID>
+          <Description xmlns="http://www.bartec-systems.com">Specific note</Description>
+          <Public xmlns="http://www.bartec-systems.com">false</Public>
+        </ServiceNoteType>
+        <ServiceNoteType>
+          <ID xmlns="http://www.bartec-systems.com">11</ID>
+          <Description xmlns="http://www.bartec-systems.com">General note</Description>
+          <Public xmlns="http://www.bartec-systems.com">false</Public>
+        </ServiceNoteType>
+        <ServiceNoteType>
+          <ID xmlns="http://www.bartec-systems.com">68</ID>
+          <Description xmlns="http://www.bartec-systems.com">Other note</Description>
+          <Public xmlns="http://www.bartec-systems.com">false</Public>
+        </ServiceNoteType>
+        <Errors>
+          <Result xmlns="http://www.bartec-systems.com">0</Result>
+          <Message xmlns="http://www.bartec-systems.com"/>
+        </Errors>
+      </ServiceRequests_Notes_Types_GetResult>
+    </ServiceRequests_Notes_Types_GetResponse>
