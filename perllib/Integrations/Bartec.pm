@@ -123,6 +123,24 @@ has service_defaults => (
     }
 );
 
+has note_types => (
+    is => 'lazy',
+    default => sub {
+        my $self = shift;
+
+        my $types = $self->memcache->get('ServiceRequests_Notes_Types_Get');
+        unless ($types) {
+            $types = $self->_wrapper('ServiceRequests_Notes_Types_Get');
+            delete $types->{SOM};
+            $self->memcache->set('ServiceRequests_Notes_Types_Get', $types, 1800);
+        }
+
+        my %types = map { $_->{Description} => $_->{ID} } @{ $types->{ServiceNoteType} };
+
+        return \%types;
+    }
+);
+
 sub _methods {
     return {
         'Authenticate' => {
@@ -143,6 +161,14 @@ sub _methods {
         'ServiceRequests_Types_Get' => {
             endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
             soapaction => 'http://bartec-systems.com/ServiceRequests_Types_Get',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [
+                SOAP::Data->new(name => 'token', type => 'string'),
+            ],
+        },
+        'ServiceRequests_Notes_Types_Get' => {
+            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            soapaction => 'http://bartec-systems.com/ServiceRequests_Notes_Types_Get',
             namespace  => 'http://bartec-systems.com/',
             parameters => [
                 SOAP::Data->new(name => 'token', type => 'string'),
@@ -177,6 +203,12 @@ sub _methods {
         'Service_Request_Document_Create' => {
             endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
             soapaction => 'http://bartec-systems.com/Service_Request_Document_Create',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [],
+        },
+        'ServiceRequests_Notes_Create' => {
+            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            soapaction => 'http://bartec-systems.com/ServiceRequests_Notes_Create',
             namespace  => 'http://bartec-systems.com/',
             parameters => [],
         },
@@ -373,7 +405,7 @@ sub ServiceRequests_Create {
         ServiceStatusID => $status_id,
         DateRequested => $time,
         ServiceTypeID => $values->{service_code},
-        serviceLocationDescription => $values->{attributes}->{title} . "\n\n" . $values->{attributes}->{description},
+        serviceLocationDescription => $values->{attributes}->{closest_address},
         ServiceRequest_Location => {
             Metric => {
                 attr => { xmlns => 'http://www.bartec-systems.com' },
@@ -424,6 +456,22 @@ sub Service_Request_Document_Create {
     my $elem = SOAP::Data->value( make_soap_structure( %req ) );
 
     return $self->_wrapper('Service_Request_Document_Create', 1, $elem);
+}
+
+sub ServiceRequests_Notes_Create {
+    my ($self, $args) = @_;
+
+    my %req = (
+        'token' => $self->token,
+        'ServiceRequestID' => $args->{srid},
+        'NoteTypeID' => $args->{note_type},
+        'Note' => $args->{note},
+        'Comment' => 'Note added by FixMyStreet',
+    );
+
+    my $elem = SOAP::Data->value( make_soap_structure( %req ) );
+
+    return $self->_wrapper('ServiceRequests_Notes_Create', 1, $elem);
 }
 
 sub ServiceRequests_Updates_Get {

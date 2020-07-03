@@ -18,6 +18,9 @@ status_map:
   CLOSED: closed
   'IN PROGRESS': in_progress
 
+note_types:
+  report: General note
+
 uprn_lookup:
   200: USRN
 

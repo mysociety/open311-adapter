@@ -89,16 +89,40 @@ sub post_service_request {
     my $res = $integ->ServiceRequests_Create($service, $req);
     die "failed to send" unless $res->{ServiceCode};
 
+    my $sr = $integ->ServiceRequests_Get( $res->{ServiceCode} );
 
+    $self->_attach_note( $args, $sr );
 
     if ( @{ $args->{media_url} }) {
-        my $sr = $integ->ServiceRequests_Get( $res->{ServiceCode} );
         $self->upload_attachments($sr->{ServiceRequest}->{id}, $args); # XXX not sure ServiceCode is correct
     }
 
     return $self->new_request(
         service_request_id => $res->{ServiceCode}
     );
+}
+
+sub _attach_note {
+    my ($self, $args, $sr) = @_;
+
+    my $integ = $self->get_integration;
+
+    my $type = $integ->note_types->{ $integ->config->{note_types}->{report} };
+
+    my $note = $args->{attributes}->{title} . "\n\n" . $args->{attributes}->{description};
+
+    if ($args->{attributes}->{central_asset_id}) {
+        my $asset_details = "\n\nAsset id: " . $args->{attributes}->{central_asset_id} . "\n" .
+                            "Asset detail: " . $args->{attributes}->{asset_details};
+
+        $note .= $asset_details;
+    }
+
+    $integ->ServiceRequests_Notes_Create({
+        srid => $sr->{ServiceRequest}->{id},
+        note_type => $type,
+        note => $note,
+    });
 }
 
 sub get_nearest_uprn {
