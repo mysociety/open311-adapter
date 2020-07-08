@@ -80,6 +80,9 @@ sub post_service_request {
 
     $args->{uprn} = $self->get_nearest_uprn($args);
 
+    # remove cruft
+    $args->{attributes}->{closest_address} =~ s/^Nearest[^:]*: //;
+
     my $defaults = $config->{field_defaults} || {};
     my $req = {
         %$defaults,
