@@ -139,6 +139,15 @@ subtest "check fetch service description" => sub {
         keywords => "",
         groups => [ "Parks" ]
     },
+    {
+        service_code => "5",
+        service_name => "Offensive graffiti",
+        description => "Offensive graffiti",
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        groups => [ "Graffiti" ]
+    },
     ],
     'correct services returned';
 };

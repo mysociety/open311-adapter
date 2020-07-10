@@ -5,6 +5,12 @@ allowed_services:
   - Leaf Removal
   - Rubbish
 
+service_map:
+  Offensive graffiti:
+    General:
+      group: Graffiti
+      category: Offensive graffiti
+
 non_unique_services:
   - Rubbish
 
