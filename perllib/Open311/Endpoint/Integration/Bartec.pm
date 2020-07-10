@@ -39,6 +39,15 @@ has allowed_services => (
     }
 );
 
+has non_unique_services => (
+    is => 'lazy',
+    default => sub {
+        my $self = shift;
+        my %non_unique = map { uc $_ => 1 } @{ $self->get_integration->config->{non_unique_services} };
+        return \%non_unique;
+    }
+);
+
 sub get_integration {
     my $self = shift;
     my $integ = $self->integration_class->new;
@@ -53,8 +62,15 @@ sub services {
     my @services = map {
         $_->{Description} =~ s/(.)(.*)/\U$1\L$2/;
         $_->{ServiceClass}->{Description} =~ s/(.)(.*)/\U$1\L$2/;
+        my $service_name = $_->{Description};
+
+        # service type names are not unique in bartec so need to distinguish
+        # them
+        if ($self->non_unique_services->{uc $service_name}) {
+           $service_name .= " ($_->{ServiceClass}->{Description})",
+        }
         my $service = Open311::Endpoint::Service::UKCouncil::Bartec->new(
-            service_name => $_->{Description},
+            service_name => $service_name,
             service_code => $_->{ID},
             description => $_->{Description},
             groups => [ $_->{ServiceClass}->{Description} ],

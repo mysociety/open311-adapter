@@ -121,6 +121,24 @@ subtest "check fetch service description" => sub {
         keywords => "",
         groups => [ "Street cleansing" ]
     },
+    {
+        service_code => "3",
+        service_name => "Rubbish (Street cleansing)",
+        description => "Rubbish",
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        groups => [ "Street cleansing" ]
+    },
+    {
+        service_code => "4",
+        service_name => "Rubbish (Parks)",
+        description => "Rubbish",
+        metadata => 'true',
+        type => "realtime",
+        keywords => "",
+        groups => [ "Parks" ]
+    },
     ],
     'correct services returned';
 };
