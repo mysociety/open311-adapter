@@ -3,6 +3,10 @@ password: password
 
 allowed_services:
   - Leaf Removal
+  - Rubbish
+
+non_unique_services:
+  - Rubbish
 
 field_defaults:
   Source: FixMyStreet
