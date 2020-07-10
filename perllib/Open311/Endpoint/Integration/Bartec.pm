@@ -48,6 +48,21 @@ has non_unique_services => (
     }
 );
 
+has service_map => (
+    is => 'lazy',
+    default => sub {
+        my $self = shift;
+        my $map = $self->get_integration->config->{service_map};
+        my %service_map;
+        foreach my $class ( keys %$map ) {
+            $service_map{ uc $class } = {
+                map { uc $_ => $map->{$class}->{ $_ } } keys %{ $map->{$class} }
+            };
+        }
+        return \%service_map;
+    }
+);
+
 sub get_integration {
     my $self = shift;
     my $integ = $self->integration_class->new;
@@ -59,24 +74,49 @@ sub services {
     my $self = shift;
     my $services = $self->get_integration->ServiceRequests_Types_Get;
     $services = $self->_coerce_to_array( $services, 'ServiceType' );
+
     my @services = map {
         $_->{Description} =~ s/(.)(.*)/\U$1\L$2/;
-        $_->{ServiceClass}->{Description} =~ s/(.)(.*)/\U$1\L$2/;
+        (my $class = $_->{ServiceClass}->{Description}) =~ s/(.)(.*)/\U$1\L$2/;
         my $service_name = $_->{Description};
 
         # service type names are not unique in bartec so need to distinguish
         # them
         if ($self->non_unique_services->{uc $service_name}) {
-           $service_name .= " ($_->{ServiceClass}->{Description})",
+           $service_name .= " ($class)",
         }
+
+        # some things we want to handle are set up as service classes so
+        # map those back to categories
+        if ( $self->service_map->{uc $class} &&
+             $self->service_map->{uc $class}->{uc $service_name}
+        ) {
+            my $map = $self->service_map->{uc $class}->{uc $service_name};
+            $class = $map->{group};
+            $service_name = $map->{category};
+            $_->{Description} = $service_name;
+        }
+
         my $service = Open311::Endpoint::Service::UKCouncil::Bartec->new(
             service_name => $service_name,
             service_code => $_->{ID},
             description => $_->{Description},
-            groups => [ $_->{ServiceClass}->{Description} ],
+            groups => [ $class ],
       );
-    } grep { $self->allowed_services->{uc $_->{Description}} } @$services;
+    } grep { $self->_allowed_service($_) } @$services;
     return @services;
+}
+
+sub _allowed_service {
+    my ($self, $service) = @_;
+
+    return 1 if $self->allowed_services->{uc $service->{Description}} ||
+                (
+                    $self->service_map->{uc $service->{ServiceClass}->{Description}} &&
+                    $self->service_map->{uc $service->{ServiceClass}->{Description}}->{uc $service->{Description}}
+                );
+
+    return 0;
 }
 
 sub service {
