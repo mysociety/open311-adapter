@@ -369,9 +369,8 @@ sub get_service_requests {
 
         next unless $res;
         my $sr = $res->{ServiceRequest};
-        # if it's got an external reference it's an FixMyStreet report. And ignore reports
-        # that are in any state other than open as it's assumed they are not new.
-        next if $sr->{ExternalReference} or not $sr->{ServiceStatus}->{Status} eq 'OPEN';
+
+        next if $self->skip_request($sr);
 
         my $service_name = $sr->{ServiceType}->{Description};
         next unless $self->allowed_services->{uc $service_name};
@@ -401,6 +400,20 @@ sub get_service_requests {
     }
 
     return @requests;
+}
+
+# if it's got an external reference it's an FixMyStreet report. And ignore reports
+# that are in any state other than open as it's assumed they are not new.
+sub skip_request {
+    my ($self, $sr) = @_;
+    my $skip = 0;
+
+    if ( $sr->{ExternalReference} ||
+         not grep { $sr->{ServiceStatus}->{Status} eq $_ } @{ $self->get_integration->config->{statuses_to_fetch} } ) {
+         $skip = 1;
+    }
+
+    return $skip;
 }
 
 sub upload_attachments {
