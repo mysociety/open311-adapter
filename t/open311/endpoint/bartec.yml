@@ -28,6 +28,9 @@ status_map:
   CLOSED: closed
   'IN PROGRESS': in_progress
 
+statuses_to_fetch:
+  - OPEN
+
 note_types:
   report: General note
 
