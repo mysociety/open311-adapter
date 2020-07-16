@@ -46,17 +46,25 @@ sub _all {
 }
 
 sub _map_with_new_id {
-    my ($self, $attribute, @results) = @_;
+    my ($self, $attributes, @results) = @_;
+    $attributes = [$attributes] unless ref $attributes eq 'ARRAY';
     @results = map {
         my ($name, $result) = @$_;
         if ($name eq $self->integration_without_prefix) {
             $result;
         } else {
             my %params;
-            $params{$attribute} = "$name-" . $result->$attribute;
-            # Also need to update the relevant request ID if it's an update
-            if ($attribute eq 'update_id') {
-                $params{service_request_id} = "$name-" . $result->service_request_id;
+            for my $attribute ( @$attributes ) {
+                if ($attribute eq 'service') {
+                    my %service_params = ( service_code => "$name-" . $result->service->service_code );
+                    $params{service} = (ref $result->service)->new( %{ $result->service }, %service_params );
+                } else {
+                    $params{$attribute} = "$name-" . $result->$attribute;
+                    # Also need to update the relevant request ID if it's an update
+                    if ($attribute eq 'update_id') {
+                        $params{service_request_id} = "$name-" . $result->service_request_id;
+                    }
+                }
             }
             (ref $result)->new(%$result, %params);
         }
@@ -157,8 +165,9 @@ sub get_service_request_updates {
 
 sub get_service_requests {
     my ($self, $args) = @_;
+
     my @requests = $self->_all(get_service_requests => $args);
-    @requests = $self->_map_with_new_id(service_request_id => @requests);
+    @requests = $self->_map_with_new_id(['service_request_id','service'] => @requests);
     return @requests;
 }
 
