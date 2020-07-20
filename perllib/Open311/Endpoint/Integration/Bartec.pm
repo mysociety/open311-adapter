@@ -76,26 +76,7 @@ sub services {
     $services = $self->_coerce_to_array( $services, 'ServiceType' );
 
     my @services = map {
-        $_->{Description} =~ s/(.)(.*)/\U$1\L$2/;
-        (my $class = $_->{ServiceClass}->{Description}) =~ s/(.)(.*)/\U$1\L$2/;
-        my $service_name = $_->{Description};
-
-        # service type names are not unique in bartec so need to distinguish
-        # them
-        if ($self->non_unique_services->{uc $service_name}) {
-           $service_name .= " ($class)",
-        }
-
-        # some things we want to handle are set up as service classes so
-        # map those back to categories
-        if ( $self->service_map->{uc $class} &&
-             $self->service_map->{uc $class}->{uc $service_name}
-        ) {
-            my $map = $self->service_map->{uc $class}->{uc $service_name};
-            $class = $map->{group};
-            $service_name = $map->{category};
-            $_->{Description} = $service_name;
-        }
+        my ($service_name, $class) = $self->_get_service_name($_);
 
         my $service = Open311::Endpoint::Service::UKCouncil::Bartec->new(
             service_name => $service_name,
@@ -105,6 +86,33 @@ sub services {
       );
     } grep { $self->_allowed_service($_) } @$services;
     return @services;
+}
+
+sub _get_service_name {
+    my ($self, $service) = @_;
+
+    $service->{Description} =~ s/(.)(.*)/\U$1\L$2/;
+    (my $class = $service->{ServiceClass}->{Description}) =~ s/(.)(.*)/\U$1\L$2/;
+    my $service_name = $service->{Description};
+
+    # service type names are not unique in bartec so need to distinguish
+    # them
+    if ($self->non_unique_services->{uc $service_name}) {
+       $service_name .= " ($class)",
+    }
+
+    # some things we want to handle are set up as service classes so
+    # map those back to categories
+    if ( $self->service_map->{uc $class} &&
+         $self->service_map->{uc $class}->{uc $service_name}
+    ) {
+        my $map = $self->service_map->{uc $class}->{uc $service_name};
+        $class = $map->{group};
+        $service_name = $map->{category};
+        $service->{Description} = $service_name;
+    }
+
+    return ($service_name, $class);
 }
 
 sub _allowed_service {
@@ -372,9 +380,8 @@ sub get_service_requests {
 
         next if $self->skip_request($sr);
 
-        my $service_name = $sr->{ServiceType}->{Description};
-        next unless $self->allowed_services->{uc $service_name};
-        $service_name = "\u\L$service_name";
+        next unless $self->_allowed_service($sr->{ServiceType});
+        my ($service_name) = $self->_get_service_name($sr->{ServiceType});
 
         my $location = $res->{SOM}->dataof('//ServiceLocation/Metric');
 

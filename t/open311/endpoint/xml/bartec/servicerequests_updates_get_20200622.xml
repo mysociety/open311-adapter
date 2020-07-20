@@ -1,0 +1,18 @@
+    <ServiceRequests_Updates_GetResponse xmlns="http://bartec-systems.com/">
+      <ServiceRequests_Updates_GetResult xmlns="http://www.bartec-systems.com/ServiceRequests_Updates_Get.xsd" RecordCount="11">
+        <ServiceRequest_Updates RecordCount="0">
+          <ServiceRequestID>51395</ServiceRequestID>
+          <ServiceCode>SR5</ServiceCode>
+          <JobReference/>
+          <ServiceCategory>General</ServiceCategory>
+          <ServiceClass>OFFENSIVE GRAFFITI</ServiceClass>
+          <ServiceType>GENERAL</ServiceType>
+          <DateAdded>0001-01-01T00:00:00</DateAdded>
+          <DateChanged>2020-06-24T16:17:00.007</DateChanged>
+        </ServiceRequest_Updates>
+        <Errors>
+          <Result xmlns="http://www.bartec-systems.com">0</Result>
+          <Message xmlns="http://www.bartec-systems.com"/>
+        </Errors>
+      </ServiceRequests_Updates_GetResult>
+    </ServiceRequests_Updates_GetResponse>

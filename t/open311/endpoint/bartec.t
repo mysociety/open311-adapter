@@ -681,6 +681,33 @@ subtest 'fetch_requests' => sub {
     ], 'correct list of requests';
 };
 
+subtest 'fetch_requests with mapped service' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.json?jurisdiction_id=bartec&start_date=2020-06-22T10:00:00Z&end_date=2022-06-20T12:00:00Z'
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+
+    is_deeply decode_json($res->content), [
+        {
+            lat => "52.543786",
+            long => "-0.567652",
+            address_id => "",
+            service_request_id => "SR5",
+            address => "",
+            requested_datetime => "2020-06-24T16:17:00+01:00",
+            updated_datetime => "2020-06-24T16:17:00+01:00",
+            media_url => "",
+            status => "open",
+            service_name => "Offensive graffiti",
+            zipcode => "",
+            service_code => "281"
+        }
+    ], 'correct list of requests';
+};
+
 subtest 'fetch_requests with no results' => sub {
     %sent = ();
 
