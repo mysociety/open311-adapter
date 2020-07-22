@@ -27,6 +27,10 @@
         {
           "attributeCode": "attributes_enquiryInspectionRFS1001181ReasonForClosure1010926_5d3245d8fe2ad806f8dfbb24",
           "value": [""]
+        },
+        {
+          "attributeCode": "attributes_Priorities",
+          "value": ["01b51bb8c0de101a004154b8"]
         }
       ],
       "signature": "5d32469bb4e1b90150014305",

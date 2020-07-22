@@ -1,0 +1,36 @@
+{
+  "item": {
+    "itemId": "01b51bb8c0de101a004154b8",
+    "designCode": "designs_taskPriorities",
+    "collection": "Live",
+    "start": "2019-07-19T18:59:29.950Z",
+    "end": "9999-12-31T23:59:59.999Z",
+    "icon": "icon-display-list",
+    "colour": "#25aae1",
+    "attributes": [
+      {
+        "attributeCode": "attributes_taskPrioritiesPriority",
+        "value": "P2"
+      },
+      {
+        "attributeCode": "attributes_taskPrioritiesDescription",
+        "value": "P2 - 2 Weeks"
+      },
+      {
+        "attributeCode": "attributes_taskPrioritiesReporting1003826_5d321301fe2ad80354bbc3e2",
+        "value": "P2"
+      },
+      {
+        "attributeCode": "attributes_itemsTitle",
+        "value": "P2, P2 - 2 Weeks"
+      },
+      {
+        "attributeCode": "attributes_itemsSubtitle",
+        "value": "Task Priority"
+      }
+    ],
+    "signature": "5d322ad4b4e1b90150f6c1e2",
+    "title": "P2, P2 - 2 Weeks",
+    "subtitle": "Task Priority"
+  }
+}
