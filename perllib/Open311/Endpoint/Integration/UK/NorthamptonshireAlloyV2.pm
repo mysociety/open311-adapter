@@ -47,6 +47,35 @@ sub process_attributes {
 
 }
 
+sub get_request_description {
+    my ($self, $desc, $req) = @_;
+
+    my ($group, $category) = $self->get_defect_category($req) =~ /([^_]*)_(.*)/;
+
+    my $attributes = $self->alloy->attributes_to_hash($req);
+
+    my $priority;
+    for my $att (keys %$attributes) {
+        if ($att =~ /Priorities/ ) {
+            $priority = $attributes->{$att}->[0];
+        }
+    }
+
+    if ($priority) {
+        my $priority_details = $self->alloy->api_call(
+            call => "item/$priority"
+        );
+
+        my $timescale = $priority_details->{item}->{title};
+        $timescale =~ s/P\d+, P\d+ - (.*)/$1/;
+
+
+        $desc = "Our Inspector has identified a $group defect at this location and has issued a works ticket to repair under the $category category. We aim to complete this work within the next $timescale.";
+    }
+
+    return $desc;
+}
+
 sub _find_or_create_contact {
     my ($self, $args) = @_;
 

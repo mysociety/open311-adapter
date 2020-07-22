@@ -125,6 +125,10 @@ $integration->mock('api_call', sub {
                 }
             } elsif ($type eq 'designs_listFixMyStreetCategories1001257_5d3210e1fe2ad806f8df98c1') {
                 $content = path(__FILE__)->sibling('json/alloyv2/categories_search.json')->slurp;
+            } elsif ( $type =~ /DEFECT/i ) {
+                if ( $time =~ /2019-01-02/ ) {
+                    $content = path(__FILE__)->sibling('json/alloyv2/defect_search_all.json')->slurp;
+                }
             }
         }
     } else {
@@ -288,6 +292,56 @@ This is an update"
         [ {
             "update_id" => "6d32469bb4e1b90150014310"
         } ], 'correct json returned';
+};
+
+subtest "check fetch problem" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res;
+    warnings_like {
+        $res = $endpoint->run_test_request(
+            GET => '/requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
+        );
+    }
+    [
+        qr/No category found for defect 3027031, source type designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6/,
+    ],
+    "Correct warnings generated";
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [{
+      long => 2,
+      requested_datetime => "2019-01-02T11:29:16Z",
+      service_code => "Bus Stops_Shelter Damaged",
+      updated_datetime => "2019-01-02T11:29:16Z",
+      service_name => "Bus Stops_Shelter Damaged",
+      address_id => "",
+      lat => 1,
+      description => "Our Inspector has identified a Bus Stops defect at this location and has issued a works ticket to repair under the Shelter Damaged category. We aim to complete this work within the next 2 Weeks.",
+      service_request_id => 4947505,
+      zipcode => "",
+      media_url => "",
+      status => "investigating",
+      address => ""
+   },
+   {
+      address_id => "",
+      lat => 1,
+      service_request_id => 4947597,
+      description => "fill",
+      service_name => "Winter_Grit Bin - empty/refill",
+      status => "fixed",
+      media_url => "",
+      address => "",
+      zipcode => "",
+      requested_datetime => "2019-01-02T14:44:53Z",
+      long => 2,
+      updated_datetime => "2019-01-02T14:44:53Z",
+      service_code => "Winter_Grit Bin - empty/refill"
+   }], "correct json returned";
 };
 
 restore_time();

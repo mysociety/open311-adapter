@@ -577,7 +577,7 @@ sub get_service_requests {
         }
 
         my $attributes = $self->alloy->attributes_to_hash($request);
-        $args{description} = $attributes->{$mapping->{description}};
+        $args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
         $args{status} = $self->defect_status($attributes->{$mapping->{status}}->[0]);
 
         #XXX check this no longer required
@@ -599,6 +599,12 @@ sub get_service_requests {
     }
 
     return @requests;
+}
+
+sub get_request_description {
+    my ($self, $desc) = @_;
+
+    return $desc;
 }
 
 sub fetch_updated_resources {
