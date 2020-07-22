@@ -324,10 +324,7 @@ sub post_service_request_update {
     my $attributes = $self->alloy->attributes_to_hash($inspection);
     my $updates = $attributes->{$self->config->{inspection_attribute_mapping}->{updates}} || '';
 
-    my $time = $self->date_to_dt($args->{updated_datetime});
-    my $formatted_time = $time->ymd . " " . $time->hms;
-    my $text = "Customer update at " . "$formatted_time" . "\n" . $args->{description};
-    $updates = $updates ? "$updates\n$text" : $text;
+    $updates = $self->_generate_update($args, $updates);
 
     my $updated = {
         attributes => [{
@@ -354,6 +351,17 @@ sub post_service_request_update {
         status => lc $args->{status},
         update_id => $update->{item}->{signature}, # $args->{service_request_id} . "_$id_date", # XXX check this
     );
+}
+
+sub _generate_update {
+    my ($self, $args, $updates) = @_;
+
+    my $time = $self->date_to_dt($args->{updated_datetime});
+    my $formatted_time = $time->ymd . " " . $time->hms;
+    my $text = "Customer update at " . "$formatted_time" . "\n" . $args->{description};
+    $updates = $updates ? "$updates\n$text" : $text;
+
+    return $updates;
 }
 
 sub get_service_request_updates {
