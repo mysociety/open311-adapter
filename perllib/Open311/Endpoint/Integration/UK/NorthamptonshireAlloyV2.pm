@@ -159,4 +159,22 @@ sub _accept_updated_resource {
     return 1;
 }
 
+sub _generate_update {
+    my ($self, $args, $updates) = @_;
+
+    my @contacts = map { $args->{$_} } grep { $args->{$_} } qw/ email phone /;
+    my $time = $self->date_to_dt($args->{updated_datetime});
+    my $formatted_time = $time->ymd . " " . $time->hms;
+    $updates .= sprintf(
+        "\nCustomer %s %s [%s] update at %s\n%s",
+        $args->{first_name},
+        $args->{last_name},
+        join(',', @contacts),
+        $formatted_time,
+        $args->{description}
+    );
+
+    return $updates;
+}
+
 1;
