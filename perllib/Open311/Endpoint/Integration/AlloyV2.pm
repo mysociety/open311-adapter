@@ -456,6 +456,19 @@ sub _get_inspection_status {
         $status = $self->get_status_with_closure($status, $reason_for_closure);
     }
 
+    ($status, $reason_for_closure) = $self->_status_and_closure_mapping($status, $reason_for_closure);
+
+    return ($status, $reason_for_closure);
+}
+
+sub _status_and_closure_mapping {
+    my ($self, $status, $reason_for_closure) = @_;
+
+    if ( my $map = $self->config->{status_and_closure_mappping}->{$status} ) {
+        $status = $map->{status};
+        $reason_for_closure = $map->{reason_for_closure};
+    }
+
     return ($status, $reason_for_closure);
 }
 
