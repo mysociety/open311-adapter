@@ -1,0 +1,89 @@
+{
+  "item": {
+    "itemId": "3027032",
+    "designCode": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+    "collection": "Live",
+    "start": "2019-07-19T22:37:04.970Z",
+    "end": "9999-12-31T23:59:59.999Z",
+    "geometry": {
+      "type": "Point",
+      "coordinates": [
+        -0.8988425683060407,
+        52.33631178883839
+      ]
+    },
+    "icon": "icon-inspection-unknown",
+    "colour": "#99cf22",
+    "attributes": [
+      {
+        "attributeCode": "attributes_tasksStatus",
+        "value": [
+          "5bc5bdd281d088d177342c7"
+        ]
+      },
+      {
+        "attributeCode": "attributes_tasksTeam",
+        "value": [
+          "01d221eac0de101a005e5aea"
+        ]
+      },
+      {
+        "attributeCode": "attributes_filesAttachableAttachments",
+        "value": [
+          "02037eefc0de101a008fb7ef"
+        ]
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181OriginalInspectionNumber1003787_5d3245d0fe2ad806f8dfbb01",
+        "value": "INS-00010625"
+      },
+      {
+        "attributeCode": "attributes_tasksCompletionTime",
+        "value": "2019-04-05T07:58:00.000Z"
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06",
+        "value": "1584613"
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181Source1009856_5d3245d2fe2ad806f8dfbb0b",
+        "value": "FixMyStreet"
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181EnquiryType1009857_5d3245d3fe2ad806f8dfbb10",
+        "value": "Request for Service"
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15",
+        "value": "Pothole - Very Large and Dangerous"
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a",
+        "value": "Pothole - Very Large and Dangerous"
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f",
+        "value": "2019-03-26T14:40:00.000Z"
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29",
+        "value": [
+          "01c2901ec0de101a004ec91e"
+        ]
+      },
+      {
+        "attributeCode": "attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33",
+        "value": [
+          "01d221e0c0de101a005e5ae0"
+        ]
+      },
+      {
+        "attributeCode": "attributes_inspectionsInspectionNumber",
+        "value": 10624
+      }
+    ],
+    "signature": "5d32469bb4e1b9015001430b",
+    "title": "INS-34037, 1584613",
+    "subtitle": "Enquiry Inspection RFS"
+  }
+}

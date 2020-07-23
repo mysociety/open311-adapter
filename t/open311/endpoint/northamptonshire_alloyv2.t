@@ -37,7 +37,7 @@ use HTTP::Response;
 use HTTP::Headers;
 
 extends 'Integrations::AlloyV2';
-sub _build_config_file { path(__FILE__)->sibling("alloyv2.yml")->stringify }
+sub _build_config_file { path(__FILE__)->sibling("alloyv2_ncc.yml")->stringify }
 
 package Open311::Endpoint::Integration::UK::Dummy;
 use Path::Tiny;
@@ -46,7 +46,7 @@ extends 'Open311::Endpoint::Integration::UK::NorthamptonshireAlloyV2';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
     $args{jurisdiction_id} = 'dummy';
-    $args{config_file} = path(__FILE__)->sibling("alloyv2.yml")->stringify;
+    $args{config_file} = path(__FILE__)->sibling("alloyv2_ncc.yml")->stringify;
     return $class->$orig(%args);
 };
 has integration_class => (is => 'ro', default => 'Integrations::AlloyV2::Dummy');
@@ -129,7 +129,14 @@ $integration->mock('api_call', sub {
                 if ( $time =~ /2019-01-02/ ) {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search_all.json')->slurp;
                 }
+            } else {
+                $content = path(__FILE__)->sibling('json/alloyv2/inspect_search_further.json')->slurp;
             }
+        } elsif ( $call =~ 'item-log/item/([^/]*)/reconstruct' ) {
+            my $id = $1;
+            my $date = $body->{date};
+            $date =~ s/\D//g;
+            $content = path(__FILE__)->sibling("json/alloyv2/reconstruct_${id}_$date.json")->slurp;
         }
     } else {
         if ( $call eq 'design/designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6' ) {
@@ -138,6 +145,8 @@ $integration->mock('api_call', sub {
             $content = path(__FILE__)->sibling('json/alloyv2/design_resource.json')->slurp;
         } elsif ( $call eq 'item/39dhd38dhdkdnxj' ) {
             $content = '{ "item": { "designCode": "a_design_code" } }';
+        } elsif ( $call =~ 'item-log/item/(.*)$' ) {
+            $content = path(__FILE__)->sibling("json/alloyv2/item_log_$1.json")->slurp;
         } elsif ( $call =~ 'item/(\w+)' ) {
             $content = path(__FILE__)->sibling("json/alloyv2/item_$1.json")->slurp;
         } else {
@@ -342,6 +351,28 @@ subtest "check fetch problem" => sub {
       updated_datetime => "2019-01-02T14:44:53Z",
       service_code => "Winter_Grit Bin - empty/refill"
    }], "correct json returned";
+};
+
+subtest "further investigation updates" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z&end_date=2019-03-01T02:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'investigating',
+        external_status_code => 'further',
+        service_request_id => '3027032',
+        description => 'This is a customer response',
+        updated_datetime => '2019-01-01T00:32:40Z',
+        update_id => '5d32469bb4e1b90150014307',
+        media_url => '',
+    } ], 'correct json returned';
 };
 
 restore_time();
