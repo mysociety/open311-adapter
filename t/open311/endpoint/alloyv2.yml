@@ -16,31 +16,29 @@
   "service_whitelist": {
     "Bus Stops": {
       "resourceId": 6183638,
-      "Shelter Damaged": { "emergency": 0 },
-      "Sign/Pole Damaged": { "emergency": 0 }
+      "Shelter Damaged": 1,
+      "Sign/Pole Damaged": 1
     },
     "Highway Bridges": {
       "resourceId": 6183643,
-      "Highway Bridges - Damaged/Unsafe": { "emergency": 1 },
+      "Highway Bridges - Damaged/Unsafe": 1,
     },
     "Drain Covers": {
       "resourceId": 6183640,
-      "Loose / Raised/Sunken": { "emergency": 0 },
-      "Broken / Missing": { "emergency": 1 },
+      "Loose / Raised/Sunken": 1,
+      "Broken / Missing": 1,
     },
     "Kerbs": {
       "resourceId": 6183644,
-      "Damaged/Loose": { "emergency": 0 },
-      "Missing": { "emergency": 1 },
+      "Damaged/Loose": 1,
+      "Missing": 1,
     },
     "Winter": {
       "resourceId": 6183645,
-      "Grit Bin - empty/refill": { "emergency": 0 },
-      "Grit Bin - damaged/replacement": { "emergency": 1 },
+      "Grit Bin - empty/refill": 1,
+      "Grit Bin - damaged/replacement": 1,
     },
   },
-
-        "emergency_text": "This is an emergency",
 
   # Some resource attributes always have the same values when sent to Alloy
   "resource_attribute_defaults": {
@@ -125,89 +123,89 @@
 
   "defect_sourcetype_category_mapping": {
 
-    # 1000658: { "default": '', "types": {}, "asset_types": {} }, # XXX no defect types (Inpection Defects)
-    # 1000749: { "default": '', "types": {}, "asset_types": {} }, # XXX missing (Defect)
+    # 1000658: { "default": '', "types": {}}, # XXX no defect types (Inpection Defects)
+    # 1000749: { "default": '', "types": {}}, # XXX missing (Defect)
 
     # not in spreadsheet
-    1000951: { "default": '', "types": {}, "asset_types": {} }, # Illuminated Lamp Columns, Signs, Bollards - no types
-    1001025: { "default": '', "types": {}, "asset_types": {} }, # Defect special treatment
-    1001061: { "default": '', "types": {}, "asset_types": {} }, # Retaining wall
+    1000951: { "default": '', "types": {}}, # Illuminated Lamp Columns, Signs, Bollards - no types
+    1001025: { "default": '', "types": {}}, # Defect special treatment
+    1001061: { "default": '', "types": {}}, # Retaining wall
 
-    1000942: { "default": 'Highway Bridges - Damaged/Unsafe', "types": {}, "asset_types": {} }, # Bridge
-    1000947: { "default": 'Highway Bridges - Damaged/Unsafe', "types": {}, "asset_types": {} }, # Subway
+    1000942: { "default": 'Highway Bridges - Damaged/Unsafe', "types": {}}, # Bridge
+    1000947: { "default": 'Highway Bridges - Damaged/Unsafe', "types": {}}, # Subway
 
-    'designs_shelterDamaged1000813_5d323d2efe2ad80354bbd71b': { "default": 'Shelter Damaged', "types": {}, "asset_types": {} }, # Bus shelter
-    1000796: { "default": 'Sign/Pole Damaged', "types": {}, "asset_types": {} }, # Bus stops
+    'designs_shelterDamaged1000813_5d323d2efe2ad80354bbd71b': { "default": 'Shelter Damaged', "types": {}}, # Bus shelter
+    1000796: { "default": 'Sign/Pole Damaged', "types": {}}, # Bus stops
 
     # XXX need to check if asset is a bus stop and not a shelter
-    'designs_benches1000794_5d32400ffe2ad80354bbdae6': { "default": 'Shelter Damaged', "types": {}, "asset_types": {} }, # Benches
+    'designs_benches1000794_5d32400ffe2ad80354bbdae6': { "default": 'Shelter Damaged', "types": {}}, # Benches
 
-    1000797: { "default": 'Loose / Raised/Sunken', "types": {}, "asset_types": {} }, # Covers, Grating, Frames & Boxes
+    1000797: { "default": 'Loose / Raised/Sunken', "types": {}}, # Covers, Grating, Frames & Boxes
 
-    1000803: { "default": 'Blocked Ditch', "types": { 1828847: "Blocked Ditch Causing Flooding" }, "asset_types": {} }, # Ditches
+    1000803: { "default": 'Blocked Ditch', "types": { 1828847: "Blocked Ditch Causing Flooding" }}, # Ditches
 
     # XXX no flooding type
-    1000793: { "default": 'Blocked/Damaged', "types": {}, "asset_types": {} }, # Ancilliary items
-    1000795: { "default": 'Blocked/Damaged', "types": {}, "asset_types": {} }, # Balancing ponds
-    1000945: { "default": 'Blocked/Damaged', "types": {}, "asset_types": {} }, # Channels
-    1000810: { "default": 'Blocked/Damaged', "types": {}, "asset_types": {} }, # Gullies, catch pits and interceptors
-    1000817: { "default": 'Blocked/Damaged', "types": {}, "asset_types": {} }, # Piped grips
+    1000793: { "default": 'Blocked/Damaged', "types": {}}, # Ancilliary items
+    1000795: { "default": 'Blocked/Damaged', "types": {}}, # Balancing ponds
+    1000945: { "default": 'Blocked/Damaged', "types": {}}, # Channels
+    1000810: { "default": 'Blocked/Damaged', "types": {}}, # Gullies, catch pits and interceptors
+    1000817: { "default": 'Blocked/Damaged', "types": {}}, # Piped grips
 
     # type 1828827 is Standing water, is this flooding?
-    1000802: { "default": 'Blocked/Damaged', "types": {}, "asset_types": {} }, # Culverts
+    1000802: { "default": 'Blocked/Damaged', "types": {}}, # Culverts
 
     # XXX how do I know what it is flooding?
-    1000811: { "default": 'Blocked/Damaged', "types": { 1828999: 'Blocked - flooding road/path'}, "asset_types": {} }, # Grips
-    1000806: { "default": 'Blocked/Damaged', "types": { 1828889: 'Blocked - flooding road/path'}, "asset_types": {} }, # Filter drains
-    1000816: { "default": 'Blocked/Damaged', "types": { 1829187: 'Blocked - flooding road/path', 1829189: 'Blocked - flooding private property', 1829190: 'Blocked - flooding road/path'}, "asset_types": {} }, # Piped drainage systems
+    1000811: { "default": 'Blocked/Damaged', "types": { 1828999: 'Blocked - flooding road/path'}}, # Grips
+    1000806: { "default": 'Blocked/Damaged', "types": { 1828889: 'Blocked - flooding road/path'}}, # Filter drains
+    1000816: { "default": 'Blocked/Damaged', "types": { 1829187: 'Blocked - flooding road/path', 1829189: 'Blocked - flooding private property', 1829190: 'Blocked - flooding road/path'}}, # Piped drainage systems
 
     1000805: { "default": 'Pothole / Failed Reinstatement', "types": {
         1828946: 'Slabs - Uneven / Damaged / Cracked',
         1828947: 'Slabs - Uneven / Damaged / Cracked',
         1828948: 'Slabs - Uneven / Damaged / Cracked'
-      }, "asset_types": {} }, # Footways & cycle tracks
+      }}, # Footways & cycle tracks
 
-    1000814: { "default": 'Obstruction (Not Vegetation)', "types": {}, "asset_types": {} }, # Litter bins
-    1000792: { "default": 'Obstruction (Not Vegetation)', "types": {}, "asset_types": {} }, # Animal waste bins
-    1001026: { "default": 'Obstruction (Not Vegetation)', "types": {}, "asset_types": {} }, # Steps
-    1001027: { "default": 'Obstruction (Not Vegetation)', "types": {}, "asset_types": {} }, # Steps Handrail
+    1000814: { "default": 'Obstruction (Not Vegetation)', "types": {}}, # Litter bins
+    1000792: { "default": 'Obstruction (Not Vegetation)', "types": {}}, # Animal waste bins
+    1001026: { "default": 'Obstruction (Not Vegetation)', "types": {}}, # Steps
+    1001027: { "default": 'Obstruction (Not Vegetation)', "types": {}}, # Steps Handrail
 
-    1000813: { "default": 'Damaged/Loose', "types": { 1829104: 'Missing'}, "asset_types": {} }, # Kerbs, Edgings
+    1000813: { "default": 'Damaged/Loose', "types": { 1829104: 'Missing'}}, # Kerbs, Edgings
 
-    1000943: { "default": 'Crash Barriers - Damaged / Missing', "types": {}, "asset_types": {} }, # Fences and barriers
-    1000821: { "default": 'Crash Barriers - Damaged / Missing', "types": {}, "asset_types": {} }, # Safety fences
-    1001216: { "default": 'Pedestrian Barriers - Damaged / Missing', "types": {}, "asset_types": {} }, # Pedestrian Guardrail
+    1000943: { "default": 'Crash Barriers - Damaged / Missing', "types": {}}, # Fences and barriers
+    1000821: { "default": 'Crash Barriers - Damaged / Missing', "types": {}}, # Safety fences
+    1001216: { "default": 'Pedestrian Barriers - Damaged / Missing', "types": {}}, # Pedestrian Guardrail
 
-    1001018: { "default": 'Sign/Waymarking - Damaged/Missing', "types": {}, "asset_types": {} }, # Finger posts
-    1001035: { "default": 'Sign/Waymarking - Damaged/Missing', "types": {}, "asset_types": {} }, # Waymarker
-    1001022: { "default": 'Passage-Obstructed/Overgrown', "types": {}, "asset_types": {} }, # Gaps
-    1001019: { "default": 'Gate - Damaged/ Missing', "types": {}, "asset_types": {} }, # GAtes
+    1001018: { "default": 'Sign/Waymarking - Damaged/Missing', "types": {}}, # Finger posts
+    1001035: { "default": 'Sign/Waymarking - Damaged/Missing', "types": {}}, # Waymarker
+    1001022: { "default": 'Passage-Obstructed/Overgrown', "types": {}}, # Gaps
+    1001019: { "default": 'Gate - Damaged/ Missing', "types": {}}, # GAtes
 
     # XXXX nothing about livestock, possibly electric cattle fence - 1948663
-    1001023: { "default": 'Passage-Obstructed/Overgrown', "types": {}, "asset_types": {} }, # Obstructions
-    1001028: { "default": 'Stile-Damaged/Missing', "types": {}, "asset_types": {} }, # Stiles
+    1001023: { "default": 'Passage-Obstructed/Overgrown', "types": {}}, # Obstructions
+    1001028: { "default": 'Stile-Damaged/Missing', "types": {}}, # Stiles
 
-    1000818: { "default": 'Road Markings - Worn/Faded', "types": {}, "asset_types": {} }, # Road Markings
-    1000819: { "default": 'Road Markings - Worn/Faded', "types": {}, "asset_types": {} }, # Road studs
+    1000818: { "default": 'Road Markings - Worn/Faded', "types": {}}, # Road Markings
+    1000819: { "default": 'Road Markings - Worn/Faded', "types": {}}, # Road studs
 
-    1001057: { "default": 'Damaged Speed Humps', "types": {}, "asset_types": {} }, # Traffic Calming
-    1000807: { "default": 'Flooding', "types": {}, "asset_types": {} }, # Flooding
+    1001057: { "default": 'Damaged Speed Humps', "types": {}}, # Traffic Calming
+    1000807: { "default": 'Flooding', "types": {}}, # Flooding
     # XXX these might need some checking of asset type?
-    1000815: { "default": 'Potholes / Highway Condition', "types": {}, "asset_types": {} }, # Minor Carriageway repairs
-    1000801: { "default": 'Potholes / Highway Condition', "types": {}, "asset_types": {} }, # Concrete carriageway repairs
+    1000815: { "default": 'Potholes / Highway Condition', "types": {}}, # Minor Carriageway repairs
+    1000801: { "default": 'Potholes / Highway Condition', "types": {}}, # Concrete carriageway repairs
     # XXX what to do with other types?
-    1000820: { "default": 'Potholes / Highway Condition', "types": {1829332: 'Mud on Road' }, "asset_types": {} }, # Sweeping Cleansing
+    1000820: { "default": 'Potholes / Highway Condition', "types": {1829332: 'Mud on Road' }}, # Sweeping Cleansing
 
-    1000941: { "default": 'Safety Bollard - Damaged/Missing', "types": {}, "asset_types": {} }, # Bollard
+    1000941: { "default": 'Safety Bollard - Damaged/Missing', "types": {}}, # Bollard
 
-    1000946: { "default": 'Damaged / Missing / Facing Wrong Way', "types": {1956329: 'Obscured by vegetation or Dirty'}, "asset_types": {} }, # Posts
-    1000822: { "default": 'Damaged / Missing / Facing Wrong Way', "types": {1956292: 'Obscured by vegetation or Dirty', 1956301: 'Obscured by vegetation or Dirty'}, "asset_types": {} }, # Signs
+    1000946: { "default": 'Damaged / Missing / Facing Wrong Way', "types": {1956329: 'Obscured by vegetation or Dirty'}}, # Posts
+    1000822: { "default": 'Damaged / Missing / Facing Wrong Way', "types": {1956292: 'Obscured by vegetation or Dirty', 1956301: 'Obscured by vegetation or Dirty'}}, # Signs
 
-    1000800: { "default": 'Damaged/Exposed Wiring / Vandalised', "types": {}, "asset_types": {} }, # Communications Installations
-    1000823: { "default": 'Damaged/Exposed Wiring / Vandalised', "types": {3379123: 'Signal Failure all out', 3379118: 'Lamp/Bulb Failure', 3379119: 'Lamp/Bulb Failure'}, "asset_types": {} }, # Traffic signals
+    1000800: { "default": 'Damaged/Exposed Wiring / Vandalised', "types": {}}, # Communications Installations
+    1000823: { "default": 'Damaged/Exposed Wiring / Vandalised', "types": {3379123: 'Signal Failure all out', 3379118: 'Lamp/Bulb Failure', 3379119: 'Lamp/Bulb Failure'}}, # Traffic signals
 
     # XXX no defect types
-    1000949: { "default": 'Fallen Tree', "types": {}, "asset_types": {} }, # Tree
+    1000949: { "default": 'Fallen Tree', "types": {}}, # Tree
     1000812: { "default": 'Fallen Tree', "types": {
         1829074: 'Restricted Visability',
         1829075: 'Restricted Visability',
@@ -217,14 +215,14 @@
         1829078: 'Restricted Visability / Overgrown / Overhanging',
         1829079: 'Restricted Visability / Overgrown / Overhanging',
         1948288: 'Restricted Visability / Overgrown / Overhanging'
-      }, "asset_types": {} }, # Hedges & Trees
+      }}, # Hedges & Trees
     # XXX TODO
-    1000944: { "default": '', "types": {}, "asset_types": {} }, # Hedges & Trees (non-LA)
+    1000944: { "default": '', "types": {}}, # Hedges & Trees (non-LA)
 
-    1000804: { "default": 'Verges - Damaged by Vehicles', "types": {}, "asset_types": {} }, # Embankments and cuttings
-    1000808: { "default": 'Verges - Damaged by Vehicles', "types": {}, "asset_types": {} }, # Grassed areas
+    1000804: { "default": 'Verges - Damaged by Vehicles', "types": {}}, # Embankments and cuttings
+    1000808: { "default": 'Verges - Damaged by Vehicles', "types": {}}, # Grassed areas
 
-    'designs_gritBin193939393_asdhfaiuasdf93d': { "default": 'Grit Bin - damaged/replacement', "types": { 'designs_gritBinEmpty193939393_asdhfaiuasdf93d': "Grit Bin - empty/refill" }, "asset_types": {} }, # Grit Bins
+    'designs_gritBin193939393_asdhfaiuasdf93d': { "default": 'Grit Bin - damaged/replacement', "types": { 'designs_gritBinEmpty193939393_asdhfaiuasdf93d': "Grit Bin - empty/refill" }}, # Grit Bins
   },
 
   "defect_status_mapping": {

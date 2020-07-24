@@ -225,6 +225,7 @@ subtest "create basic problem" => sub {
             "service_request_id" => 12345
         } ], 'correct json returned';
 
+    restore_time;
 };
 
 subtest "create problem with file" => sub {
@@ -293,6 +294,7 @@ subtest "create problem with file" => sub {
             "service_request_id" => 12345
         } ], 'correct json returned';
 
+    restore_time;
 };
 
 subtest "create problem with no resource_id" => sub {
@@ -350,10 +352,10 @@ subtest "create problem with no resource_id" => sub {
             "service_request_id" => 12345
         } ], 'correct json returned';
 
+    restore_time;
 };
 
 subtest "check fetch updates" => sub {
-    set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
       GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z&end_date=2019-03-01T02:00:00Z',
     );
@@ -416,7 +418,6 @@ subtest "check fetch updates" => sub {
 };
 
 subtest "create comment" => sub {
-    set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request( 
         POST => '/servicerequestupdates.json', 
         jurisdiction_id => 'dummy',
@@ -453,7 +454,6 @@ This is an update"
 };
 
 subtest "update comment" => sub {
-    set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request( 
         POST => '/servicerequestupdates.json', 
         jurisdiction_id => 'dummy',
@@ -491,7 +491,6 @@ This is an update"
 };
 
 subtest "check fetch problem" => sub {
-    set_fixed_time('2014-01-01T12:00:00Z');
     my $res;
     warnings_like {
         $res = $endpoint->run_test_request(
