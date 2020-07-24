@@ -67,6 +67,27 @@ if ( $inspection_attrib->{'Status'}->{linked_code} ) {
     say "Can't work out what the status design is to get status details";
 }
 
+if ( $inspection_attrib->{'Reason for Closure'}->{linked_code} ) {
+    my $code = $inspection_attrib->{'Reason for Closure'}->{linked_code};
+
+    my $query = {
+        properties =>  {
+            dodiCode => $code,
+        },
+    };
+
+    my $results = $i->search( $query, 1 );
+
+    say "";
+    say "reasons for closure";
+
+    for my $status ( @$results ) {
+        say sprintf('%s: %s', $status->{title}, $status->{itemId});
+    }
+} else {
+    say "Can't work out what the reason for closure design is to get reason for closure details";
+}
+
 if ( $inspection_attrib->{'FMS Contact'}->{linked_code} ) {
     say "";
     say "contact design is " . $inspection_attrib->{'FMS Contact'}->{linked_code};
