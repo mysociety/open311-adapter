@@ -62,7 +62,6 @@
     "title": 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', # summary
     "description": 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', # explanation
     "fixmystreet_id": 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', # Source ID
-    #"category": 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', # category
   },
   "request_to_resource_attribute_manual_mapping": {
     "category": 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', # category
@@ -100,9 +99,7 @@
     "5bc5bdd281d088d177342c72": "open", # proposed
     "5bc5bdd281d088d177342c73": "investigating", # issued to contractor
     "5bc5bdd281d088d177342c74": "investigating", # in progress
-    # "5bc5bdd281d088d177342c75": "" # on hold
     "5bc5bdd281d088d177342c76": "closed", # completed
-    # "5bc5bdd281d088d177342c79": "" # cancelled
     "01b51bb6c0de101a004154b7": 'further_investigation', # highways to monitor
   },
 
@@ -130,107 +127,9 @@
   ],
 
   "defect_sourcetype_category_mapping": {
-
-    # 1000658: { "default": '', "types": {}, "asset_types": {} }, # XXX no defect types (Inpection Defects)
-    # 1000749: { "default": '', "types": {}, "asset_types": {} }, # XXX missing (Defect)
-
-    # not in spreadsheet
-    1000951: { "default": '', "types": {}, "asset_types": {} }, # Illuminated Lamp Columns, Signs, Bollards - no types
-    1001025: { "default": '', "types": {}, "asset_types": {} }, # Defect special treatment
-    1001061: { "default": '', "types": {}, "asset_types": {} }, # Retaining wall
-
-    1000942: { "default": 'Highway Bridges - Damaged/Unsafe', "types": {}, "asset_types": {} }, # Bridge
-    1000947: { "default": 'Highway Bridges - Damaged/Unsafe', "types": {}, "asset_types": {} }, # Subway
-
-    'designs_shelterDamaged1000813_5d323d2efe2ad80354bbd71b': { "default": 'Shelter Damaged', "types": {}, "asset_types": {} }, # Bus shelter
-    1000796: { "default": 'Sign/Pole Damaged', "types": {}, "asset_types": {} }, # Bus stops
-
-    # XXX need to check if asset is a bus stop and not a shelter
-    'designs_benches1000794_5d32400ffe2ad80354bbdae6': { "default": 'Shelter Damaged', "types": {}, "asset_types": {} }, # Benches
-
-    1000797: { "default": 'Loose / Raised/Sunken', "types": {}, "asset_types": {} }, # Covers, Grating, Frames & Boxes
-
-    1000803: { "default": 'Blocked Ditch', "types": { 1828847: "Blocked Ditch Causing Flooding" }, "asset_types": {} }, # Ditches
-
-    # XXX no flooding type
-    1000793: { "default": 'Blocked/Damaged', "types": {}, "asset_types": {} }, # Ancilliary items
-    1000795: { "default": 'Blocked/Damaged', "types": {}, "asset_types": {} }, # Balancing ponds
-    1000945: { "default": 'Blocked/Damaged', "types": {}, "asset_types": {} }, # Channels
-    1000810: { "default": 'Blocked/Damaged', "types": {}, "asset_types": {} }, # Gullies, catch pits and interceptors
-    1000817: { "default": 'Blocked/Damaged', "types": {}, "asset_types": {} }, # Piped grips
-
-    # type 1828827 is Standing water, is this flooding?
-    1000802: { "default": 'Blocked/Damaged', "types": {}, "asset_types": {} }, # Culverts
-
-    # XXX how do I know what it is flooding?
-    1000811: { "default": 'Blocked/Damaged', "types": { 1828999: 'Blocked - flooding road/path'}, "asset_types": {} }, # Grips
-    1000806: { "default": 'Blocked/Damaged', "types": { 1828889: 'Blocked - flooding road/path'}, "asset_types": {} }, # Filter drains
-    1000816: { "default": 'Blocked/Damaged', "types": { 1829187: 'Blocked - flooding road/path', 1829189: 'Blocked - flooding private property', 1829190: 'Blocked - flooding road/path'}, "asset_types": {} }, # Piped drainage systems
-
-    1000805: { "default": 'Pothole / Failed Reinstatement', "types": {
-        1828946: 'Slabs - Uneven / Damaged / Cracked',
-        1828947: 'Slabs - Uneven / Damaged / Cracked',
-        1828948: 'Slabs - Uneven / Damaged / Cracked'
-      }, "asset_types": {} }, # Footways & cycle tracks
-
-    1000814: { "default": 'Obstruction (Not Vegetation)', "types": {}, "asset_types": {} }, # Litter bins
-    1000792: { "default": 'Obstruction (Not Vegetation)', "types": {}, "asset_types": {} }, # Animal waste bins
-    1001026: { "default": 'Obstruction (Not Vegetation)', "types": {}, "asset_types": {} }, # Steps
-    1001027: { "default": 'Obstruction (Not Vegetation)', "types": {}, "asset_types": {} }, # Steps Handrail
-
-    1000813: { "default": 'Damaged/Loose', "types": { 1829104: 'Missing'}, "asset_types": {} }, # Kerbs, Edgings
-
-    1000943: { "default": 'Crash Barriers - Damaged / Missing', "types": {}, "asset_types": {} }, # Fences and barriers
-    1000821: { "default": 'Crash Barriers - Damaged / Missing', "types": {}, "asset_types": {} }, # Safety fences
-    1001216: { "default": 'Pedestrian Barriers - Damaged / Missing', "types": {}, "asset_types": {} }, # Pedestrian Guardrail
-
-    1001018: { "default": 'Sign/Waymarking - Damaged/Missing', "types": {}, "asset_types": {} }, # Finger posts
-    1001035: { "default": 'Sign/Waymarking - Damaged/Missing', "types": {}, "asset_types": {} }, # Waymarker
-    1001022: { "default": 'Passage-Obstructed/Overgrown', "types": {}, "asset_types": {} }, # Gaps
-    1001019: { "default": 'Gate - Damaged/ Missing', "types": {}, "asset_types": {} }, # GAtes
-
-    # XXXX nothing about livestock, possibly electric cattle fence - 1948663
-    1001023: { "default": 'Passage-Obstructed/Overgrown', "types": {}, "asset_types": {} }, # Obstructions
-    1001028: { "default": 'Stile-Damaged/Missing', "types": {}, "asset_types": {} }, # Stiles
-
-    1000818: { "default": 'Road Markings - Worn/Faded', "types": {}, "asset_types": {} }, # Road Markings
-    1000819: { "default": 'Road Markings - Worn/Faded', "types": {}, "asset_types": {} }, # Road studs
-
-    1001057: { "default": 'Damaged Speed Humps', "types": {}, "asset_types": {} }, # Traffic Calming
-    1000807: { "default": 'Flooding', "types": {}, "asset_types": {} }, # Flooding
-    # XXX these might need some checking of asset type?
-    1000815: { "default": 'Potholes / Highway Condition', "types": {}, "asset_types": {} }, # Minor Carriageway repairs
-    1000801: { "default": 'Potholes / Highway Condition', "types": {}, "asset_types": {} }, # Concrete carriageway repairs
-    # XXX what to do with other types?
-    1000820: { "default": 'Potholes / Highway Condition', "types": {1829332: 'Mud on Road' }, "asset_types": {} }, # Sweeping Cleansing
-
-    1000941: { "default": 'Safety Bollard - Damaged/Missing', "types": {}, "asset_types": {} }, # Bollard
-
-    1000946: { "default": 'Damaged / Missing / Facing Wrong Way', "types": {1956329: 'Obscured by vegetation or Dirty'}, "asset_types": {} }, # Posts
-    1000822: { "default": 'Damaged / Missing / Facing Wrong Way', "types": {1956292: 'Obscured by vegetation or Dirty', 1956301: 'Obscured by vegetation or Dirty'}, "asset_types": {} }, # Signs
-
-    1000800: { "default": 'Damaged/Exposed Wiring / Vandalised', "types": {}, "asset_types": {} }, # Communications Installations
-    1000823: { "default": 'Damaged/Exposed Wiring / Vandalised', "types": {3379123: 'Signal Failure all out', 3379118: 'Lamp/Bulb Failure', 3379119: 'Lamp/Bulb Failure'}, "asset_types": {} }, # Traffic signals
-
-    # XXX no defect types
-    1000949: { "default": 'Fallen Tree', "types": {}, "asset_types": {} }, # Tree
-    1000812: { "default": 'Fallen Tree', "types": {
-        1829074: 'Restricted Visability',
-        1829075: 'Restricted Visability',
-        1829073: 'Restricted Visability / Overgrown / Overhanging',
-        1829076: 'Restricted Visability / Overgrown / Overhanging',
-        1829077: 'Restricted Visability / Overgrown / Overhanging',
-        1829078: 'Restricted Visability / Overgrown / Overhanging',
-        1829079: 'Restricted Visability / Overgrown / Overhanging',
-        1948288: 'Restricted Visability / Overgrown / Overhanging'
-      }, "asset_types": {} }, # Hedges & Trees
-    # XXX TODO
-    1000944: { "default": '', "types": {}, "asset_types": {} }, # Hedges & Trees (non-LA)
-
-    1000804: { "default": 'Verges - Damaged by Vehicles', "types": {}, "asset_types": {} }, # Embankments and cuttings
-    1000808: { "default": 'Verges - Damaged by Vehicles', "types": {}, "asset_types": {} }, # Grassed areas
-
-    'designs_gritBin193939393_asdhfaiuasdf93d': { "default": 'Grit Bin - damaged/replacement', "types": { 'designs_gritBinEmpty193939393_asdhfaiuasdf93d': "Grit Bin - empty/refill" }, "asset_types": {} }, # Grit Bins
+    'designs_shelterDamaged1000813_5d323d2efe2ad80354bbd71b': { "default": 'Shelter Damaged', "types": {} }, # Bus shelter
+    'designs_gritBin193939393_asdhfaiuasdf93d': { "default": 'Grit Bin - damaged/replacement', "types": { 'designs_gritBinEmpty193939393_asdhfaiuasdf93d': "Grit Bin - empty/refill" } }, # Grit Bins
+    'designs_benches1000794_5d32400ffe2ad80354bbdae6': { "default": 'Shelter Damaged', "types": {} }, # Benches
   },
 
   "defect_status_mapping": {
@@ -239,10 +138,6 @@
     "5c8bdfb98ae862230019dc20": "investigating", # "Confirmed"
     "5c8bdfc18ae862230019dc21": "action_scheduled", # "Order Raised"
     "5c8bdfc88ae862230019dc22": "fixed", # "Remedied"
-    #"5c8bdfe08ae862230019dc24": "" # no action required
-    #"5c8bdff68ae862230019dc25": "" # superseded
-    #"5c8bdfdb8ae862230019dc23": "" # "Found and Forwarded"
-    #"5d485225fe2ad809d85a9981": "" # "Rejected"
   },
 
   "defect_resource_name": "designInterfaces_defects",
@@ -260,189 +155,6 @@
       28: 'P3',
       182: 'P4',
       277: 'P5',
-  },
-
-  "historic_resource_name": "INSPECTION_ST INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_MIGRATED_DATA",
-
-  "historic_skip_import_status": {
-      "closed": 1,
-      "no_further_action": 1,
-      "not_councils_responsibility": 1
-  },
-
-  "historic_status_mapping": {
-    "1": "open", # proposed
-    "2": "investigating", # issued to contractor
-    "4": "in_progress", # in progress
-    # "3": "" # on hold
-    "6": "closed" # closed
-  },
-
-  "historic_inspection_closure_mapping": {
-    9483946: 'in_progress', # works instructed
-    9483949: 'no_further_action', # no action necessary
-    9483947: 'not_councils_responsibility', # outside NCC control
-    9483948: 'no_further_action', # highways to monitor
-  },
-
-  "historic_category_mapping": {
-    "Bridges": {
-      "Damaged/Unsafe": "Highway Bridges - Damaged/Unsafe"
-    },
-    "Bus Stops/Routes": {
-        "Request a new shelter": "",
-        "Shelter Damaged": "Shelter Damaged",
-        "Sign/Pole Damaged": "Sign/Pole Damaged"
-    },
-    "Ditches": {
-      "Blocked" : "Blocked Ditch",
-      "Blocked Causing Flooding": "Blocked Ditch Causing Flooding"
-    },
-    "Drain Covers": {
-        "Broken": "Broken / Missing",
-        "Missing": "Broken / Missing",
-        "Loose": "Loose / Raised/Sunken",
-        "Raised/Sunken": "Loose / Raised/Sunken"
-    },
-    "Drains": {
-        "New Drainage Request": ""
-    },
-    "Footway/Footpath": {
-        "Damaged/Cracked": "Slabs - Uneven / Damaged / Cracked",
-        "Slabs - uneven/missing": "Slabs - Uneven / Damaged / Cracked",
-        "Failed Reinstatement": "Pothole / Failed Reinstatement",
-        "Obstruction": "Obstruction (Not Vegetation)",
-        "Pothole": "Pothole / Failed Reinstatement",
-        "Potholes - Previous Repair": "Pothole / Failed Reinstatement"
-    },
-    "Grit Bin": {
-        "empty/refill": "Grit Bin - empty/refill",
-        "new request": "Grit Bin - damaged/replacement"
-    },
-    "Kerbs": {
-        "Dropped Kerb Request - Public use": "",
-    },
-    "Northamptonshire Highways": {
-        "Correspondence": "",
-        "Local Resolution": "",
-        "Comment": ""
-    },
-    "Parking": {
-        "Blue Badge": "",
-        "Obstructive/Verge Parking": "",
-        "Request New Restrictions": "",
-        "Request Review of Restrictions": "",
-        "Resident Parking Permits": "",
-    },
-    "Pedestrian/Crash Barriers": {
-        "Damaged/Missing": "Pedestrian Barriers - Damaged / Missing",
-        "Request New Barriers": ""
-    },
-    "Pedestrian Crossings": {
-        "Damaged Control": "Damaged/Exposed Wiring / Vandalised",
-        "New Crossing Request": "",
-        "Request Timing Review": "",
-        "Signal Failure/Damaged - Toucan/Pelican": "Signal Failure/Damaged - Toucan/Pelican"
-    },
-    "Rights of Way": {
-        "Bridge-Damaged/missing/New": "Bridge-Damaged/ Missing",
-        "Gate - Damaged/Missing/New": "Gate - Damaged/ Missing",
-        "Legal": "",
-        "Passage-Obstructed/Overgrown/New": "Passage-Obstructed/Overgrown",
-        "Sign/Waymaking - Damaged/Missing/New": "Sign/Waymarking - Damaged/Missing",
-        "Stil-Damaged/Missing/New": "Stile-Damaged/Missing"
-    },
-    "Road Markings": {
-        "Obstruction of Driveway ( access line request )": "",
-        "Request for New": "",
-        "Worn/Faded": "Road Markings - Worn/Faded"
-    },
-    "Roads": {
-        "Roadworks - NCC": "",
-        "Highway Condition": "Potholes / Highway Condition",
-        "Obstruction": "Potholes / Highway Condition",
-        "Potholes - Previous Repair": "Potholes / Highway Condition",
-        "Potholes": "Potholes / Highway Condition"
-    },
-    "Safety Bollard": {
-        "Damaged/Missing": "Safety Bollard - Damaged/Missing",
-        "Request New Bollards": ""
-    },
-    "Sign": {
-        "Damaged/Missing": "Damaged / Missing / Facing Wrong Way",
-        "Facing Wrong Way": "Damaged / Missing / Facing Wrong Way",
-        "Obscured/Dirty": "Obscured by vegetation or Dirty",
-        "Obscured by vegetation": "Obscured by vegetation or Dirty",
-        "Request for new signs": "Damaged / Missing / Facing Wrong Way"
-    },
-    "Transport & Highways": {
-        "Correspondence": ""
-    },
-    "Traffic Calming": {
-        "Request for Traffic Calming Scheme": "",
-        "Speeding Concerns": ""
-    },
-    "Traffic Signals": {
-        "Damaged/Exposed Wiring": "Damaged/Exposed Wiring / Vandalised",
-        "Lamp/Bulb Failure": "Lamp/Bulb Failure",
-        "Signal Failure": "Signal Failure",
-        "Signal Stuck": "Signal Stuck",
-        "Signal Failure all out": "Signal Failure all out",
-        "Temporary Lights": "Request Timing Review",
-        "Request Timing Review": "Request Timing Review",
-        "Vandsalised": "Damaged/Exposed Wiring / Vandalised"
-    },
-    "Utilities": {
-        "Roadworks": "",
-        "Failed Reinstatement": "Potholes / Highway Condition",
-    },
-    "Vegetation": {
-        "Roots": "Restricted Visibility / Overgrown / Overhanging",
-        "Sap/Fruit": "Restricted Visibility / Overgrown / Overhanging",
-        "Overgrown/Overhanging": "Restricted Visibility / Overgrown / Overhanging",
-        "Overgrown/Overhanging In Northampton Borough": "Restricted Visibility / Overgrown / Overhanging",
-        "Tree Removal": "Restricted Visibility / Overgrown / Overhanging",
-    },
-    "Verges": {
-        "Damaged by Vehicles": "Verges - Damaged by Vehicles",
-        "Obstruction - stones/signs": "",
-        "Request Verge Hardening": ""
-    },
-    "Winter Maintenance": {
-        "Grit Bin - new request": "Grit Bin - damaged/replacement",
-        "Gritting - new road request": "",
-        "Non Gritted Road": "Missed published Gritted Route",
-        "Snow": "",
-        "Personal Damage due to Winter": "",
-        "Personal Injury due to Winter": "",
-    }
-    #"Bus Stops/Routes - Shelter Damaged": "Shelter Damaged",
-    #"Drain Covers - Raised/Sunken": "Loose / Raised/Sunken",
-    #"Footway/Footpath - Damaged/Cracked": "Slabs - Uneven / Damaged / Cracked",
-    #"Footway/Footpath - Obstruction": "Obstruction (Not Vegetation)",
-    #"Footway/Footpath - Pothole": "Pothole / Failed Reinstatement",
-    #"Footway/Footpath - Potholes - Previous Repair": "Pothole / Failed Reinstatement",
-    #"Grit Bin - empty/refill": "Grit Bin - empty/refill",
-    #"Grit Bin - new request": "Grit Bin - damaged/replacement",
-    #"Winter Maintenance Grit Bin - new request": "Grit Bin - damaged/replacement",
-    #"Rights of Way - Gate - Damaged/Missing/New": "Gate Damaged/ Missing",
-    #"Rights of Way - Sign/Waymaking - Damaged/Missing/New": "Sign/Waymarking - Damaged/Missing",
-    #"Road Markings - Worn/Faded": "Road Markings - Worn/Faded",
-    #"Roads - Highway Condition": "Potholes / Highway Condition",
-    #"Roads - Obstruction": "Potholes / Highway Condition",
-    #"Roads - Potholes - Previous Repair": "Potholes / Highway Condition",
-    #"Roads - Potholes": "Potholes / Highway Condition",
-    #"Safety Bollard - Damaged/Missing": "Safety Bollard - Damaged/Missing",
-    #"Sign - Damaged/Missing": "Damaged / Missing / Facing Wrong Way",
-    #"Sign - Facing Wrong Way": "Damaged / Missing / Facing Wrong Way",
-    #"Sign - Obscured/Dirty": "Obscured by vegetation or Dirty",
-    #"Sign - Request for new signs": "Damaged / Missing / Facing Wrong Way",
-    #"Vegetation - Overgrown/Overhanging": "Restricted Visibility / Overgrown / Overhanging",
-
-    #"New Drainage Request": "",
-    #"Damaged Control": "",
-    #"Roadworks - NCC": "",
-    #"Temporary Lights": "",
   },
 
   "contact": {
