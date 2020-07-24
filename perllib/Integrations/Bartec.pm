@@ -412,6 +412,11 @@ sub ServiceRequests_Create {
                 Latitude => $values->{lat} * 1,
                 Longitude => $values->{long} * 1,
             },
+            BNG => {
+                attr => { xmlns => 'http://www.bartec-systems.com' },
+                Easting => $values->{attributes}->{easting} * 1,
+                Northing => $values->{attributes}->{northing} * 1,
+            },
         },
         #source => $values->{Source},
         ExternalReference => $values->{attributes}->{fixmystreet_id},

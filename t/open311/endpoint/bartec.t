@@ -350,7 +350,11 @@ subtest "check send basic report" => sub {
             Metric => {
                 Longitude => -0.289832,
                 Latitude => 52.540930,
-            }
+            },
+            BNG => {
+                Easting => 1,
+                Northing => 1,
+            },
         },
         #source => 'FixMyStreet',
         ExternalReference => 1,
@@ -427,7 +431,11 @@ subtest "check send report with assets" => sub {
             Metric => {
                 Longitude => -0.289832,
                 Latitude => 52.540930,
-            }
+            },
+            BNG => {
+                Easting => 1,
+                Northing => 1,
+            },
         },
         #source => 'FixMyStreet',
         ExternalReference => 1,
@@ -496,7 +504,11 @@ subtest "check send report with a photo" => sub {
             Metric => {
                 Longitude => -0.289832,
                 Latitude => 52.540930,
-            }
+            },
+            BNG => {
+                Easting => 1,
+                Northing => 1,
+            },
         },
         #source => 'FixMyStreet',
         ExternalReference => 1,
