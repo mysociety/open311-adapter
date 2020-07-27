@@ -28,6 +28,10 @@ status_map:
   CLOSED: closed
   'IN PROGRESS': in_progress
 
+closing_code_map:
+  CLOSED:
+    JUSTIFIED: fixed
+
 statuses_to_fetch:
   - OPEN
 

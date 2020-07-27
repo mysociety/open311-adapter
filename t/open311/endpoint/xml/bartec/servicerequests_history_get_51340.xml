@@ -1,0 +1,35 @@
+    <ServiceRequests_History_GetResponse xmlns="http://bartec-systems.com/">
+      <ServiceRequests_History_GetResult xmlns="http://www.bartec-systems.com/ServiceRequests_History_Get.xsd" RecordCount="1">
+        <ServiceRequest_History>
+          <id>228028</id>
+          <ServiceCode>SR00051624</ServiceCode>
+          <UPRN>10008049175</UPRN>
+          <ServiceLocation>
+            <BNG xmlns="http://www.bartec-systems.com" Easting="517609.009161874" Northing="294148.99443794"/>
+            <Metric xmlns="http://www.bartec-systems.com" Latitude="52.532487" Longitude="-0.267587"/>
+          </ServiceLocation>
+          <LandType>HH</LandType>
+          <DateRequested>2020-06-15T09:44:00</DateRequested>
+          <DateChanged>2020-06-17T09:59:26.867</DateChanged>
+          <DateClosed>2020-06-17T09:59:26.867</DateClosed>
+          <ClosingCode>UNMAPPED</ClosingCode>
+          <ServiceClassName>WASTE</ServiceClassName>
+          <ServiceTypeName>GW NEW SUBSCRIPTION</ServiceTypeName>
+          <ServiceStatusName>CLOSED</ServiceStatusName>
+          <ExternalReference>707</ExternalReference>
+          <ContactTelephone/>
+          <ContactEmail/>
+          <SLAID>35</SLAID>
+          <WorkGroupName>Waste</WorkGroupName>
+          <CrewNumber>999</CrewNumber>
+          <RecordStamp>
+            <AddedBy xmlns="http://www.bartec-systems.com">c15_ts01_petetest</AddedBy>
+            <DateAdded xmlns="http://www.bartec-systems.com">2020-06-17T09:47:26.85</DateAdded>
+          </RecordStamp>
+        </ServiceRequest_History>
+        <Errors>
+          <Result xmlns="http://www.bartec-systems.com">0</Result>
+          <Message xmlns="http://www.bartec-systems.com"/>
+        </Errors>
+      </ServiceRequests_History_GetResult>
+    </ServiceRequests_History_GetResponse>

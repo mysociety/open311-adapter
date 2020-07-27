@@ -349,7 +349,7 @@ sub get_service_request_updates {
 
         for my $entry ( @$entries ) {
             my %args = (
-                status => $self->get_integration->config->{status_map}->{ $entry->{ServiceStatusName} },
+                status => $self->_get_update_status($entry),
                 update_id => $entry->{id},
                 service_request_id => $entry->{ServiceCode},
                 description => '',
@@ -360,7 +360,20 @@ sub get_service_request_updates {
         }
 
     }
-    return @updates;
+    return sort { $a->update_id <=> $b->update_id } @updates;
+}
+
+sub _get_update_status {
+    my ($self, $update) = @_;
+
+    my $conf = $self->get_integration->config;
+
+    my $status = $conf->{status_map}->{ $update->{ServiceStatusName} };
+
+    my $mapped = $conf->{closing_code_map}->{ $update->{ServiceStatusName} }->{ $update->{ClosingCode} };
+    return $mapped if $mapped && $update->{ClosingCode};
+
+    return $status;
 }
 
 sub get_service_requests {
