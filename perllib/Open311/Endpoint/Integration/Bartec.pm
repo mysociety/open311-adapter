@@ -146,6 +146,7 @@ sub post_service_request {
 
     # remove cruft
     $args->{attributes}->{closest_address} =~ s/^Nearest[^:]*: //;
+    $args->{attributes}->{closest_address} =~ s/\nNearest.*$//s;
 
     my $defaults = $config->{field_defaults} || {};
     my $req = {
