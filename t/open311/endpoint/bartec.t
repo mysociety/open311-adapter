@@ -39,6 +39,14 @@ sub ServiceRequests_Get {
     return path(__FILE__)->parent(1)->realpath->child($path)->slurp,
 }
 
+sub ServiceRequests_History_Get {
+    my %args = @_;
+
+    my ($id) = $args{envelope} =~ /<ServiceRequestID[^>]*>([^>]*)</;
+    my $path = "xml/bartec/servicerequests_history_get_$id.xml";
+    return path(__FILE__)->parent(1)->realpath->child($path)->slurp;
+}
+
 my %responses = (
     Authenticate => '<AuthenticateResponse xmlns="http://bartec-systems.com/">
   <AuthenticateResult xmlns="http://www.bartec-systems.com">
@@ -50,7 +58,7 @@ my %responses = (
     ServiceRequests_Create => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_create.xml')->slurp,
     ServiceRequests_Statuses_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_status_get.xml')->slurp,
     Premises_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/get_premises.xml')->slurp,
-    ServiceRequests_History_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_history_get.xml')->slurp,
+    ServiceRequests_History_Get =>  \&ServiceRequests_History_Get,
     ServiceRequests_Updates_Get =>  \&ServiceRequests_Updates_Get,
     ServiceRequests_Get => \&ServiceRequests_Get,
     Service_Request_Document_Create => '<Service_Request_Document_CreateResult />',
@@ -617,7 +625,7 @@ subtest 'fetch updates' => sub {
 
     is_deeply $sent_history->body->{ServiceRequests_History_Get}, {
         token => 'ABC=',
-        ServiceRequestID => '51388',
+        ServiceRequestID => '51340',
         Date => '2020-06-19T10:00:00Z',
     }, 'correct fetch history request sent';
 
@@ -631,10 +639,26 @@ subtest 'fetch updates' => sub {
             media_url =>'',
         },
         {
-            update_id =>228025,
+            update_id =>228026,
+            service_request_id =>'SR00051628',
+            status =>'fixed',
+            updated_datetime => '2020-06-17T09:48:26+01:00',
+            description =>'',
+            media_url =>'',
+        },
+        {
+            update_id =>228027,
             service_request_id =>'SR00051627',
             status =>'open',
-            updated_datetime => '2020-06-17T09:47:26+01:00',
+            updated_datetime => '2020-06-17T09:55:36+01:00',
+            description =>'',
+            media_url =>'',
+        },
+        {
+            update_id =>228028,
+            service_request_id =>'SR00051624',
+            status =>'closed',
+            updated_datetime => '2020-06-17T09:59:26+01:00',
             description =>'',
             media_url =>'',
         }

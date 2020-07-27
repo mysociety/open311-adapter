@@ -20,6 +20,16 @@
           <DateAdded>0001-01-01T00:00:00</DateAdded>
           <DateChanged>2020-06-19T15:04:56.317</DateChanged>
         </ServiceRequest_Updates>
+        <ServiceRequest_Updates RecordCount="0">
+          <ServiceRequestID>51340</ServiceRequestID>
+          <ServiceCode>SR00051624</ServiceCode>
+          <JobReference/>
+          <ServiceCategory>General</ServiceCategory>
+          <ServiceClass>WASTE</ServiceClass>
+          <ServiceType>GW BIN OPERATION</ServiceType>
+          <DateAdded>0001-01-01T00:00:00</DateAdded>
+          <DateChanged>2020-06-19T15:04:56.007</DateChanged>
+        </ServiceRequest_Updates>
         <Errors>
           <Result xmlns="http://www.bartec-systems.com">0</Result>
           <Message xmlns="http://www.bartec-systems.com"/>
