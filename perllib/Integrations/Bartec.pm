@@ -1,6 +1,6 @@
 package Integrations::Bartec;
 
-use SOAP::Lite; # +trace => [ transport => \&log_message ]; # for debug
+use SOAP::Lite;
 use Exporter;
 use DateTime::Format::W3CDTF;
 use Carp ();
@@ -60,11 +60,28 @@ has memcache => (
 );
 
 sub log_message {
+    # uncoverable subroutine
+    # uncoverable statement
     my ($msg) = @_;
 
     my $l = Open311::Endpoint::Logger->new;
     if ( ref($msg) eq 'HTTP::Request' || ref($msg) eq 'HTTP::Response' ) {
         $l->debug($msg->content);
+    }
+}
+
+my $last_request;
+
+sub log_errors {
+    # uncoverable subroutine
+    # uncoverable statement
+    my ($msg) = @_;
+
+    if ( ref($msg) eq 'HTTP::Response' && $msg->content =~ /Errors><Result[^>]*>[1-9]/ ) {
+        my $l = Open311::Endpoint::Logger->new;
+        $l->error("Req: $last_request\nRes: " . $msg->content);
+    } elsif ( ref($msg) eq 'HTTP::Request' ) {
+        $last_request = $msg->content;
     }
 }
 
@@ -243,6 +260,13 @@ sub _methods {
 
 sub endpoint {
     my ($self, $args) = @_;
+
+    # uncoverable branch true
+    if ( $self->config->{loglevel} && $self->config->{loglevel} eq 'debug' ) {
+        SOAP::Lite->import( +trace => [ transport => \&log_message ] ); # uncoverable statement
+    } else {
+        SOAP::Lite->import( +trace => [ transport => \&log_errors ] );
+    }
 
     my $endpoint = SOAP::Lite->new();
     $endpoint->proxy( $args->{endpoint}, timeout => 360 )
