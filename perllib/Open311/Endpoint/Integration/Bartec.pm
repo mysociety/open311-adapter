@@ -162,6 +162,8 @@ sub post_service_request {
     $self->_attach_note( $args, $sr );
 
     if ( @{ $args->{media_url} }) {
+        $self->upload_urls($sr->{ServiceRequest}->{id}, $args); # XXX not sure ServiceCode is correct
+    } elsif ( @{ $args->{uploads} } ) {
         $self->upload_attachments($sr->{ServiceRequest}->{id}, $args); # XXX not sure ServiceCode is correct
     }
 
@@ -437,22 +439,49 @@ sub skip_request {
     return $skip;
 }
 
-sub upload_attachments {
+sub upload_urls {
     my ($self, $request_id, $args) = @_;
 
     # grab the URLs and download its content
     my $photos = $self->_get_photos( $args->{media_url} );
 
+    my @photos = map {
+        {
+            filename => $_->filename,
+            data => MIME::Base64::encode_base64($_->content, ''),
+        }
+    } @$photos;
+
+    $self->_put_photos($request_id, $args, \@photos);
+}
+
+sub upload_attachments {
+    my ($self, $request_id, $args) = @_;
+
+    my @photos = map {
+        my $file = path($_);
+        {
+            filename => $_->filename,
+            data => MIME::Base64::encode_base64($file->slurp, '')
+        };
+    } @{ $args->{uploads} };
+
+    $self->_put_photos($request_id, $args, \@photos);
+}
+
+sub _put_photos {
+    my ($self, $request_id, $args, $photos) = @_;
+
+    my $photo_id = $args->{attributes}->{fixmystreet_id};
+    my $i = 1;
     for my $photo ( @$photos ) {
-        (my $photo_id = $photo->filename) =~ s/^\d+\.(\d+)\..*$/$1/;
-        $photo_id = $args->{attributes}->{fixmystreet_id} . $photo_id;
         $self->get_integration->Service_Request_Document_Create({
             srid => $request_id,
-            id => $photo_id + 1,
-            name => $photo->filename,
-            content => MIME::Base64::encode_base64( $photo->content, '' )
+            id => $photo_id . $i,
+            name => $photo->{filename},
+            content => $photo->{data},
         });
-
+        $i++;
     }
 }
 
