@@ -9,6 +9,7 @@ use JSON::MaybeXS;
 use Path::Tiny;
 use SOAP::Lite;
 use SOAP::Transport::HTTP;
+use HTTP::Request::Common;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
@@ -531,9 +532,99 @@ subtest "check send report with a photo" => sub {
         Comment => 'Photo uploaded from FixMyStreet',
         AttachedDocument => {
             FileExtension => 'jpg',
-            ID => '12',
+            ID => '11',
             Name => '1.1.jpg',
             Document => 'Y29udGVudA==',
+        }
+    }, "correct request to create photo";
+
+    is_deeply decode_json($res->content), [ { service_request_id => '0001' } ], 'correct return';
+};
+
+subtest "check send report with a photo as an upload" => sub {
+    set_fixed_time('2020-06-17T16:28:30Z');
+    %sent = ();
+    my $file = Web::Dispatch::Upload->new(
+        headers => '',
+        tempname => path(__FILE__)->dirname . '/files/bartec/image.jpg',
+        filename => 'image.jpg',
+        size => 10,
+    );
+
+    my $req = POST '/requests.json',
+        Content_Type => 'form-data',
+        Content => [
+            jurisdiction_id => 'bartec',
+            api_key => 'test',
+            service_code => '1',
+            first_name => 'Bob',
+            last_name => 'Mould',
+            email => 'test@example.com',
+            description => 'description',
+            lat => '52.540930',
+            long => '-0.289832',
+            'attribute[fixmystreet_id]' => 1,
+            'attribute[northing]' => 1,
+            'attribute[easting]' => 1,
+            'attribute[description]' => 'a description',
+            'attribute[report_url]' => 1,
+            'attribute[title]' => 'a title',
+            'attribute[house_no]' => '14',
+            'attribute[street]' => 'a street',
+            'attribute[postcode]' => 'AB1 1BA',
+            'attribute[closest_address]' => '22 A Street, A Town. XX1 1ZZ',
+            uploads => [ $file ],
+        ];
+    my $res = $endpoint->run_test_request($req);
+
+    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Create} );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply $create_req->body->{ServiceRequests_Create}, {
+        DateRequested => '2020-06-17T17:28:30+01:00',
+        token => 'ABC=',
+        UPRN => 987654321,
+        ServiceTypeID => 1,
+        ServiceStatusID => 2276,
+        CrewID => 11,
+        LandTypeID => 12,
+        SLAID => 13,
+        serviceLocationDescription => "22 A Street, A Town. XX1 1ZZ",
+        ServiceRequest_Location => {
+            Metric => {
+                Longitude => -0.289832,
+                Latitude => 52.540930,
+            }
+        },
+        #source => 'FixMyStreet',
+        ExternalReference => 1,
+        reporterContact => {
+            Forename => 'Bob',
+            Surname => 'Mould',
+            Email => 'test@example.com',
+            ReporterType => 'Public',
+        }
+    }, 'correct request sent';
+
+    my $sr_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Get} );
+    is_deeply $sr_sent->body->{ServiceRequests_Get}, {
+        token => 'ABC=',
+        ServiceCode => '0001',
+    }, "correct request for servicerequests_get";
+
+    my $sr_doc = SOAP::Deserializer->deserialize( $sent{Service_Request_Document_Create} );
+    is_deeply $sr_doc->body->{Service_Request_Document_Create}, {
+        token => 'ABC=',
+        Public => 'true',
+        ServiceRequestID => '0001',
+        DateTaken => '2020-06-17T17:28:30+01:00',
+        Comment => 'Photo uploaded from FixMyStreet',
+        AttachedDocument => {
+            FileExtension => 'jpg',
+            ID => '11',
+            Name => 'image.jpg',
+            Document => 'VGhpcyBpcyBhIGZha2UgaW1hZ2UK',
         }
     }, "correct request to create photo";
 
