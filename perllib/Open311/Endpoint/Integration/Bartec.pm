@@ -155,7 +155,10 @@ sub post_service_request {
     };
 
     my $res = $integ->ServiceRequests_Create($service, $req);
-    die "failed to send" unless $res->{ServiceCode};
+    unless ($res->{ServiceCode}) {
+        my $err = $res->{Errors}->{Message};
+        die "failed to send request " . $args->{attributes}->{fixmystreet_id} . ": $err";
+    }
 
     my $sr = $integ->ServiceRequests_Get( $res->{ServiceCode} );
 
@@ -188,11 +191,17 @@ sub _attach_note {
         $note .= $asset_details;
     }
 
-    $integ->ServiceRequests_Notes_Create({
+    my $res = $integ->ServiceRequests_Notes_Create({
         srid => $sr->{ServiceRequest}->{id},
         note_type => $type,
         note => $note,
     });
+
+    if ( $res->{Errors}->{Message} ) {
+        warn "failed to attach note for report "
+            . $args->{attributes}->{fixmystreet_id}
+            . ": " . $res->{Errors}->{Message};
+    }
 }
 
 sub get_nearest_uprn {
@@ -475,12 +484,17 @@ sub _put_photos {
     my $photo_id = $args->{attributes}->{fixmystreet_id};
     my $i = 1;
     for my $photo ( @$photos ) {
-        $self->get_integration->Service_Request_Document_Create({
+        my $res = $self->get_integration->Service_Request_Document_Create({
             srid => $request_id,
             id => $photo_id . $i,
             name => $photo->{filename},
             content => $photo->{data},
         });
+        if ( $res->{Errors}->{Message} ) {
+            warn "failed to attach photo for report "
+                . $args->{attributes}->{fixmystreet_id}
+                . ": " . $res->{Errors}->{Message};
+        }
         $i++;
     }
 }
