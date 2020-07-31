@@ -231,12 +231,12 @@ sub get_uprn_for_street {
         usrn => $usrn,
     });
 
-    if (ref $premises->{Premises} eq 'ARRAY') {
-        for my $p ( @{ $premises->{Premises} } ) {
-            next unless $p->{Address}->{Address1} eq 'STREET RECORD';
+    $premises = $self->_coerce_to_array($premises, 'Premises');
 
-            return $p->{UPRN};
-        }
+    for my $p ( @{ $premises } ) {
+        next unless $p->{Address}->{Address1} eq 'STREET RECORD';
+
+        return $p->{UPRN};
     }
 }
 
