@@ -77,7 +77,9 @@ sub log_errors {
     # uncoverable statement
     my ($msg) = @_;
 
-    if ( ref($msg) eq 'HTTP::Response' && $msg->content =~ /Errors><Result[^>]*>[1-9]/ ) {
+    if ( ref($msg) eq 'HTTP::Response' &&
+         $msg->content =~ /Errors><Result[^>]*>[1-9]|soap:Fault>/
+       ) {
         my $l = Open311::Endpoint::Logger->new;
         $l->error("Req: $last_request\nRes: " . $msg->content);
     } elsif ( ref($msg) eq 'HTTP::Request' ) {
@@ -264,8 +266,9 @@ sub endpoint {
     # uncoverable branch true
     if ( $self->config->{loglevel} && $self->config->{loglevel} eq 'debug' ) {
         SOAP::Lite->import( +trace => [ transport => \&log_message ] ); # uncoverable statement
-    } else {
-        SOAP::Lite->import( +trace => [ transport => \&log_errors ] );
+    # uncoverable branch true
+    } elsif ( not $ENV{TEST_MODE} ) {
+        SOAP::Lite->import( +trace => [ fault => transport => \&log_errors ] ); #uncoverable statement
     }
 
     my $endpoint = SOAP::Lite->new();
