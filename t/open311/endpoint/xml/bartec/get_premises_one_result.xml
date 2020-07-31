@@ -1,0 +1,20 @@
+    <Premises_GetResponse xmlns="http://bartec-systems.com/">
+      <Premises_GetResult xmlns="http://www.bartec-systems.com/Premises_Get.xsd" RecordCount="1">
+        <Premises>
+          <UPRN xmlns="http://www.bartec-systems.com">100062704</UPRN>
+          <USRN xmlns="http://www.bartec-systems.com">301380</USRN>
+          <Address xmlns="http://www.bartec-systems.com">
+            <Address1>STREET RECORD</Address1>
+            <Address2/>
+            <Street>A LANE</Street>
+            <Locality/>
+            <Town>PETERBOROUGH</Town>
+            <PostCode/>
+          </Address>
+        </Premises>
+        <Errors>
+          <Result xmlns="http://www.bartec-systems.com">0</Result>
+          <Message xmlns="http://www.bartec-systems.com"/>
+        </Errors>
+      </Premises_GetResult>
+    </Premises_GetResponse>

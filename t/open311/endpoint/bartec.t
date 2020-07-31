@@ -82,6 +82,16 @@ sub ServiceRequests_History_Get {
     return path(__FILE__)->parent(1)->realpath->child($path)->slurp;
 }
 
+sub Premises_Get {
+    my %args = @_;
+
+    if ( $args{envelope} =~ /<USRN>301380</ ) {
+        return path(__FILE__)->parent(1)->realpath->child('xml/bartec/get_premises_one_result.xml')->slurp;
+    }
+
+    return path(__FILE__)->parent(1)->realpath->child('xml/bartec/get_premises.xml')->slurp;
+}
+
 my %responses = (
     Authenticate => '<AuthenticateResponse xmlns="http://bartec-systems.com/">
   <AuthenticateResult xmlns="http://www.bartec-systems.com">
@@ -92,7 +102,7 @@ my %responses = (
     ServiceRequests_Types_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_types_get.xml')->slurp,
     ServiceRequests_Create => \&ServiceRequests_Create,
     ServiceRequests_Statuses_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_status_get.xml')->slurp,
-    Premises_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/get_premises.xml')->slurp,
+    Premises_Get => \&Premises_Get,
     ServiceRequests_History_Get =>  \&ServiceRequests_History_Get,
     ServiceRequests_Updates_Get =>  \&ServiceRequests_Updates_Get,
     ServiceRequests_Get => \&ServiceRequests_Get,
@@ -829,6 +839,19 @@ subtest 'get uprn for usrn' => sub {
     }, "only used USRN in request";
 
     is $uprn,987654321 , "got correct uprn";
+};
+
+subtest 'get uprn for usrn with one result' => sub {
+    my $uprn = $endpoint->get_nearest_uprn({
+            long => -0.28938,
+            lat => 52.540936,
+            service_code => 200,
+            attributes => {
+                site_code => 301380
+            },
+    });
+
+    is $uprn, 100062704, "got correct uprn";
 };
 
 subtest 'fetch updates' => sub {
