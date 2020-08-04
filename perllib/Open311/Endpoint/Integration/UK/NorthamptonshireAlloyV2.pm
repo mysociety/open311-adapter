@@ -175,19 +175,6 @@ sub _create_contact {
     );
 }
 
-sub _accept_updated_resource {
-    my ($self, $update, $start_time, $end_time) = @_;
-
-    # we only want updates to RFS inspections
-    return 0 unless $update->{designCode} eq $self->config->{rfs_design};
-
-    # For Northamptonshire we need to check this value too.
-    my $latest = $self->date_to_truncated_dt( $update->{start} );
-    return 0 unless $latest >= $start_time && $latest <= $end_time;
-
-    return 1;
-}
-
 sub _generate_update {
     my ($self, $args, $updates) = @_;
 
