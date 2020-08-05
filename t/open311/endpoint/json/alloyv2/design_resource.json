@@ -40,6 +40,7 @@
         "unique": false,
         "tags": [],
         "options": {
+          "code": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
           "max": 20,
           "discriminator": "DodiAttributeOptionsStringWebModel"
         }
