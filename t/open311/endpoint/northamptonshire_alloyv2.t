@@ -200,6 +200,7 @@ subtest "create basic problem" => sub {
     is_deeply $sent,
     {
     attributes => [
+        { attributeCode => 'attribute_itemsGeometry', value => { coordinates => [ 0.1, 50 ], type => "Point" } },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => [ '01d221dcc0de101a005e5adc' ] },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
         { attributeCode  => 'attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29', value => [ 708823 ] },
