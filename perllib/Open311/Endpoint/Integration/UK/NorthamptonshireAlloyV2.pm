@@ -37,6 +37,15 @@ sub process_attributes {
         value => [ $group_code ],
     };
 
+    # this is apparently required twice.
+    push @$attributes, {
+        attributeCode => $self->config->{geometry_attribute},
+        value => {
+            type => "Point",
+            coordinates => [$args->{long}, $args->{lat}],
+        }
+    };
+
     # Attach the caller to the inspection attributes
     push @$attributes, {
         attributeCode => $self->config->{contact}->{attribute_id},
