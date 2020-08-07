@@ -854,13 +854,15 @@ sub _find_category_code {
     my $results = $self->alloy->search( {
             properties => {
                 dodiCode => $self->config->{category_list_code},
+                attributes => ["all"],
                 collectionCode => "Live"
             },
         }
     );
 
     for my $cat ( @{ $results } ) {
-        return $cat->{itemId} if $cat->{title} eq $category;
+        my $a = $self->alloy->attributes_to_hash($cat);
+        return $cat->{itemId} if $a->{$self->config->{category_title_attribute}} eq $category;
     }
 }
 
