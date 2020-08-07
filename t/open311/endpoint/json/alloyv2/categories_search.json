@@ -10,9 +10,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f65226",
-      "title": "Highway Bridges",
+      "attributes": [ { "attributeCode": "title", "value": "Highway Bridges" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -23,9 +22,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f6522b",
-      "title": "Roads",
+      "attributes": [ { "attributeCode": "title", "value": "Roads" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -36,9 +34,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f65228",
-      "title": "Pedestrian Barriers",
+      "attributes": [ { "attributeCode": "title", "value": "Pedestrian Barriers" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -49,9 +46,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f6522e",
-      "title": "Traffic Signals / Crossings",
+      "attributes": [ { "attributeCode": "title", "value": "Traffic Signals / Crossings" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -62,9 +58,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f65231",
-      "title": "Winter Maintenance",
+      "attributes": [ { "attributeCode": "title", "value": "Winter Maintenance" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -75,9 +70,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f65227",
-      "title": "Kerbs",
+      "attributes": [ { "attributeCode": "title", "value": "Kerbs" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -88,9 +82,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f65223",
-      "title": "Drain Covers",
+      "attributes": [ { "attributeCode": "title", "value": "Drain Covers" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -101,9 +94,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f65229",
-      "title": "Rights of Way",
+      "attributes": [ { "attributeCode": "title", "value": "Rights of Way" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -114,9 +106,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f65221",
-      "title": "Bus Stops",
+      "attributes": [ { "attributeCode": "title", "value": "Bus Stops" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -127,9 +118,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f6522c",
-      "title": "Safety Bollard",
+      "attributes": [ { "attributeCode": "title", "value": "Safety Bollard" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -140,9 +130,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f6522a",
-      "title": "Road Markings",
+      "attributes": [ { "attributeCode": "title", "value": "Road Markings" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -153,9 +142,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f6522d",
-      "title": "Sign",
+      "attributes": [ { "attributeCode": "title", "value": "Sign" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -166,9 +154,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f6522f",
-      "title": "Vegetation",
+      "attributes": [ { "attributeCode": "title", "value": "Vegetation" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -179,9 +166,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f65224",
-      "title": "Drains",
+      "attributes": [ { "attributeCode": "title", "value": "Drains" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -192,9 +178,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f65225",
-      "title": "Footway/Footpath",
+      "attributes": [ { "attributeCode": "title", "value": "Footway/Footpath" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -205,9 +190,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f65222",
-      "title": "Crash Barriers",
+      "attributes": [ { "attributeCode": "title", "value": "Crash Barriers" } ],
       "subtitle": "List FixMyStreet Categories"
     },
     {
@@ -218,9 +202,8 @@
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-system-designer",
       "colour": "#25aae1",
-      "attributes": [],
       "signature": "5d322971b4e1b90150f65230",
-      "title": "Verges",
+      "attributes": [ { "attributeCode": "title", "value": "Verges" } ],
       "subtitle": "List FixMyStreet Categories"
     }
   ]
