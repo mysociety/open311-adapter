@@ -232,7 +232,8 @@ sub post_service_request {
     # Upload any photos to Alloy and link them to the new resource
     # via the appropriate attribute
     if (@$files) {
-        $self->_add_attachments_to_item($files, $item_id, $self->config->{resource_attachment_attribute_id});
+        my $attributes = [{ attributeCode => $self->config->{resource_attachment_attribute_id}, value => $files }];
+        $self->_update_item($item_id, $attributes);
     }
 
     # create a new Request and return it
@@ -242,20 +243,19 @@ sub post_service_request {
 
 }
 
-sub _add_attachments_to_item {
-    my ($self, $files, $item_id, $attribute_id) = @_;
+sub _update_item {
+    my ($self, $item_id, $attributes) = @_;
 
     my $item = $self->alloy->api_call(call => "item/$item_id");
+
     my $updated = {
-        attributes => [{
-            attributeCode => $attribute_id,
-            value => $files
-        }],
+        attributes => $attributes,
         signature => $item->{item}->{signature}
     };
 
+    my $update;
     try {
-        my $update = $self->alloy->api_call(
+        $update = $self->alloy->api_call(
             call => "item/$item_id",
             method => 'PUT',
             body => $updated
@@ -268,7 +268,7 @@ sub _add_attachments_to_item {
             my $item = $self->alloy->api_call(call => "item/$item_id");
             $updated->{signature} = $item->{item}->{signature};
             try {
-                my $update = $self->alloy->api_call(
+                $update = $self->alloy->api_call(
                     call => "item/$item_id",
                     method => 'PUT',
                     body => $updated
@@ -279,7 +279,9 @@ sub _add_attachments_to_item {
         } else {
             warn $_;
         }
-    }
+    };
+
+    return $update;
 }
 
 sub _set_parent_attribute {
@@ -326,26 +328,19 @@ sub post_service_request_update {
 
     $updates = $self->_generate_update($args, $updates);
 
-    my $updated = {
-        attributes => [{
-            attributeCode => $self->config->{inspection_attribute_mapping}->{updates},
-            value => $updates
-        }],
-        signature => $inspection->{signature}, # XXX check this is correct
-    };
+    my $updated_attributes = [{
+        attributeCode => $self->config->{inspection_attribute_mapping}->{updates},
+        value => $updates
+    }];
 
     if ( $self->config->{resource_attachment_attribute_id} && @{ $args->{media_url} }) {
-        push @{ $updated->{attributes} }, {
-            attributeCode => $updated->{attributes}->{$self->config->{resource_attachment_attribute_id}},
+        push @$updated_attributes, {
+            attributeCode => $self->config->{resource_attachment_attribute_id},
             value => $self->upload_attachments($args)
         };
     }
 
-    my $update = $self->alloy->api_call(
-        call => "item/$resource_id",
-        method => 'PUT',
-        body => $updated
-    );
+    my $update = $self->_update_item($resource_id, $updated_attributes);
 
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
         status => lc $args->{status},
