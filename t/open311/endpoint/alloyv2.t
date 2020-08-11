@@ -490,6 +490,46 @@ This is an update"
         } ], 'correct json returned';
 };
 
+subtest "create comment with photo" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'This is an update',
+        service_request_id => 12345,
+        update_id => 999,
+        status => 'OPEN',
+        updated_datetime => '2019-04-17T14:39:00Z',
+        media_url => 'http://example.org/photo/1.jpeg',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply $sent,
+    {
+        attributes => [
+            {
+            attributeCode => "attributes_enquiryInspectionRFS1001181UpdatesFromFixMyStreet1014437_5d3245dffe2ad806f8dfbb42",
+            value => "Customer update at 2019-04-17 14:39:00
+This is an update"
+            },
+            { attributeCode => 'attributes_filesAttachableAttachments', value => [ 'fileid' ] }
+        ],
+        signature => '5d32469bb4e1b9015001430b'
+    },
+    , 'correct json sent';
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => "5d32469bb4e1b90150014310"
+        } ], 'correct json returned';
+};
+
 subtest "check fetch problem" => sub {
     my $res;
     warnings_like {
