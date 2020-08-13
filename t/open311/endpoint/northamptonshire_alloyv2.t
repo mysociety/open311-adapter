@@ -128,6 +128,8 @@ $integration->mock('api_call', sub {
             } elsif ( $type =~ /DEFECT/i ) {
                 if ( $time =~ /2019-01-02/ ) {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search_all.json')->slurp;
+                } elsif ( $time =~ /2019-01-04/ ) {
+                    $content = path(__FILE__)->sibling('json/alloyv2/defect_search_inspection_link.json')->slurp;
                 }
             } else {
                 $content = path(__FILE__)->sibling('json/alloyv2/inspect_search_further.json')->slurp;
@@ -372,6 +374,28 @@ subtest "further investigation updates" => sub {
         description => 'This is a customer response',
         updated_datetime => '2019-01-01T00:32:40Z',
         update_id => '5d32469bb4e1b90150014307',
+        media_url => '',
+    } ], 'correct json returned';
+};
+
+subtest "defect with manual inspection link" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-04T00:00:00Z&end_date=2019-03-01T02:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'action_scheduled',
+        service_request_id => '5947505',
+        fixmystreet_id => '10101010',
+        description => '',
+        updated_datetime => '2019-01-04T01:51:08Z',
+        update_id => '5d324086b4e1b90150f946a1',
         media_url => '',
     } ], 'correct json returned';
 };

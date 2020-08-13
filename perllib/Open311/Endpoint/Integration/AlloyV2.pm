@@ -491,10 +491,9 @@ sub _get_defect_updates {
 
         my $service_request_id = $update->{itemId};
 
-        # XXX check no longer required
         my $fms_id;
         if (my @ids = grep { $_ =~ /StreetDoctorID/ && $attributes->{$_} } keys %{ $attributes } ) {
-            $fms_id = $ids[0];
+            $fms_id = $attributes->{$ids[0]};
         }
 
         # if it has a parent that is an enquiry get the resource id of the inspection and use that
