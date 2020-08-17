@@ -486,10 +486,7 @@ sub _get_defect_updates {
 
         my $service_request_id = $update->{itemId};
 
-        my $fms_id;
-        if (my @ids = grep { $_ =~ /StreetDoctorID/ && $attributes->{$_} } keys %{ $attributes } ) {
-            $fms_id = $attributes->{$ids[0]};
-        }
+        my $fms_id = $self->_get_defect_fms_id( $attributes );
 
         # if it has a parent that is an enquiry get the resource id of the inspection and use that
         # as the external id so updates are added to the report that created the inspection
@@ -807,6 +804,7 @@ sub process_attributes {
     return \@remapped;
 }
 
+sub _get_defect_fms_id { return undef; }
 
 sub _get_attachments {
     my ($self, $urls) = @_;

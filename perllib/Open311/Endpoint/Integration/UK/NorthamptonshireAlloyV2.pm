@@ -184,6 +184,17 @@ sub _create_contact {
     );
 }
 
+sub _get_defect_fms_id {
+    my ($self, $attributes) = @_;
+
+    my $fms_id;
+    if (my @ids = grep { $_ =~ /StreetDoctorID/ && $attributes->{$_} } keys %{ $attributes } ) {
+        $fms_id = $attributes->{$ids[0]};
+    }
+
+    return $fms_id;
+}
+
 sub _generate_update {
     my ($self, $args, $updates) = @_;
 
