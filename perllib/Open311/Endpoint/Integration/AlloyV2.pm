@@ -488,16 +488,8 @@ sub _get_defect_updates {
 
         my $fms_id = $self->_get_defect_fms_id( $attributes );
 
-        # if it has a parent that is an enquiry get the resource id of the inspection and use that
-        # as the external id so updates are added to the report that created the inspection
-        for my $attribute (keys %$attributes) {
-            if ( $attribute =~ /DefectInspection/) { # request for service
-                $linked_defect = 1;
-                $service_request_id = $attributes->{$attribute}->[0];
-                $fms_id = undef;
-                last;
-            }
-        }
+        ($linked_defect, $service_request_id) = $self->_get_defect_inspection($update, $service_request_id);
+        $fms_id = undef if $linked_defect;
 
         # we don't care about linked defects until they have been scheduled
         my $status = $self->defect_status($attributes->{$mapping->{status}});
@@ -553,11 +545,7 @@ sub get_service_requests {
 
         next if $self->is_ignored_category( $request );
 
-        my $linked_defect;
-        for my $parent_info (@{ $request->{parents} } ) {
-            $linked_defect = 1 if $parent_info->{attribute} =~ 'Request'; # request for service
-        }
-        next if $linked_defect;
+        next if $self->_get_defect_inspection_parents( $request );
 
         my $category = $self->get_defect_category( $request );
         unless ($category) {
@@ -805,6 +793,35 @@ sub process_attributes {
 }
 
 sub _get_defect_fms_id { return undef; }
+
+sub _get_defect_inspection {
+    my ($self, $defect, $service_request_id) = @_;
+
+    my $linked_defect;
+    # if it has a parent that is an enquiry get the resource id of the inspection and use that
+    # as the external id so updates are added to the report that created the inspection
+    my $attributes = $self->alloy->attributes_to_hash( $defect );
+    for my $attribute (keys %$attributes) {
+        if ( $attribute =~ /DefectInspection/) { # request for service
+            $linked_defect = 1;
+            $service_request_id = $attributes->{$attribute}->[0];
+            last;
+        }
+    }
+
+    return ($linked_defect, $service_request_id);
+}
+
+sub _get_defect_inspection_parents {
+    my ($self, $defect) = @_;
+
+    my $linked_defect;
+    for my $parent_info (@{ $defect->{parents} } ) {
+        $linked_defect = 1 if $parent_info->{attribute} =~ 'Request'; # request for service
+    }
+
+    return $linked_defect;
+}
 
 sub _get_attachments {
     my ($self, $urls) = @_;
