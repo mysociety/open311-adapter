@@ -1,0 +1,24 @@
+{
+  "joinResults": [],
+  "page": 1,
+  "pageSize": 20,
+  "results": [
+    {
+      "itemId": "asdkf0338aflaldsfjkjhf",
+      "designCode": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
+      "collection": "Live",
+      "start": "2019-07-19T22:37:04.970Z",
+      "end": "9999-12-31T23:59:59.999Z",
+      "icon": "icon-inspection-unknown",
+      "colour": "#99cf22",
+      "attributes": [
+        {
+          "attributeCode": "attributes_tasksStatus",
+          "value": [
+            "5bc5bdd281d088d177342c76"
+          ]
+        }
+      ]
+    }
+  ]
+}

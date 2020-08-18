@@ -195,6 +195,37 @@ sub _get_defect_fms_id {
     return $fms_id;
 }
 
+sub _get_defect_inspection {
+    my ($self, $defect, $service_request_id) = @_;
+
+    my $linked_defect;
+
+    my $inspections = $self->_get_defect_inspection_parents($defect);
+
+    if ( $inspections ) {
+        $linked_defect = 1;
+        $service_request_id = $inspections->[0];
+    }
+
+    return ($linked_defect, $service_request_id);
+}
+
+sub _get_defect_inspection_parents {
+    my ($self, $defect) = @_;
+    my $item_id = $defect->{itemId};
+
+    my $parents = $self->alloy->api_call( call=> "item/$item_id/parents")->{results};
+
+    my @linked_inspections;
+    for my $parent ( @$parents ) {
+        if ($parent->{designCode} eq $self->alloy->config->{rfs_design}) {
+            push @linked_inspections, $parent->{itemId};
+        }
+    }
+
+    return scalar @linked_inspections ? \@linked_inspections : undef;
+}
+
 sub _generate_update {
     my ($self, $args, $updates) = @_;
 
