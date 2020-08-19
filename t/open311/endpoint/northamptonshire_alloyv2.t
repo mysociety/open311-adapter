@@ -127,7 +127,7 @@ $integration->mock('api_call', sub {
                 $content = path(__FILE__)->sibling('json/alloyv2/categories_search.json')->slurp;
             } elsif ( $type =~ /DEFECT/i ) {
                 if ( $time =~ /2019-01-02/ ) {
-                    $content = path(__FILE__)->sibling('json/alloyv2/defect_search_all.json')->slurp;
+                    $content = path(__FILE__)->sibling('json/alloyv2/defect_search_all_ncc.json')->slurp;
                 } elsif ( $time =~ /2019-01-04/ ) {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search_inspection_link.json')->slurp;
                 } elsif ( $time =~ /2019-01-05/ ) {
