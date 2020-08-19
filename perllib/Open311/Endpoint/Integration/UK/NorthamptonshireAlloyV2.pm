@@ -184,6 +184,15 @@ sub _create_contact {
     );
 }
 
+sub skip_fetch_defect {
+    my ( $self, $defect ) = @_;
+
+    my $a = $self->alloy->attributes_to_hash( $defect );
+    return 1 if $self->SUPER::skip_fetch_defect($defect) || $self->_get_defect_fms_id( $a );
+
+    return 0;
+}
+
 sub _get_defect_fms_id {
     my ($self, $attributes) = @_;
 

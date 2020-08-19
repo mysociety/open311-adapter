@@ -543,9 +543,7 @@ sub get_service_requests {
     for my $request (@$requests) {
         my %args;
 
-        next if $self->is_ignored_category( $request );
-
-        next if $self->_get_defect_inspection_parents( $request );
+        next if $self->skip_fetch_defect( $request );
 
         my $category = $self->get_defect_category( $request );
         unless ($category) {
@@ -648,6 +646,15 @@ sub defect_status {
 
     $status = $status->[0] if ref $status eq 'ARRAY';
     return $self->config->{defect_status_mapping}->{$status} || 'open';
+}
+
+sub skip_fetch_defect {
+    my ( $self, $defect ) = @_;
+
+    return 1 if $self->is_ignored_category( $defect ) ||
+        $self->_get_defect_inspection_parents( $defect );
+
+    return 0;
 }
 
 sub service_request_id_for_resource {
