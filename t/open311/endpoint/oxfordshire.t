@@ -349,7 +349,7 @@ subtest "create problem with multiple photos" => sub {
     <placename>22 Acacia Avenue</placename>
   </location>
   <northing>101</northing>
-  <usrn>48405113</usrn>
+  <usrn>0</usrn>
 </wdmenquiry>
 ',
     'correct xml sent';
@@ -683,7 +683,7 @@ sub _generate_request_xml {
     <placename>$args->{address_string}</placename>
   </location>
   <northing>$args->{northing}</northing>
-  <usrn>$args->{usrn}</usrn>
+  <usrn>0</usrn>
 </wdmenquiry>
 ";
 }

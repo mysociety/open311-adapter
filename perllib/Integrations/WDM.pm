@@ -73,7 +73,7 @@ sub post_request {
             enquiry_category_code => '',
             enquiry_type_code => '',
             enquiry_detail_code => $args->{service_code},
-            usrn => $args->{attributes}->{usrn} || 0,
+            usrn => 0, # Ignore provided USRN as WDM doesn't always do the right thing with it
             location=> {
                 item_uid => '',
                 placename => join(', ', @placenames),
