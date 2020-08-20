@@ -132,12 +132,16 @@ $integration->mock('api_call', sub {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search_inspection_link.json')->slurp;
                 } elsif ( $time =~ /2019-01-05/ ) {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search_inspection_parent.json')->slurp;
+                } elsif ( $time =~ /2018-12-31/ ) {
+                    $content = path(__FILE__)->sibling('json/alloyv2/defect_search_2018.json')->slurp;
                 }
             } else {
                 if ( $time =~ /2019-01-01/ ) {
                     $content = path(__FILE__)->sibling('json/alloyv2/inspect_search_further.json')->slurp;
                 } elsif ( $time =~ /2019-01-06/ ) {
                     $content = path(__FILE__)->sibling('json/alloyv2/inspect_search_countryside.json')->slurp;
+                } elsif ( $time =~ /2018-12-31/ ) {
+                    $content = path(__FILE__)->sibling('json/alloyv2/inspect_search_2018.json')->slurp;
                 }
             }
         } elsif ( $call =~ 'item-log/item/([^/]*)/reconstruct' ) {
@@ -361,6 +365,19 @@ subtest "check fetch problem" => sub {
       updated_datetime => "2019-01-02T14:44:53Z",
       service_code => "Winter_Grit Bin - empty/refill"
    }], "correct json returned";
+};
+
+subtest "updates before cutoff ignored" => sub {
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2018-12-31T23:00:00Z&end_date=2019-03-01T02:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ ], 'correct json returned';
 };
 
 subtest "further investigation updates" => sub {

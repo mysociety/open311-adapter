@@ -379,6 +379,7 @@ sub _get_inspection_updates {
 
         my $last_description = '';
         foreach my $date (@version_ids) {
+            next unless $self->_valid_update_date($update, $date, $start_time, $end_time);
             # we have to fetch all the updates as we need them to check if the
             # comments have changed. once we've fetched them we can throw away the
             # ones that don't match the date range.
@@ -424,6 +425,8 @@ sub _accept_updated_resource {
     # we only want updates to RFS inspections
     return 1 if $update->{designCode} eq $self->config->{rfs_design};
 }
+
+sub _valid_update_date { return 1; }
 
 sub _get_inspection_status {
     my ($self, $attributes, $mapping) = @_;
@@ -488,6 +491,7 @@ sub _get_defect_updates {
 
         my @version_ids = $self->get_versions_of_resource($update->{itemId});
         foreach my $date (@version_ids) {
+            next unless $self->_valid_update_date($update, $date, $start_time, $end_time);
 
             my $update_dt = $self->date_to_truncated_dt($date);
             my $resource = $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });

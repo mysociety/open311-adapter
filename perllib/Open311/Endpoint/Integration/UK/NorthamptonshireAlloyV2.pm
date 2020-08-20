@@ -185,6 +185,21 @@ sub skip_fetch_defect {
     return 0;
 }
 
+# We want to ignore and updates that were made during and before the migration
+# to alloy V2 as the might lead to sprurious updates on FixMyStreet.
+sub _valid_update_date {
+    my ($self, $update, $update_time, $start_time, $end_time) = @_;
+
+    if ( $self->alloy->config->{update_cutoff_date} ) {
+        my $cutoff = $self->date_to_dt( $self->alloy->config->{update_cutoff_date} );
+        my $update_dt = $self->date_to_truncated_dt( $update_time );
+
+        return 0 if $update_dt < $cutoff;
+    }
+
+    return 1;
+}
+
 sub _get_defect_fms_id {
     my ($self, $attributes) = @_;
 
