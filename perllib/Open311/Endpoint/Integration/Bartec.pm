@@ -350,10 +350,26 @@ sub get_service_request_updates {
 
     my $response = $self->get_integration->ServiceRequests_Updates_Get($args->{start_date});
 
+    # The `Date` parameter to `ServiceRequests_History_Get` has a bug. Instead
+    # of returning history items that have changed since that date it either
+    # returns all of the history or none of the history, depending on whether the
+    # supplied date is before or after the request was created.
+    #
+    # Docs: https://confluence.bartecautoid.com/display/COLLAPIR15/ServiceRequests_History_Get
+    #
+    # The documentation claims this parameter is optional, but omitting it
+    # results in this error:
+    #
+    #     SqlDateTime overflow. Must be between 1/1/1753 12:00:00 AM and 12/31/9999 11:59:59 PM
+    #
+    # So that's why we're using this date, to ensure we get all history entries.
+    #
+    my $history_start_date = "1753-01-01T00:00:00Z";
+
     my @updates;
     my $updates = $self->_coerce_to_array( $response, 'ServiceRequest_Updates' );
     for my $update ( @$updates ) {
-        my $history = $self->get_integration->ServiceRequests_History_Get( $update->{ServiceRequestID}, $args->{start_date} );
+        my $history = $self->get_integration->ServiceRequests_History_Get( $update->{ServiceRequestID}, $history_start_date );
 
         next unless $history->{ServiceRequest_History};
         my $entries = $self->_coerce_to_array( $history, 'ServiceRequest_History' );

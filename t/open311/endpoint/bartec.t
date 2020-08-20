@@ -872,7 +872,7 @@ subtest 'fetch updates' => sub {
     is_deeply $sent_history->body->{ServiceRequests_History_Get}, {
         token => 'ABC=',
         ServiceRequestID => '51340',
-        Date => '2020-06-19T10:00:00Z',
+        Date => '1753-01-01T00:00:00Z',
     }, 'correct fetch history request sent';
 
     is_deeply decode_json($res->content), [
