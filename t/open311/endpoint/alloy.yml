@@ -162,6 +162,13 @@
     4281526: 'no_further_action', # highways to monitor
   },
 
+  "status_and_closure_mapping": {
+    "further_investigation": {
+      "status": "investigating",
+      "reason_for_closure": "further"
+    }
+  },
+
   "inspection_resource_name": "INSPECTION_STANDARD INSPECTION_STANDARD",
 
   "defect_sourcetype_category_mapping": {

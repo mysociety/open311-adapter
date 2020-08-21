@@ -87,9 +87,10 @@ sub get_request_description {
 sub process_update_state {
     my ($self, $status, $reason_for_closure) = @_;
 
-    if ( $status eq 'further_investigation' ) {
-        $status = 'investigating';
-        $reason_for_closure = 'further'
+    my $mapping = $self->config->{status_and_closure_mapping};
+    if ( my $map = $mapping->{$status} ) {
+        $reason_for_closure = $map->{reason_for_closure};
+        $status = $map->{status};
     }
 
     return ($status, $reason_for_closure);
