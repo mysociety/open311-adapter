@@ -194,15 +194,6 @@ sub post_service_request {
         # This appears to be shared amongst all asset types for now,
         # as everything is based off one design.
         designCode => $self->config->{rfs_design},
-
-
-        # No way to include the SRS in the GeoJSON, sadly, so
-        # requires another API call to reproject. Beats making
-        # open311-adapter geospatially aware, anyway :)
-        geometry => {
-            type => "Point",
-            coordinates => [$args->{long}, $args->{lat}],
-        }
     };
 
     $self->_set_parent_attribute($resource, $resource_id);
@@ -795,6 +786,13 @@ sub process_attributes {
             value => $created_time
         };
     }
+    push @remapped, {
+        attributeCode => "attributes_itemsGeometry",
+        value => {
+            type => "Point",
+            coordinates => [$args->{long}, $args->{lat}],
+        }
+    };
 
     return \@remapped;
 }
