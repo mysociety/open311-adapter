@@ -216,23 +216,16 @@ subtest "create basic problem" => sub {
     is_deeply $sent,
     {
     attributes => [
-        { attributeCode => 'attribute_itemsGeometry', value => { coordinates => [ 0.1, 50 ], type => "Point" } },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', value => [ '01d221dcc0de101a005e5adc' ] },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
         { attributeCode  => 'attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29', value => [ 708823 ] },
         { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
+        { attributeCode => 'attributes_itemsGeometry', value => { coordinates => [ 0.1, 50 ], type => "Point" } },
         { attributeCode => 'attributes_workflowActionPatchLinkAttributeCode', value => "FixMyStreet" },
     ],
     designCode => 'designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6',
-    geometry => {
-        coordinates => [
-            0.1,
-            50
-        ],
-        type => "Point"
-    },
     parents => { "attribute_design_code" => [ '39dhd38dhdkdnxj' ] },
     }
     , 'correct json sent';

@@ -66,8 +66,6 @@
     "category": 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', # category
   },
 
-  "geometry_attribute": "attribute_itemsGeometry",
-
   # There are some Alloy resource attributes which we never want to include
   # in our Open311 services - they may be irrelevant, or have values
   # calculated at the time the resource is POSTed to Alloy.

@@ -206,16 +206,16 @@ subtest "create basic problem" => sub {
         { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
+        { attributeCode => 'attributes_itemsGeometry', value => {
+            coordinates => [
+                0.1,
+                50
+            ],
+            type => "Point"
+        } },
         { attributeCode => 'attributes_workflowActionPatchLinkAttributeCode', value => "FixMyStreet" },
     ],
     designCode => 'designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6',
-    geometry => {
-        coordinates => [
-            0.1,
-            50
-        ],
-        type => "Point"
-    },
     parents => { "attribute_design_code" => [ '39dhd38dhdkdnxj' ] },
     }
     , 'correct json sent';
@@ -275,16 +275,16 @@ subtest "create problem with file" => sub {
         { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
+        { attributeCode => 'attributes_itemsGeometry', value => {
+            coordinates => [
+                0.1,
+                50
+            ],
+            type => "Point"
+        } },
         { attributeCode => 'attributes_workflowActionPatchLinkAttributeCode', value => "FixMyStreet" },
     ],
     designCode => 'designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6',
-    geometry => {
-        coordinates => [
-            0.1,
-            50
-        ],
-        type => "Point"
-    },
     parents => { "attribute_design_code" => [ '39dhd38dhdkdnxj' ] },
     }
     , 'correct json sent';
@@ -333,16 +333,16 @@ subtest "create problem with no resource_id" => sub {
         { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
+        { attributeCode => 'attributes_itemsGeometry', value => {
+            coordinates => [
+                0.1,
+                50
+            ],
+            type => "Point"
+        } },
         { attributeCode => 'attributes_workflowActionPatchLinkAttributeCode', value => "FixMyStreet" },
     ],
     designCode => 'designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6',
-    geometry => {
-        coordinates => [
-            0.1,
-            50
-        ],
-        type => "Point"
-    },
     parents => {},
     }
     , 'correct json sent';
