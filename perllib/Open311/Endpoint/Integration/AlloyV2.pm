@@ -568,7 +568,7 @@ sub get_service_requests {
             service_name => $category,
             service_code => $category,
         );
-        $args{title} = $request->{title};
+        $args{title} = $attributes->{attributes_itemsTitle};
         $args{service} = $service;
         $args{service_request_id} = $request->{itemId};
         $args{requested_datetime} = $self->date_to_truncated_dt( $request->{start} );
