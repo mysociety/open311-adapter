@@ -689,7 +689,10 @@ sub get_latlong_from_request {
 
     my $latlong;
 
-    my $geometry = $request->{geometry};
+    my $attributes = $request->{attributes};
+    my @attribs = grep { $_->{attributeCode} eq 'attributes_itemsGeometry' } @$attributes;
+    return unless @attribs;
+    my $geometry = $attribs[0]->{value};
 
     if ( $geometry->{type} eq 'Point') {
         # convert from string because the validation expects numbers
