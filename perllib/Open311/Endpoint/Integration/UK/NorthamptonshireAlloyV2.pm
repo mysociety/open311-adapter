@@ -66,7 +66,8 @@ sub get_request_description {
             call => "item/$priority"
         );
 
-        my $timescale = $priority_details->{item}->{title};
+        $attributes = $self->alloy->attributes_to_hash($priority_details->{item});
+        my $timescale = $attributes->{attributes_itemsTitle};
         $timescale =~ s/P\d+, P\d+ - (.*)/$1/;
 
 
