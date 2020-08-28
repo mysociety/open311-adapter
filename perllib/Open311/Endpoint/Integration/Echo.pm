@@ -143,6 +143,7 @@ sub process_service_request_args {
     my $event_type = $args->{service_code};
     my $service = $args->{attributes}{service_id} || '';
     my $uprn = $args->{attributes}{uprn};
+    my $fixmystreet_id = $args->{attributes}{fixmystreet_id} || '';
 
     # Missed collections have different event types depending
     # on the service
@@ -158,6 +159,7 @@ sub process_service_request_args {
         event_type => $event_type,
         service => $service,
         uprn => $uprn,
+        client_reference => "FMS-$fixmystreet_id",
         data => [],
     };
 

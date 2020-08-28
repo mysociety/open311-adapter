@@ -116,6 +116,7 @@ sub PostEvent {
     );
     my $data = ixhash(
         $args->{data} ? (Data => extensible_data($args->{data})) : (),
+        ClientReference => $args->{client_reference},
         EventObjects => { EventObject => $source },
         EventTypeId => $args->{event_type},
         ServiceId => $args->{service},

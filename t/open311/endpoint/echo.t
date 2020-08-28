@@ -45,8 +45,8 @@ $soap_lite->mock(call => sub {
     my $method = $args[0]->name;
     if ($method eq 'PostEvent') {
         my @params = ${$args[3]->value}->value;
-        my $event_type = $params[2]->value;
-        my $service_id = $params[3]->value;
+        my $event_type = $params[3]->value;
+        my $service_id = $params[4]->value;
         if ($event_type == EVENT_TYPE_REQUEST) {
             is $service_id, 547, 'Service ID overriden for a new container request';
         }
@@ -85,8 +85,11 @@ $soap_lite->mock(call => sub {
             is $notes[1]->value, 'These are some notes';
         }
 
+        my $client_ref = $params[1]->value;
+        is $client_ref, 'FMS-2000123';
+
         # Check the UPRN has been included
-        my @event_object = ${${$params[1]->value}->value->value}->value;
+        my @event_object = ${${$params[2]->value}->value->value}->value;
         is $event_object[0]->value, 'Source';
         my @object_ref = ${$event_object[1]->value}->value;
         is $object_ref[0]->value, 'Uprn';
@@ -202,6 +205,7 @@ subtest "GET service" => sub {
       "attributes" => [
           { code => 'uprn', order => 1, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'UPRN reference' },
           { code => 'service_id', order => 2, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'server_set', description => 'Service ID' },
+          { code => 'fixmystreet_id', order => 3, required => 'true', variable => 'false', datatype => 'string', datatype_description => '', automated => 'server_set', description => 'external system ID' },
       ],
     }, 'correct json returned';
 };
@@ -218,6 +222,7 @@ subtest "POST missed collection OK" => sub {
         long => -1,
         'attribute[service_id]' => 536, # Communal container mix
         'attribute[uprn]' => 1000001,
+        'attribute[fixmystreet_id]' => 2000123,
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -239,6 +244,7 @@ subtest "POST new request OK" => sub {
         lat => 51,
         long => -1,
         'attribute[uprn]' => 1000001,
+        'attribute[fixmystreet_id]' => 2000123,
         'attribute[Container_Type]' => 12, # Black Box (Paper)
         'attribute[Quantity]' => 2,
     );
@@ -263,6 +269,7 @@ subtest "POST general enquiry OK" => sub {
         long => -1,
         'attribute[service_id]' => 531, # Domestic refuse
         'attribute[uprn]' => 1000001,
+        'attribute[fixmystreet_id]' => 2000123,
         'attribute[Notes]' => "These are some notes",
     );
     ok $res->is_success, 'valid request'
