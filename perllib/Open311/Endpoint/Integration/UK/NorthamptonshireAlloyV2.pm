@@ -56,6 +56,19 @@ sub process_attributes {
 
 }
 
+sub get_defect_update_description {
+    my ($self, $desc, $req) = @_;
+    my $attributes = $self->alloy->attributes_to_hash($req);
+    my $mapping = $self->config->{defect_attribute_mapping};
+    my $status = $self->defect_status($attributes->{$mapping->{status}}->[0]);
+
+    if ( $status eq $self->config->{defect_update_priority_status} ) {
+        $desc = $self->get_request_description($desc, $req);
+    }
+
+    return $desc;
+}
+
 sub get_request_description {
     my ($self, $desc, $req) = @_;
 
