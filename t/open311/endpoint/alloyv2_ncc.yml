@@ -41,8 +41,6 @@
     },
   },
 
-        "emergency_text": "This is an emergency",
-
   # Some resource attributes always have the same values when sent to Alloy
   "resource_attribute_defaults": {
     "attributes_workflowActionPatchLinkAttributeCode": "FixMyStreet",
@@ -75,9 +73,6 @@
   # calculated at the time the resource is POSTed to Alloy.
   # List these Alloy attribute IDs here.
   "ignored_attributes": [
-    1009861, # Reported DateTime - current time is used
-    1009858,
-    1011685
   ],
 
 
@@ -123,10 +118,6 @@
   "inspection_resource_name": "INSPECTION_ST INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_REQUEST_FOR_SERVICE",
 
   "ignored_defect_types": [
-      1000963,
-      1000967,
-      1000957,
-      1000958
   ],
 
   "defect_sourcetype_category_mapping": {
@@ -151,13 +142,6 @@
       "created": 1000603,
       "number": 1003788, # this is the DEF-NNN and not resourceId
       "fixmystreet_id": 1011576,
-  },
-
-  "defect_target_days_mapping": {
-      7: 'P2',
-      28: 'P3',
-      182: 'P4',
-      277: 'P5',
   },
 
   "contact": {
