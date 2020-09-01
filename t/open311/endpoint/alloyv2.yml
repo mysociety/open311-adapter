@@ -114,10 +114,7 @@
   "inspection_resource_name": "INSPECTION_ST INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_REQUEST_FOR_SERVICE",
 
   "ignored_defect_types": [
-      1000963,
-      1000967,
-      1000957,
-      1000958
+    "designs_coversGratingsFramesBoxes1000797_5d323f8efe2ad80354bbda56"
   ],
 
   "defect_sourcetype_category_mapping": {
