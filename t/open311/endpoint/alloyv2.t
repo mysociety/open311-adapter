@@ -407,6 +407,14 @@ subtest "check fetch updates" => sub {
         media_url => '',
     },
     {
+        status => 'investigating',
+        service_request_id => '3027034',
+        description => '',
+        updated_datetime => '2019-01-01T01:49:13Z',
+        update_id => '5d324086b4e1b90150f946a1',
+        media_url => '',
+    },
+    {
         status => 'fixed',
         service_request_id => '4947502',
         description => '',
