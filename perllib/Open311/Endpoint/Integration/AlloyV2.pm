@@ -370,7 +370,7 @@ sub get_service_request_updates {
     push @updates, $self->_get_inspection_updates($args, $start_time, $end_time);
     push @updates, $self->_get_defect_updates($args, $start_time, $end_time);
 
-    return @updates;
+    return sort { $a->updated_datetime <=> $b->updated_datetime } @updates;
 }
 
 sub _get_inspection_updates {
