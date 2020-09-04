@@ -510,7 +510,7 @@ sub _get_defect_updates {
                 status => $status,
                 update_id => $resource->{signature},
                 service_request_id => $service_request_id,
-                description => '',
+                description => $self->get_defect_update_description('', $resource),
                 updated_datetime => $update_dt,
             );
 
@@ -589,6 +589,12 @@ sub get_service_requests {
     }
 
     return @requests;
+}
+
+sub get_defect_update_description {
+    my ($self, $desc) = @_;
+
+    return $desc;
 }
 
 sub get_request_description {

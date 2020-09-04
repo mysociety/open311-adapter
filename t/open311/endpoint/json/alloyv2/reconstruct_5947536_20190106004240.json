@@ -1,8 +1,8 @@
 {
   "item":
     {
-      "itemId": "5947506",
-      "designCode": "designs_shelterDamaged1000793_5d324047fe2ad806f8dfb464",
+      "itemId": "5947536",
+      "designCode": "designs_shelterDamaged1000813_5d323d2efe2ad80354bbd71b",
       "collection": "Live",
       "start": "2019-01-01T00:00:00.723Z",
       "end": "9999-12-31T23:59:59.999Z",
@@ -23,7 +23,7 @@
         {
           "attributeCode": "attributes_defectsStatus",
           "value": [
-            "5c8bdfc88ae862230019dc22"
+            "5c8bdfc18ae862230019dc21"
           ]
         },
         {
@@ -89,7 +89,7 @@
           "value": "10101010"
         }
       ],
-      "signature": "5d324086b4e1b90150f946b2",
+      "signature": "5d32469bb4e1b90150014318",
       "title": "DEF-3401",
       "subtitle": "Ancillary Items"
     }

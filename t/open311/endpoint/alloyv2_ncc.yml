@@ -144,6 +144,8 @@
       "fixmystreet_id": 1011576,
   },
 
+  "defect_update_priority_status": "action_scheduled",
+
   "contact": {
       "code": "designs_fMSContacts1001214_5d321178fe2ad80354bbc0a7",
       "attribute_id": "attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29",

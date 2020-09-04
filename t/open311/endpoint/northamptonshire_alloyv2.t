@@ -132,6 +132,8 @@ $integration->mock('api_call', sub {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search_inspection_link.json')->slurp;
                 } elsif ( $time =~ /2019-01-05/ ) {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search_inspection_parent.json')->slurp;
+                } elsif ( $time =~ /2019-01-06/ ) {
+                    $content = path(__FILE__)->sibling('json/alloyv2/defect_search_priority.json')->slurp;
                 }
             } else {
                 $content = path(__FILE__)->sibling('json/alloyv2/inspect_search_further.json')->slurp;
@@ -388,6 +390,43 @@ subtest "further investigation updates" => sub {
     } ], 'correct json returned';
 };
 
+subtest "updates with prorities" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-06T00:00:00Z&end_date=2019-03-01T02:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'action_scheduled',
+        service_request_id => '5947536',
+        description => '',
+        updated_datetime => '2019-01-06T00:42:10Z',
+        update_id => '5d32469bb4e1b90150014317',
+        media_url => '',
+      },
+      {
+        status => 'action_scheduled',
+        service_request_id => '5947536',
+        description => 'Our Inspector has identified a Bus Stops defect at this location and has issued a works ticket to repair under the Shelter Damaged category. We aim to complete this work within the next 4 Weeks.',
+        updated_datetime => '2019-01-06T00:42:40Z',
+        update_id => '5d32469bb4e1b90150014318',
+        media_url => '',
+      },
+      {
+        status => 'fixed',
+        service_request_id => '5947536',
+        description => '',
+        updated_datetime => '2019-01-06T00:52:40Z',
+        update_id => '5d32469bb4e1b90150014319',
+        media_url => '',
+    } ], 'correct json returned';
+};
+
 subtest "defect with parents inspection link" => sub {
     my $res = $endpoint->run_test_request(
       GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-05T00:00:00Z&end_date=2019-03-01T02:00:00Z',
@@ -399,7 +438,7 @@ subtest "defect with parents inspection link" => sub {
 
     is_deeply decode_json($res->content),
     [ {
-        status => 'action_scheduled',
+        status => 'fixed',
         service_request_id => 'asdkf0338aflaldsfjkjhf',
         description => '',
         updated_datetime => '2019-01-05T01:32:08Z',
@@ -420,7 +459,7 @@ subtest "defect with manual inspection link" => sub {
 
     is_deeply decode_json($res->content),
     [ {
-        status => 'action_scheduled',
+        status => 'fixed',
         service_request_id => '5947505',
         fixmystreet_id => '10101010',
         description => '',
