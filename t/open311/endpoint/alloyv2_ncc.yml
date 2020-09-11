@@ -106,12 +106,17 @@
     '01b51bb4c0de101a004154b4': 'no_further_action', # no action necessary
     '01b51bb5c0de101a004154b5': 'not_councils_responsibility', # outside NCC control
     '01b51bb6c0de101a004154b6': 'no_further_action', # highways to monitor
+    '01b51bb6c0de101a004154b7': 'countryside_rights', # highways to monitor
   },
 
   "status_and_closure_mappping": {
     "further_investigation": {
       "status": "investigating",
       "reason_for_closure": "further"
+    },
+    "countryside_rights": {
+      "status": "investigating",
+      "reason_for_closure": "countryside_rights"
     }
   },
 

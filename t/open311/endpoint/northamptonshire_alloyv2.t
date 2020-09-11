@@ -134,7 +134,11 @@ $integration->mock('api_call', sub {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search_inspection_parent.json')->slurp;
                 }
             } else {
-                $content = path(__FILE__)->sibling('json/alloyv2/inspect_search_further.json')->slurp;
+                if ( $time =~ /2019-01-01/ ) {
+                    $content = path(__FILE__)->sibling('json/alloyv2/inspect_search_further.json')->slurp;
+                } elsif ( $time =~ /2019-01-06/ ) {
+                    $content = path(__FILE__)->sibling('json/alloyv2/inspect_search_countryside.json')->slurp;
+                }
             }
         } elsif ( $call =~ 'item-log/item/([^/]*)/reconstruct' ) {
             my $id = $1;
@@ -384,6 +388,28 @@ subtest "further investigation updates" => sub {
         description => 'This is a customer response',
         updated_datetime => '2019-01-01T00:32:40Z',
         update_id => '5d32469bb4e1b90150014307',
+        media_url => '',
+    } ], 'correct json returned';
+};
+
+subtest "countryside rights investigation updates" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-06T00:00:00Z&end_date=2019-03-01T02:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'investigating',
+        external_status_code => 'countryside_rights',
+        service_request_id => '3027052',
+        description => 'This is a customer response',
+        updated_datetime => '2019-01-06T00:32:40Z',
+        update_id => '5d32469bb4e1b90150014308',
         media_url => '',
     } ], 'correct json returned';
 };
