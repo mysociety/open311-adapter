@@ -55,6 +55,11 @@ has update_urls => (
     default => sub { $_[0]->endpoint_config->{update_urls} }
 );
 
+has customer_defaults => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{customer_defaults} }
+);
+
 # May want something like Confirm's service_assigned_officers
 
 sub services {
@@ -165,10 +170,16 @@ sub process_service_request_args {
         }
     }
 
+    # Bit Bexley-specific still
+    my $contact_type = $self->customer_defaults->{ContactType};
+    $contact_type //= $request->{contributed_by} ? 'TL' : 'OL';
+
     my $customer = {
         name => $args->{first_name} . " " . $args->{last_name},
         email => $args->{email},
         phone => $args->{phone},
+        customer_type => $self->customer_defaults->{CustomerType},
+        contact_type => $contact_type,
     };
 
     my $fields = delete $request->{contributed_by};
