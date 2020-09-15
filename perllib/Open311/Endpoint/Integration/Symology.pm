@@ -67,6 +67,7 @@ sub services {
             service_code => $_,
             description => $name,
             $services->{$_}{group} ? (group => $services->{$_}{group}) : (),
+            $services->{$_}{groups} ? (groups => $services->{$_}{groups}) : (),
         );
         foreach (@{$services->{$_}{questions}}) {
             my %attribute = (
