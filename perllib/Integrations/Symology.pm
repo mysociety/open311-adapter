@@ -169,7 +169,7 @@ sub SOAP::Serializer::as_RequestSend {
         # Information extracted from Street Gaz database
         NextAction => $value->{NextAction},
         NextInspection => '',
-        NextActionUserName => '',
+        NextActionUserName => $value->{NextActionUserName} || '',
         NextNotify => '0',
         ActionDescription => '',
         CreateLACode => $value->{CreateLACode} || '0',
@@ -186,8 +186,8 @@ sub SOAP::Serializer::as_CustomerSend {
           CustomerTelNo => $value->{phone},
           #minOccurs="0" maxOccurs="1" name="CustomerReference"
           CustomerEmail => $value->{email},
-          CustomerType => 'PB',
-          ContactType => $value->{contributed_by} ? 'TL' : 'OL',
+          CustomerType => $value->{customer_type},
+          ContactType => $value->{contact_type},
           InitialDate => $dt->strftime('%Y-%m-%d'),
           InitialTime => $dt->strftime('%H:%M:%S'),
           ReceivedDate => $dt->strftime('%Y-%m-%d'),

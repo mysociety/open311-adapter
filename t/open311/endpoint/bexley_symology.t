@@ -112,6 +112,9 @@ $bexley_end->mock(endpoint_config => sub {
             NSGREF, 'N1',
             '234/5678' => 'S2',
         },
+        customer_defaults => {
+            CustomerType => "PB",
+        },
         category_mapping => {
             AbanVeh => {
                 name => 'Abandoned vehicles',
