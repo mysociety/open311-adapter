@@ -102,7 +102,7 @@
     "5bc5bdd281d088d177342c76": "closed" # completed
   },
 
-  "status_and_closure_mappping": {},
+  "status_and_closure_mapping": {},
 
   "inspection_closure_mapping": {
     '01b51bb3c0de101a004154b3': 'in_progress', # works instructed

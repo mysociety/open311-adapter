@@ -107,7 +107,7 @@
     '01b51bb6c0de101a004154b7': 'countryside_rights', # highways to monitor
   },
 
-  "status_and_closure_mappping": {
+  "status_and_closure_mapping": {
     "further_investigation": {
       "status": "investigating",
       "reason_for_closure": "further"
