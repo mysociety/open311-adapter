@@ -36,6 +36,9 @@ use constant {
 use constant {
     NORTHING => 100,
     EASTING => 100,
+    EASTING_AREAA => 101,
+    EASTING_AREAB => 102,
+    EASTING_BAD => 103,
 };
 
 my $soap_lite = Test::MockModule->new('SOAP::Lite');
@@ -48,11 +51,29 @@ $soap_lite->mock(call => sub {
         my @request = ${$args[2]->value}->value;
         is $request[REPORT_NSGREF]->value, NSGREF;
         is $request[REPORT_NEXTACTION]->value, undef;
-        is $request[REPORT_NEXTACTIONUSERNAME]->value, $request[REPORT_REQUEST_TYPE]->value eq "Bridges" ? 'USER0001' : 'POT00001';
         is $request[REPORT_NORTHING]->value, NORTHING;
         my $photo_desc = "\n\n[ This report contains a photo, see: http://example.org/photo/1.jpeg ]";
         is $request[REPORT_DESC]->value, "This is the details$photo_desc";
         is $request[REPORT_PRIORITY]->value, ($request[REPORT_REQUEST_TYPE]->value eq "Bridges" ? 'Priority1' : 'Priority2');
+        if ( $request[REPORT_REQUEST_TYPE]->value eq "Potholes" ) {
+            is $request[REPORT_NEXTACTIONUSERNAME]->value, 'POT00001';
+        } elsif ( $request[REPORT_EASTING]->value == EASTING_AREAA ) {
+            is $request[REPORT_NEXTACTIONUSERNAME]->value, 'USER0001';
+        } elsif ( $request[REPORT_EASTING]->value == EASTING_AREAB ) {
+            is $request[REPORT_NEXTACTIONUSERNAME]->value, 'USER0002';
+        } elsif ( $request[REPORT_EASTING]->value == EASTING_BAD ) {
+            is $request[REPORT_NEXTACTIONUSERNAME]->value, '';
+            return {
+                StatusCode => 1,
+                StatusMessage => 'Failed',
+                SendRequestResults => {
+                    SendRequestResultRow => {
+                        RecordType => 1,
+                        MessageText => 'Username required for notification',
+                    }
+                }
+            };
+        }
         return {
             StatusCode => 0,
             StatusMessage => 'Success',
@@ -99,6 +120,11 @@ $centralbeds_end->mock(endpoint_config => sub {
             CustomerType => "",
             ContactType => "",
         },
+        area_to_username => {
+            AreaA => "USER0001",
+            AreaB => "USER0002",
+            AreaC => "USER0003",
+        },
         category_mapping => {
             Bridges => {
                 name => 'Bridges',
@@ -106,7 +132,6 @@ $centralbeds_end->mock(endpoint_config => sub {
                     ServiceCode => 'ServiceCode',
                     RequestType => 'Bridges',
                     Priority => 'Priority1',
-                    NextActionUserName => 'USER0001',
                 },
                 questions => [],
                 logic => [],
@@ -231,12 +256,22 @@ subtest "GET service" => sub {
                    "variable" => "true",
                    "datatype_description" => "",
                    "automated" => "server_set"
-                }
+                },
+                {
+                   "required" => "false",
+                   "order" => 7,
+                   "datatype" => "string",
+                   "code" => "area_code",
+                   "description" => "Area code",
+                   "variable" => "true",
+                   "datatype_description" => "",
+                   "automated" => "server_set"
+                },
             ],
         }, 'correct json returned';
 };
 
-subtest "POST Bridges OK" => sub {
+subtest "POST Bridges Area A OK" => sub {
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
         api_key => 'test',
@@ -248,9 +283,10 @@ subtest "POST Bridges OK" => sub {
         long => -1,
         media_url => 'http://example.org/photo/1.jpeg',
         'attribute[NSGRef]' => NSGREF,
-        'attribute[easting]' => EASTING,
+        'attribute[easting]' => EASTING_AREAA,
         'attribute[northing]' => NORTHING,
         'attribute[fixmystreet_id]' => UPDATE_REPORT_ID,
+        'attribute[area_code]' => 'AreaA',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -261,7 +297,59 @@ subtest "POST Bridges OK" => sub {
         } ], 'correct json returned';
 };
 
-subtest "POST Bridges OK" => sub {
+subtest "POST Bridges Area B OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'Bridges',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        media_url => 'http://example.org/photo/1.jpeg',
+        'attribute[NSGRef]' => NSGREF,
+        'attribute[easting]' => EASTING_AREAB,
+        'attribute[northing]' => NORTHING,
+        'attribute[fixmystreet_id]' => UPDATE_REPORT_ID,
+        'attribute[area_code]' => 'AreaB',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => 1001
+        } ], 'correct json returned';
+};
+
+subtest "POST Bridges with no area fails" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'Bridges',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        media_url => 'http://example.org/photo/1.jpeg',
+        'attribute[NSGRef]' => NSGREF,
+        'attribute[easting]' => EASTING_BAD,
+        'attribute[northing]' => NORTHING,
+        'attribute[fixmystreet_id]' => UPDATE_REPORT_ID,
+    );
+    ok !$res->is_success, 'invalid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "description" => "Couldn't create SendRequest in Symology: Failed - Username required for notification\n",
+            "code" => 500,
+        } ], 'correct json returned';
+};
+
+subtest "POST Potholes OK" => sub {
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
         api_key => 'test',
