@@ -265,6 +265,16 @@ subtest "GET service" => sub {
              "required" => "false",
              "order" => 7,
              "datatype" => "string",
+             "code" => "area_code",
+             "description" => "Area code",
+             "variable" => "true",
+             "datatype_description" => "",
+             "automated" => "server_set"
+          },
+          {
+             "required" => "false",
+             "order" => 8,
+             "datatype" => "string",
              "code" => "message",
              "description" => "Please ignore yellow cars",
              "variable" => "false",
@@ -272,7 +282,7 @@ subtest "GET service" => sub {
           },
           {
              "required" => "true",
-             "order" => 8,
+             "order" => 9,
              "datatype" => "string",
              "code" => "car_details",
              "description" => "Car details",
@@ -281,7 +291,7 @@ subtest "GET service" => sub {
           },
           {
              "required" => "true",
-             "order" => 9,
+             "order" => 10,
              "datatype" => "singlevaluelist",
              "code" => "burnt",
              "description" => "Burnt out?",
