@@ -1,0 +1,66 @@
+{
+  "api_key": "api_key",
+  "api_url": "http://localhost/api/",
+  "rfs_design": 'designs_enquiryInspection_FixMyStreet',
+  "defect_inspection_parent_id": 1001181,
+  "irg_config_code": "ASSET_INSPECTIONS",
+  "resource_attachment_attribute_id": "attributes_filesAttachableAttachments",
+  "photo_base": "http://localhost",
+
+  "service_attribute_overrides": {
+  },
+
+  "category_list_code": "",
+  "category_title_attribute": "title",
+  "service_whitelist": {},
+
+  "resource_attribute_defaults": {},
+
+  "parent_attribute_name": "",
+
+  "request_to_resource_attribute_mapping": {},
+  "request_to_resource_attribute_manual_mapping": {},
+
+  "ignored_attributes": [],
+
+  "created_datetime_attribute_id": '',
+
+  "inspection_attribute_mapping": {
+      "description": 1000594,
+      "status": 'attributes_taskStatus', # this is a structure so needs more processing
+      "reason_for_closure": "attributes_reasonForClosure",
+      "inspector_comments": "attributes_inspectorComments",
+  },
+
+  "inspection_status_mapping": {
+    "6bc5bdd281d088d177342c72": "open",
+    "6bc5bdd281d088d177342c73": "investigating",
+    "6bc5bdd281d088d177342c74": "in_progress",
+    "6bc5bdd281d088d177342c76": "closed", #
+    "61b51bb6c0de101a004154b7": 'fixed',
+  },
+
+  "inspection_closure_mapping": {
+  },
+
+  "ignored_defect_types": [
+  ],
+
+  "defect_sourcetype_category_mapping": {
+  },
+
+  "defect_status_mapping": {
+  },
+
+  "defect_resource_name": "designInterfaces_defects",
+
+  "defect_attribute_mapping": {
+  },
+
+  "contact": {
+  },
+
+  "completion_photo_states": [
+    'fixed', 'in_progress'
+  ]
+}

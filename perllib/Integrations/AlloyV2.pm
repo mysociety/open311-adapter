@@ -58,7 +58,11 @@ sub api_call {
     my $response = $ua->request($request);
     if ($response->is_success) {
         $self->logger->debug($response->content) if $body;
-        return decode_json($response->content);
+        if ( $response->header('Content-Type') =~ m#application/json# ) {
+            return decode_json($response->content);
+        } else {
+            return $response;
+        }
     } else {
         $self->logger->error($call);
         $self->logger->error(encode_json($body)) if $body and (ref $body eq 'HASH' || ref $body eq 'ARRAY');
@@ -202,6 +206,15 @@ sub search {
     }
 
     return \@results;
+}
+
+sub _get_photo {
+    my ( $self, $id ) = @_;
+
+    my $response = $self->api_call( call => "file/$id" );
+
+    return ( $response->header('Content-Type'), $response->decoded_content );
+
 }
 
 1;

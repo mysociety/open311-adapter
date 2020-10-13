@@ -10,6 +10,7 @@ use Types::Standard ':all';
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 with 'Open311::Endpoint::Role::ConfigFile';
+with 'Open311::Endpoint::Role::CompletionPhotos';
 
 with 'Role::Logger';
 
@@ -467,8 +468,8 @@ sub _get_inspection_updates {
             my $resource = $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
             next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
 
-            $resource = $resource->{item};
-            my $attributes = $self->alloy->attributes_to_hash($resource);
+            my $item = $resource->{item};
+            my $attributes = $self->alloy->attributes_to_hash($item);
 
             my ($status, $reason_for_closure) = $self->_get_inspection_status($attributes, $mapping);
 
@@ -487,11 +488,15 @@ sub _get_inspection_updates {
             my %args = (
                 status => $status,
                 external_status_code => $reason_for_closure,
-                update_id => $resource->{signature},
+                update_id => $item->{signature},
                 service_request_id => $update->{itemId},
                 description => $description_to_send,
                 updated_datetime => $update_dt,
             );
+
+            if (my $photo = $self->_get_update_photos($resource, $status)) {
+                $args{media_url} = $photo;
+            }
 
             push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
         }
@@ -986,6 +991,46 @@ sub _find_category_code {
         my $a = $self->alloy->attributes_to_hash($cat);
         return $cat->{itemId} if $a->{$self->config->{category_title_attribute}} eq $category;
     }
+}
+
+sub _get_update_photos {
+    my ($self, $update, $status) = @_;
+
+    return unless $self->config->{completion_photo_states};
+
+    my %valid_status = map { $_ => 1 } @{ $self->config->{completion_photo_states} };
+    my $id = $update->{item}->{itemId};
+    my $jurisdiction = $self->jurisdiction_id;
+    if ( $valid_status{ $status } ) {
+        my $attribs = $self->alloy->attributes_to_hash($update->{item});
+        my $prev_attribs = $self->alloy->attributes_to_hash($update->{previous});
+        if ( $prev_attribs->{attributes_filesAttachableAttachments} ) {
+            my %photos = map { $_ => 1 } @{ $prev_attribs->{attributes_filesAttachableAttachments} };
+            my @new =
+            map {
+                sprintf(
+                    '%s/photo/completion?jurisdiction_id=%s&job=%s&photo=%s',
+                    $self->config->{photo_base},
+                    $jurisdiction,
+                    $id,
+                    $_
+                )
+            }
+            grep { not defined $photos{$_} } @{ $attribs->{attributes_filesAttachableAttachments} };
+            return \@new if @new;
+        }
+    }
+
+    return undef;
+}
+
+sub get_completion_photo {
+    my ($self, $args) = @_;
+
+    my ($content_type, $content) = $self->alloy->_get_photo($args->{photo});
+    return [ 404, [ 'Content-type', 'text/plain' ], [ 'Not found' ] ] unless $content;
+
+    return [ 200, [ 'Content-type', $content_type ], [ $content ] ];
 }
 
 1;
