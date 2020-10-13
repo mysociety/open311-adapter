@@ -1,0 +1,39 @@
+{
+  "item":
+    {
+      "itemId": "4027032",
+      "designCode": "designs_enquiryInspection_FixMyStreet",
+      "collection": "Live",
+      "start": "2019-01-01T00:32:40Z",
+      "end": "9999-12-31T23:59:59.999Z",
+      "geometry":{
+        "type": "Point",
+        "coordinates":[-0.89868522337640622, 52.112591554183062]
+      },
+      "icon": "icon-inspection-unknown",
+      "colour": "#99cf22",
+      "attributes":[
+        {
+          "attributeCode": "attributes_taskStatus",
+          "value": ["6bc5bdd281d088d177342c74"]
+        },
+        {
+          "attributeCode": "attributes_filesAttachableAttachments",
+          "value": ["123456", "654321"]
+        }
+      ],
+      "signature": "5d32469bb4e1b90150014307",
+      "title": "INS-34032, 1584451",
+      "subtitle": "Enquiry Inspection RFS"
+    },
+    "previous":
+    {
+      "attributes":
+      [
+        {
+          "attributeCode": "attributes_filesAttachableAttachments",
+          "value": ["123456"]
+        }
+      ]
+    }
+}
