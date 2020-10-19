@@ -3,6 +3,13 @@ package Open311::Endpoint::Integration::UK::Bexley::Uniform;
 use Moo;
 extends 'Open311::Endpoint::Integration::Uniform';
 
+use Open311::Endpoint::Service::UKCouncil::BexleyUniform;
+
+has service_class  => (
+    is => 'ro',
+    default => 'Open311::Endpoint::Service::UKCouncil::BexleyUniform'
+);
+
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
     $args{jurisdiction_id} = 'bexley_uniform';

@@ -277,6 +277,16 @@ subtest "GET service" => sub {
              "required" => "false",
              "order" => 8,
              "datatype" => "string",
+             "code" => "private_comments",
+             "description" => "Private comments",
+             "variable" => "true",
+             "datatype_description" => "",
+             "automated" => "server_set"
+          },
+          {
+             "required" => "false",
+             "order" => 9,
+             "datatype" => "string",
              "code" => "message",
              "description" => "Please ignore yellow cars",
              "variable" => "false",
@@ -284,7 +294,7 @@ subtest "GET service" => sub {
           },
           {
              "required" => "true",
-             "order" => 9,
+             "order" => 10,
              "datatype" => "string",
              "code" => "car_details",
              "description" => "Car details",
@@ -293,7 +303,7 @@ subtest "GET service" => sub {
           },
           {
              "required" => "true",
-             "order" => 10,
+             "order" => 11,
              "datatype" => "singlevaluelist",
              "code" => "burnt",
              "description" => "Burnt out?",
