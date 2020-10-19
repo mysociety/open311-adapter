@@ -11,6 +11,7 @@ use URI;
 use Try::Tiny;
 use Encode qw(encode_utf8);
 use JSON::MaybeXS qw(encode_json decode_json);
+use List::Util qw[min];
 
 with 'Role::Config';
 with 'Role::Logger';
@@ -242,7 +243,9 @@ sub search {
     my $result_count = $stats->{result};
     return [] unless $result_count;
 
-    my $pages = int( $result_count / 20 ) + 1;
+    my $maxPages = 100;
+    my $pageSize = $result_count <= 2000 ? 20 : ( ceil($result_count / $maxPages) + 1 );
+    my $pages = int( $result_count / $pageSize ) + 1;
 
     my $query_body = $body_base;
     $query_body->{type} = 'Query';
@@ -252,7 +255,7 @@ sub search {
     while ($page <= $pages) {
         my $result = $self->api_call(
             call => "aqs/query",
-            params => { page => $page, pageSize => 20 },
+            params => { page => $page, pageSize => $pageSize },
             body => $query_body
         );
 
