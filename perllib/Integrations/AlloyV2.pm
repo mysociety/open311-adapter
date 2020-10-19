@@ -83,7 +83,10 @@ sub api_call {
         $self->logger->error($response->content);
         try {
             my $json_response = decode_json($response->content);
-            die "Alloy API call failed: [$json_response->{errorCode} $json_response->{errorCodeString}] $json_response->{debugErrorMessage}";
+            my $code = $json_response->{errorCode} || "";
+            my $codeString = $json_response->{errorCodeString} || "";
+            my $msg = $json_response->{debugErrorMessage} || "";
+            die "Alloy API call failed: [$code $codeString] $msg";
         } catch {
             die $response->content;
         };
