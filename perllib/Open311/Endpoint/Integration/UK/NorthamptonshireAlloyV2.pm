@@ -104,16 +104,23 @@ sub _find_contact {
     my $body = {
         properties => {
             dodiCode => $self->config->{contact}->{code},
-            collectionCode => "Live"
+            collectionCode => "Live",
+            attributes => [ $attribute_code ],
         },
         children => [
             {
-                type => "GlobalAttributeSearch",
-                children=> [
+                type => "Equals",
+                children => [
+                    {
+                        type => "Attribute",
+                        properties => {
+                            attributeCode => $attribute_code,
+                        },
+                    },
                     {
                         type => "String",
                         properties => {
-                            value => [$search_term]
+                            value => [ $search_term ]
                         }
                     }
                 ]
@@ -124,7 +131,14 @@ sub _find_contact {
     my $results = $self->alloy->search($body);
 
     return undef unless @$results;
-    return $results->[0];
+    my $contact = $results->[0];
+
+    # Sanity check that the user we're returning actually has the correct email
+    # or phone, just in case Alloy returns something odd.
+    my $a = $self->alloy->attributes_to_hash( $contact );
+    return undef if $a->{$attribute_code} ne $search_term;
+
+    return $contact;
 }
 
 sub _create_contact {
