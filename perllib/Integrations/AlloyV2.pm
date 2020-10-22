@@ -246,9 +246,9 @@ sub search {
     my $result_count = $stats->{result};
     return [] unless $result_count;
 
-    my $pageSize = 20;
     my $maxPages = 100;
-    my $pages = min($maxPages, int( $result_count / $pageSize ) + 1);
+    my $pageSize = $result_count <= 2000 ? 20 : ( ceil($result_count / $maxPages) + 1 );
+    my $pages = int( $result_count / $pageSize ) + 1;
 
     my $query_body = $body_base;
     $query_body->{type} = 'Query';
