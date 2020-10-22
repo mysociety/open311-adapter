@@ -5,6 +5,7 @@ use Moo;
 use Try::Tiny;
 use DateTime::Format::W3CDTF;
 use LWP::UserAgent;
+use JSON::MaybeXS;
 use Types::Standard ':all';
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
@@ -306,6 +307,124 @@ sub _set_parent_attribute {
     } else {
         $resource->{parents} = {};
     }
+}
+
+sub _find_or_create_contact {
+    my ($self, $args) = @_;
+
+    if (my $contact = $self->_find_contact($args->{email})) {
+        return $contact->{itemId};
+    } else {
+        return $self->_create_contact($args)->{item}->{itemId};
+    }
+}
+
+sub _find_contact {
+    my ($self, $email, $phone) = @_;
+
+    my ($attribute_code, $search_term);
+    if ( $email ) {
+        $search_term = $email;
+        $attribute_code = $self->config->{contact}->{search_attribute_code_email};
+    } elsif ( $phone ) {
+        $search_term = $phone;
+        $attribute_code = $self->config->{contact}->{search_attribute_code_phone};
+    } else {
+        return undef;
+    }
+
+    my $body = {
+        properties => {
+            dodiCode => $self->config->{contact}->{code},
+            collectionCode => "Live",
+            attributes => [ $attribute_code ],
+        },
+        children => [
+            {
+                type => "Equals",
+                children => [
+                    {
+                        type => "Attribute",
+                        properties => {
+                            attributeCode => $attribute_code,
+                        },
+                    },
+                    {
+                        type => "String",
+                        properties => {
+                            value => [ $search_term ]
+                        }
+                    }
+                ]
+            }
+        ]
+    };
+
+    my $results = $self->alloy->search($body);
+
+    return undef unless @$results;
+    my $contact = $results->[0];
+
+    # Sanity check that the user we're returning actually has the correct email
+    # or phone, just in case Alloy returns something
+    my $a = $self->alloy->attributes_to_hash( $contact );
+    return undef unless $a->{$attribute_code} && $a->{$attribute_code} eq $search_term;
+
+    return $contact;
+}
+
+sub _create_contact {
+    my ($self, $args) = @_;
+
+    # For true/false values we have to use the JSON()->true/false otherwise
+    # when we convert to JSON later we get 1/0 which then fails the validation
+    # at the Alloy end
+    # NB: have to use 'true'/'false' strings in the YAML for this to work. If we
+    # use true/false then it gets passed in as something that gets converted to 1/0
+    #
+    # we could possibly use local $YAML::XS::Boolean = "JSON::PP" in the Config module
+    # to get round all this but not sure if that would break something else.
+    my $defaults = {
+        map {
+            $_ => $self->config->{contact}->{attribute_defaults}->{$_} =~ /^(true|false)$/
+                ? JSON()->$1
+                : $self->config->{contact}->{attribute_defaults}->{$_}
+        } keys %{ $self->config->{contact}->{attribute_defaults} }
+    };
+
+    # phone cannot be null;
+    $args->{phone} ||= '';
+
+    # XXX should use the created time of the report?
+    my $now = DateTime->now();
+    my $created_time = DateTime::Format::W3CDTF->new->format_datetime($now);
+    $args->{created} = $created_time;
+
+    # include the defaults which map to themselves in the mapping
+    my $remapping = {
+        %{$self->config->{contact}->{attribute_mapping}},
+        map {
+            $_ => $_
+        } keys %{ $self->config->{contact}->{attribute_defaults} }
+    };
+
+    $args = {
+        %$args,
+        %$defaults
+    };
+
+    my @attributes = @{ $self->alloy->update_attributes( $args, $remapping, []) };
+
+    my $contact = {
+        designCode => $self->config->{contact}->{code},
+        attributes => \@attributes,
+        geometry => undef,
+    };
+
+    return $self->alloy->api_call(
+        call => "item",
+        body => $contact
+    );
 }
 
 sub post_service_request_update {

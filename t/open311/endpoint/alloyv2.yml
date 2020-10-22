@@ -145,7 +145,7 @@
       "attribute_id": "attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29",
       "source_id": "2636",
       "search_entity_code": "USER_ST USER_ST_FMS_CONTACTS",
-      "search_attribute_code_email": "STU_USER_ST_FMS_CONTACTS_ATT_EMAIL",
+      "search_attribute_code_email": "attributes_fMSContacts1001214Email1010922_5d321186fe2ad806f8df9a10",
       "search_attribute_code_phone": "STU_USER_ST_FMS_CONTACTS_ATT_PHONE",
       "acceptance_datetime_attribute": "",
       "attribute_defaults": {

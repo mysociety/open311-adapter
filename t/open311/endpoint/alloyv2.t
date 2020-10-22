@@ -125,9 +125,13 @@ $integration->mock('api_call', sub {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search.json')->slurp;
                 }
             } elsif ($type eq 'designs_fMSContacts1001214_5d321178fe2ad80354bbc0a7') {
-                my $search = $body->{children}->[0]->{children}->[0]->{properties}->{value}->[0];
+                my $search = $body->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
                 if ( $search eq 'exists@example.com' ) {
-                    $content = '{ "page": 1, "results": [ { "itemId": 708824 } ] }';
+                    $content = '{ "page": 1, "results": [ { "itemId": 708824, "attributes": [ { "attributeCode": "attributes_fMSContacts1001214Email1010922_5d321186fe2ad806f8df9a10", "value": "exists@example.com" } ] } ] }';
+                } elsif ( $search eq 'doesntexist@example.com' ) {
+                    $content = '{ "page": 1, "results": [] }';
+                } elsif ( $search eq 'error@example.com' ) {
+                    $content = '{ "page": 1, "results": [ { "itemId": 708825, "attributes": [ { "attributeCode": "attributes_fMSContacts1001214Email1010922_5d321186fe2ad806f8df9a10", "value": "notrelevant@example.org" } ] } ] }';
                 }
             } elsif ($type eq 'designs_listFixMyStreetCategories1001257_5d3210e1fe2ad806f8df98c1') {
                 $content = path(__FILE__)->sibling('json/alloyv2/categories_search.json')->slurp;
@@ -168,6 +172,22 @@ $integration->mock('api_call', sub {
     }
     return $result;
 });
+
+subtest "existing contact can be found" => sub {
+    my $result = $endpoint->_find_contact('exists@example.com');
+    ok $result, "User exists";
+    is $result->{itemId}, "708824", "correct user returned";
+};
+
+subtest "non-existing contact isn't found" => sub {
+    my $result = $endpoint->_find_contact('doesntexist@example.com');
+    is $result, undef, "User doesn't exist";
+};
+
+subtest "invalid contact from Alloy is ignored" => sub {
+    my $result = $endpoint->_find_contact('error@example.com');
+    is $result, undef, "User doesn't exist";
+};
 
 subtest "create basic problem" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
