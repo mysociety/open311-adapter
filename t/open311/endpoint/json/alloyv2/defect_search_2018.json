@@ -8,13 +8,6 @@
       "collection": "Live",
       "start": "2018-12-31T00:00:00.723Z",
       "end": "9999-12-31T23:59:59.999Z",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -0.5878147518991453,
-          52.31519007307925
-        ]
-      },
       "icon": "icon-defect-full",
       "colour": "#AAC6Df",
       "attributes": [
@@ -89,6 +82,16 @@
         {
           "attributeCode": "attributes_defectsWithInspectionsDefectInspection",
           "value": [ "3027032" ]
+        },
+        {
+          "attributeCode": "attribute_itemsGeometry",
+          "value": {
+            "type": "Point",
+            "coordinates": [
+              -0.5878147518991453,
+              52.31519007307925
+            ]
+          }
         }
       ],
       "signature": "5d324086b4e1b90150f946a0",
