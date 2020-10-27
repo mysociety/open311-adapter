@@ -5,13 +5,6 @@
     "collection": "Live",
     "start": "2019-07-19T22:37:04.970Z",
     "end": "9999-12-31T23:59:59.999Z",
-    "geometry": {
-      "type": "Point",
-      "coordinates": [
-        -0.8988425683060407,
-        52.33631178883839
-      ]
-    },
     "icon": "icon-inspection-unknown",
     "colour": "#99cf22",
     "attributes": [
@@ -80,6 +73,16 @@
       {
         "attributeCode": "attributes_inspectionsInspectionNumber",
         "value": 10624
+      },
+      {
+        "attributeCode": "attribute_itemsGeometry",
+        "value": {
+          "type": "Point",
+          "coordinates": [
+            -0.8988425683060407,
+            52.33631178883839
+          ]
+        }
       }
     ],
     "signature": "5d32469bb4e1b9015001430b",

@@ -6,10 +6,6 @@
       "collection": "Live",
       "start": "2019-01-01T00:32:40Z",
       "end": "9999-12-31T23:59:59.999Z",
-      "geometry":{
-        "type": "Point",
-        "coordinates":[-0.89868522337640622, 52.112591554183062]
-      },
       "icon": "icon-inspection-unknown",
       "colour": "#99cf22",
       "attributes":[
@@ -24,6 +20,13 @@
         {
           "attributeCode": "attributes_enquiryInspectionRFS1001181ReasonForClosure1010926_5d3245d8fe2ad806f8dfbb24",
           "value": [""]
+        },
+        {
+          "attributeCode": "attribute_itemsGeometry",
+          "value": {
+            "type": "Point",
+            "coordinates":[-0.89868522337640622, 52.112591554183062]
+          }
         }
       ],
       "signature": "5d324086b4e1b90150f946a1",
