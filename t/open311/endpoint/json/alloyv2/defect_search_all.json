@@ -8,10 +8,6 @@
       "designCode": "designs_coversGratingsFramesBoxes1000797_5d323f8efe2ad80354bbda56",
       "collection": "Live",
       "end": "9999-12-31T23:59:59.999Z",
-      "geometry":{
-        "type": "Point",
-        "coordinates":[2,1]
-      },
       "icon": "icon-inspection-unknown",
       "colour": "#99cf22",
       "attributes":[
@@ -34,6 +30,13 @@
         {
           "attributeCode": "attributes_Priorities",
           "value": ["01b51bb8c0de101a004154b8"]
+        },
+        {
+          "attributeCode": "attribute_itemsGeometry",
+          "value": {
+            "type": "Point",
+            "coordinates":[2,1]
+          }
         }
       ],
       "signature": "5d32469bb4e1b90150014305",
