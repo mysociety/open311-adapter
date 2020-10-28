@@ -583,13 +583,13 @@ sub _get_defect_updates {
             my $resource = $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
             next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
 
-            $resource = $resource->{item};
-            my $attributes = $self->alloy->attributes_to_hash($resource);
+            my $item = $resource->{item};
+            my $attributes = $self->alloy->attributes_to_hash($item);
             my $status = $self->defect_status($attributes->{$mapping->{status}});
 
             my %args = (
                 status => $status,
-                update_id => $resource->{signature},
+                update_id => $item->{signature},
                 service_request_id => $service_request_id,
                 description => '',
                 updated_datetime => $update_dt,
@@ -607,6 +607,10 @@ sub _get_defect_updates {
                 $args{external_status_code} = $reverse_closure_mapping{'action_scheduled'};
             }
             $args{fixmystreet_id} = $fms_id if $fms_id;
+
+            if (my $photo = $self->_get_update_photos($resource, $status)) {
+                $args{media_url} = $photo;
+            }
 
             push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
         }

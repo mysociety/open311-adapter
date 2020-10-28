@@ -130,6 +130,8 @@ $integration->mock('api_call', sub {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search_inspection_parent.json')->slurp;
                 } elsif ( $time =~ /2018-12-31/ ) {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search_2018.json')->slurp;
+                } elsif ( $time =~ /2020-10-20/ ) {
+                    $content = path(__FILE__)->sibling('json/alloyv2/defect_search_2020.json')->slurp;
                 }
             } else {
                 if ( $time =~ /2019-01-01/ ) {
@@ -459,6 +461,28 @@ subtest "defect with manual inspection link" => sub {
         update_id => '5d324086b4e1b90150f946a1',
         media_url => '',
     } ], 'correct json returned';
+};
+
+subtest "defect update with a photo" => sub {
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2020-10-20T11:00:00Z&end_date=2020-10-12T14:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [
+        {
+            status => 'fixed',
+            service_request_id => '5947507',
+            description => '',
+            updated_datetime => '2020-10-20T12:15:00Z',
+            update_id => '4d32469aa4e5690150014309',
+            media_url => 'http://localhost/photo/completion?jurisdiction_id=northamptonshire_alloy_v2&job=5947507&photo=d9023haljdwf039jcnd902slmcn',
+        }
+    ], 'correct json returned';
 };
 
 restore_time();
