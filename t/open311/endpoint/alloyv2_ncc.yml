@@ -8,6 +8,7 @@
   "attachment_folder_id": 52,
   "resource_attachment_attribute_id": "attributes_filesAttachableAttachments",
   "update_cutoff_date": "2019-01-01T00:00:00Z",
+  "photo_base": "http://localhost",
 
   "service_attribute_overrides": {
   },
@@ -99,6 +100,8 @@
     "5bc5bdd281d088d177342c76": "closed", # completed
     "01b51bb6c0de101a004154b7": 'further_investigation', # highways to monitor
   },
+
+  "completion_photo_states" : [ "fixed" ],
 
   "inspection_closure_mapping": {
     '01b51bb3c0de101a004154b3': 'in_progress', # works instructed
