@@ -88,6 +88,28 @@
             <Comments/>
           </RecordStamp>
         </ServiceStatus>
+        <ServiceStatus>
+          <ID xmlns="http://www.bartec-systems.com">2282</ID>
+          <Status xmlns="http://www.bartec-systems.com">PENDING</Status>
+          <SequenceNumber xmlns="http://www.bartec-systems.com">0</SequenceNumber>
+          <ServiceTypeID xmlns="http://www.bartec-systems.com">4</ServiceTypeID>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>bartec</AddedBy>
+            <DateAdded>2019-02-22T16:11:11.953</DateAdded>
+            <Comments/>
+          </RecordStamp>
+        </ServiceStatus>
+        <ServiceStatus>
+          <ID xmlns="http://www.bartec-systems.com">2283</ID>
+          <Status xmlns="http://www.bartec-systems.com">OPEN</Status>
+          <SequenceNumber xmlns="http://www.bartec-systems.com">0</SequenceNumber>
+          <ServiceTypeID xmlns="http://www.bartec-systems.com">4</ServiceTypeID>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>bartec</AddedBy>
+            <DateAdded>2019-02-22T16:11:11.953</DateAdded>
+            <Comments/>
+          </RecordStamp>
+        </ServiceStatus>
         <Errors>
           <Result xmlns="http://www.bartec-systems.com">0</Result>
           <Message xmlns="http://www.bartec-systems.com"/>

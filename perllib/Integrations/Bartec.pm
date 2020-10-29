@@ -160,6 +160,24 @@ has note_types => (
     }
 );
 
+has service_extended_data_map => (
+    is => 'lazy',
+    default => sub {
+        my $self = shift;
+        my $services = $self->ServiceRequests_Types_Get;
+
+        my $extended = $self->get_extended_data;
+        my %map;
+        for my $service ( @{ $services->{ServiceType} } ) {
+            $map{ $service->{ID} } = $extended->{ $service->{ExtendedDataRecordDefinitionID} } || undef
+                if $service->{ExtendedDataRecordDefinitionID};
+        }
+
+        return \%map;
+    },
+);
+
+
 sub _methods {
     return {
         'Authenticate' => {
@@ -230,6 +248,15 @@ sub _methods {
             soapaction => 'http://bartec-systems.com/ServiceRequests_Notes_Create',
             namespace  => 'http://bartec-systems.com/',
             parameters => [],
+        },
+        'System_ExtendedDataDefinitions_Get' => {
+            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            soapaction => 'http://bartec-systems.com/System_ExtendedDataDefinitions_Get',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [
+                SOAP::Data->new(name => 'token', type => 'string'),
+                SOAP::Data->new(name => 'ServiceCode', type => 'string'),
+            ],
         },
         'ServiceRequests_Get' => {
             endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
@@ -450,6 +477,19 @@ sub ServiceRequests_Create {
         },
     );
 
+    if ( my $extended = $self->get_extended_data ) {
+        if ( my $data = $self->service_extended_data_map->{ $values->{service_code} } ) {
+            my @data;
+            for my $v ( @$data ) {
+                push @data, {
+                    FieldName => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => $v->{code} },
+                    FieldValue => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => $values->{attributes}->{$v->{code}} },
+                } if $values->{attributes}->{$v->{code}};
+            }
+            $req{extendedData} = { ServiceRequests_CreateServiceRequests_CreateFields => \@data } if @data;
+        }
+    }
+
     my %data = (
         %{ $self->service_defaults->{$values->{service_code} } },
         %req
@@ -516,6 +556,51 @@ sub ServiceRequests_Get {
     return $self->_wrapper('ServiceRequests_Get', 0, @_);
 }
 
+sub System_ExtendedDataDefinitions_Get {
+    my $self = shift;
+    return $self->_wrapper('System_ExtendedDataDefinitions_Get', 0, @_);
+}
+
+sub get_extended_data {
+    my $self = shift;
+
+    my $map = $self->memcache->get('extended_data_map');
+    unless ($map) {
+        my $extended = $self->System_ExtendedDataDefinitions_Get;
+        my %map;
+        my $records = $self->_coerce_to_array($extended, 'RecordDefinition' );
+        for my $data ( @$records ) {
+            my $name = $data->{ID};
+            my @values;
+            my $fields = $self->_coerce_to_array( $data->{Fields}, 'Field');
+            for my $field ( @$fields ) {
+                my $conf = {
+                    code => $field->{FieldName},
+                    name => $field->{FieldName},
+                    description => $field->{Caption},
+                    order => $field->{SequenceNumber},
+                    required => lc( $field->{Mandatory} ) eq 'true',
+                };
+                if ( $field->{ValueList} ) {
+                    my $values = $self->_coerce_to_array( $field->{ValueList}, 'Values' );
+                    my @answers = map {
+                        $_->{Value} =~ /(.+) -/;
+                        [ $_->{Value}, $1 ];
+                    } @$values;
+                    $conf->{values} = \@answers;
+                }
+                push @values, $conf;
+            }
+            $map{$name} = \@values;
+        }
+        $map = \%map;
+        $self->memcache->set('extended_data_map', $map, 1800);
+    }
+
+    return $map;
+}
+
+
 sub ServiceRequests_Detail_Get {
     my $self = shift;
     return $self->_wrapper('ServiceRequests_Detail_Get', 0, @_);
@@ -553,6 +638,16 @@ sub make_soap_structure {
         }
     }
     return @out;
+}
+
+sub _coerce_to_array {
+    my ( $self, $ref, $key ) = @_;
+
+    return [] unless $ref->{$key};
+
+    $ref = ref $ref->{$key} eq 'ARRAY' ? $ref->{$key} : [ $ref->{$key} ] ;
+
+    return $ref;
 }
 
 1;

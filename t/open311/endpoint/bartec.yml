@@ -11,6 +11,24 @@ service_map:
       group: Graffiti
       category: Offensive graffiti
 
+extended_data:
+   Rubbish (Street cleansing):
+    pcc-rubbish-type:
+      order: 1
+      name: RubbishType
+      description: Type of rubbish
+      required: 1
+      values:
+        - [ 'Paper', 'Paper' ]
+        - [ 'Food', 'Food waste' ]
+    pcc-rubbish-size:
+      order: 2
+      name: RubbishDepth
+      description: How much rubbish is there?
+      values:
+        - [ 'Lots', 'Lots' ]
+        - [ 'Some', 'Some' ]
+
 non_unique_services:
   - Rubbish
 

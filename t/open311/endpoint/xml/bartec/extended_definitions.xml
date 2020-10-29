@@ -1,0 +1,128 @@
+    <System_ExtendedDataDefinitions_GetResponse xmlns="http://bartec-systems.com/">
+      <System_ExtendedDataDefinitions_GetResult xmlns="http://www.bartec-systems.com/System_ExtendedDataDefinitions_Get.xsd" RecordCount="10">
+        <RecordDefinition>
+          <ID xmlns="http://www.bartec-systems.com">2</ID>
+          <RecordType xmlns="http://www.bartec-systems.com">
+            <ID>2</ID>
+            <Name>BusinessLayer.Premises.Service</Name>
+            <Description>Service Request meta data</Description>
+            <RecordStamp>
+              <AddedBy>sbeavers</AddedBy>
+              <DateAdded>2011-03-04T12:27:32.433</DateAdded>
+            </RecordStamp>
+          </RecordType>
+          <Name xmlns="http://www.bartec-systems.com">RUBBISH</Name>
+          <Description xmlns="http://www.bartec-systems.com">PARKS</Description>
+          <Fields xmlns="http://www.bartec-systems.com">
+            <Field>
+              <ID>6707</ID>
+              <SequenceNumber>10</SequenceNumber>
+              <FieldName>RubbishType</FieldName>
+              <DataType>list</DataType>
+              <Mandatory>true</Mandatory>
+              <UniqueValue>false</UniqueValue>
+              <Caption>Type of rubbish</Caption>
+              <Locked>false</Locked>
+              <Tooltip>LandType</Tooltip>
+              <InboundXMLTag/>
+              <Numeric>
+                <Minimum xsi:nil="true"/>
+                <Maximum xsi:nil="true"/>
+              </Numeric>
+              <Date>
+                <Minimum xsi:nil="true"/>
+                <Maximum xsi:nil="true"/>
+              </Date>
+              <String>
+                <Minimum xsi:nil="true"/>
+                <Maximum xsi:nil="true"/>
+              </String>
+              <ValueList>
+                <ID>662</ID>
+                <Name>Rubbish Type
+</Name>
+                <Description>Rubbish Type
+</Description>
+                <Values>
+                  <ID>2449</ID>
+                  <Sequence>10</Sequence>
+                  <Value>Paper - L01</Value>
+                </Values>
+                <Values>
+                  <ID>2450</ID>
+                  <Sequence>20</Sequence>
+                  <Value>Food - L02</Value>
+                </Values>
+                <RecordStamp>
+                  <AddedBy>proj_amiller</AddedBy>
+                  <DateAdded>2019-05-03T16:16:10.04</DateAdded>
+                </RecordStamp>
+              </ValueList>
+              <RecordStamp>
+                <AddedBy>PROJ_AMILLER</AddedBy>
+                <DateAdded>2019-05-03T16:27:14.01</DateAdded>
+                <Comments/>
+              </RecordStamp>
+            </Field>
+            <Field>
+              <ID>6708</ID>
+              <SequenceNumber>20</SequenceNumber>
+              <FieldName>RubbishDepth</FieldName>
+              <DataType>list</DataType>
+              <Mandatory>false</Mandatory>
+              <UniqueValue>false</UniqueValue>
+              <Caption>How much rubbish is there?</Caption>
+              <Locked>false</Locked>
+              <Tooltip>PrimaryWasteType</Tooltip>
+              <InboundXMLTag/>
+              <Numeric>
+                <Minimum xsi:nil="true"/>
+                <Maximum xsi:nil="true"/>
+              </Numeric>
+              <Date>
+                <Minimum xsi:nil="true"/>
+                <Maximum xsi:nil="true"/>
+              </Date>
+              <String>
+                <Minimum xsi:nil="true"/>
+                <Maximum xsi:nil="true"/>
+              </String>
+              <ValueList>
+                <ID>663</ID>
+                <Name>PrimaryWasteType
+</Name>
+                <Description>PrimaryWasteType
+</Description>
+                <Values>
+                  <ID>2459</ID>
+                  <Sequence>10</Sequence>
+                  <Value>Lots - W01</Value>
+                </Values>
+                <Values>
+                  <ID>2460</ID>
+                  <Sequence>20</Sequence>
+                  <Value>Some - W02</Value>
+                </Values>
+                <RecordStamp>
+                  <AddedBy>proj_amiller</AddedBy>
+                  <DateAdded>2019-05-03T16:22:47.22</DateAdded>
+                </RecordStamp>
+              </ValueList>
+              <RecordStamp>
+                <AddedBy>PROJ_AMILLER</AddedBy>
+                <DateAdded>2019-05-03T16:27:14.523</DateAdded>
+                <Comments/>
+              </RecordStamp>
+            </Field>
+          </Fields>
+          <RecordStamp xmlns="http://www.bartec-systems.com">
+            <AddedBy>proj_amiller</AddedBy>
+            <DateAdded>2019-05-03T16:26:26.51</DateAdded>
+          </RecordStamp>
+        </RecordDefinition>
+        <Errors>
+          <Result xmlns="http://www.bartec-systems.com">0</Result>
+          <Message xmlns="http://www.bartec-systems.com"/>
+        </Errors>
+      </System_ExtendedDataDefinitions_GetResult>
+    </System_ExtendedDataDefinitions_GetResponse>

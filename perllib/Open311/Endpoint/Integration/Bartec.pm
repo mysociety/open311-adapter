@@ -73,7 +73,7 @@ sub get_integration {
 sub services {
     my $self = shift;
     my $services = $self->get_integration->ServiceRequests_Types_Get;
-    $services = $self->_coerce_to_array( $services, 'ServiceType' );
+    $services = $self->get_integration->_coerce_to_array( $services, 'ServiceType' );
 
     my @services = map {
         my ($service_name, $class) = $self->_get_service_name($_);
@@ -132,7 +132,23 @@ sub service {
 
     my @services = grep { $_->service_code eq $id } $self->services;
 
-    return $services[0];
+    my $service = $services[0];
+    my $extended = $self->get_integration->service_extended_data_map;
+    if ( my $data = $extended->{ $id } ) {
+        for my $q ( sort { $a->{order} <=> $b->{order} } @$data ) {
+            my $a = Open311::Endpoint::Service::Attribute->new(
+                code => $q->{code},
+                variable => 1,
+                required => $q->{required} ? 1 : 0,
+                description => $q->{description},
+                datatype => 'singlevaluelist',
+                values => { map { $_->[0] => $_->[1] } @{ $q->{values} } },
+            );
+            push @{ $service->attributes }, $a;
+        }
+    }
+
+    return $service;
 }
 
 sub post_service_request {
@@ -231,7 +247,7 @@ sub get_uprn_for_street {
         usrn => $usrn,
     });
 
-    $premises = $self->_coerce_to_array($premises, 'Premises');
+    $premises = $self->get_integration->_coerce_to_array($premises, 'Premises');
 
     for my $p ( @{ $premises } ) {
         next unless $p->{Address}->{Address1} eq 'STREET RECORD';
@@ -367,12 +383,12 @@ sub get_service_request_updates {
     my $history_start_date = "1753-01-01T00:00:00Z";
 
     my @updates;
-    my $updates = $self->_coerce_to_array( $response, 'ServiceRequest_Updates' );
+    my $updates = $self->get_integration->_coerce_to_array( $response, 'ServiceRequest_Updates' );
     for my $update ( @$updates ) {
         my $history = $self->get_integration->ServiceRequests_History_Get( $update->{ServiceRequestID}, $history_start_date );
 
         next unless $history->{ServiceRequest_History};
-        my $entries = $self->_coerce_to_array( $history, 'ServiceRequest_History' );
+        my $entries = $self->get_integration->_coerce_to_array( $history, 'ServiceRequest_History' );
 
         for my $entry ( @$entries ) {
             my %args = (
@@ -412,7 +428,7 @@ sub get_service_requests {
 
     my @requests;
 
-    my $updates = $self->_coerce_to_array( $response, 'ServiceRequest_Updates' );
+    my $updates = $self->get_integration->_coerce_to_array( $response, 'ServiceRequest_Updates' );
     for my $update ( @$updates ) {
         my $res = $self->get_integration->ServiceRequests_Get( $update->{ServiceCode} );
 
@@ -525,16 +541,6 @@ sub _get_photos {
     } @$urls;
 
     return \@photos;
-}
-
-sub _coerce_to_array {
-    my ( $self, $ref, $key ) = @_;
-
-    return [] unless $ref->{$key};
-
-    $ref = ref $ref->{$key} eq 'ARRAY' ? $ref->{$key} : [ $ref->{$key} ] ;
-
-    return $ref;
 }
 
 __PACKAGE__->run_if_script;
