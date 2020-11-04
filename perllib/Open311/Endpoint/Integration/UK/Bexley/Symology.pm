@@ -29,4 +29,41 @@ sub event_action_event_type {
         : 'CCA'
     };
 }
+
+sub _row_status {
+    my ($self, $row) = @_;
+
+    return do {
+        my $maint_stage = $row->{'Maint. Stage'} || '';
+        my $action_due = $row->{'Action Due'} || '';
+        if ($maint_stage eq 'ORDERED') {
+            'investigating'
+        } elsif ($maint_stage eq 'COMMENCED' || $maint_stage eq 'ALLOCATED') {
+            'action_scheduled'
+        } elsif ($maint_stage =~ /COMPLETED|CLAIMED|APPROVED/) {
+            'fixed'
+        } elsif ($action_due eq 'CLEARREQ') {
+            'no_further_action'
+        } elsif ($action_due eq 'CR') {
+            'fixed'
+        } elsif ($action_due =~ /^[NS][1-6]$/) {
+            'in_progress'
+        } elsif ($action_due eq 'IR') {
+            'internal_referral'
+        } elsif ($action_due eq 'NCR') {
+            'not_councils_responsibility'
+        } elsif ($action_due =~ /^([NS]I[1-6]MOB|IPSGM|IGF|IABV)$/) {
+            'investigating'
+        } elsif ($action_due =~ /^PT[CS]$/) {
+            'action_scheduled'
+        } elsif ($row->{Stage} == 9) {
+            undef
+        } else {
+            'open' # XXX Might want to maintain existing status?
+        }
+    };
+}
+
+sub _row_description { '' } # lca description not used
+
 1;

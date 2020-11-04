@@ -336,36 +336,9 @@ sub _process_csv_row {
 
     my $dt = $self->date_formatter->parse_datetime($row->{date_history});
 
-    my $status = do {
-        my $maint_stage = $row->{'Maint. Stage'} || '';
-        my $action_due = $row->{'Action Due'} || '';
-        if ($maint_stage eq 'ORDERED') {
-            'investigating'
-        } elsif ($maint_stage eq 'COMMENCED' || $maint_stage eq 'ALLOCATED') {
-            'action_scheduled'
-        } elsif ($maint_stage =~ /COMPLETED|CLAIMED|APPROVED/) {
-            'fixed'
-        } elsif ($action_due eq 'CLEARREQ') {
-            'no_further_action'
-        } elsif ($action_due eq 'CR') {
-            'fixed'
-        } elsif ($action_due =~ /^[NS][1-6]$/) {
-            'in_progress'
-        } elsif ($action_due eq 'IR') {
-            'internal_referral'
-        } elsif ($action_due eq 'NCR') {
-            'not_councils_responsibility'
-        } elsif ($action_due =~ /^([NS]I[1-6]MOB|IPSGM|IGF|IABV)$/) {
-            'investigating'
-        } elsif ($action_due =~ /^PT[CS]$/) {
-            'action_scheduled'
-        } elsif ($row->{Stage} == 9) {
-            'IGNORE'
-        } else {
-            'open' # XXX Might want to maintain existing status?
-        }
-    };
-    return if $status eq 'IGNORE';
+    my $status = $self->_row_status($row);
+    return unless $status;
+    my $description = $self->_row_description($row);
 
     my $digest_key = join "-", map { $row->{$_} } sort keys %$row;
     my $digest = substr(md5_hex($digest_key), 0, 8);
@@ -374,7 +347,7 @@ sub _process_csv_row {
         status => $status,
         update_id => $update_id,
         service_request_id => $row->{CRNo}+0,
-        description => '', # lca description not used
+        description => $description,
         updated_datetime => $dt,
     );
 }
