@@ -26,4 +26,26 @@ sub process_service_request_args {
     return @args;
 }
 
+sub _get_csvs {
+    my $self = shift;
+
+    my $dir = $self->endpoint_config->{updates_sftp}->{out};
+    my @files = glob "$dir/*.CSV";
+    return \@files;
+}
+
+sub _row_description {
+    my ($self, $row) = @_;
+
+    return $row->{"LCA Description"};
+}
+
+sub _row_status {
+    my ($self, $row) = @_;
+
+    my $stage = $row->{"Stage Desc."};
+
+    return $self->endpoint_config->{stage_mapping}->{$stage};
+}
+
 1;
