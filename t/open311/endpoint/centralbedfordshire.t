@@ -7,6 +7,7 @@ use Test::More;
 use Test::MockModule;
 
 use JSON::MaybeXS;
+use Path::Tiny;
 
 use constant {
     REPORT_NSGREF => 0,
@@ -147,6 +148,13 @@ $centralbeds_end->mock(endpoint_config => sub {
                 questions => [],
                 logic => [],
             },
+        },
+        stage_mapping => {
+            RECORDED => 'open',
+            CLEARED => 'closed',
+        },
+        updates_sftp => {
+            out => path(__FILE__)->sibling('files/centralbedfordshire/updates')->stringify,
         },
     }
 });
@@ -396,6 +404,51 @@ subtest "POST update OK" => sub {
         [ {
             'update_id' => 789,
         } ], 'correct json returned';
+};
+
+subtest "GET updates OK" => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?start_date=2020-11-01T00:08:00Z&end_date=2020-11-01T10:00:00Z',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    my $response = decode_json($res->content);
+    is_deeply $response,
+        [
+            {
+                description => '',
+                media_url => '',
+                service_request_id => 789951,
+                status => 'open',
+                update_id => '789951_1cd1d8d5',
+                updated_datetime => '2020-11-01T08:05:00+00:00',
+            },
+            {
+                description => '',
+                media_url => '',
+                service_request_id => 789952,
+                status => 'open',
+                update_id => '789952_14f97f3a',
+                updated_datetime => '2020-11-01T08:56:00+00:00',
+            },
+            {
+                description => '',
+                media_url => '',
+                service_request_id => 789953,
+                status => 'open',
+                update_id => '789953_b0446ae3',
+                updated_datetime => '2020-11-01T09:35:00+00:00',
+            },
+            {
+                description => 'This has now been resolved.',
+                media_url => '',
+                service_request_id => 789951,
+                status => 'closed',
+                update_id => '789951_b287d6e6',
+                updated_datetime => '2020-11-01T09:59:00+00:00',
+            }
+        ], 'correct json returned';
 };
 
 done_testing;
