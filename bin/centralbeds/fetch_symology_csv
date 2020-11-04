@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -eu
+
+source /data/mysociety/shlib/deployfns
+read_conf "$(dirname "$0")/../../conf/council-centralbedfordshire_symology.yml"
+
+FLAG=${1-}
+
+if [[ "$FLAG" == "--summary" ]]; then
+    # Fetch the daily summary file - the file with yesterday's activities has
+    # today's timestamp, confusingly.
+    DATEPART=$(date "+%d%m%Y")
+    FILENAME="CSVSUM_${DATEPART}.CSV"
+else
+    # Files are generated on the hour and on the half hour, so try and fetch
+    # the most recent one.
+    DATEPART=$(date "+%d%m%Y")
+    TIMEPART=$(echo "$(date "+%H%M") - ($(date +%M)%30)"|bc)
+    FILENAME="CSVEXP_${DATEPART}_$TIMEPART.CSV"
+fi
+
+TMPDIR=$(mktemp -d) || exit 1
+trap 'rm -rf "$TMPDIR"' EXIT
+cd $TMPDIR
+
+curl -s -O -u $OPTION_updates_sftp__username:$OPTION_updates_sftp__password \
+    "sftp://$OPTION_updates_sftp__host$OPTION_updates_sftp__dir/$FILENAME" || ( echo "Couldn't fetch $FILENAME (curl exited with $?)" && exit 1 )
+mv $FILENAME $OPTION_updates_sftp__out

@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -eu
+
+source /data/mysociety/shlib/deployfns
+read_conf "$(dirname "$0")/../../conf/council-centralbedfordshire_symology.yml"
+
+# Delete any CSV files from before today's date.
+find $OPTION_updates_sftp__out -name '*.CSV' -not -name "*$(date "+%d%m%Y")*" -delete
