@@ -310,6 +310,7 @@ sub get_service_request_updates {
     my $start_time = $w3c->parse_datetime($args->{start_date});
     my $end_time = $w3c->parse_datetime($args->{end_date});
 
+    my %seen;
     my @updates;
     my $csv_files = $self->_get_csvs;
     foreach (@$csv_files) {
@@ -325,7 +326,14 @@ sub get_service_request_updates {
             my $dt = $self->date_formatter->parse_datetime($row->{date_history});
             next unless $dt >= $start_time && $dt <= $end_time;
 
-            push @updates, $self->_process_csv_row($row);
+            my $update = $self->_process_csv_row($row);
+            # The same row might appear in multiple files (e.g. for Central Beds
+            # each 30 minute CSV contains 90 minutes of data) so skip if we've
+            # already seen this row.
+            next if !$update || $seen{$update->update_id};
+
+            push @updates, $update;
+            $seen{$update->update_id} = 1;
         }
     }
 
