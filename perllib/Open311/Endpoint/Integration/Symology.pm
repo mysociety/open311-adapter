@@ -321,6 +321,7 @@ sub get_service_request_updates {
         } });
 
         while (my $row = $csv->getline_hr($fh)) {
+            next unless $row->{date_history};
             my $dt = $self->date_formatter->parse_datetime($row->{date_history});
             next unless $dt >= $start_time && $dt <= $end_time;
 
@@ -340,7 +341,7 @@ sub _process_csv_row {
     return unless $status;
     my $description = $self->_row_description($row);
 
-    my $digest_key = join "-", map { $row->{$_} } sort keys %$row;
+    my $digest_key = join "-", map { $row->{$_} || '' } sort keys %$row;
     my $digest = substr(md5_hex($digest_key), 0, 8);
     my $update_id = $row->{CRNo} . '_' . $digest;
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
