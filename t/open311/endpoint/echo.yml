@@ -1,0 +1,32 @@
+url: http://bromley-echo.example.org/
+username: username
+password: password
+
+service_whitelist:
+  missed: 'Report missed collection'
+  2104: 'Request new container'
+  2118: 'Gate not closed'
+  2119: 'Waste spillage'
+  2148: 'General Enquiry'
+
+service_to_event_type:
+  missed:
+    531: 2095
+    534: 2101
+    536: 2096
+
+service_id_override:
+  2104: 547
+
+data_key_open311_map:
+  First Name: 'first_name'
+  Surname: 'last_name'
+  Email Address: 'email'
+  Telephone: 'phone'
+
+default_data_all:
+  Source: 2
+
+default_data_event_type:
+  2104:
+    Reason: 7

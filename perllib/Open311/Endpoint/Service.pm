@@ -59,6 +59,12 @@ has attributes => (
     }
 );
 
+has allow_any_attributes => (
+    is => 'ro',
+    isa => Bool,
+    default => 0,
+);
+
 sub _build_attributes { [] }
 
 1;

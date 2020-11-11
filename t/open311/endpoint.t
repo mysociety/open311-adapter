@@ -295,6 +295,18 @@ subtest "POST Service Request validation" => sub {
         'attribute[shape]' => 'starfish',
     );
     ok ! $res->is_success, 'bad attribute';
+
+    $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'BIN',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        'attribute[shape]' => 'starfish',
+    );
+    ok $res->is_success, 'any attributes let through';
+    shift @{$endpoint->_requests}; # Remove after success
 };
 
 my $id = 0;
