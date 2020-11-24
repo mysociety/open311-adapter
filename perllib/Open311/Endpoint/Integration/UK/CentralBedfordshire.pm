@@ -126,14 +126,17 @@ sub _update_for_history_event {
     my $status = $self->_event_status($event);
     return unless $status;
     my $description = $self->_event_description($event);
-
     my $update_id = $crno . '_' . $event->{LineNo};
+    my $external_status = $event->{HistoryType};
+    $external_status = "${external_status}_" . $event->{HistoryEventType} if $external_status eq '21';
+
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
         status => $status,
         update_id => $update_id,
         service_request_id => $crno,
         description => $description,
         updated_datetime => $dt,
+        external_status_code => $external_status,
     );
 }
 
