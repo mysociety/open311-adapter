@@ -96,7 +96,8 @@ sub _updates_for_crno {
 
     if (($response->{StatusCode}//-1) != 0) {
         my $error = $response->{StatusMessage};
-        $self->log_and_die("Couldn't call GetRequestAdditionalGroup for CRNo $crno: $error");
+        $self->logger->warn("Couldn't call GetRequestAdditionalGroup for CRNo $crno: $error");
+        return [];
     }
 
     my $history = $response->{Request}->{EventHistory}->{EventHistoryGet};
