@@ -1,8 +1,40 @@
 endpoint_url: ''
 username: FMS
-update_urls:
-  - https://...
-  - https://...
+
+# Central Beds doesn't fetch updates directly from a Symology HTTP URL,
+update_urls: []
+
+# instead they're fetched from SFTP and cached locally by fetch_symology_csv
+updates_sftp:
+  username: USER
+  password: PASSWORD
+  host: sftp.example.org
+  # the directory to fetch files from
+  dir: /csvs
+  # the local directly to store/read CSVs
+  out: /data/vhost/foo.example.org/symology_csvs/centralbedfordshire
+
+
+# This maps the event codes from within Symology to Open311 statuses.
+event_status_mapping:
+  # It can either be a simple mapping from HistoryType to a status code:
+  "20": closed # Inspection cleared
+  # Or a slightly more complex mapping for a specific HistoryType:
+  "21": # Event Recorded
+    field: HistoryEventType # This is the field in the event to look up
+    values:
+      # And then the mapping of that field's value to Open311 status
+      GN01: no_further_action
+      GN02: closed
+      GN03: action_scheduled
+
+
+# This config maps the incoming area_code Open311 ServiceRequest attribute
+# to the NextActionUserName field when raising an enquiry in Symology.
+area_to_username:
+  Area1: XY000348
+  Area2: XY000349
+  Area3: XY000350
 
 customer_defaults:
   CustomerType: ""
@@ -47,6 +79,5 @@ category_mapping:
       AnalysisCode1: Code
       AnalysisCode2: Code
 
-nsgref_to_action:
-  ref: A1
-  ref2: B3
+# Not used by Central Beds.
+nsgref_to_action: {}

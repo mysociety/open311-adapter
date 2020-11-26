@@ -8,6 +8,7 @@ use Test::MockModule;
 
 use JSON::MaybeXS;
 use Path::Tiny;
+use Encode;
 
 use constant {
     REPORT_NSGREF => 0,
@@ -28,6 +29,8 @@ use constant {
     REPORT_NEXTINSPECTION => 15,
     REPORT_NEXTACTIONUSERNAME => 16,
     UPDATE_REPORT_ID => 123,
+    REQUEST_SERVICE_CODE => 1,
+    REQUEST_CRNO => 2,
 };
 
 use constant {
@@ -100,6 +103,10 @@ $soap_lite->mock(call => sub {
                 }
             }
         };
+    } elsif ($args[0] eq 'GetRequestAdditionalGroup') {
+        is $args[REQUEST_SERVICE_CODE]->value, "SERV";
+        is $args[REQUEST_CRNO]->value, "789951";
+        return decode_json(encode_utf8(path(__FILE__)->sibling("files/centralbedfordshire/json/GetRequestAdditionalGroup/789951.json")->slurp));
     } else {
         is $args[0], '';
     }
@@ -149,9 +156,15 @@ $centralbeds_end->mock(endpoint_config => sub {
                 logic => [],
             },
         },
-        stage_mapping => {
-            RECORDED => 'open',
-            CLEARED => 'closed',
+        event_status_mapping => {
+            "20" => "closed", # Inspection cleared
+            "21" => { # Event Recorded
+                field => "HistoryEventType",
+                values => {
+                    GN02 => "closed",
+                    GN03 => "action_scheduled",
+                },
+            },
         },
         updates_sftp => {
             out => path(__FILE__)->sibling('files/centralbedfordshire/updates')->stringify,
@@ -417,36 +430,22 @@ subtest "GET updates OK" => sub {
     is_deeply $response,
         [
             {
-                description => '',
+                description => "This has been added to the crew's schedule.",
                 media_url => '',
                 service_request_id => 789951,
-                status => 'open',
-                update_id => '789951_1cd1d8d5',
+                status => 'action_scheduled',
+                update_id => '789951_2',
                 updated_datetime => '2020-11-01T08:05:00+00:00',
-            },
-            {
-                description => '',
-                media_url => '',
-                service_request_id => 789952,
-                status => 'open',
-                update_id => '789952_14f97f3a',
-                updated_datetime => '2020-11-01T08:56:00+00:00',
-            },
-            {
-                description => '',
-                media_url => '',
-                service_request_id => 789953,
-                status => 'open',
-                update_id => '789953_b0446ae3',
-                updated_datetime => '2020-11-01T09:35:00+00:00',
+                external_status_code => '21_GN03',
             },
             {
                 description => 'This has now been resolved.',
                 media_url => '',
                 service_request_id => 789951,
                 status => 'closed',
-                update_id => '789951_b287d6e6',
+                update_id => '789951_4',
                 updated_datetime => '2020-11-01T09:59:00+00:00',
+                external_status_code => '20',
             }
         ], 'correct json returned';
 };
