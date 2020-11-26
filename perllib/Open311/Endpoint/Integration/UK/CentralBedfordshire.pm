@@ -47,7 +47,11 @@ sub _event_status {
 
     my $map = $self->endpoint_config->{event_status_mapping}->{$event->{HistoryType}};
     return unless $map;
-    return $map->{$event->{HistoryEventType}};
+    return ( $map, $event->{HistoryType} ) unless ref $map eq 'HASH';
+    my $field = $map->{field};
+    my $external_status = $event->{HistoryType} . "_" . $event->{$field};
+    $map = $map->{values};
+    return ( $map->{$event->{$field}}, $external_status );
 }
 
 sub get_service_request_updates {
@@ -124,12 +128,10 @@ sub _updates_for_crno {
 sub _update_for_history_event {
     my ($self, $event, $crno, $dt) = @_;
 
-    my $status = $self->_event_status($event);
+    my ($status, $external_status) = $self->_event_status($event);
     return unless $status;
     my $description = $self->_event_description($event);
     my $update_id = $crno . '_' . $event->{LineNo};
-    my $external_status = $event->{HistoryType};
-    $external_status = "${external_status}_" . $event->{HistoryEventType} if $external_status eq '21';
 
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
         status => $status,
