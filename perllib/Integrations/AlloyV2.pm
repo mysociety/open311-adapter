@@ -243,7 +243,7 @@ sub search {
         );
     }
 
-    my $result_count = $stats->{result};
+    my $result_count = $stats->{results}[0]{value}{value} + 0;
     return [] unless $result_count;
 
     my $maxPages = 100;

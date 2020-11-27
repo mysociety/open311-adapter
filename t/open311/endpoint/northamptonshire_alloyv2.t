@@ -113,16 +113,12 @@ $integration->mock('api_call', sub {
         } elsif ( $call eq 'item' ) {
             $content = '{ "item": { "itemId": 12345 } }';
         } elsif ( $call =~ 'aqs/statistics' ) {
-            $content = '{ "result": 4.0 }';
+            $content = '{ "page":1,"pageSize":20,"results":[{"value":{"attributeCode":"attributes_fake","value":4.0}}] }';
         } elsif ( $call =~ 'aqs/query' ) {
             my $type = $body->{properties}->{dodiCode};
             my $time = $body->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
             $content = '{}';
             if ($type eq 'designs_fMSContacts1001214_5d321178fe2ad80354bbc0a7') {
-                my $search = $body->{children}->[0]->{children}->[0]->{properties}->{value}->[0];
-                if ( $search eq 'exists@example.com' ) {
-                    $content = '{ "page": 1, "results": [ { "itemId": 708824 } ] }';
-                }
             } elsif ($type eq 'designs_listFixMyStreetCategories1001257_5d3210e1fe2ad806f8df98c1') {
                 $content = path(__FILE__)->sibling('json/alloyv2/categories_search.json')->slurp;
             } elsif ( $type =~ /DEFECT/i ) {
