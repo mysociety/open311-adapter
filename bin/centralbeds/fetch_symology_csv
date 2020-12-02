@@ -7,6 +7,10 @@ read_conf "$(dirname "$0")/../../conf/council-centralbedfordshire_symology.yml"
 
 FLAG=${1-}
 
+# Ensure that the SSH keys for the SFTP server have been accepted
+[ -e ~/.ssh/known_hosts ] || install -D -m 0644 /dev/null ~/.ssh/known_hosts
+grep $OPTION_updates_sftp__host ~/.ssh/known_hosts >/dev/null || ssh-keyscan $OPTION_updates_sftp__host >> ~/.ssh/known_hosts
+
 if [[ "$FLAG" == "--summary" ]]; then
     # Fetch the daily summary file
     DATEPART=$(date -d "now - 1 day" "+%d%m%Y")
