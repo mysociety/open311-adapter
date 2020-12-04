@@ -60,6 +60,11 @@ has customer_defaults => (
     default => sub { $_[0]->endpoint_config->{customer_defaults} }
 );
 
+has external_id_prefix => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{external_id_prefix} || "" }
+);
+
 # May want something like Confirm's service_assigned_officers
 
 sub services {
@@ -129,6 +134,8 @@ sub process_service_request_args {
             $request->{$_} = delete $args->{attributes}->{$_};
         }
     }
+
+    $request->{fixmystreet_id} = $self->external_id_prefix . $request->{fixmystreet_id};
 
     if ($args->{media_url}->[0]) {
         foreach my $photo_url (@{ $args->{media_url} }) {
@@ -235,7 +242,7 @@ sub process_service_request_update_args {
         Description => $args->{description},
         ServiceCode => $codes->{parameters}{ServiceCode},
         CRNo => $args->{service_request_id},
-        fixmystreet_id => $args->{service_request_id_ext},
+        fixmystreet_id => $self->external_id_prefix . $args->{service_request_id_ext},
         UserName => $self->username,
     };
     $request->{EventType} = $self->event_action_event_type($request);

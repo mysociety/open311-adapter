@@ -56,6 +56,8 @@ $soap_lite->mock(call => sub {
         is $request[REPORT_DESC]->value, "This is the details$photo_desc\n\nBurnt out?: $burnt\n\nCar details: M4 GIC, red Ford Focus";
         is $request[REPORT_PRIORITY]->value, $request[REPORT_EASTING]->value == EASTING_GOOD_BURNT ? 'P1' : "N";
         if ($request[REPORT_EASTING]->value == EASTING_BAD) {
+            is $request[REPORT_INWEB]->value, "123";
+            is $request[REPORT_REF]->value, "123";
             return {
                 StatusCode => 1,
                 StatusMessage => 'Failed',

@@ -61,6 +61,8 @@ $soap_lite->mock(call => sub {
         is $request[REPORT_PRIORITY]->value, ($request[REPORT_REQUEST_TYPE]->value eq "Bridges" ? 'Priority1' : 'Priority2');
         if ( $request[REPORT_REQUEST_TYPE]->value eq "Potholes" ) {
             is $request[REPORT_NEXTACTIONUSERNAME]->value, 'POT00001';
+            is $request[REPORT_INWEB]->value, "FMS456";
+            is $request[REPORT_REF]->value, "FMS456";
         } elsif ( $request[REPORT_EASTING]->value == EASTING_AREAA ) {
             is $request[REPORT_NEXTACTIONUSERNAME]->value, 'USER0001';
         } elsif ( $request[REPORT_EASTING]->value == EASTING_AREAB ) {
@@ -91,9 +93,7 @@ $soap_lite->mock(call => sub {
     } elsif ($args[0] eq 'SendEventAction') {
         my @request = map { $_->value } ${$args[2]->value}->value;
         my $photo_desc = "\n\n[ This update contains a photo, see: http://example.org/photo/1.jpeg ]";
-        my $report_id = $request[2];
-        my $code = 'GN11';
-        is_deeply \@request, [ 'ServiceCode', 1001, $report_id, $code, '', 'FMS', "This is the update$photo_desc" ];
+        is_deeply \@request, [ 'ServiceCode', 1001, "FMS123", "GN11", '', 'FMS', "This is the update$photo_desc" ];
         return {
             StatusCode => 0,
             StatusMessage => 'Event Loaded',
@@ -169,6 +169,7 @@ $centralbeds_end->mock(endpoint_config => sub {
         updates_sftp => {
             out => path(__FILE__)->sibling('files/centralbedfordshire/updates')->stringify,
         },
+        external_id_prefix => "FMS",
     }
 });
 
