@@ -12,6 +12,10 @@ service_map:
     General:
       group: Graffiti
       category: Offensive graffiti
+  Missed bin:
+    Missed food:
+      group: Missed collection
+      category: Food
 
 extended_data:
    Rubbish (Street cleansing):
@@ -64,3 +68,6 @@ uprn_lookup:
 address_match:
   100:
     - OPEN SPACE
+
+service_keywords:
+  6: [ waste_only ]

@@ -75,6 +75,8 @@ sub services {
     my $services = $self->get_integration->ServiceRequests_Types_Get;
     $services = $self->get_integration->_coerce_to_array( $services, 'ServiceType' );
 
+    my $keywords_map = $self->get_integration->config->{service_keywords};
+
     my @services = map {
         my ($service_name, $class) = $self->_get_service_name($_);
 
@@ -83,6 +85,7 @@ sub services {
             service_code => $_->{ID},
             description => $_->{Description},
             groups => [ $class ],
+            keywords => $keywords_map->{$_->{ID}} || [],
       );
     } grep { $self->_allowed_service($_) } @$services;
     return @services;
