@@ -38,6 +38,18 @@ sub credentials {
     );
 }
 
+sub collective_endpoint {
+    my $config = $_[0]->config;
+
+    return $config->{collective_endpoint};
+}
+
+sub auth_endpoint {
+    my $config = $_[0]->config;
+
+    return $config->{auth_endpoint};
+}
+
 sub log_message {
     # uncoverable subroutine
     # uncoverable statement
@@ -158,9 +170,11 @@ has service_extended_data_map => (
 
 
 sub _methods {
+    my $self = shift;
+
     return {
         'Authenticate' => {
-            endpoint   => 'https://collapi.bartec-systems.com/CollAuth/Authenticate.asmx',
+            endpoint   => $self->auth_endpoint,
             soapaction => 'http://bartec-systems.com/Authenticate',
             namespace  => 'http://bartec-systems.com/',
             parameters => [
@@ -169,13 +183,13 @@ sub _methods {
             ],
         },
         'Premises_Get' => {
-            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/Premises_Get',
             namespace  => 'http://bartec-systems.com/',
             parameters => [],
         },
         'ServiceRequests_Types_Get' => {
-            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/ServiceRequests_Types_Get',
             namespace  => 'http://bartec-systems.com/',
             parameters => [
@@ -183,7 +197,7 @@ sub _methods {
             ],
         },
         'ServiceRequests_Notes_Types_Get' => {
-            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/ServiceRequests_Notes_Types_Get',
             namespace  => 'http://bartec-systems.com/',
             parameters => [
@@ -191,7 +205,7 @@ sub _methods {
             ],
         },
         'ServiceRequests_Updates_Get' => {
-            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/ServiceRequests_Updates_Get',
             namespace  => 'http://bartec-systems.com/',
             parameters => [
@@ -200,7 +214,7 @@ sub _methods {
             ],
         },
         'ServiceRequests_History_Get' => {
-            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/ServiceRequests_History_Get',
             namespace  => 'http://bartec-systems.com/',
             parameters => [
@@ -211,25 +225,25 @@ sub _methods {
             ],
         },
         'ServiceRequests_Create' => {
-            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/ServiceRequests_Create',
             namespace  => 'http://bartec-systems.com/',
             parameters => [],
         },
         'Service_Request_Document_Create' => {
-            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/Service_Request_Document_Create',
             namespace  => 'http://bartec-systems.com/',
             parameters => [],
         },
         'ServiceRequests_Notes_Create' => {
-            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/ServiceRequests_Notes_Create',
             namespace  => 'http://bartec-systems.com/',
             parameters => [],
         },
         'System_ExtendedDataDefinitions_Get' => {
-            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/System_ExtendedDataDefinitions_Get',
             namespace  => 'http://bartec-systems.com/',
             parameters => [
@@ -238,7 +252,7 @@ sub _methods {
             ],
         },
         'ServiceRequests_Get' => {
-            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/ServiceRequests_Get',
             namespace  => 'http://bartec-systems.com/',
             parameters => [
@@ -247,7 +261,7 @@ sub _methods {
             ],
         },
         'ServiceRequests_Detail_Get' => {
-            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/ServiceRequests_Detail_Get',
             namespace  => 'http://bartec-systems.com/',
             parameters => [
@@ -256,7 +270,7 @@ sub _methods {
             ],
         },
         'ServiceRequests_Statuses_Get' => {
-            endpoint   => 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx',
+            endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/ServiceRequests_Statuses_Get',
             namespace  => 'http://bartec-systems.com/',
             parameters => [
