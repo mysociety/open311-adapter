@@ -1,5 +1,7 @@
 username: username
 password: password
+collective_endpoint: https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx
+auth_endpoint: https://collapi.bartec-systems.com/CollAuth/Authenticate.asmx
 
 allowed_services:
   - Leaf Removal
