@@ -202,6 +202,15 @@ subtest "check fetch service description" => sub {
         keywords => "",
         groups => [ "Graffiti" ]
     },
+    {
+        service_code => "6",
+        service_name => "Food",
+        description => "Food",
+        metadata => 'true',
+        type => "realtime",
+        keywords => "waste_only",
+        groups => [ "Missed collection" ]
+    },
     ],
     'correct services returned';
 };
