@@ -152,7 +152,7 @@ sub raise_defect {
     my $data = {
         wdminstruction => {
             external_system_reference => $args->{service_request_id}, # XXX OR WDM REF?
-            usrn => $attrs->{usrn} || '',
+            usrn => 0, # Ignore provided USRN
             comments => $attrs->{extra_details},
             location_description => $attrs->{defect_location_description} || '',
             item_category_uid => $defect_mapping->{category}{$attrs->{defect_item_category} || ''} || '',

@@ -703,7 +703,7 @@ subtest "post update that is a defect" => sub {
   <location_description>Location</location_description>
   <northing>300</northing>
   <response_time_uid>73</response_time_uid>
-  <usrn>40066632</usrn>
+  <usrn>0</usrn>
 </wdminstruction>
 ',
     'correct xml sent';
