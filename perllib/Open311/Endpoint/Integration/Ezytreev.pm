@@ -132,7 +132,7 @@ sub get_service_request_updates {
         next unless substr($enquiry->{CRMXRef}, 0, 4) eq 'fms:';
         foreach my $enquiry_status (@{$enquiry->{StatusHistory}}) {
             # Ignore updates created by FMS
-            next if $enquiry_status->{StatusByName} eq 'CRM System';
+            next if ($enquiry_status->{StatusByName} || '') eq 'CRM System';
 
             # Ignore updates that relate to creating/attaching order items as
             # these result in duplicate status updates appearing for the same

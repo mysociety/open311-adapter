@@ -91,7 +91,7 @@ sub _send_request {
         }
 
         die sprintf(
-            "Error fetching from SalesForce: %s (%d)\n",
+            "Error fetching from SalesForce: %s (%s)\n",
             $message,
             $code
         );

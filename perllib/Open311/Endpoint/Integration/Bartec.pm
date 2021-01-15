@@ -413,8 +413,10 @@ sub _get_update_status {
 
     my $status = $conf->{status_map}->{ $update->{ServiceStatusName} };
 
-    my $mapped = $conf->{closing_code_map}->{ $update->{ServiceStatusName} }->{ $update->{ClosingCode} };
-    return $mapped if $mapped && $update->{ClosingCode};
+    if ($update->{ClosingCode}) {
+        my $mapped = $conf->{closing_code_map}->{ $update->{ServiceStatusName} }->{ $update->{ClosingCode} };
+        return $mapped if $mapped;
+    }
 
     return $status;
 }

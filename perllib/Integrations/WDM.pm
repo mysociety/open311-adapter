@@ -189,7 +189,7 @@ sub get_updates {
     my $response = $self->_soap_call($self->updates_endpoint, 'GetWdmUpdates', $data);
 
     my $xml = $response->valueof('//GetWdmUpdatesResponse/GetWdmUpdatesResult/NewDataSet');
-    return [] if $xml->{wdmupdate} eq "";
+    return [] unless $xml->{wdmupdate};
     my $updates = $xml->{wdmupdate};
 
     # a single updates returns a hashref not an array
