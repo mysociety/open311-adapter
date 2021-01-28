@@ -287,10 +287,12 @@ sub check_error {
     my $result = $response->{$type."Results"}->{$type."ResultRow"};
     $result = [ $result ] if ref $result ne 'ARRAY';
     foreach (@$result) {
-        $error .= " - $_->{MessageText}" if $_->{RecordType} == 1;
-        if ($_->{RecordType} == 2 && $type eq 'SendRequest') {
-            $crno = $_->{ConvertCRNo};
-            $error .= " - created request $crno";
+        if ($_->{RecordType}) {
+            $error .= " - $_->{MessageText}" if $_->{RecordType} == 1;
+            if ($_->{RecordType} == 2 && $type eq 'SendRequest') {
+                $crno = $_->{ConvertCRNo};
+                $error .= " - created request $crno";
+            }
         }
     }
 
