@@ -100,7 +100,7 @@ sub post_request {
     my $response = $self->soap_post($self->requests_endpoint, 'CreateEnquiry', 'xDoc', $self->_create_xml_string($data));
 
 
-    my $resp_text = $response->valueof('//CreateEnquiryResponse/CreateEnquiryResult');
+    my $resp_text = $response->valueof('//CreateEnquiryResponse/CreateEnquiryResult') || 'No Enquiry Response';
     if ($resp_text eq 'OK' || $resp_text =~ /Thank you for your feed back/ || $resp_text =~ /External system reference '$fms_id' already exists in database/) {
         # WDM doesn't return a reference in the response to new enquiries so we have
         # to use the FMS ID, which WDM includes when fetching updates.
