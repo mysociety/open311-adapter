@@ -132,8 +132,7 @@ $integration->mock('_soap_call', sub {
     return $som;
 });
 
-my $ox_integration = Test::MockModule->new('Integrations::WDM');
-$ox_integration->mock('_build_config_file', sub {
+$integration->mock('_build_config_file', sub {
     path(__FILE__)->sibling('oxfordshire.yml');
 });
 
@@ -301,6 +300,47 @@ for my $category (
         is $sent->{content}, _generate_request_xml($args), 'correct xml sent';
     }
 }
+
+subtest 'create already existing problem' => sub {
+    my $current = $responses{'SOAP CreateEnquiry'};
+    $responses{'SOAP CreateEnquiry'} = '
+        <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+          <soap:Body>
+            <CreateEnquiryResponse xmlns="http://www.wdm.co.uk/remedy/">
+              <CreateEnquiryResult>An exception occurred adding a new enquiry.
+                Error: External system reference \'123456\' already exists in database.
+              </CreateEnquiryResult>
+            </CreateEnquiryResponse>
+          </soap:Body>
+        </soap:Envelope>';
+    my $args = { %defaults, fms_id => 123456 };
+    my %post_args = (
+        jurisdiction_id => 'oxfordshire',
+        api_key => 'test',
+        service_code => $args->{category},
+        address_string => $args->{address_string},
+        first_name => $args->{firstname},
+        last_name => $args->{lastname},
+        email => $args->{email},
+        description => $args->{description},
+        lat => $args->{latitude},
+        long => $args->{longitude},
+        'attribute[description]' => $args->{description},
+        'attribute[external_id]' => $args->{fms_id},
+        'attribute[easting]' => $args->{easting},
+        'attribute[northing]' => $args->{northing},
+        'attribute[usrn]' => $args->{usrn},
+    );
+
+    my $res = $endpoint->run_test_request( POST => '/requests.json', %post_args );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is $sent->{content}, _generate_request_xml($args), 'correct xml sent';
+    $responses{'SOAP CreateEnquiry'} = $current;
+};
 
 subtest "create problem with multiple photos" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');

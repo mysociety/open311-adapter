@@ -54,6 +54,7 @@ sub parse_w3c_datetime {
 sub post_request {
     my ($self, $service, $args) = @_;
 
+    my $fms_id = $args->{attributes}->{external_id};
     my $name = join(' ', ($args->{first_name}, $args->{last_name}));
 
     my $tz = DateTime::TimeZone->new( name => 'Europe/London' );
@@ -89,7 +90,7 @@ sub post_request {
                 email => $args->{email} || '',
                 telephone_number => $args->{phone} || '',
             },
-            external_system_reference => $args->{attributes}->{external_id},
+            external_system_reference => $fms_id,
         }
     };
     if ( defined $args->{media_url} && @{$args->{media_url}} ) {
@@ -100,10 +101,10 @@ sub post_request {
 
 
     my $resp_text = $response->valueof('//CreateEnquiryResponse/CreateEnquiryResult');
-    if ($resp_text eq 'OK' || $resp_text =~ /Thank you for your feed back/) {
+    if ($resp_text eq 'OK' || $resp_text =~ /Thank you for your feed back/ || $resp_text =~ /External system reference '$fms_id' already exists in database/) {
         # WDM doesn't return a reference in the response to new enquiries so we have
         # to use the FMS ID, which WDM includes when fetching updates.
-        return $args->{attributes}->{external_id};
+        return $fms_id;
     } else {
         die $resp_text;
     }
