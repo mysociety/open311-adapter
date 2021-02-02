@@ -61,7 +61,7 @@ sub _map_with_new_id {
                 } else {
                     $params{$attribute} = "$name-" . $result->$attribute;
                     # Also need to update the relevant request ID if it's an update
-                    if ($attribute eq 'update_id') {
+                    if ($attribute eq 'update_id' && $result->service_request_id) {
                         $params{service_request_id} = "$name-" . $result->service_request_id;
                     }
                 }
