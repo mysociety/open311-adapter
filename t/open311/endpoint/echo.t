@@ -23,6 +23,7 @@ package main;
 
 use strict;
 use warnings;
+use utf8;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
@@ -82,7 +83,11 @@ $soap_lite->mock(call => sub {
         } elsif ($event_type == EVENT_TYPE_ENQUIRY) {
             my @notes = ${$data[3]->value}->value;
             is $notes[0]->value, 1008;
-            is $notes[1]->value, 'These are some notes';
+            is $notes[1]->value, 'These are some notes 🎉';
+
+            # Check serialisation as well
+            my $envelope = $cls->serializer->envelope(method => $method, @notes);
+            like $envelope, qr/These are some notes 🎉/;
         }
 
         my $client_ref = $params[1]->value;
@@ -270,7 +275,7 @@ subtest "POST general enquiry OK" => sub {
         'attribute[service_id]' => 531, # Domestic refuse
         'attribute[uprn]' => 1000001,
         'attribute[fixmystreet_id]' => 2000123,
-        'attribute[Notes]' => "These are some notes",
+        'attribute[Notes]' => "These are some notes 🎉",
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;

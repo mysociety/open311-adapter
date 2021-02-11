@@ -25,6 +25,10 @@ has endpoint => (
         $soap->on_action( sub { $self->action . $_[1]; } );
         $soap->on_fault(sub { my($soap, $res) = @_; die ref $res ? $res->fault->{Reason}{Text} : $soap->transport->status, "\n"; });
         $soap->serializer->register_ns("http://schemas.microsoft.com/2003/10/Serialization/Arrays", 'msArray'),
+        # Prevent Base64 encoding
+        my $lookup = $soap->serializer->typelookup;
+        $lookup->{base64Binary}->[0] = 1000;
+        $soap->serializer->typelookup($lookup);
         return $soap;
     },
 );
