@@ -92,12 +92,17 @@ has service_defaults => (
         my $self = shift;
         my $services = $self->ServiceRequests_Types_Get;
 
+        # Some services don't seem to have a default land type set, but
+        # ServiceRequests_Create nevertheless fails if the value isn't set -
+        # so have a fallback value in config in case it's needed.
+        my $fallback_land_type = $self->config->{fallback_land_type};
+
         my %defaults;
         for my $service ( @{ $services->{ServiceType} } ) {
             $defaults{ $service->{ID} } = {
                 CrewID => $service->{DefaultCrew}->{ID},
                 SLAID => $service->{DefaultSLA}->{ID},
-                LandTypeID => $service->{DefaultLandType}->{ID},
+                LandTypeID => $service->{DefaultLandType}->{ID} || $fallback_land_type,
             };
         }
 
