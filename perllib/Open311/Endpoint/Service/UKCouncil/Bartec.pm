@@ -80,6 +80,13 @@ sub _build_attributes {
             required => 0,
             automated => "server_set",
         ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => "uprn",
+            description => "UPRN",
+            datatype => "string",
+            required => 0,
+            automated => "hidden_field",
+        ),
     );
 
     return \@attributes;
