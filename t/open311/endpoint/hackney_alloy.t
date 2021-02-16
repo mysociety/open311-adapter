@@ -106,7 +106,7 @@ $integration->mock('api_call', sub {
         $sent{$call} = $body;
         push @sent, $body;
         if ( $call =~ 'aqs/statistics' ) {
-            $content = '{ "result": 4.0 }';
+            $content = '{ "page":1,"pageSize":20,"results":[{"value":{"attributeCode":"attributes_fake","value":4.0}}] }';
         } elsif ( $call =~ 'aqs/query' ) {
             my $type = $body->{properties}->{dodiCode};
             my $time = $body->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
