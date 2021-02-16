@@ -158,7 +158,7 @@ sub post_service_request {
     my $integ = $self->get_integration;
     my $config = $integ->config;
 
-    $args->{uprn} = $self->get_nearest_uprn($args);
+    $args->{uprn} = $args->{attributes}->{uprn} || $self->get_nearest_uprn($args);
 
     # remove cruft
     $args->{attributes}->{closest_address} =~ s/^Nearest[^:]*: //;
