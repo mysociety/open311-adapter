@@ -115,8 +115,8 @@ $integration->mock('api_call', sub {
         } elsif ( $call =~ 'aqs/statistics' ) {
             $content = '{ "page":1,"pageSize":20,"results":[{"value":{"attributeCode":"attributes_fake","value":4.0}}] }';
         } elsif ( $call =~ 'aqs/query' ) {
-            my $type = $body->{properties}->{dodiCode};
-            my $time = $body->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
+            my $type = $body->{aqs}->{properties}->{dodiCode};
+            my $time = $body->{aqs}->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
             $content = '{}';
             if ($type eq 'designs_fMSContacts1001214_5d321178fe2ad80354bbc0a7') {
             } elsif ($type eq 'designs_listFixMyStreetCategories1001257_5d3210e1fe2ad806f8df98c1') {

@@ -239,7 +239,7 @@ sub search {
 
         $stats = $self->api_call(
             call => "aqs/statistics",
-            body => $stats_body
+            body => { aqs => $stats_body },
         );
     }
 
@@ -259,7 +259,7 @@ sub search {
         my $result = $self->api_call(
             call => "aqs/query",
             params => { page => $page, pageSize => $pageSize },
-            body => $query_body
+            body => { aqs => $query_body },
         );
 
         $page++;

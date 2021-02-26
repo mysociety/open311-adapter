@@ -115,8 +115,8 @@ $integration->mock('api_call', sub {
         } elsif ( $call =~ 'aqs/statistics' ) {
             $content = '{ "page":1,"pageSize":20,"results":[{"value":{"attributeCode":"attributes_fake","value":4.0}}] }';
         } elsif ( $call =~ 'aqs/query' ) {
-            my $type = $body->{properties}->{dodiCode};
-            my $time = $body->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
+            my $type = $body->{aqs}->{properties}->{dodiCode};
+            my $time = $body->{aqs}->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
             $content = '{}';
             if ( $type =~ /DEFECT/i ) {
                 if ( $time =~ /2019-01-02/ ) {
@@ -125,7 +125,7 @@ $integration->mock('api_call', sub {
                     $content = path(__FILE__)->sibling('json/alloyv2/defect_search.json')->slurp;
                 }
             } elsif ($type eq 'designs_fMSContacts1001214_5d321178fe2ad80354bbc0a7') {
-                my $search = $body->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
+                my $search = $body->{aqs}->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
                 if ( $search eq 'exists@example.com' ) {
                     $content = '{ "page": 1, "results": [ { "itemId": 708824, "attributes": [ { "attributeCode": "attributes_fMSContacts1001214Email1010922_5d321186fe2ad806f8df9a10", "value": "exists@example.com" } ] } ] }';
                 } elsif ( $search eq 'doesntexist@example.com' ) {
