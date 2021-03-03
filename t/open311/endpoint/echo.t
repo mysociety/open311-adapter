@@ -36,6 +36,7 @@ use JSON::MaybeXS;
 use constant EVENT_TYPE_MISSED => 2096;
 use constant EVENT_TYPE_REQUEST => 2104;
 use constant EVENT_TYPE_ENQUIRY => 2148;
+use constant EVENT_TYPE_SUBSCRIBE => 2106;
 
 my $soap_lite = Test::MockModule->new('SOAP::Lite');
 $soap_lite->mock(call => sub {
@@ -56,12 +57,29 @@ $soap_lite->mock(call => sub {
         if ($event_type == EVENT_TYPE_REQUEST) {
             is $service_id, 547, 'Service ID overriden for a new container request';
         }
+
+        # Check the UPRN has been included
+        my @event_object = ${${$params[2]->value}->value->value}->value;
+        is $event_object[0]->value, 'Source';
+        my @object_ref = ${$event_object[1]->value}->value;
+        is $object_ref[0]->value, 'Uprn';
+        is $object_ref[1]->value, 'PointAddress';
+        my $uprn = ${$object_ref[2]->value}->value->value->value->value;
+
         my @data = ${$params[0]->value}->value->value;
         if ($event_type == EVENT_TYPE_MISSED) {
+            is $uprn, 1000001;
             is @data, 3, 'Name and source is only extra data';
         } elsif ($multi_request) {
             is @data, 5, 'Name, source and two container stuff';
+        } elsif ($event_type == EVENT_TYPE_SUBSCRIBE) {
+            if ( $uprn == 1000001 ) {
+                is @data, 5, 'Name, source, type and subscription request';
+            } elsif ( $uprn == 1000002 ) {
+                is @data, 6, 'Name, source, type, subscription request and container stuff';
+            }
         } else {
+            is $uprn, 1000001;
             is @data, 4, 'Name, source and (container stuff or notes)';
         }
         my @first_name = ${$data[0]->value}->value;
@@ -109,35 +127,81 @@ $soap_lite->mock(call => sub {
             # Check serialisation as well
             my $envelope = $cls->serializer->envelope(method => $method, @notes);
             like $envelope, qr/These are some notes 🎉/;
+        } elsif ($event_type == EVENT_TYPE_SUBSCRIBE) {
+            my @sub_request = ${$data[3]->value}->value;
+            is $sub_request[1]->value, 1004;
+            my @children = ${$sub_request[0]->value}->value->value;
+            my @quantity = ${$children[0]->value}->value;
+            is $quantity[0]->value, 1005;
+            is $quantity[1]->value, 2;
+            my @container_type = ${$children[1]->value}->value;
+            is $container_type[0]->value, 1007;
+            is $container_type[1]->value, 44;
+            if ($uprn == 1000002) {
+                my @container_request = ${$data[4]->value}->value;
+                is $container_request[1]->value, 1009;
+                my @children = ${$container_request[0]->value}->value->value;
+                my @quantity = ${$children[0]->value}->value;
+                is $quantity[0]->value, 1005;
+                is $quantity[1]->value, 1;
+                my @container_type = ${$children[1]->value}->value;
+                is $container_type[0]->value, 1007;
+                is $container_type[1]->value, 44;
+                my @sub_type = ${$data[5]->value}->value;
+                is $sub_type[0]->value, 1010;
+                is $sub_type[1]->value, 1;
+            } else {
+                my @sub_type = ${$data[4]->value}->value;
+                is $sub_type[0]->value, 1010;
+                is $sub_type[1]->value, 1;
+            }
         }
 
-        # Check the UPRN has been included
-        my @event_object = ${${$params[2]->value}->value->value}->value;
-        is $event_object[0]->value, 'Source';
-        my @object_ref = ${$event_object[1]->value}->value;
-        is $object_ref[0]->value, 'Uprn';
-        is $object_ref[1]->value, 'PointAddress';
-        my $uprn = ${$object_ref[2]->value}->value->value->value->value;
-        is $uprn, 1000001;
         return SOAP::Result->new(result => {
             EventGuid => '1234',
         });
     } elsif ($method eq 'GetEventType') {
-        return SOAP::Result->new(result => {
-            Datatypes => { ExtensibleDatatype => [
-                { Id => 1001, Name => "First Name" },
-                { Id => 1002, Name => "Surname" },
-                { Id => 1003, Name => "Source" },
-                { Id => 1004, Name => "Container Stuff",
-                    ChildDatatypes => { ExtensibleDatatype => [
-                        { Id => 1005, Name => "Quantity" },
-                        { Id => 1006, Name => "Reason" },
-                        { Id => 1007, Name => "Container Type" },
-                    ] },
-                },
-                { Id => 1008, Name => "Notes" },
-            ] },
-        });
+        my @params = ${$args[3]->value}->value;
+        my $event_type = ${$params[2]->value}->value->value->value;
+        if ( $event_type == EVENT_TYPE_SUBSCRIBE ) {
+            return SOAP::Result->new(result => {
+                Datatypes => { ExtensibleDatatype => [
+                    { Id => 1001, Name => "First Name" },
+                    { Id => 1002, Name => "Surname" },
+                    { Id => 1003, Name => "Source" },
+                    { Id => 1004, Name => "Subscription Details",
+                        ChildDatatypes => { ExtensibleDatatype => [
+                            { Id => 1005, Name => "Quantity" },
+                            { Id => 1007, Name => "Container Type" },
+                        ] },
+                    },
+                    { Id => 1009, Name => "Container Request",
+                        ChildDatatypes => { ExtensibleDatatype => [
+                            { Id => 1005, Name => "Quantity" },
+                            { Id => 1007, Name => "Container Type" },
+                        ] },
+                    },
+                    { Id => 1010, Name => "Type" },
+                    { Id => 1008, Name => "Notes" },
+                ] },
+            });
+        } else {
+            return SOAP::Result->new(result => {
+                Datatypes => { ExtensibleDatatype => [
+                    { Id => 1001, Name => "First Name" },
+                    { Id => 1002, Name => "Surname" },
+                    { Id => 1003, Name => "Source" },
+                    { Id => 1004, Name => "Container Stuff",
+                        ChildDatatypes => { ExtensibleDatatype => [
+                            { Id => 1005, Name => "Quantity" },
+                            { Id => 1006, Name => "Reason" },
+                            { Id => 1007, Name => "Container Type" },
+                        ] },
+                    },
+                    { Id => 1008, Name => "Notes" },
+                ] },
+            });
+        }
     } elsif ($method eq 'PerformEventAction') {
         my @params = ${$args[3]->value}->value;
         my $action_type_id = $params[0]->value;
@@ -175,6 +239,15 @@ subtest "GET services" => sub {
       "metadata" => "true",
       "type" => "realtime",
       "description" => "Request new container",
+      "group" => "Waste"
+   },
+   {
+      "keywords" => "",
+      "service_name" => "Garden Subscription",
+      "service_code" => EVENT_TYPE_SUBSCRIBE,
+      "metadata" => "true",
+      "type" => "realtime",
+      "description" => "Garden Subscription",
       "group" => "Waste"
    },
    {
@@ -345,6 +418,58 @@ subtest "POST update OK" => sub {
     is_deeply decode_json($res->content),
         [ {
             "update_id" => 'action-1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST subscription request OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => EVENT_TYPE_SUBSCRIBE,
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 1000001,
+        'attribute[fixmystreet_id]' => 2000123,
+        'attribute[Subscription_Details_Container_Type]' => 44, # Garden Waste
+        'attribute[Subscription_Details_Quantity]' => 2,
+        'attribute[Type]' => 1,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST subscription request with containter request OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => EVENT_TYPE_SUBSCRIBE,
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 1000002,
+        'attribute[fixmystreet_id]' => 2000123,
+        'attribute[Subscription_Details_Container_Type]' => 44, # Garden Waste
+        'attribute[Subscription_Details_Quantity]' => 2,
+        'attribute[Container_Request_Container_Type]' => 44, # Garden Waste
+        'attribute[Container_Request_Quantity]' => 1,
+        'attribute[Type]' => 1,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '1234',
         } ], 'correct json returned';
 };
 

@@ -5,6 +5,7 @@ password: password
 service_whitelist:
   missed: 'Report missed collection'
   2104: 'Request new container'
+  2106: 'Garden Subscription'
   2118: 'Gate not closed'
   2119: 'Waste spillage'
   2148: 'General Enquiry'
