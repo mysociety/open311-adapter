@@ -77,13 +77,13 @@ sub get_integration {
 # or any given defaults
 sub check_for_data_value {
     my ($self, $name, $args, $request, $parent_name) = @_;
+    my ($value, $full_name);
+    $full_name = $parent_name . '_' . $name if $parent_name;
 
-    my $value;
-    if ($parent_name) {
-        my $full_name = $parent_name . '_' . $name;
+    if ($full_name) {
         $value = $self->_get_data_value($full_name, $args, $request);
     }
-    unless (defined $value) {
+    unless ($value) {
         $value = $self->_get_data_value($name, $args, $request);
     }
     return $value;
