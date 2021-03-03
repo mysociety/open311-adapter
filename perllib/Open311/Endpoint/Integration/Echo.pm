@@ -90,6 +90,20 @@ sub get_integration {
 # from the main request if mapped, provided attributes,
 # or any given defaults
 sub check_for_data_value {
+    my ($self, $name, $args, $request, $parent_name) = @_;
+    my ($value, $full_name);
+    $full_name = $parent_name . '_' . $name if $parent_name;
+
+    if ($full_name) {
+        $value = $self->_get_data_value($full_name, $args, $request);
+    }
+    unless ($value) {
+        $value = $self->_get_data_value($name, $args, $request);
+    }
+    return $value;
+}
+
+sub _get_data_value {
     my ($self, $name, $args, $request) = @_;
     my $value;
     (my $name_with_underscores = $name) =~ s/ /_/g;
@@ -112,14 +126,14 @@ sub post_service_request {
 
     # Look up extra data fields
     my $event_type = $integ->GetEventType($request->{event_type});
-    foreach (@{$event_type->{Datatypes}->{ExtensibleDatatype}}) {
-        my $row = { id => $_->{Id} };
-        $row->{value} = $self->check_for_data_value($_->{Name}, $args, $request);
+    foreach my $type (@{$event_type->{Datatypes}->{ExtensibleDatatype}}) {
+        my $row = { id => $type->{Id} };
+        $row->{value} = $self->check_for_data_value($type->{Name}, $args, $request);
 
-        if ($_->{ChildDatatypes}) {
-            foreach (@{$_->{ChildDatatypes}{ExtensibleDatatype}}) {
+        if ($type->{ChildDatatypes}) {
+            foreach (@{$type->{ChildDatatypes}{ExtensibleDatatype}}) {
                 my $subrow = { id => $_->{Id} };
-                $subrow->{value} = $self->check_for_data_value($_->{Name}, $args, $request);
+                $subrow->{value} = $self->check_for_data_value($_->{Name}, $args, $request, $type->{Name});
                 push @{$row->{childdata}}, $subrow if $subrow->{value};
             }
         }
