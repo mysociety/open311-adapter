@@ -113,6 +113,12 @@ my %responses = (
 
 my @sent;
 
+# Mock out the Alloy integration because we're not testing that here.
+my $alloy = Test::MockModule->new('Open311::Endpoint::Integration::AlloyV2');
+$alloy->mock('get_service_request_updates', sub {
+    return ();
+});
+
 my $integration = Test::MockModule->new('Integrations::WDM');
 
 $integration->mock('_soap_call', sub {
@@ -133,7 +139,7 @@ $integration->mock('_soap_call', sub {
 });
 
 $integration->mock('_build_config_file', sub {
-    path(__FILE__)->sibling('oxfordshire.yml');
+    path(__FILE__)->sibling('oxfordshire_wdm.yml');
 });
 
 my %defaults = (
@@ -664,6 +670,7 @@ subtest "post update" => sub {
         POST => '/servicerequestupdates.json',
         jurisdiction_id => 'oxfordshire',
         api_key => 'test',
+        service_code => 'POT',
         service_request_id => "wdm1234",
         updated_datetime => "2014-01-01T12:00:00Z",
         update_id => 1234,
@@ -709,6 +716,7 @@ subtest "post update that is a defect" => sub {
         POST => '/servicerequestupdates.json',
         jurisdiction_id => 'oxfordshire',
         api_key => 'test',
+        service_code => 'POT',
         service_request_id => "wdm2345",
         updated_datetime => "2014-01-01T12:00:00Z",
         update_id => 2345,

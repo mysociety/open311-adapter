@@ -15,6 +15,10 @@ has service_class  => (
     default => 'Open311::Endpoint::Service::UKCouncil::Oxfordshire'
 );
 
+has jurisdiction_id => (
+    is => 'ro',
+);
+
 sub service_request_content {
     '/open311/service_request_extended'
 }
