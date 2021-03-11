@@ -83,7 +83,7 @@ sub check_for_data_value {
     if ($full_name) {
         $value = $self->_get_data_value($full_name, $args, $request);
     }
-    unless ($value) {
+    unless (defined $value) {
         $value = $self->_get_data_value($name, $args, $request);
     }
     return $value;
