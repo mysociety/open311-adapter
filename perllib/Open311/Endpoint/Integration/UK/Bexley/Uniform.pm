@@ -25,6 +25,7 @@ my %closing_action_codes = (
     REFER => 'internal_referral',
     REFERE => 'not_councils_responsibility',
     NFA => 'no_further_action',
+    NAP => 'no_further_action',
 );
 
 sub map_status_code {
