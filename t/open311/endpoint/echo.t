@@ -66,7 +66,7 @@ $soap_lite->mock(call => sub {
             is $uprn, 1000001;
             is @data, 3, 'Name and source is only extra data';
         } elsif ($event_type == EVENT_TYPE_SUBSCRIBE) {
-            if ( $uprn == 1000001 ) {
+            if ( $uprn == 1000001 || $uprn == 1000003 ) {
                 is @data, 5, 'Name, source, type and subscription request';
             } elsif ( $uprn == 1000002 ) {
                 is @data, 6, 'Name, source, type, subscription request and container stuff';
@@ -112,7 +112,11 @@ $soap_lite->mock(call => sub {
             my @children = ${$sub_request[0]->value}->value->value;
             my @quantity = ${$children[0]->value}->value;
             is $quantity[0]->value, 1005;
-            is $quantity[1]->value, 2;
+            if ($uprn == 1000003) {
+                is $quantity[1]->value, 0;
+            } else {
+                is $quantity[1]->value, 2;
+            }
             my @container_type = ${$children[1]->value}->value;
             is $container_type[0]->value, 1007;
             is $container_type[1]->value, 44;
@@ -419,6 +423,31 @@ subtest "POST subscription request with containter request OK" => sub {
         'attribute[Subscription_Details_Quantity]' => 2,
         'attribute[Container_Request_Container_Type]' => 44, # Garden Waste
         'attribute[Container_Request_Quantity]' => 1,
+        'attribute[Type]' => 1,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST subscription request with zero containers OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => EVENT_TYPE_SUBSCRIBE,
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 1000003,
+        'attribute[fixmystreet_id]' => 2000123,
+        'attribute[Subscription_Details_Container_Type]' => 44, # Garden Waste
+        'attribute[Subscription_Details_Quantity]' => 0,
         'attribute[Type]' => 1,
     );
     ok $res->is_success, 'valid request'

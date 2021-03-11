@@ -97,7 +97,7 @@ sub check_for_data_value {
     if ($full_name) {
         $value = $self->_get_data_value($full_name, $args, $request);
     }
-    unless ($value) {
+    unless (defined $value) {
         $value = $self->_get_data_value($name, $args, $request);
     }
     return $value;
@@ -108,7 +108,7 @@ sub _get_data_value {
     my $value;
     (my $name_with_underscores = $name) =~ s/ /_/g;
     $value = $args->{$self->data_key_open311_map->{$name}} if $self->data_key_open311_map->{$name};
-    $value = $args->{attributes}{$name_with_underscores} if $args->{attributes}{$name_with_underscores};
+    $value = $args->{attributes}{$name_with_underscores} if defined $args->{attributes}{$name_with_underscores};
     $value = $self->default_data_all->{$name} if $self->default_data_all->{$name};
     $value = $self->default_data_event_type->{$request->{event_type}}{$name}
         if $self->default_data_event_type->{$request->{event_type}}{$name};
@@ -134,11 +134,11 @@ sub post_service_request {
             foreach (@{$type->{ChildDatatypes}{ExtensibleDatatype}}) {
                 my $subrow = { id => $_->{Id} };
                 $subrow->{value} = $self->check_for_data_value($_->{Name}, $args, $request, $type->{Name});
-                push @{$row->{childdata}}, $subrow if $subrow->{value};
+                push @{$row->{childdata}}, $subrow if defined $subrow->{value};
             }
         }
 
-        push @{$request->{data}}, $row if $row->{value} || $row->{childdata};
+        push @{$request->{data}}, $row if defined $row->{value} || $row->{childdata};
     }
 
     my $response = $integ->PostEvent($request);
