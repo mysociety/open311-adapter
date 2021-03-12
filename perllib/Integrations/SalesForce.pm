@@ -26,7 +26,7 @@ has 'requests_endpoint' => (
 
 has 'services_endpoint' => (
     is => 'ro',
-    default => sub { shift->endpoint_url . 'FixMyStreetInfo' }
+    default => sub { shift->endpoint_url . 'FixMyStreetInfoV2' }
 );
 
 has 'updates_endpoint' => (

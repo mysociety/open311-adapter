@@ -175,12 +175,24 @@ sub services {
 
     my @services = $self->get_integration->get_services($args);
 
+    my %service_lookup = map { $_->{serviceid} => $_ } @services;
+
     my @service_types;
     for my $service (@services) {
+        # If service has children then it's a group, so skip it.
+        next if $service->{hasChildren} eq 'true';
+
+        my $group = '';
+        my $parent = $service_lookup{$service->{parent}};
+        if ($parent) {
+            $group = $parent->{name};
+        }
+
         my $type = Open311::Endpoint::Service::UKCouncil::Rutland->new(
             service_name => $service->{name},
             service_code => $service->{serviceid},
             description => $service->{name},
+            group => $group,
             type => 'realtime',
             keywords => [qw/ /],
         );
