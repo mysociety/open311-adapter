@@ -81,6 +81,7 @@ $endpoint = Open311::Endpoint::Integration::UK::Oxfordshire->new;
 
 %config_filenames = (
     'Open311::Endpoint::Integration::UK::Oxfordshire::WDM' => 'oxfordshire_wdm',
+    'Open311::Endpoint::Integration::UK::Oxfordshire::AlloyV2' => 'oxfordshire_alloy_v2',
 );
 
 foreach ($endpoint->plugins) {
