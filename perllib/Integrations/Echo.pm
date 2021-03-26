@@ -19,7 +19,6 @@ has endpoint => (
     default => sub {
         my $self = shift;
         $ENV{PERL_LWP_SSL_CA_PATH} = '/etc/ssl/certs';
-        SOAP::Lite->soapversion(1.2);
         my $soap = SOAP::Lite->new;
         $soap->proxy($self->url);
         $soap->on_action( sub { $self->action . $_[1]; } );
@@ -64,18 +63,31 @@ sub call {
     my ($self, $method, @params) = @_;
 
     @params = make_soap_structure(@params);
+
+    # SOAP::Lite uses some global constants to set e.g. the request's
+    # Content-Type header and various envelope XML attributes. On new() it sets
+    # up those XML attributes, and even if you call soapversion on the object's
+    # serializer after, it does nothing if the global version matches the
+    # object's current version (which it will!), and then uses those same
+    # constants anyway. So we have to set the version globally before creating
+    # the object (during the call to self->endpoint), and also during the
+    # call() (because it uses the constants at that point to set the
+    # Content-Type header), and then set it back after so it doesn't break
+    # other users of SOAP::Lite.
+    SOAP::Lite->soapversion(1.2);
     my $res = $self->endpoint->call(
         SOAP::Data->name($method)->attr({ xmlns => $self->namespace }),
         $self->security,
         $self->action_hdr($method),
         @params
     );
+    SOAP::Lite->soapversion(1.1);
     $res = $res->result;
     return $res;
 }
 
 # Tie::IxHashes are used below because Echo complains if
-# the XML fields are not recieved in the correct order.
+# the XML fields are not received in the correct order.
 
 sub GetEventType {
     my ($self, $id) = @_;
