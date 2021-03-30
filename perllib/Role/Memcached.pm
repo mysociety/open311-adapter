@@ -13,9 +13,9 @@ has memcache => (
     default => sub {
         my $self = shift;
         my $namespace = 'open311adapter:' . $self->memcache_namespace . ':';
-        $namespace = "test:$namespace" if $ENV{TEST_MODE};
+        my $servers = $ENV{TEST_MODE} ? [] : [ '127.0.0.1:11211' ];
         new Cache::Memcached {
-            'servers' => [ '127.0.0.1:11211' ],
+            'servers' => $servers,
             'namespace' => $namespace,
             'debug' => 0,
             'compress_threshold' => 10_000,
