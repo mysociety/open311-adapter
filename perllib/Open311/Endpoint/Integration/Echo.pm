@@ -91,14 +91,13 @@ sub check_for_data_value {
 
 sub _get_data_value {
     my ($self, $name, $args, $request) = @_;
-    my $value;
     (my $name_with_underscores = $name) =~ s/ /_/g;
-    $value = $args->{$self->data_key_open311_map->{$name}} if $self->data_key_open311_map->{$name};
-    $value = $args->{attributes}{$name_with_underscores} if defined $args->{attributes}{$name_with_underscores};
-    $value = $self->default_data_all->{$name} if $self->default_data_all->{$name};
-    $value = $self->default_data_event_type->{$request->{event_type}}{$name}
+    return $args->{$self->data_key_open311_map->{$name}} if $self->data_key_open311_map->{$name};
+    return $args->{attributes}{$name_with_underscores} if length $args->{attributes}{$name_with_underscores};
+    return $self->default_data_all->{$name} if $self->default_data_all->{$name};
+    return $self->default_data_event_type->{$request->{event_type}}{$name}
         if $self->default_data_event_type->{$request->{event_type}}{$name};
-    return $value;
+    return undef;
 }
 
 sub post_service_request {
