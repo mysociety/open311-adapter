@@ -39,36 +39,14 @@ sub log {
     $self->logger->$level($msg);
 }
 
-sub emergency {
-    shift->log('emergency', @_);
-}
-
-sub alert {
-    shift->log('alert', @_);
-}
-
-sub critical {
-    shift->log('critical', @_);
-}
-
-sub error {
-    shift->log('error', @_);
-}
-
-sub warn {
-    shift->log('warn', @_);
-}
-
-sub notice {
-    shift->log('notice', @_);
-}
-
-sub info {
-    shift->log('info', @_);
-}
-
-sub debug {
-    shift->log('debug', @_);
+BEGIN {
+    no strict 'refs';
+    my @levels = qw(emergency alert critical error warn notice info debug);
+    foreach my $level (@levels) {
+        *$level = sub {
+            shift->log($level, @_);
+        };
+    }
 }
 
 sub dump {
