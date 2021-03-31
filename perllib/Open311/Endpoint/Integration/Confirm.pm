@@ -5,6 +5,7 @@ use DateTime::Format::W3CDTF;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 with 'Open311::Endpoint::Role::ConfigFile';
+with 'Role::Logger';
 
 use Open311::Endpoint::Service::UKCouncil::Confirm;
 use Open311::Endpoint::Service::Attribute;
@@ -490,7 +491,7 @@ sub get_service_request_updates {
             my $status = $self->reverse_status_mapping->{$status_log->{EnquiryStatusCode}};
             next if $status && $status eq 'IGNORE';
             if (!$status) {
-                print STDERR "Missing reverse status mapping for EnquiryStatus Code $status_log->{EnquiryStatusCode} (EnquiryNumber $enquiry->{EnquiryNumber})\n";
+                $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code $status_log->{EnquiryStatusCode} (EnquiryNumber $enquiry->{EnquiryNumber})");
                 $status = "open";
             }
 
@@ -565,7 +566,7 @@ sub _services {
         for my $code (keys %{ $whitelist }) {
             my $subject = $services{$code}->{subject};
             if (!$subject) {
-                printf("$code doesn't exist in Confirm.\n");
+                $self->logger->error("$code doesn't exist in Confirm.");
                 next;
             }
             my $name = $subject->{SubjectName};
@@ -635,19 +636,19 @@ sub get_service_requests {
         my $status = $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}};
 
         unless ($service || ($service = $self->_find_wrapping_service($code, \@services))) {
-            warn "no service for service code $code\n";
+            $self->logger->warn("no service for service code $code");
             next;
         }
 
         unless ($status) {
             # Default to 'open' if the status doesn't appear in the reverse mapping,
             # which is the same as we do for service request updates.
-            warn "no reverse mapping for for status code $enquiry->{EnquiryStatusCode} (Enquiry $enquiry->{EnquiryNumber})\n";
+            $self->logger->warn("no reverse mapping for for status code $enquiry->{EnquiryStatusCode} (Enquiry $enquiry->{EnquiryNumber})");
             $status = 'open';
         }
 
         unless ($enquiry->{EnquiryY} && $enquiry->{EnquiryX}) {
-            warn "no easting/northing for Enquiry $enquiry->{EnquiryNumber}\n";
+            $self->logger->warn("no easting/northing for Enquiry $enquiry->{EnquiryNumber}");
             next;
         }
 

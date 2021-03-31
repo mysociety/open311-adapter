@@ -259,10 +259,10 @@ sub _update_item {
                     body => $updated
                 );
             } catch {
-                warn $_;
+                $self->logger->warn($_);
             }
         } else {
-            warn $_;
+            $self->logger->warn($_);
         }
     };
 
@@ -652,13 +652,13 @@ sub get_service_requests {
 
         my $category = $self->get_defect_category( $request );
         unless ($category) {
-            warn "No category found for defect $request->{itemId}, source type $request->{designCode} in " . $self->jurisdiction_id . "\n";
+            $self->logger->warn("No category found for defect $request->{itemId}, source type $request->{designCode} in " . $self->jurisdiction_id);
             next;
         }
 
         my $cat_service = $self->service($category);
         unless ($cat_service) {
-            warn "No service found for defect $request->{itemId}, category $category in " . $self->jurisdiction_id . "\n";
+            $self->logger->warn("No service found for defect $request->{itemId}, category $category in " . $self->jurisdiction_id);
             next;
         }
 
@@ -667,7 +667,6 @@ sub get_service_requests {
         unless ($args{latlong}) {
             my $geometry = $request->{geometry}{type} || 'unknown';
             $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry");
-            warn "Defect $request->{itemId}: don't know how to handle geometry: $geometry\n";
             next;
         }
 

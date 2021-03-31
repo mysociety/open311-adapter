@@ -210,9 +210,9 @@ sub _attach_note {
     });
 
     if ( $res->{Errors}->{Message} ) {
-        warn "failed to attach note for report "
+        $self->logger->warn("failed to attach note for report "
             . $args->{attributes}->{fixmystreet_id}
-            . ": " . $res->{Errors}->{Message};
+            . ": " . $res->{Errors}->{Message});
     }
 }
 
@@ -521,9 +521,9 @@ sub _put_photos {
             content => $photo->{data},
         });
         if ( $res->{Errors}->{Message} ) {
-            warn "failed to attach photo for report "
+            $self->logger->warn("failed to attach photo for report "
                 . $args->{attributes}->{fixmystreet_id}
-                . ": " . $res->{Errors}->{Message};
+                . ": " . $res->{Errors}->{Message});
         }
         $i++;
     }

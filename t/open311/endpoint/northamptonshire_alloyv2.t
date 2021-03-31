@@ -68,7 +68,7 @@ use Test::More;
 use Test::LongString;
 use Test::MockModule;
 use Test::MockTime ':all';
-use Test::Warn;
+use Test::Output;
 use Encode;
 
 use Open311::Endpoint;
@@ -315,15 +315,14 @@ This is an update"
 
 subtest "check fetch problem" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
+    local $ENV{TEST_LOGGER} = 'warn';
     my $res;
-    warnings_like {
+    stderr_like {
         $res = $endpoint->run_test_request(
             GET => '/requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
         );
     }
-    [
-        qr/No category found for defect 3027031, source type designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6/,
-    ],
+    qr/No category found for defect 3027031, source type designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6/,
     "Correct warnings generated";
 
     my $sent = pop @sent;

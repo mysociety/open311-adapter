@@ -15,11 +15,12 @@ has logger => (
     is => 'lazy',
     default => sub {
         my $self = shift;
-        return undef unless $self->config->{logfile};
-        my $min_level = $self->config->{min_log_level} || 'error';
+        return undef unless $self->config->{logfile} || $ENV{TEST_LOGGER};
+        my $min_level = $ENV{TEST_LOGGER} || $self->config->{min_log_level} || 'error';
+        my $class = $ENV{TEST_LOGGER} ? 'Screen' : 'File::Locked';
         Log::Dispatch->new(
             outputs => [
-                [ 'File::Locked',
+                [ $class,
                     min_level => $min_level,
                     filename => $self->config->{logfile},
                     callbacks => $add_datetime,

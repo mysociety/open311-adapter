@@ -480,7 +480,6 @@ sub upload_enquiry_documents {
         unless ( $photo->is_success ) {
             my $msg = "[Confirm::upload_enquiry_documents] Couldn't fetch photo from URL $_ : " . $photo->status_line;
             $self->logger->warn($msg);
-            warn $msg;
         }
         {
             documentName => $photo->filename,
