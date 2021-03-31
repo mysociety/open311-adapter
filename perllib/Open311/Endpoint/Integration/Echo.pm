@@ -1,7 +1,6 @@
 package Open311::Endpoint::Integration::Echo;
 
 use v5.14;
-use warnings;
 
 use Moo;
 use JSON::MaybeXS;
@@ -15,13 +14,6 @@ use Integrations::Echo;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::UKCouncil::Echo;
 use Open311::Endpoint::Service::Request::Update;
-
-around BUILDARGS => sub {
-    my ($orig, $class, %args) = @_;
-    die unless $args{jurisdiction_id}; # Must have one by here
-    $args{config_file} //= path(__FILE__)->parent(5)->realpath->child("conf/council-$args{jurisdiction_id}.yml")->stringify;
-    return $class->$orig(%args);
-};
 
 has jurisdiction_id => ( is => 'ro' );
 

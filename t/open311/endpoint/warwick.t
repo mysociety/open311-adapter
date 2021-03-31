@@ -9,6 +9,8 @@ use JSON::MaybeXS;
 use Module::Loaded;
 BEGIN { mark_as_loaded('DBD::Oracle') }
 
+BEGIN { $ENV{TEST_MODE} = 1; }
+
 use lib '.';
 use t::open311::endpoint::Endpoint_Warwick;
 

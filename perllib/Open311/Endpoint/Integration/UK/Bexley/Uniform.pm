@@ -10,11 +10,10 @@ has service_class  => (
     default => 'Open311::Endpoint::Service::UKCouncil::BexleyUniform'
 );
 
-around BUILDARGS => sub {
-    my ($orig, $class, %args) = @_;
-    $args{jurisdiction_id} = 'bexley_uniform';
-    return $class->$orig(%args);
-};
+has jurisdiction_id => (
+    is => 'ro',
+    default => 'bexley_uniform',
+);
 
 sub web_service {
     my ($self, $service) = @_;

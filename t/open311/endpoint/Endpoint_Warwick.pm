@@ -6,6 +6,12 @@ our $UPDATES_SQL;
 
 extends 'Open311::Endpoint::Integration::Warwick';
 
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{jurisdiction_id} = 'warwick';
+    return $class->$orig(%args);
+};
+
 sub insert_into_db {
     my ($self, $bindings) = @_;
 
