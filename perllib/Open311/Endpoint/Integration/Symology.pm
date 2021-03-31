@@ -98,19 +98,13 @@ sub service_class {
     'Open311::Endpoint::Service::UKCouncil::Symology';
 }
 
-sub log_and_die {
-    my ($self, $msg) = @_;
-    $self->logger->error($msg);
-    die "$msg\n";
-}
-
 sub process_service_request_args {
     my $self = shift;
     my $args = shift;
 
     my $service_code = $args->{service_code};
     my $codes = $self->category_mapping->{$service_code};
-    $self->log_and_die("Could not find category mapping for $service_code") unless $codes;
+    die "Could not find category mapping for $service_code\n" unless $codes;
 
     my $request = {
         Description => $args->{description},
@@ -200,7 +194,7 @@ sub get_integration {
 
 sub post_service_request {
     my ($self, $service, $args) = @_;
-    $self->log_and_die("No such service") unless $service;
+    die "No such service\n" unless $service;
 
     my @args = $self->process_service_request_args($args);
     $self->logger->debug(encode_json(\@args));
@@ -224,7 +218,7 @@ sub process_service_request_update_args {
 
     my $service_code = $args->{service_code};
     my $codes = $self->category_mapping->{$service_code};
-    $self->log_and_die("Could not find category mapping for $service_code") unless $codes;
+    die "Could not find category mapping for $service_code\n" unless $codes;
 
     my $closed = $args->{status} =~ /FIXED|DUPLICATE|NOT_COUNCILS_RESPONSIBILITY|NO_FURTHER_ACTION|INTERNAL_REFERRAL|CLOSED/;
 
@@ -267,7 +261,7 @@ sub post_service_request_update {
 sub check_error {
     my ($self, $response, $type) = @_;
 
-    $self->log_and_die("Couldn't create $type in Symology") unless defined $response;
+    die "Couldn't create $type in Symology\n" unless defined $response;
 
     $self->logger->debug(encode_json($response));
 
@@ -291,7 +285,7 @@ sub check_error {
         $self->logger->debug("Created $type in Symology: $error");
         return $crno; # For reports, not updates
     } else {
-        $self->log_and_die("Couldn't create $type in Symology: $error");
+        die "Couldn't create $type in Symology: $error\n";
     }
 }
 

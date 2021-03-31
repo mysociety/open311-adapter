@@ -281,9 +281,7 @@ sub _set_parent_attribute {
         $parent_attribute_id = $self->alloy->get_parent_attributes($resource_type);
 
         unless ( $parent_attribute_id ) {
-            my $msg = "no parent attribute id found for asset $resource_id with type $resource_type";
-            $self->logger->error($msg);
-            die $msg;
+            die "no parent attribute id found for asset $resource_id with type $resource_type";
         }
     }
 

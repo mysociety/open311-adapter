@@ -177,9 +177,7 @@ sub post_service_request {
         }
 
         unless ( $parent_attribute_id ) {
-            my $msg = "no parent attribute id found for asset $resource_id with type $resource_type ($source->{source_type_id})";
-            $self->logger->error($msg);
-            die $msg;
+            die "no parent attribute id found for asset $resource_id with type $resource_type ($source->{source_type_id})\n";
         }
     }
 
