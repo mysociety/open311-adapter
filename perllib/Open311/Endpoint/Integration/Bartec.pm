@@ -21,7 +21,7 @@ has jurisdiction_id => (
 
 has bartec => (
     is => 'lazy',
-    default => sub { Integrations::Bartec->new(config_filename => $_[0]->jurisdiction_id) }
+    default => sub { $_[0]->integration_class->new(config_filename => $_[0]->jurisdiction_id) }
 );
 
 has integration_class => (
@@ -63,10 +63,7 @@ has service_map => (
 );
 
 sub get_integration {
-    my $self = shift;
-    my $integ = $self->integration_class->new;
-    $integ->config_filename($self->jurisdiction_id);
-    return $integ;
+    return $_[0]->bartec;
 }
 
 sub services {
