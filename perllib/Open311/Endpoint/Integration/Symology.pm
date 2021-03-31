@@ -10,11 +10,11 @@ use Moo;
 use Path::Tiny;
 use JSON::MaybeXS;
 use Text::CSV;
-use YAML::XS qw(LoadFile);
 use YAML::Logic;
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
+with 'Role::Config';
 with 'Role::Logger';
 
 use Integrations::Symology;
@@ -24,8 +24,6 @@ use Open311::Endpoint::Service::UKCouncil::Symology;
 
 has jurisdiction_id => ( is => 'ro' );
 
-has endpoint_config => ( is => 'lazy' );
-
 has date_formatter => ( is => 'lazy', default => sub {
     DateTime::Format::Strptime->new(
         pattern => '%d/%m/%Y %H:%M',
@@ -33,36 +31,29 @@ has date_formatter => ( is => 'lazy', default => sub {
     );
 });
 
-sub _build_endpoint_config {
-    my $self = shift;
-    my $config_file = path(__FILE__)->parent(5)->realpath->child('conf/council-' . $self->jurisdiction_id . '.yml');
-    my $conf = LoadFile($config_file);
-    return $conf;
-}
-
 has category_mapping => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{category_mapping} }
+    default => sub { $_[0]->config->{category_mapping} }
 );
 
 has username => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{username} }
+    default => sub { $_[0]->config->{username} }
 );
 
 has update_urls => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{update_urls} }
+    default => sub { $_[0]->config->{update_urls} }
 );
 
 has customer_defaults => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{customer_defaults} }
+    default => sub { $_[0]->config->{customer_defaults} }
 );
 
 has external_id_prefix => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{external_id_prefix} || "" }
+    default => sub { $_[0]->config->{external_id_prefix} || "" }
 );
 
 # May want something like Confirm's service_assigned_officers

@@ -20,7 +20,7 @@ sub process_service_request_args {
     my @args = $self->SUPER::process_service_request_args(@_);
     my $response = $args[0];
 
-    my $lookup = $self->endpoint_config->{area_to_username};
+    my $lookup = $self->config->{area_to_username};
     $response->{NextActionUserName} ||= $lookup->{$area_code};
 
     return @args;
@@ -29,7 +29,7 @@ sub process_service_request_args {
 sub _get_csvs {
     my $self = shift;
 
-    my $dir = $self->endpoint_config->{updates_sftp}->{out};
+    my $dir = $self->config->{updates_sftp}->{out};
     my @files = glob "$dir/*.CSV";
     return \@files;
 }
@@ -45,7 +45,7 @@ sub _event_description {
 sub _event_status {
     my ($self, $event) = @_;
 
-    my $map = $self->endpoint_config->{event_status_mapping}->{$event->{HistoryType}};
+    my $map = $self->config->{event_status_mapping}->{$event->{HistoryType}};
     return unless $map;
     return ( $map, $event->{HistoryType} ) unless ref $map eq 'HASH';
     my $field = $map->{field};

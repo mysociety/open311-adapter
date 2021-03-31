@@ -2,7 +2,6 @@ package Open311::Endpoint::Integration::Bartec;
 
 use JSON::MaybeXS;
 use Path::Tiny;
-use YAML::XS qw(LoadFile);
 use MIME::Base64;
 
 use Integrations::Bartec;

@@ -134,7 +134,7 @@ $integ->mock(config => sub {
 });
 
 my $end = Test::MockModule->new('Open311::Endpoint::Integration::Uniform');
-$end->mock(endpoint_config => sub {
+$end->mock(config => sub {
     {
         username => 'FMS',
         service_whitelist => {

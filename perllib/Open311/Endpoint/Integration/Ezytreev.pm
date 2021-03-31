@@ -2,7 +2,6 @@ package Open311::Endpoint::Integration::Ezytreev;
 
 use JSON::MaybeXS;
 use Path::Tiny;
-use YAML::XS qw(LoadFile);
 use Digest::MD5 qw(md5_hex);
 use DateTime::Format::W3CDTF;
 
@@ -13,16 +12,8 @@ use Open311::Endpoint::Service::Request::Update::mySociety;
 use Moo;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
+with 'Role::Config';
 with 'Role::Logger';
-
-has endpoint_config => ( is => 'lazy' );
-
-sub _build_endpoint_config {
-    my $self = shift;
-    my $config_file = path(__FILE__)->parent(5)->realpath->child('conf/council-' . $self->jurisdiction_id . '.yml');
-    my $conf = LoadFile($config_file);
-    return $conf;
-}
 
 has jurisdiction_id => (
     is => 'ro',
@@ -39,23 +30,23 @@ sub get_integration {
 
 has category_mapping => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{category_mapping} }
+    default => sub { $_[0]->config->{category_mapping} }
 );
 
 has forward_status_mapping => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{forward_status_mapping} }
+    default => sub { $_[0]->config->{forward_status_mapping} }
 );
 
 has reverse_status_mapping => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{reverse_status_mapping} }
+    default => sub { $_[0]->config->{reverse_status_mapping} }
 );
 
 has statuses_to_show_notes_for => (
     is => 'lazy',
     default => sub {
-        return { map { $_ => 1 } @{$_[0]->endpoint_config->{statuses_to_show_notes_for}} };
+        return { map { $_ => 1 } @{$_[0]->config->{statuses_to_show_notes_for}} };
     }
 );
 

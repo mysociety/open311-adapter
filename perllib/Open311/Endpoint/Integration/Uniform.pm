@@ -11,10 +11,10 @@ use Moo;
 use Path::Tiny;
 use Types::Standard ':all';
 use JSON::MaybeXS;
-use YAML::XS qw(LoadFile);
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
+with 'Role::Config';
 with 'Role::Logger';
 
 use Integrations::Uniform;
@@ -23,8 +23,6 @@ use Open311::Endpoint::Service::UKCouncil::Uniform;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 
 has jurisdiction_id => ( is => 'ro' );
-
-has endpoint_config => ( is => 'lazy' );
 
 has '+identifier_types' => (
     is => 'lazy',
@@ -37,32 +35,24 @@ has '+identifier_types' => (
     },
 );
 
-sub _build_endpoint_config {
-    my $self = shift;
-    my $config_file = path(__FILE__)->parent(5)->realpath->child('conf/council-' . $self->jurisdiction_id . '.yml');
-    return {} if $ENV{TEST_MODE};
-    my $conf = LoadFile($config_file);
-    return $conf;
-}
-
 has service_whitelist => (
     is => 'ro',
-    default => sub { $_[0]->endpoint_config->{service_whitelist} || {} },
+    default => sub { $_[0]->config->{service_whitelist} || {} },
 );
 
 has database => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{database} }
+    default => sub { $_[0]->config->{database} }
 );
 
 has username => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{username} }
+    default => sub { $_[0]->config->{username} }
 );
 
 has password => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{password} }
+    default => sub { $_[0]->config->{password} }
 );
 
 sub logon {
