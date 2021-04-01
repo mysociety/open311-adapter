@@ -125,22 +125,44 @@ my %responses = (
         "id": "a086E000001gcVRQAY",
         "Comments": "this is a comment"
     }]',
-    'GET FixMyStreetInfo summary' => '{
+    'GET FixMyStreetInfoV2 summary' => '{
         "title": "Summary Categories",
         "CategoryInformation": [
             {
                 "serviceid": "a096E000007pbxWQAQ",
+                "parent" : "",
                 "name_code": "POT",
-                "name": "Fly Tipping"
+                "name": "Fly Tipping",
+                "html" : "",
+                "hasChildren" : "false"
             },
             {
                 "serviceid": "a096E000007pbwiQAA",
+                "parent" : "",
                 "name_code": "RC08",
-                "name": "Street Furniture"
+                "name": "Street Furniture",
+                "html" : "",
+                "hasChildren" : "false"
+            },
+            {
+                "serviceid" : "a012500000JJ0nBAAT",
+                "parent" : "",
+                "name_code" : "RC25_2",
+                "name" : "Traffic Lights - Permanent",
+                "html" : "<h1>Traffic Lights</h1>",
+                "hasChildren" : "true"
+            },
+            {
+                "serviceid" : "a012500000JJ0neAAD",
+                "parent" : "a012500000JJ0nBAAT",
+                "name_code" : "RC25_2_D",
+                "name" : "Phasing/timing issues",
+                "html" : "<h1>Phasing/timing issues</h1>",
+                "hasChildren" : "false"
             }
         ]
     }',
-    'GET FixMyStreetInfo id=POT' => '{
+    'GET FixMyStreetInfoV2 id=POT' => '{
         "title": "POT",
         "fieldInformation": [
             {
@@ -152,7 +174,7 @@ my %responses = (
             }
         ]
     }',
-    'GET FixMyStreetInfo id=a096E000007pbxWQAQ' => '{
+    'GET FixMyStreetInfoV2 id=a096E000007pbxWQAQ' => '{
         "title": "POT",
         "fieldInformation": [
             {
@@ -164,7 +186,7 @@ my %responses = (
             }
         ]
     }',
-    'GET FixMyStreetInfo id=RC_08' => '{
+    'GET FixMyStreetInfoV2 id=RC_08' => '{
         "title": "RC08",
         "fieldInformation": [
             {
@@ -176,7 +198,7 @@ my %responses = (
             }
         ]
     }',
-    'GET FixMyStreetInfo id=RC_09' => '[{
+    'GET FixMyStreetInfoV2 id=RC_09' => '[{
         "errorCode": "111",
         "message": "This is an error"
     }]',
@@ -212,8 +234,8 @@ $integration->mock('_get_response', sub {
 
 subtest "create basic problem" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
-    my $res = $endpoint->run_test_request( 
-        POST => '/requests.json', 
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
         jurisdiction_id => 'rutland',
         api_key => 'test',
         service_code => 'POT',
@@ -828,7 +850,17 @@ subtest "check fetch service description" => sub {
         group => "",
         service_name => "Street Furniture",
         description => "Street Furniture"
-    } ], 'correct json returned';
+    },
+    {
+        metadata => "true",
+        description => "Phasing/timing issues",
+        group => "Traffic Lights - Permanent",
+        service_code => "a012500000JJ0neAAD",
+        type => "realtime",
+        service_name => "Phasing/timing issues",
+        keywords => ""
+    } ], 'correct json returned'
+        or diag $res->content;
 };
 
 subtest "check fetch failing request" => sub {

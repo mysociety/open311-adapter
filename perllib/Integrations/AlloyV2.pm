@@ -2,7 +2,6 @@ package Integrations::AlloyV2;
 
 use DateTime::Format::W3CDTF;
 use Moo;
-use Cache::Memcached;
 use LWP::UserAgent;
 use HTTP::Headers;
 use HTTP::Request;
@@ -15,25 +14,8 @@ use List::Util qw[min];
 
 with 'Role::Config';
 with 'Role::Logger';
+with 'Role::Memcached';
 
-
-has memcache_namespace  => (
-    is => 'lazy',
-    default => sub { $_[0]->config_filename }
-);
-
-has memcache => (
-    is => 'lazy',
-    default => sub {
-        my $self = shift;
-        new Cache::Memcached {
-            'servers' => [ '127.0.0.1:11211' ],
-            'namespace' => 'open311adapter:' . $self->memcache_namespace . ':',
-            'debug' => 0,
-            'compress_threshold' => 10_000,
-        };
-    },
-);
 
 sub detect_type {
     my ($self, $photo) = @_;
