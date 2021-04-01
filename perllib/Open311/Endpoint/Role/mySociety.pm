@@ -32,6 +32,7 @@ L<Open311::Endpoint::Service::Request::mySociety> objects.
 
 =cut
 
+use SOAP::Lite;
 use Moo::Role;
 no warnings 'illegalproto';
 
@@ -43,9 +44,24 @@ has '+request_class' => (
     default => 'Open311::Endpoint::Service::Request::mySociety',
 );
 
+my $soap_logging_configured = 0;
+
 around dispatch_request => sub {
     my ($orig, $self, @args) = @_;
     my @dispatch = $self->$orig(@args);
+
+    if (!$soap_logging_configured) {
+        $soap_logging_configured = 1;
+        my $config = $self->logger->config;
+        # uncoverable branch true
+        if ( ($config->{min_log_level} || '') eq 'debug' ) {
+            SOAP::Lite->import( +trace => [ transport => \&log_soap_message ] ); # uncoverable statement
+        # uncoverable branch true
+        } elsif ( not $ENV{TEST_MODE} ) {
+            SOAP::Lite->import( +trace => [ fault => transport => \&log_soap_errors ] ); #uncoverable statement
+        }
+    }
+
     return (
         @dispatch,
 
@@ -61,6 +77,34 @@ around dispatch_request => sub {
 
     );
 };
+
+sub log_soap_message {
+    # uncoverable subroutine
+    # uncoverable statement
+    my ($msg) = @_;
+
+    my $l = Open311::Endpoint::Logger->new;
+    if ( ref($msg) eq 'HTTP::Request' || ref($msg) eq 'HTTP::Response' ) {
+        $l->debug($msg->content);
+    }
+}
+
+my $last_request;
+
+sub log_soap_errors {
+    # uncoverable subroutine
+    # uncoverable statement
+    my ($msg) = @_;
+
+    if ( ref($msg) eq 'HTTP::Response' &&
+         $msg->content =~ /Errors><Result[^>]*>[1-9]|soap:Fault>/
+       ) {
+        my $l = Open311::Endpoint::Logger->new;
+        $l->error("Req: $last_request\nRes: " . $msg->content);
+    } elsif ( ref($msg) eq 'HTTP::Request' ) {
+        $last_request = $msg->content;
+    }
+}
 
 sub GET_Service_Request_Updates_input_schema {
     my $self = shift;

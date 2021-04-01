@@ -1,5 +1,7 @@
 use strict; use warnings;
 
+BEGIN { $ENV{TEST_MODE} = 1; }
+
 use Test::More;
 use Test::LongString;
 use Test::MockTime ':all';
