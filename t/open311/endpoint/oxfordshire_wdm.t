@@ -113,6 +113,12 @@ my %responses = (
 
 my @sent;
 
+# Mock out the Alloy integration because we're not testing that here.
+my $alloy = Test::MockModule->new('Open311::Endpoint::Integration::AlloyV2');
+$alloy->mock('get_service_request_updates', sub {
+    return ();
+});
+
 my $integration = Test::MockModule->new('Integrations::WDM');
 
 $integration->mock('_soap_call', sub {
@@ -133,7 +139,7 @@ $integration->mock('_soap_call', sub {
 });
 
 $integration->mock('_build_config_file', sub {
-    path(__FILE__)->sibling('oxfordshire.yml');
+    path(__FILE__)->sibling('oxfordshire_wdm.yml');
 });
 
 my %defaults = (
