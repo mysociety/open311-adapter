@@ -159,7 +159,7 @@ sub SOAP::Serializer::as_RequestSend {
         Priority => $value->{Priority} || 'N',
         AnalysisCode1 => $value->{AnalysisCode1},
         AnalysisCode2 => $value->{AnalysisCode2},
-        # Location => '',
+        Location => $value->{Location} || '',
         ExternalRef => $value->{fixmystreet_id},
         Description => $value->{Description}, # With attributes appended
         Easting => $value->{easting},

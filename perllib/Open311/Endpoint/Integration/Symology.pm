@@ -129,7 +129,7 @@ sub process_service_request_args {
 
     # We need to bump some values up from the attributes hashref to
     # the $args passed
-    foreach (qw/fixmystreet_id easting northing UnitID RegionSite NSGRef contributed_by/) {
+    foreach (qw/fixmystreet_id easting northing UnitID RegionSite NSGRef contributed_by report_url description/) {
         if (defined $args->{attributes}->{$_}) {
             $request->{$_} = delete $args->{attributes}->{$_};
         }
