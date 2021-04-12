@@ -19,15 +19,16 @@ use constant {
     REPORT_PRIORITY => 5,
     REPORT_AC1 => 6,
     REPORT_ACT2 => 7,
-    REPORT_REF => 8,
-    REPORT_DESC => 9,
-    REPORT_EASTING => 10,
-    REPORT_NORTHING => 11,
-    REPORT_INWEB => 12,
-    REPORT_SERVICECODE => 13,
-    REPORT_NEXTACTION => 14,
-    REPORT_NEXTINSPECTION => 15,
-    REPORT_NEXTACTIONUSERNAME => 16,
+    REPORT_LOCATION => 8,
+    REPORT_REF => 9,
+    REPORT_DESC => 10,
+    REPORT_EASTING => 11,
+    REPORT_NORTHING => 12,
+    REPORT_INWEB => 13,
+    REPORT_SERVICECODE => 14,
+    REPORT_NEXTACTION => 15,
+    REPORT_NEXTINSPECTION => 16,
+    REPORT_NEXTACTIONUSERNAME => 17,
     UPDATE_REPORT_ID => 123,
     REQUEST_SERVICE_CODE => 1,
     REQUEST_CRNO => 2,
@@ -65,6 +66,7 @@ $soap_lite->mock(call => sub {
             is $request[REPORT_REF]->value, "FMS456";
         } elsif ( $request[REPORT_EASTING]->value == EASTING_AREAA ) {
             is $request[REPORT_NEXTACTIONUSERNAME]->value, 'USER0001';
+            is $request[REPORT_LOCATION]->value, 'This is the report title';
         } elsif ( $request[REPORT_EASTING]->value == EASTING_AREAB ) {
             is $request[REPORT_NEXTACTIONUSERNAME]->value, 'USER0002';
         } elsif ( $request[REPORT_EASTING]->value == EASTING_BAD ) {
@@ -289,6 +291,36 @@ subtest "GET service" => sub {
                    "datatype_description" => "",
                    "automated" => "server_set"
                 },
+                {
+                   "required" => "false",
+                   "order" => 8,
+                   "datatype" => "string",
+                   "code" => "title",
+                   "description" => "Title",
+                   "variable" => "true",
+                   "datatype_description" => "",
+                   "automated" => "server_set"
+                },
+                {
+                   "required" => "false",
+                   "order" => 9,
+                   "datatype" => "string",
+                   "code" => "description",
+                   "description" => "Description",
+                   "variable" => "true",
+                   "datatype_description" => "",
+                   "automated" => "server_set"
+                },
+                {
+                   "required" => "false",
+                   "order" => 10,
+                   "datatype" => "string",
+                   "code" => "report_url",
+                   "description" => "Report URL",
+                   "variable" => "true",
+                   "datatype_description" => "",
+                   "automated" => "server_set"
+                },
             ],
         }, 'correct json returned';
 };
@@ -309,6 +341,7 @@ subtest "POST Bridges Area A OK" => sub {
         'attribute[northing]' => NORTHING,
         'attribute[fixmystreet_id]' => UPDATE_REPORT_ID,
         'attribute[area_code]' => 'AreaA',
+        'attribute[title]' => 'This is the report title',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
