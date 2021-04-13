@@ -141,7 +141,11 @@ $soap_lite->mock(call => sub {
         }
 
         my $client_ref = $params[1]->value;
-        is $client_ref, 'FMS-2000123';
+        if ( $uprn == 1000002 ) {
+            is $client_ref, 'client_ref1234';
+        } else {
+            is $client_ref, 'FMS-2000123';
+        }
 
         return SOAP::Result->new(result => {
             EventGuid => '1234',
@@ -423,6 +427,7 @@ subtest "POST subscription request with containter request OK" => sub {
         'attribute[Subscription_Details_Quantity]' => 2,
         'attribute[Container_Request_Container_Type]' => 44, # Garden Waste
         'attribute[Container_Request_Quantity]' => 1,
+        'attribute[client_reference]' => 'client_ref1234',
         'attribute[Type]' => 1,
     );
     ok $res->is_success, 'valid request'
