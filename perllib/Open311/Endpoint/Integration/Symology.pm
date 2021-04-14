@@ -10,11 +10,11 @@ use Moo;
 use Path::Tiny;
 use JSON::MaybeXS;
 use Text::CSV;
-use YAML::XS qw(LoadFile);
 use YAML::Logic;
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
+with 'Role::Config';
 with 'Role::Logger';
 
 use Integrations::Symology;
@@ -24,8 +24,6 @@ use Open311::Endpoint::Service::UKCouncil::Symology;
 
 has jurisdiction_id => ( is => 'ro' );
 
-has endpoint_config => ( is => 'lazy' );
-
 has date_formatter => ( is => 'lazy', default => sub {
     DateTime::Format::Strptime->new(
         pattern => '%d/%m/%Y %H:%M',
@@ -33,36 +31,29 @@ has date_formatter => ( is => 'lazy', default => sub {
     );
 });
 
-sub _build_endpoint_config {
-    my $self = shift;
-    my $config_file = path(__FILE__)->parent(5)->realpath->child('conf/council-' . $self->jurisdiction_id . '.yml');
-    my $conf = LoadFile($config_file);
-    return $conf;
-}
-
 has category_mapping => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{category_mapping} }
+    default => sub { $_[0]->config->{category_mapping} }
 );
 
 has username => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{username} }
+    default => sub { $_[0]->config->{username} }
 );
 
 has update_urls => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{update_urls} }
+    default => sub { $_[0]->config->{update_urls} }
 );
 
 has customer_defaults => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{customer_defaults} }
+    default => sub { $_[0]->config->{customer_defaults} }
 );
 
 has external_id_prefix => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{external_id_prefix} || "" }
+    default => sub { $_[0]->config->{external_id_prefix} || "" }
 );
 
 # May want something like Confirm's service_assigned_officers
@@ -107,19 +98,13 @@ sub service_class {
     'Open311::Endpoint::Service::UKCouncil::Symology';
 }
 
-sub log_and_die {
-    my ($self, $msg) = @_;
-    $self->logger->error($msg);
-    die "$msg\n";
-}
-
 sub process_service_request_args {
     my $self = shift;
     my $args = shift;
 
     my $service_code = $args->{service_code};
     my $codes = $self->category_mapping->{$service_code};
-    $self->log_and_die("Could not find category mapping for $service_code") unless $codes;
+    die "Could not find category mapping for $service_code\n" unless $codes;
 
     my $request = {
         Description => $args->{description},
@@ -209,7 +194,7 @@ sub get_integration {
 
 sub post_service_request {
     my ($self, $service, $args) = @_;
-    $self->log_and_die("No such service") unless $service;
+    die "No such service\n" unless $service;
 
     my @args = $self->process_service_request_args($args);
     $self->logger->debug(encode_json(\@args));
@@ -233,7 +218,7 @@ sub process_service_request_update_args {
 
     my $service_code = $args->{service_code};
     my $codes = $self->category_mapping->{$service_code};
-    $self->log_and_die("Could not find category mapping for $service_code") unless $codes;
+    die "Could not find category mapping for $service_code\n" unless $codes;
 
     my $closed = $args->{status} =~ /FIXED|DUPLICATE|NOT_COUNCILS_RESPONSIBILITY|NO_FURTHER_ACTION|INTERNAL_REFERRAL|CLOSED/;
 
@@ -276,7 +261,7 @@ sub post_service_request_update {
 sub check_error {
     my ($self, $response, $type) = @_;
 
-    $self->log_and_die("Couldn't create $type in Symology") unless defined $response;
+    die "Couldn't create $type in Symology\n" unless defined $response;
 
     $self->logger->debug(encode_json($response));
 
@@ -300,7 +285,7 @@ sub check_error {
         $self->logger->debug("Created $type in Symology: $error");
         return $crno; # For reports, not updates
     } else {
-        $self->log_and_die("Couldn't create $type in Symology: $error");
+        die "Couldn't create $type in Symology: $error\n";
     }
 }
 

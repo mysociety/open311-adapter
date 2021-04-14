@@ -429,12 +429,13 @@ XML
 };
 
 subtest 'GET reports' => sub {
+    local $ENV{TEST_LOGGER} = 'warn';
     my $res;
-    stderr_is {
+    stderr_like {
         $res = $endpoint->run_test_request(
             GET => '/requests.xml?jurisdiction_id=confirm_dummy&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
         );
-    } "no easting/northing for Enquiry 2004\nno easting/northing for Enquiry 2005\n", 'Warnings about invalid locations output';
+    } qr{no easting/northing for Enquiry 2004\n.*?no easting/northing for Enquiry 2005\n}, 'Warnings about invalid locations output';
     ok $res->is_success, 'valid request' or diag $res->content;
 
 my $expected = <<XML;
@@ -465,12 +466,13 @@ XML
 $endpoint = Open311::Endpoint::Integration::UK::DummyPrivate->new;
 
 subtest 'GET reports - private' => sub {
+    local $ENV{TEST_LOGGER} = 'warn';
     my $res;
-    stderr_is {
+    stderr_like {
         $res = $endpoint->run_test_request(
           GET => '/requests.xml?jurisdiction_id=confirm_dummy_private&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
         );
-    } "no easting/northing for Enquiry 2004\nno easting/northing for Enquiry 2005\n", 'Warnings about invalid locations output';
+    } qr{no easting/northing for Enquiry 2004\n.*?no easting/northing for Enquiry 2005\n}, 'Warnings about invalid locations output';
     ok $res->is_success, 'valid request' or diag $res->content;
 
 my $expected = <<XML;
@@ -525,12 +527,13 @@ XML
 };
 
 subtest 'GET reports - private services' => sub {
+    local $ENV{TEST_LOGGER} = 'warn';
     my $res;
-    stderr_is {
+    stderr_like {
         $res = $endpoint->run_test_request(
           GET => '/requests.xml?jurisdiction_id=confirm_dummy_private_services&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
         );
-    } "no easting/northing for Enquiry 2004\nno easting/northing for Enquiry 2005\n", 'Warnings about invalid locations output';
+    } qr{no easting/northing for Enquiry 2004\n.*?no easting/northing for Enquiry 2005\n}, 'Warnings about invalid locations output';
     ok $res->is_success, 'valid request' or diag $res->content;
 
 my $expected = <<XML;

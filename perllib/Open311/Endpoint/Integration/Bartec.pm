@@ -2,7 +2,6 @@ package Open311::Endpoint::Integration::Bartec;
 
 use JSON::MaybeXS;
 use Path::Tiny;
-use YAML::XS qw(LoadFile);
 use MIME::Base64;
 
 use Integrations::Bartec;
@@ -22,7 +21,7 @@ has jurisdiction_id => (
 
 has bartec => (
     is => 'lazy',
-    default => sub { Integrations::Bartec->new(config_filename => $_[0]->jurisdiction_id) }
+    default => sub { $_[0]->integration_class->new(config_filename => $_[0]->jurisdiction_id) }
 );
 
 has integration_class => (
@@ -64,10 +63,7 @@ has service_map => (
 );
 
 sub get_integration {
-    my $self = shift;
-    my $integ = $self->integration_class->new;
-    $integ->config_filename($self->jurisdiction_id);
-    return $integ;
+    return $_[0]->bartec;
 }
 
 sub services {
@@ -217,9 +213,9 @@ sub _attach_note {
     });
 
     if ( $res->{Errors}->{Message} ) {
-        warn "failed to attach note for report "
+        $self->logger->warn("failed to attach note for report "
             . $args->{attributes}->{fixmystreet_id}
-            . ": " . $res->{Errors}->{Message};
+            . ": " . $res->{Errors}->{Message});
     }
 }
 
@@ -528,9 +524,9 @@ sub _put_photos {
             content => $photo->{data},
         });
         if ( $res->{Errors}->{Message} ) {
-            warn "failed to attach photo for report "
+            $self->logger->warn("failed to attach photo for report "
                 . $args->{attributes}->{fixmystreet_id}
-                . ": " . $res->{Errors}->{Message};
+                . ": " . $res->{Errors}->{Message});
         }
         $i++;
     }

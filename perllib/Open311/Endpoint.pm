@@ -27,6 +27,8 @@ use Types::Standard ':all';
 
 use DateTime::Format::W3CDTF;
 
+with 'Role::Logger';
+
 =head1 DESCRIPTION
 
 An implementation of L<http://wiki.open311.org/GeoReport_v2> with a
@@ -790,10 +792,13 @@ sub call_api {
         }
     }
 
-    my $data = eval { $self->$api_method(@args) }
-        or return Open311::Endpoint::Result->error( 
-            $@ ? (500 => $@) : (404 => 'Resource not found')
-        );
+    my $data = eval { $self->$api_method(@args) };
+    if (my $err = $@) {
+        $self->logger->error($err);
+        return Open311::Endpoint::Result->error(500 => $err);
+    } elsif (!$data) {
+        return Open311::Endpoint::Result->error(404 => 'Resource not found');
+    }
 
     if (my $output_schema_method = $self->can("${api_name}_output_schema")) {
         my $definition = $self->$output_schema_method(@args);

@@ -13,8 +13,11 @@ has config_file => (
 around BUILDARGS => sub {
     my $next = shift;
     my $class = shift;
-
     my %args = @_;
+
+    die unless $args{jurisdiction_id}; # Must have one by here
+    $args{config_file} //= path(__FILE__)->parent(5)->realpath->child("conf/council-$args{jurisdiction_id}.yml")->stringify;
+
     if (my $config_data = $args{config_data}) {
         my $config = Load($config_data) or croak "Couldn't load config from string";
         return $class->$next(%$config, %args);

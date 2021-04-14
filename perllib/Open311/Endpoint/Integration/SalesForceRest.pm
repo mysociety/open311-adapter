@@ -116,7 +116,7 @@ sub post_service_request {
         try {
             my $photo_id = $self->_add_attachment( $new_id, $args->{media_url} );
         } catch {
-            warn "failed to upload photo for report $new_id: $_\n";
+            $self->logger->warn("failed to upload photo for report $new_id: $_");
         }
     }
 

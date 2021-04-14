@@ -11,10 +11,10 @@ use Moo;
 use Path::Tiny;
 use Types::Standard ':all';
 use JSON::MaybeXS;
-use YAML::XS qw(LoadFile);
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
+with 'Role::Config';
 with 'Role::Logger';
 
 use Integrations::Uniform;
@@ -23,8 +23,6 @@ use Open311::Endpoint::Service::UKCouncil::Uniform;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 
 has jurisdiction_id => ( is => 'ro' );
-
-has endpoint_config => ( is => 'lazy' );
 
 has '+identifier_types' => (
     is => 'lazy',
@@ -37,32 +35,24 @@ has '+identifier_types' => (
     },
 );
 
-sub _build_endpoint_config {
-    my $self = shift;
-    my $config_file = path(__FILE__)->parent(5)->realpath->child('conf/council-' . $self->jurisdiction_id . '.yml');
-    return {} if $ENV{TEST_MODE};
-    my $conf = LoadFile($config_file);
-    return $conf;
-}
-
 has service_whitelist => (
     is => 'ro',
-    default => sub { $_[0]->endpoint_config->{service_whitelist} || {} },
+    default => sub { $_[0]->config->{service_whitelist} || {} },
 );
 
 has database => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{database} }
+    default => sub { $_[0]->config->{database} }
 );
 
 has username => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{username} }
+    default => sub { $_[0]->config->{username} }
 );
 
 has password => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{password} }
+    default => sub { $_[0]->config->{password} }
 );
 
 sub logon {
@@ -73,7 +63,7 @@ sub logon {
         database => $self->database,
     })->result;
 
-    $self->log_and_die($result->{Message}) unless $result->{LogonSuccessful} eq 'true';
+    die $result->{Message} . "\n" unless $result->{LogonSuccessful} eq 'true';
 }
 
 sub services {
@@ -124,12 +114,6 @@ sub services {
 
 sub service_class {
     'Open311::Endpoint::Service::UKCouncil::Uniform';
-}
-
-sub log_and_die {
-    my ($self, $msg) = @_;
-    $self->logger->error($msg);
-    die "$msg\n";
 }
 
 sub process_service_request_args {
@@ -193,7 +177,7 @@ sub get_integration {
 
 sub post_service_request {
     my ($self, $service, $args) = @_;
-    $self->log_and_die("No such service") unless $service;
+    die "No such service\n" unless $service;
 
     my @args = $self->process_service_request_args($args);
     $self->logger->debug(encode_json(\@args));
@@ -201,19 +185,19 @@ sub post_service_request {
     $self->logon;
     my $web_service = $self->web_service($service);
     my $response = $self->get_integration->$web_service(@args);
-    $self->log_and_die('Failed') unless $response;
+    die "Failed" unless $response;
 
     $response = $response->method;
-    $self->log_and_die('Failed') unless $response;
+    die "Failed" unless $response;
 
     if ($response->{TransactionSuccess} && $response->{TransactionSuccess} eq 'False') {
-        $self->log_and_die($response->{TransactionMessages}{TransactionMessage}{MessageBrief});
+        die $response->{TransactionMessages}{TransactionMessage}{MessageBrief} . "\n";
     }
 
     # Also SiteID
     my $id = $response->{ServiceRequestIdentification}{ReferenceValue};
     my $key = $response->{ServiceRequestIdentification}{ServiceRequestTechnicalKey} || '-';
-    $self->log_and_die("Failed to find ID in success response: $key") unless $id;
+    die "Failed to find ID in success response: $key\n" unless $id;
     my $request = $self->new_request(
         service_request_id => $id,
     );
@@ -328,7 +312,7 @@ sub post_service_request_update {
             last;
         }
     }
-    $self->log_and_die("Could not find matching Visit") unless $visit_id;
+    die "Could not find matching Visit\n" unless $visit_id;
 
     $self->get_integration->AddActionsToVisit($visit_id, $args); # Doesn't return anything
 

@@ -1,7 +1,6 @@
 package Open311::Endpoint::Integration::Echo;
 
 use v5.14;
-use warnings;
 
 use Moo;
 use JSON::MaybeXS;
@@ -15,13 +14,6 @@ use Integrations::Echo;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::UKCouncil::Echo;
 use Open311::Endpoint::Service::Request::Update;
-
-around BUILDARGS => sub {
-    my ($orig, $class, %args) = @_;
-    die unless $args{jurisdiction_id}; # Must have one by here
-    $args{config_file} //= path(__FILE__)->parent(5)->realpath->child("conf/council-$args{jurisdiction_id}.yml")->stringify;
-    return $class->$orig(%args);
-};
 
 has jurisdiction_id => ( is => 'ro' );
 
@@ -67,12 +59,6 @@ sub services {
     return @services;
 }
 
-sub log_and_die {
-    my ($self, $msg) = @_;
-    $self->logger->error($msg);
-    die "$msg\n";
-}
-
 has integration_class => (
     is => 'ro',
     default => 'Integrations::Echo'
@@ -116,7 +102,7 @@ sub _get_data_value {
 
 sub post_service_request {
     my ($self, $service, $args) = @_;
-    $self->log_and_die("No such service") unless $service;
+    die "No such service\n" unless $service;
 
     my $request = $self->process_service_request_args($args);
     $self->logger->debug(encode_json($request));
@@ -141,7 +127,7 @@ sub post_service_request {
     }
 
     my $response = $integ->PostEvent($request);
-    $self->log_and_die('Failed') unless $response;
+    die "Failed\n" unless $response;
 
     $request = $self->new_request(
         service_request_id => $response->{EventGuid},

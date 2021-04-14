@@ -23,13 +23,6 @@ use Open311::Endpoint::Service::Request::Update::mySociety;
 use Path::Tiny;
 
 
-around BUILDARGS => sub {
-    my ($orig, $class, %args) = @_;
-    die unless $args{jurisdiction_id}; # Must have one by here
-    $args{config_file} //= path(__FILE__)->parent(5)->realpath->child("conf/council-$args{jurisdiction_id}.yml")->stringify;
-    return $class->$orig(%args);
-};
-
 has jurisdiction_id => (
     is => 'ro',
 );
@@ -267,10 +260,10 @@ sub _update_item {
                     body => $updated
                 );
             } catch {
-                warn $_;
+                $self->logger->warn($_);
             }
         } else {
-            warn $_;
+            $self->logger->warn($_);
         }
     };
 
@@ -289,9 +282,7 @@ sub _set_parent_attribute {
         $parent_attribute_id = $self->alloy->get_parent_attributes($resource_type);
 
         unless ( $parent_attribute_id ) {
-            my $msg = "no parent attribute id found for asset $resource_id with type $resource_type";
-            $self->logger->error($msg);
-            die $msg;
+            die "no parent attribute id found for asset $resource_id with type $resource_type";
         }
     }
 
@@ -670,13 +661,13 @@ sub get_service_requests {
 
         my $category = $self->get_defect_category( $request );
         unless ($category) {
-            warn "No category found for defect $request->{itemId}, source type $request->{designCode} in " . $self->jurisdiction_id . "\n";
+            $self->logger->warn("No category found for defect $request->{itemId}, source type $request->{designCode} in " . $self->jurisdiction_id);
             next;
         }
 
         my $cat_service = $self->service($category);
         unless ($cat_service) {
-            warn "No service found for defect $request->{itemId}, category $category in " . $self->jurisdiction_id . "\n";
+            $self->logger->warn("No service found for defect $request->{itemId}, category $category in " . $self->jurisdiction_id);
             next;
         }
 
@@ -685,7 +676,6 @@ sub get_service_requests {
         unless ($args{latlong}) {
             my $geometry = $request->{geometry}{type} || 'unknown';
             $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry");
-            warn "Defect $request->{itemId}: don't know how to handle geometry: $geometry\n";
             next;
         }
 

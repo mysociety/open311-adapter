@@ -19,13 +19,6 @@ use Open311::Endpoint::Service::Request::Update::mySociety;
 use Path::Tiny;
 
 
-around BUILDARGS => sub {
-    my ($orig, $class, %args) = @_;
-    die unless $args{jurisdiction_id}; # Must have one by here
-    $args{config_file} //= path(__FILE__)->parent(5)->realpath->child("conf/council-$args{jurisdiction_id}.yml")->stringify;
-    return $class->$orig(%args);
-};
-
 has jurisdiction_id => (
     is => 'ro',
 );
@@ -184,9 +177,7 @@ sub post_service_request {
         }
 
         unless ( $parent_attribute_id ) {
-            my $msg = "no parent attribute id found for asset $resource_id with type $resource_type ($source->{source_type_id})";
-            $self->logger->error($msg);
-            die $msg;
+            die "no parent attribute id found for asset $resource_id with type $resource_type ($source->{source_type_id})\n";
         }
     }
 
@@ -493,13 +484,13 @@ sub get_service_requests {
         my $category = $self->get_defect_category( $request );
         (my $service_name = $category) =~ s/^.*_//;
         unless ($category) {
-            warn "No category found for defect $request->{resourceId}, source type $request->{sourceTypeId} in " . $self->jurisdiction_id . "\n";
+            $self->logger->warn("No category found for defect $request->{resourceId}, source type $request->{sourceTypeId} in " . $self->jurisdiction_id);
             next;
         }
 
         my $category_service = $self->service($category);
         unless ($category_service) {
-            warn "No matching service for $category for defect $request->{resourceId} in " . $self->jurisdiction_id . "\n";
+            $self->logger->warn("No matching service for $category for defect $request->{resourceId} in " . $self->jurisdiction_id);
             next;
         }
 
@@ -508,7 +499,6 @@ sub get_service_requests {
         unless ($args{latlong}) {
             my $geometry = $request->{geometry}->{featureGeom}->{geometry};
             $self->logger->error("Defect $request->{resourceId}: don't know how to handle geometry: $geometry->{type}");
-            warn "Defect $request->{resourceId}: don't know how to handle geometry: $geometry->{type}\n";
             next;
         }
 

@@ -1,9 +1,17 @@
 use strict; use warnings;
 
 BEGIN {
+    $ENV{TEST_MODE} = 1;
+
     package Foo;
     use Moo;
     with 'Open311::Endpoint::Role::ConfigFile';
+
+    around BUILDARGS => sub {
+        my ($orig, $class, %args) = @_;
+        $args{jurisdiction_id} = 'foo';
+        return $class->$orig(%args);
+    };
 
     has foo => ( is => 'ro', default => 'foo' );
 }

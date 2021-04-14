@@ -77,7 +77,7 @@ $lwp->mock(request => sub {
     }
 });
 
-my $endpoint_config = {
+my $config = {
     endpoint_url => 'http://example.com/',
     username => 'user',
     password => 'pass',
@@ -100,10 +100,10 @@ my $endpoint_config = {
 };
 
 my $ezytreev_open311_mock = Test::MockModule->new('Open311::Endpoint::Integration::Ezytreev');
-$ezytreev_open311_mock->mock(endpoint_config => sub { $endpoint_config });
+$ezytreev_open311_mock->mock(config => sub { $config });
 
 my $ezytreev_mock = Test::MockModule->new('Integrations::Ezytreev');
-$ezytreev_mock->mock(config => sub { $endpoint_config });
+$ezytreev_mock->mock(config => sub { $config });
 
 use Open311::Endpoint::Integration::Ezytreev;
 
