@@ -71,6 +71,12 @@ sub _row_status {
     };
 }
 
+sub _row_external_status_code {
+    my ($self, $row, $status) = @_;
+    return undef unless $status && $status eq 'not_councils_responsibility';
+    return $row->{'Event Type'};
+}
+
 sub _row_description { '' } # lca description not used
 
 1;
