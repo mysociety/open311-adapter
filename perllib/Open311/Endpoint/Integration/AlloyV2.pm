@@ -829,7 +829,7 @@ sub get_defect_category {
         my $type;
 
         for my $att (@attributes) {
-            if ($att->{attributeCode} =~ /DefectType/ ) {
+            if ($att->{attributeCode} =~ /DefectType|DefectFaultType|lightingJobJobType/) {
                 $type = $att->{value}->[0];
             }
         }
