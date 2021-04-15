@@ -81,6 +81,8 @@ sub post_service_request_update {
     );
 }
 
+sub get_service_requests { () }
+
 sub get_service_request_updates {
     my ($self, $args) = @_;
     my $updates = $self->get_integration->get_updates({ start_date => $args->{start_date}, end_date => $args->{end_date} });
