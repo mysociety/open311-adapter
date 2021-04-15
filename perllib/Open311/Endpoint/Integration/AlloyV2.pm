@@ -858,7 +858,7 @@ sub get_defect_category {
         my $type;
 
         for my $att (@attributes) {
-            if ($att->{attributeCode} =~ /DefectType/ ) {
+            if ($att->{attributeCode} =~ /DefectType/ || $att->{attributeCode} =~ /DefectFaultType/) {
                 $type = $att->{value}->[0];
             }
         }
