@@ -115,15 +115,37 @@ sub post_service_request {
         my $row = { id => $type->{Id} };
         $row->{value} = $self->check_for_data_value($type->{Name}, $args, $request);
 
+        my %extra;
+        my $extra_count = 0;
         if ($type->{ChildDatatypes}) {
             foreach (@{$type->{ChildDatatypes}{ExtensibleDatatype}}) {
                 my $subrow = { id => $_->{Id} };
-                $subrow->{value} = $self->check_for_data_value($_->{Name}, $args, $request, $type->{Name});
-                push @{$row->{childdata}}, $subrow if defined $subrow->{value};
+                my $value = $self->check_for_data_value($_->{Name}, $args, $request, $type->{Name});
+                if (defined $value) {
+                    my ($first, @rest) = split /::/, $value;
+                    $subrow->{value} = $first;
+                    push @{$row->{childdata}}, $subrow;
+                    if (@rest) {
+                        $extra{$_->{Id}} = \@rest;
+                        $extra_count = @rest;
+                    }
+                }
             }
         }
 
         push @{$request->{data}}, $row if defined $row->{value} || $row->{childdata};
+        for (my $i=0; $i<$extra_count; $i++) {
+            my @childdata;
+            foreach (@{$row->{childdata}}) {
+                my $subrow = { %$_ };
+                if ($extra{$_->{id}}) {
+                    $subrow->{value} = $extra{$_->{id}}->[$i];
+                }
+                push @childdata, $subrow;
+            }
+            $row = { %$row, childdata => \@childdata };
+            push @{$request->{data}}, $row;
+        }
     }
 
     my $response = $integ->PostEvent($request);

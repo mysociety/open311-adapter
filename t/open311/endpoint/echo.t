@@ -47,6 +47,7 @@ $soap_lite->mock(call => sub {
     my $method = $args[0]->name;
     if ($method eq 'PostEvent') {
         my @params = ${$args[3]->value}->value;
+
         my $event_type = $params[3]->value;
         my $service_id = $params[4]->value;
         if ($event_type == EVENT_TYPE_REQUEST) {
@@ -61,6 +62,14 @@ $soap_lite->mock(call => sub {
         is $object_ref[1]->value, 'PointAddress';
         my $uprn = ${$object_ref[2]->value}->value->value->value->value;
 
+        my $client_ref = $params[1]->value;
+        if ( $uprn == 1000002 ) {
+            is $client_ref, 'client_ref1234';
+        } else {
+            like $client_ref, qr/^FMS-200012[34]$/;
+        }
+        my $multi_request = $client_ref eq 'FMS-2000124';
+
         my @data = ${$params[0]->value}->value->value;
         if ($event_type == EVENT_TYPE_MISSED) {
             is $uprn, 1000001;
@@ -71,6 +80,8 @@ $soap_lite->mock(call => sub {
             } elsif ( $uprn == 1000002 ) {
                 is @data, 6, 'Name, source, type, subscription request and container stuff';
             }
+        } elsif ($multi_request) {
+            is @data, 5, 'Name, source and two container stuff';
         } else {
             is $uprn, 1000001;
             is @data, 4, 'Name, source and (container stuff or notes)';
@@ -98,6 +109,20 @@ $soap_lite->mock(call => sub {
             @child = ${$children[2]->value}->value;
             is $child[0]->value, 1007;
             is $child[1]->value, 12;
+            if ($multi_request) {
+                @notes = ${$data[4]->value}->value;
+                is $notes[1]->value, 1004;
+                @children = ${$notes[0]->value}->value->value;
+                @child = ${$children[0]->value}->value;
+                is $child[0]->value, 1005;
+                is $child[1]->value, 2;
+                @child = ${$children[1]->value}->value;
+                is $child[0]->value, 1006;
+                is $child[1]->value, 1;
+                @child = ${$children[2]->value}->value;
+                is $child[0]->value, 1007;
+                is $child[1]->value, 12;
+            }
         } elsif ($event_type == EVENT_TYPE_ENQUIRY) {
             my @notes = ${$data[3]->value}->value;
             is $notes[0]->value, 1008;
@@ -138,13 +163,6 @@ $soap_lite->mock(call => sub {
                 is $sub_type[0]->value, 1010;
                 is $sub_type[1]->value, 1;
             }
-        }
-
-        my $client_ref = $params[1]->value;
-        if ( $uprn == 1000002 ) {
-            is $client_ref, 'client_ref1234';
-        } else {
-            is $client_ref, 'FMS-2000123';
         }
 
         return SOAP::Result->new(result => {
@@ -333,6 +351,31 @@ subtest "POST new request OK" => sub {
         'attribute[fixmystreet_id]' => 2000123,
         'attribute[Container_Type]' => 12, # Black Box (Paper)
         'attribute[Quantity]' => 2,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST new multi-request OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => EVENT_TYPE_REQUEST,
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 1000001,
+        'attribute[fixmystreet_id]' => 2000124,
+        'attribute[Container_Type]' => 12, # Black Box (Paper)
+        'attribute[Quantity]' => 2,
+        'attribute[Reason]' => '7::1',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
