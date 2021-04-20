@@ -1,0 +1,26 @@
+username: FMS
+nsgref_to_action:
+    '123/4567': 'N1'
+    '234/5678': 'S2'
+customer_defaults:
+    CustomerType: "PB"
+category_mapping:
+    AbanVeh:
+        name: 'Abandoned vehicles'
+        parameters:
+            ServiceCode: 'ServiceCode'
+            RequestType: 'ReqType'
+            AnalysisCode1: 'A1'
+            AnalysisCode2: 'A2'
+        questions:
+          - code: 'message'
+            description: 'Please ignore yellow cars'
+            variable: 0
+          - code: 'car_details'
+            description: 'Car details'
+          - code: 'burnt'
+            description: 'Burnt out?'
+            values: [ 'Yes', 'No' ]
+        logic:
+          - rules: [ '$attr.burnt', 'Yes' ]
+            output: { Priority: 'P1' }

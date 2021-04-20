@@ -3,6 +3,7 @@ use warnings;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
+use Path::Tiny;
 use Test::More;
 use Test::MockModule;
 
@@ -48,7 +49,7 @@ $soap_lite->mock(call => sub {
     if ($args[0] eq 'SendRequestAdditionalGroup') {
         my @request = ${$args[2]->value}->value;
         is $request[REPORT_NSGREF]->value, NSGREF;
-        my $next_action = Open311::Endpoint::Integration::UK::Bexley::Symology->config->{nsgref_to_action}{+NSGREF};
+        my $next_action = Open311::Endpoint::Integration::UK::Bexley::Symology->new->endpoint_config->{nsgref_to_action}{+NSGREF};
         is $request[REPORT_NEXTACTION]->value, $next_action; # Worked out automatically from 0
         is $request[REPORT_NORTHING]->value, NORTHING;
         my $photo_desc = "\n\n[ This report contains a photo, see: http://example.org/photo/1.jpeg ]";
@@ -107,36 +108,8 @@ $bexley_integ->mock(config => sub {
 });
 
 my $bexley_end = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::Symology');
-$bexley_end->mock(config => sub {
-    {
-        username => 'FMS',
-        nsgref_to_action => {
-            NSGREF, 'N1',
-            '234/5678' => 'S2',
-        },
-        customer_defaults => {
-            CustomerType => "PB",
-        },
-        category_mapping => {
-            AbanVeh => {
-                name => 'Abandoned vehicles',
-                parameters => {
-                    ServiceCode => 'ServiceCode',
-                    RequestType => 'ReqType',
-                    AnalysisCode1 => 'A1',
-                    AnalysisCode2 => 'A2',
-                },
-                questions => [
-                    { code => 'message', description => 'Please ignore yellow cars', variable => 0 },
-                    { code => 'car_details', description => 'Car details', },
-                    { code => 'burnt', description => 'Burnt out?', values => [ 'Yes', 'No' ], },
-                ],
-                logic => [
-                    { rules => [ '$attr.burnt', 'Yes' ], output => { Priority => 'P1' } },
-                ],
-            },
-        },
-    }
+$bexley_end->mock('_build_config_file', sub {
+    path(__FILE__)->sibling('bexley_symology.yml');
 });
 $bexley_end->mock(_get_csvs => sub {
     [ \<<EOF,
@@ -398,7 +371,7 @@ subtest "POST Abandoned Vehicles burnt OK" => sub {
         } ], 'correct json returned';
 };
 
-$bexley_end->mock(config => sub {
+$bexley_end->mock(endpoint_config => sub {
     {
         username => 'FMS',
         nsgref_to_action => {

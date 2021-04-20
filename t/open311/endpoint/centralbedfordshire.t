@@ -120,7 +120,7 @@ $centralbeds_integ->mock(config => sub {
 });
 
 my $centralbeds_end = Test::MockModule->new('Open311::Endpoint::Integration::UK::CentralBedfordshire');
-$centralbeds_end->mock(config => sub {
+$centralbeds_end->mock(endpoint_config => sub {
     {
         username => 'FMS',
         nsgref_to_action => {},
