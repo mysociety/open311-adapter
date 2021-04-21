@@ -451,6 +451,7 @@ subtest "check send basic report" => sub {
         first_name => 'Bob',
         last_name => 'Mould',
         email => 'test@example.com',
+        phone => '07123456789',
         description => 'description',
         lat => '52.540930',
         long => '-0.289832',
@@ -502,6 +503,7 @@ subtest "check send basic report" => sub {
             Surname => 'Mould',
             Email => 'test@example.com',
             ReporterType => 'Public',
+            Telephone => '07123456789',
         }
     }, 'correct request sent';
 
