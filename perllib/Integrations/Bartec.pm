@@ -435,6 +435,7 @@ sub ServiceRequests_Create {
             Forename => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => $values->{first_name} },
             Surname => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => $values->{last_name} },
             Email => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd'} , value => $values->{email} },
+            $values->{phone} ? ( Telephone => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd'} , value => $values->{phone} } ) : (),
             ReporterType => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd'}, value => $values->{ReporterType} },
         },
     );
