@@ -8,13 +8,12 @@ use warnings;
 use DateTime::Format::W3CDTF;
 use Digest::MD5 qw(md5_hex);
 use Moo;
-use Path::Tiny;
 use Types::Standard ':all';
 use JSON::MaybeXS;
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
-with 'Role::Config';
+with 'Role::EndpointConfig';
 with 'Role::Logger';
 
 use Integrations::Uniform;
@@ -37,22 +36,22 @@ has '+identifier_types' => (
 
 has service_whitelist => (
     is => 'ro',
-    default => sub { $_[0]->config->{service_whitelist} || {} },
+    default => sub { $_[0]->endpoint_config->{service_whitelist} || {} },
 );
 
 has database => (
     is => 'lazy',
-    default => sub { $_[0]->config->{database} }
+    default => sub { $_[0]->endpoint_config->{database} }
 );
 
 has username => (
     is => 'lazy',
-    default => sub { $_[0]->config->{username} }
+    default => sub { $_[0]->endpoint_config->{username} }
 );
 
 has password => (
     is => 'lazy',
-    default => sub { $_[0]->config->{password} }
+    default => sub { $_[0]->endpoint_config->{password} }
 );
 
 sub logon {

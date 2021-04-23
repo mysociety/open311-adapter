@@ -7,14 +7,13 @@ use DateTime::Format::Strptime;
 use DateTime::Format::W3CDTF;
 use Digest::MD5 qw(md5_hex);
 use Moo;
-use Path::Tiny;
 use JSON::MaybeXS;
 use Text::CSV;
 use YAML::Logic;
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
-with 'Role::Config';
+with 'Role::EndpointConfig';
 with 'Role::Logger';
 
 use Integrations::Symology;
@@ -33,27 +32,27 @@ has date_formatter => ( is => 'lazy', default => sub {
 
 has category_mapping => (
     is => 'lazy',
-    default => sub { $_[0]->config->{category_mapping} }
+    default => sub { $_[0]->endpoint_config->{category_mapping} }
 );
 
 has username => (
     is => 'lazy',
-    default => sub { $_[0]->config->{username} }
+    default => sub { $_[0]->endpoint_config->{username} }
 );
 
 has update_urls => (
     is => 'lazy',
-    default => sub { $_[0]->config->{update_urls} }
+    default => sub { $_[0]->endpoint_config->{update_urls} }
 );
 
 has customer_defaults => (
     is => 'lazy',
-    default => sub { $_[0]->config->{customer_defaults} }
+    default => sub { $_[0]->endpoint_config->{customer_defaults} }
 );
 
 has external_id_prefix => (
     is => 'lazy',
-    default => sub { $_[0]->config->{external_id_prefix} || "" }
+    default => sub { $_[0]->endpoint_config->{external_id_prefix} || "" }
 );
 
 # May want something like Confirm's service_assigned_officers
