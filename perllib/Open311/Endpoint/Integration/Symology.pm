@@ -334,12 +334,15 @@ sub get_service_request_updates {
     return @updates;
 }
 
+sub _row_external_status_code { return undef; }
+
 sub _process_csv_row {
     my ($self, $row) = @_;
 
     my $dt = $self->date_formatter->parse_datetime($row->{date_history});
 
     my $status = $self->_row_status($row);
+    my $external_status = $self->_row_external_status_code($row, $status);
     return unless $status;
     my $description = $self->_row_description($row);
 
@@ -352,6 +355,7 @@ sub _process_csv_row {
         service_request_id => $row->{CRNo}+0,
         description => $description,
         updated_datetime => $dt,
+        $external_status ? ( external_status_code => $external_status ) : (),
     );
 }
 
