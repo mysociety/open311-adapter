@@ -55,14 +55,16 @@ use DateTime;
 use DateTime::Format::W3CDTF;
 use Getopt::Long;
 use Pod::Usage;
+use JSON::MaybeXS;
 
-my ($csv_in, $csv_out, $start_date, $end_date, $help);
+my ($csv_in, $csv_out, $start_date, $end_date, $csv, $json, $help);
 
 GetOptions (
     'infile=s'  => \$csv_in,
     'outfile=s' => \$csv_out,
     'start_date=s' => \$start_date,
     'end_date=s' => \$end_date,
+    'json' => \$json,
     'help|h|?'  => \$help,
 );
 
@@ -87,17 +89,38 @@ my @updates = $int->get_service_request_updates( {
 my $first = pop @updates;
 
 
-open my $out, '>', $csv_out;
+open my $out, '>', $csv_out or die "Failed to open $csv_out: $!\n";
 
-my $csv = Text::CSV->new({ binary => 1, eol => "\n" });
-$csv->print($out, [ qw(description update_id time status service_request_id) ]);
+if ( $json ) {
+    my @out;
 
-for my $row (@updates) {
-    $csv->print($out, [
-        $row->description,
-        $row->update_id,
-        $formatter->format_datetime($row->updated_datetime),
-        $row->status,
-        $row->service_request_id
-    ] );
+    for my $row(@updates) {
+        push @out, {
+            description => $row->description,
+            update_id => $row->update_id,
+            updated_datetime => $formatter->format_datetime($row->updated_datetime),
+            status => $row->status,
+            service_request_id => $row->service_request_id
+        };
+    }
+
+    my $json = JSON::MaybeXS->new(utf8 => 1, pretty => 1);
+    my $string = $json->encode(\@out);
+    print $out $string;
+} else {
+
+    my $csv = Text::CSV->new({ binary => 1, eol => "\n" });
+    $csv->print($out, [ qw(description update_id time status service_request_id) ]);
+
+    for my $row (@updates) {
+        $csv->print($out, [
+            $row->description,
+            $row->update_id,
+            $formatter->format_datetime($row->updated_datetime),
+            $row->status,
+            $row->service_request_id
+        ] );
+    }
 }
+
+close $out;
