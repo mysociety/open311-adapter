@@ -99,6 +99,7 @@ $open311->mock(perform_request => sub {
         # Check more contents of req here
         my %req = map { $_->name => $_->value } ${$op->value}->value;
         is $req{SiteCode}, 999999;
+        is $req{EnquiryClassCode}, 'TEST';
         if ($req{EnquiryReference} == 1002) {
             ok !defined $req{LoggedTime}, 'LoggedTime omitted';
         }
