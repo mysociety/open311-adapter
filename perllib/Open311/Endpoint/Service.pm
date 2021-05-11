@@ -37,6 +37,18 @@ has group => (
     default => '',
 );
 
+has hint => (
+    is => 'rw',
+    isa => Str,
+    default => '',
+);
+
+has group_hint => (
+    is => 'rw',
+    isa => Str,
+    default => '',
+);
+
 has groups => (
     is => 'rw',
     isa => ArrayRef[Str],

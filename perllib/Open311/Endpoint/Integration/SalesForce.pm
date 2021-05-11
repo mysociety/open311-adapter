@@ -183,9 +183,13 @@ sub services {
         next if $service->{hasChildren} eq 'true';
 
         my $group = '';
+        my $hint = $service->{html};
+        my $group_hint = '';
+
         my $parent = $service_lookup{$service->{parent}};
         if ($parent) {
             $group = $parent->{name};
+            $group_hint = $parent->{html};
         }
 
         my $type = Open311::Endpoint::Service::UKCouncil::Rutland->new(
@@ -195,6 +199,8 @@ sub services {
             group => $group,
             type => 'realtime',
             keywords => [qw/ /],
+            hint => $hint,
+            group_hint => $group_hint,
         );
 
         push @service_types, $type;

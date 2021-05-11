@@ -92,6 +92,8 @@ has schema => (
                     metadata => '/open311/bool',
                     description => '//str',
                     service_code => '//str',
+                    hint => '//str',
+                    group_hint => '//str',
                 },
                 optional => {
                     keywords => '//str',

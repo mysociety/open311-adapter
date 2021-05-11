@@ -350,7 +350,7 @@ sub GET_Service_List {
             metadata => $self->format_boolean( $service->has_attributes ),
             @{$service->groups} ? (groups => $service->groups) : (group => $service->group),
             map { $_ => $service->$_ } 
-                qw/ service_name service_code description type /,
+                qw/ service_name service_code description type hint group_hint /,
         }
     } $self->services($args);
     return {
