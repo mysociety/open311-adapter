@@ -130,10 +130,10 @@ my %responses = (
         "CategoryInformation": [
             {
                 "serviceid": "a096E000007pbxWQAQ",
-                "parent" : "",
+                "parent" : "a096E000007pbwiQAA",
                 "name_code": "POT",
                 "name": "Fly Tipping",
-                "html" : "",
+                "html" : "<span>This is the category HTML hint</span>",
                 "hasChildren" : "false"
             },
             {
@@ -141,8 +141,8 @@ my %responses = (
                 "parent" : "",
                 "name_code": "RC08",
                 "name": "Street Furniture",
-                "html" : "",
-                "hasChildren" : "false"
+                "html" : "<span>This is the group HTML hint</span>",
+                "hasChildren" : "true"
             },
             {
                 "serviceid" : "a012500000JJ0nBAAT",
@@ -840,16 +840,7 @@ subtest "check fetch service description" => sub {
         metadata => 'true',
         type => "realtime",
         keywords => "",
-        group => ""
-    },
-    {
-        service_code => 'a096E000007pbwiQAA',
-        metadata => 'true',
-        type => "realtime",
-        keywords => "",
-        group => "",
-        service_name => "Street Furniture",
-        description => "Street Furniture"
+        group => "Street Furniture"
     },
     {
         metadata => "true",
@@ -942,6 +933,26 @@ subtest "check fetch service metadata" => sub {
             datatype_description => '',
             order => 5,
             description => "Additional Information",
+          },
+          {
+            variable => 'false',
+            code => "hint",
+            datatype => "string",
+            required => 'false',
+            datatype_description => '',
+            order => 6,
+            description => "<span>This is the category HTML hint</span>",
+            automated => 'server_set',
+          },
+          {
+            variable => 'false',
+            code => "group_hint",
+            datatype => "string",
+            required => 'false',
+            datatype_description => '',
+            order => 7,
+            description => "<span>This is the group HTML hint</span>",
+            automated => 'server_set',
           }
         ]
     }, 'correct json returned';

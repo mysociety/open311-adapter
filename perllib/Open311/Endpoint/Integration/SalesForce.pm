@@ -207,6 +207,22 @@ sub service {
     my ($self, $id, $args) = @_;
 
     my $meta = $self->get_integration->get_service($id, $args);
+    my @services = $self->get_integration->get_services($args);
+
+    my %service_lookup = map { $_->{serviceid} => $_ } @services;
+    my $srv = $service_lookup{$id};
+    my $parent;
+    my $hint = '';
+    my $group_hint = '';
+
+    if ($srv) {
+        $parent = $service_lookup{$srv->{parent}};
+        $hint = $srv->{html};
+    }
+
+    if ($parent) {
+        $group_hint = $parent->{html};
+    }
 
     my $service = Open311::Endpoint::Service::UKCouncil::Rutland->new(
         service_name => $meta->{title},
@@ -232,6 +248,25 @@ sub service {
         my $attrib = Open311::Endpoint::Service::Attribute->new(%options);
         push @{ $service->attributes }, $attrib;
     }
+
+    my %options = (
+        required => 0,
+        variable => 0,
+        datatype => 'string',
+        automated => 'server_set',
+    );
+
+    push @{ $service->attributes }, Open311::Endpoint::Service::Attribute->new(
+        code => 'hint',
+        description => $hint,
+        %options,
+    );
+
+    push @{ $service->attributes }, Open311::Endpoint::Service::Attribute->new(
+        code => 'group_hint',
+        description => $group_hint,
+        %options,
+    );
 
     return $service;
 }
