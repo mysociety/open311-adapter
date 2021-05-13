@@ -48,6 +48,8 @@ has internal_attributes => (
       title => 1,
       description => 1,
       closest_address => 1,
+      group_hint => 1,
+      hint => 1,
   } },
 );
 
