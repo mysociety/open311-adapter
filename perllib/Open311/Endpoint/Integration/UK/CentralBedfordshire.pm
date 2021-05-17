@@ -24,6 +24,8 @@ sub process_service_request_args {
     my $self = shift;
 
     my $location = (delete $_[0]->{attributes}->{title}) || '';
+    delete $_[0]->{attributes}->{description};
+    delete $_[0]->{attributes}->{report_url};
 
     my $area_code = (delete $_[0]->{attributes}->{area_code}) || '';
     my @args = $self->SUPER::process_service_request_args(@_);
