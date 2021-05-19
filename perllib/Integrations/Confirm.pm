@@ -67,6 +67,13 @@ has 'customer_type_code' => (
     default => sub { $_[0]->config->{customer_type_code} }
 );
 
+# If a particular service requires an enquiry class code, we can look this up here
+sub service_enquiry_class_code {
+    my ($self, $service_code) = @_;
+    my $lookup = $self->config->{service_enquiry_class_code} || {};
+    return $lookup->{$service_code};
+}
+
 has 'server_timezone' => (
     is => 'lazy',
     default => sub { $_[0]->config->{server_timezone} }
@@ -282,6 +289,9 @@ sub NewEnquiry {
     if ($args->{external_system_number}) {
         $enq{ExternalSystemNumber} = $args->{external_system_number};
         $enq{ExternalSystemReference} = $args->{attributes}->{fixmystreet_id};
+    }
+    if (my $code = $self->service_enquiry_class_code($service_code)) {
+        $enq{EnquiryClassCode} = $code;
     }
 
     my @elements = map {
