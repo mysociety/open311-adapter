@@ -9,3 +9,4 @@ category_mapping:
     name: "Category A"
   categoryB:
     name: "Category B"
+user_agent_string: "FixMyStreet/open311-adapter Peterborough"

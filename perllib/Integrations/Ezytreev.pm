@@ -9,10 +9,27 @@ use Moo;
 with 'Role::Config';
 with 'Role::Logger';
 
+=head2 ua_string
+
+Returns a string to be used in the User-Agent: header for all requests
+to the EzyTreev API. This is looked up from the user_agent_string config key,
+and defaults to "open311-adapter/FixMyStreet" if not found in config.
+
+=cut
+
+has ua_string => (
+    is => 'lazy',
+    default => sub {
+        my $self = shift;
+        return $self->config->{user_agent_string} || "FixMyStreet/open311-adapter";
+    },
+);
+
 has ua => (
     is => 'lazy',
     default => sub {
-        my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+        my $self = shift;
+        my $ua = LWP::UserAgent->new(agent => $self->ua_string);
         my $uri = URI->new($_[0]->config->{endpoint_url});
         my $netloc = $uri->host . ":" . $uri->port;
         $ua->credentials($netloc, $uri->host, $_[0]->config->{username}, $_[0]->config->{password});
