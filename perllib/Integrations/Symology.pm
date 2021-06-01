@@ -135,11 +135,16 @@ sub current_date {
 sub SOAP::Serializer::as_ArrayOfAdditionalFieldSend {
     my ($self, $value, $name, $type, $attr) = @_;
 
-    my $v = [
-          [ FieldLine => 17, ValueType => 1, DataValue => $value ],
-    ];
+    # Allow individual integrations to provide their own values here, otherwise
+    # assume it's a simple value for the customer type field.
+    unless (ref $value eq 'ARRAY') {
+        $value = [
+            [ FieldLine => 17, ValueType => 1, DataValue => $value ],
+        ];
+    }
+
     my $elem = \SOAP::Data
-        ->name('AdditionalFieldSend' => map { [ make_soap_structure(@$_) ] } @$v)
+        ->name('AdditionalFieldSend' => map { [ make_soap_structure(@$_) ] } @$value)
         ->attr({'xsi:type' => 'AdditionalFieldSend'});
     return [$name, {'xsi:type' => $type, %$attr}, $elem];
 }
