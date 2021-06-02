@@ -92,6 +92,8 @@ sub check_for_data_value {
 sub _get_data_value {
     my ($self, $name, $args, $request) = @_;
     (my $name_with_underscores = $name) =~ s/ /_/g;
+    # skip emails if it's an anonymous user
+    return undef if $self->data_key_open311_map->{$name} && $self->data_key_open311_map->{$name} eq 'email' && $args->{attributes}->{contributed_as} && $args->{attributes}->{contributed_as} eq 'anonymous_user';
     return $args->{$self->data_key_open311_map->{$name}} if $self->data_key_open311_map->{$name};
     return $args->{attributes}{$name_with_underscores} if length $args->{attributes}{$name_with_underscores};
     return $self->default_data_all->{$name} if $self->default_data_all->{$name};
