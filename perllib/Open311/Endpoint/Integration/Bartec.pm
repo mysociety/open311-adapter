@@ -3,6 +3,7 @@ package Open311::Endpoint::Integration::Bartec;
 use JSON::MaybeXS;
 use Path::Tiny;
 use MIME::Base64;
+use Try::Tiny;
 
 use Integrations::Bartec;
 
@@ -172,19 +173,41 @@ sub post_service_request {
         die "failed to send request " . $args->{attributes}->{fixmystreet_id} . ": $err";
     }
 
-    my $sr = $integ->ServiceRequests_Get( $res->{ServiceCode} );
-
-    $self->_attach_note( $args, $sr );
-
-    if ( @{ $args->{media_url} }) {
-        $self->upload_urls($sr->{ServiceRequest}->{id}, $args); # XXX not sure ServiceCode is correct
-    } elsif ( @{ $args->{uploads} } ) {
-        $self->upload_attachments($sr->{ServiceRequest}->{id}, $args); # XXX not sure ServiceCode is correct
-    }
-
-    return $self->new_request(
+    my $request = $self->new_request(
         service_request_id => $res->{ServiceCode}
     );
+
+    # At this point the ServiceRequest has been raised in Bartec and we now need to make
+    # some more API calls to add the report description and any photos.
+    # The failure of these calls must not fail the Open311 POST Service Request request,
+    # otherwise FMS will try and resend the report over and over and duplicate Bartec
+    # ServiceRequests will be raised.
+    my $sr;
+    try {
+        $sr = $integ->ServiceRequests_Get( $res->{ServiceCode} );
+    } catch {
+        $self->logger->warn("failed to fetch newly created ServiceRequest: " . $res->{ServiceCode} . " (FMS ID " . $args->{attributes}->{fixmystreet_id} . ")");
+        return $request;
+    };
+
+    try {
+        $self->_attach_note( $args, $sr );
+    } catch {
+        $self->logger->warn("failed to attach note to ServiceRequest: " . $res->{ServiceCode} . " (FMS ID " . $args->{attributes}->{fixmystreet_id} . ")");
+    };
+
+
+    try {
+        if ( @{ $args->{media_url} }) {
+            $self->upload_urls($sr->{ServiceRequest}->{id}, $args);
+        } elsif ( @{ $args->{uploads} } ) {
+            $self->upload_attachments($sr->{ServiceRequest}->{id}, $args);
+        }
+    } catch {
+        $self->logger->warn("failed to upload photos for ServiceRequest: " . $res->{ServiceCode} . " (FMS ID " . $args->{attributes}->{fixmystreet_id} . ")");
+    };
+
+    return $request;
 }
 
 sub _attach_note {
