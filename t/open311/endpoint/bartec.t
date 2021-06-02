@@ -497,7 +497,7 @@ subtest "check send basic report" => sub {
     is_deeply decode_json($res->content), [ { service_request_id => '0001' } ], 'correct return';
 };
 
-subtest "check send report with extended info" => sub {
+subtest "check send report with extended info & ampersands" => sub {
     set_fixed_time('2020-06-17T16:28:30Z');
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
@@ -505,7 +505,7 @@ subtest "check send report with extended info" => sub {
         api_key => 'test',
         service_code => '4',
         first_name => 'Bob',
-        last_name => 'Mould',
+        last_name => 'Mould & Test',
         email => 'test@example.com',
         description => 'description',
         lat => '52.540930',
@@ -513,7 +513,7 @@ subtest "check send report with extended info" => sub {
         'attribute[fixmystreet_id]' => 1,
         'attribute[northing]' => 1,
         'attribute[easting]' => 1,
-        'attribute[description]' => 'a description',
+        'attribute[description]' => 'a description & some text',
         'attribute[report_url]' => 1,
         'attribute[title]' => 'a title',
         'attribute[house_no]' => '14',
@@ -568,7 +568,7 @@ subtest "check send report with extended info" => sub {
         ExternalReference => 1,
         reporterContact => {
             Forename => 'Bob',
-            Surname => 'Mould',
+            Surname => 'Mould & Test',
             Email => 'test@example.com',
             ReporterType => 'Public',
         }
@@ -579,7 +579,7 @@ subtest "check send report with extended info" => sub {
         token => 'ABC=',
         ServiceRequestID => '0001',
         NoteTypeID => 11,
-        Note => "a title\n\na description",
+        Note => "a title\n\na description & some text",
         Comment => 'Note added by FixMyStreet',
     }, 'correct note created';
 

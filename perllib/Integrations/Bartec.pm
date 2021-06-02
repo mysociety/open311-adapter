@@ -413,8 +413,8 @@ sub ServiceRequests_Create {
         #source => $values->{Source},
         ExternalReference => $values->{attributes}->{fixmystreet_id},
         reporterContact => {
-            Forename => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => $values->{first_name} },
-            Surname => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => $values->{last_name} },
+            Forename => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => SOAP::Utils::encode_data($values->{first_name}) },
+            Surname => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => SOAP::Utils::encode_data($values->{last_name}) },
             Email => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd'} , value => $values->{email} },
             ReporterType => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd'}, value => $values->{ReporterType} },
         },
@@ -475,7 +475,7 @@ sub ServiceRequests_Notes_Create {
         'token' => $self->token,
         'ServiceRequestID' => $args->{srid},
         'NoteTypeID' => $args->{note_type},
-        'Note' => $args->{note},
+        'Note' => SOAP::Utils::encode_data($args->{note}),
         'Comment' => 'Note added by FixMyStreet',
     );
 
