@@ -4,6 +4,10 @@ use Moo;
 extends 'Integrations::Bartec';
 sub _build_config_file { path(__FILE__)->sibling('bartec.yml')->stringify }
 
+sub collective_endpoint { 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx' }
+
+sub auth_endpoint { 'https://collapi.bartec-systems.com/CollAuth/Authenticate.asmx' }
+
 sub get_integration {
     my $self = shift;
     my $integ = Integrations::Bartec::Dummy->new;
