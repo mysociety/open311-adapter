@@ -36,6 +36,16 @@ sub process_service_request_args {
 
     $response->{Location} = $location;
 
+    # Send the first photo to the appropriate field in Symology
+    # (these values are specific to Central Beds and were divined by
+    # inspecting the GetRequestAdditionalGroup output for an existing
+    # enquiry that had a photo.)
+    if ( my $photo_url = $_[0]->{media_url}->[0] ) {
+        $args[2] = [
+            [ FieldLine => 18, ValueType => 5, DataValue => $photo_url ],
+        ];
+    }
+
     return @args;
 }
 
