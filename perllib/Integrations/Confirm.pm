@@ -135,12 +135,10 @@ sub _call {
        ->ns($method{namespace})
        ->on_action(sub{qq!"$method{soapaction}"!});
   $self->serializer->register_ns("http://schemas.xmlsoap.org/wsdl/","wsdl");
-  $self->serializer->register_ns("http://schemas.xmlsoap.org/soap/envelope/","soap");
   $self->serializer->register_ns("http://schemas.xmlsoap.org/wsdl/mime/","mime");
   $self->serializer->register_ns("http://www.confirm.co.uk/schema/am/connector/webservice","tns");
   $self->serializer->register_ns("http://schemas.xmlsoap.org/soap/encoding/","soapenc");
   $self->serializer->register_ns("http://microsoft.com/wsdl/mime/textMatching/","tm");
-  $self->serializer->register_ns("http://schemas.xmlsoap.org/wsdl/soap12/","soap12");
   $self->serializer->register_ns("http://schemas.xmlsoap.org/wsdl/http/","http");
   $self->serializer->register_ns("http://www.w3.org/2001/XMLSchema","s");
     my $som = $self->SUPER::call($method => @parameters);
