@@ -127,9 +127,8 @@ sub _call {
   $self->serializer->register_ns("http://www.caps-solutions.co.uk/webservices/connectors/74b/servicerequest/messagetypes","s0");
   $self->serializer->register_ns("http://www.caps-solutions.co.uk/webservices/connectors/75/servicerequest/service","tns");
   $self->serializer->register_ns("http://www.caps-solutions.co.uk/schema/uniform/74b/servicerequest/sr/srtypes","s2");
-  $self->serializer->register_ns("http://schemas.xmlsoap.org/soap/encoding/","soapenc");
+  $self->serializer->register_ns("http://schemas.xmlsoap.org/soap/encoding/","soapEncoding");
   $self->serializer->register_ns("http://schemas.xmlsoap.org/soap/envelope/","soap");
-  $self->serializer->register_ns("http://schemas.xmlsoap.org/wsdl/soap12/","soap12");
   $self->serializer->register_ns("http://www.caps-solutions.co.uk/webservices/connectors/731/servicerequest/messagetypes","s5");
   $self->serializer->register_ns("http://schemas.xmlsoap.org/wsdl/","wsdl");
   $self->serializer->register_ns("http://www.w3.org/2001/XMLSchema","s");
@@ -142,6 +141,7 @@ sub _call {
   $self->serializer->register_ns("http://www.caps-solutions.co.uk/schema/uniform/731/xi/xitypes","s9");
   $self->serializer->register_ns("http://www.caps-solutions.co.uk/schema/uniform/74b/xi/xitypes","s10");
   $self->serializer->register_ns("http://www.caps-solutions.co.uk/webservices/connectors/75/servicerequest/messagetypes","s6");
+    SOAP::Lite->soapversion(1.1);
     my $som = $self->SUPER::call($method => @parameters);
     if ($self->want_som) {
         return $som;
