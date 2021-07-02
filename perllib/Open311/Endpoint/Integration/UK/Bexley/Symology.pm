@@ -55,13 +55,13 @@ sub _row_status {
             'fixed'
         } elsif ($action_due =~ /^[NS][1-6]$/) {
             'in_progress'
-        } elsif ($action_due eq 'IR') {
+        } elsif ($action_due =~ /^IR|REH|RES|RET|RP|RPOS|RT|RWT$/) {
             'internal_referral'
         } elsif ($action_due eq 'NCR') {
             'not_councils_responsibility'
         } elsif ($action_due =~ /^([NS]I[1-6]MOB|IPSGM|IGF|IABV)$/) {
             'investigating'
-        } elsif ($action_due =~ /^PT[CS]$/) {
+        } elsif ($action_due =~ /^PT[CS]|TPHR|REIN$/) {
             'action_scheduled'
         } elsif ($row->{Stage} == 9) {
             undef
