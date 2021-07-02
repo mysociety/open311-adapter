@@ -15,6 +15,10 @@ has service_class  => (
     default => 'Open311::Endpoint::Service::UKCouncil::Oxfordshire'
 );
 
+has jurisdiction_id => (
+    is => 'ro',
+);
+
 sub service_request_content {
     '/open311/service_request_extended'
 }
@@ -76,6 +80,8 @@ sub post_service_request_update {
         updated_datetime => $response->{update_time},
     );
 }
+
+sub get_service_requests { () }
 
 sub get_service_request_updates {
     my ($self, $args) = @_;
