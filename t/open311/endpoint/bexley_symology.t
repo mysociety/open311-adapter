@@ -120,8 +120,8 @@ $bexley_end->mock(_get_csvs => sub {
 14/03/2019 07:32,13/03/2019,569924,CLEARED,14/03/2019,NI2,NI2MOB,,,9
 17/04/2019 12:05,04/04/2019,560065,RECORDED,,SI6,S6,S6,,1
 17/04/2019 12:05,04/04/2019,560064,RECORDED,,SI6,PTC,PTC,,1
-17/04/2019 12:32,02/04/2019,560057,RECORDED,,NI3,NI3MOB,PTS,,1
-17/04/2019 13:29,04/04/2019,560063,RECORDED,,SI6,S5,NCR,,1
+17/04/2019 12:32,02/04/2019,560057,RECORDED,,NI3,NI3MOB,PTS,ROH,1
+17/04/2019 13:29,04/04/2019,560063,RECORDED,,SI6,S5,NCR,RLQ,1
 17/04/2019 13:34,02/04/2019,560056,RECORDED,,SI6,SI6MOB,SI6MOB,,1
 17/04/2019 13:49,17/04/2019,560067,RECORDED,,SI4,S4,CLEARREQ,,1
 17/04/2019 13:50,04/04/2019,560058,RECORDED,,SI6,SI6MOB,IR,,1
@@ -503,7 +503,7 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560057_9d1bacb4",
+              "update_id" => "560057_13d32550",
               "updated_datetime" => "2019-04-17T12:32:00+01:00",
               "service_request_id" => "560057",
               "status" => "action_scheduled",
@@ -511,12 +511,13 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560063_cb783d63",
+              "update_id" => "560063_c5f60f35",
               "updated_datetime" => "2019-04-17T13:29:00+01:00",
               "service_request_id" => "560063",
               "status" => "not_councils_responsibility",
               "description" => "",
               "media_url" => "",
+              "external_status_code" => 'RLQ',
            },
            {
               "update_id" => "560056_caf47a7e",
