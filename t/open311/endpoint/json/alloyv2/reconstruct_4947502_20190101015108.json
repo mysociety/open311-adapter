@@ -6,13 +6,6 @@
       "collection": "Live",
       "start": "2019-01-01T00:00:00.002Z",
       "end": "9999-12-31T23:59:59.999Z",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -0.9050079189236898,
-          52.236715671161356
-        ]
-      },
       "icon": "icon-defect-full",
       "colour": "#AAC6Df",
       "attributes": [
@@ -79,6 +72,16 @@
         {
           "attributeCode": "attributes_benches1000794ActivityCode1011100_5d324022fe2ad80354bbdb20",
           "value": "BE"
+        },
+        {
+          "attributeCode": "attribute_itemsGeometry",
+          "value": {
+            "type": "Point",
+            "coordinates": [
+              -0.9050079189236898,
+              52.236715671161356
+            ]
+          }
         }
       ],
       "signature": "5d324049b4e1b90150f94191",
