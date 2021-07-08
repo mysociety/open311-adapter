@@ -73,7 +73,9 @@ sub _row_status {
 
 sub _row_external_status_code {
     my ($self, $row, $status) = @_;
-    return undef unless $status && $status eq 'not_councils_responsibility';
+    return undef unless $status && ( $status eq 'not_councils_responsibility'
+                        || $status eq 'action_scheduled'
+                        || $status eq 'internal_referral' );
     return $row->{'Event Type'};
 }
 

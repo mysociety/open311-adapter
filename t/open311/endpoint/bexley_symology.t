@@ -125,6 +125,7 @@ $bexley_end->mock(_get_csvs => sub {
 17/04/2019 13:34,02/04/2019,560056,RECORDED,,SI6,SI6MOB,SI6MOB,,1
 17/04/2019 13:49,17/04/2019,560067,RECORDED,,SI4,S4,CLEARREQ,,1
 17/04/2019 13:50,04/04/2019,560058,RECORDED,,SI6,SI6MOB,IR,,1
+17/04/2019 13:53,04/04/2019,560058,RECORDED,,SI6,SI6MOB,IR,RES,1
 17/04/2019 14:08,04/04/2019,560062,RECORDED,,SI5,NCR,CR,,1
 EOF
     \<<EOF
@@ -509,6 +510,7 @@ subtest "GET updates OK" => sub {
               "status" => "action_scheduled",
               "description" => "",
               "media_url" => "",
+              "external_status_code" => 'ROH',
            },
            {
               "update_id" => "560063_c5f60f35",
@@ -542,6 +544,15 @@ subtest "GET updates OK" => sub {
               "status" => "internal_referral",
               "description" => "",
               "media_url" => "",
+           },
+           {
+              "update_id" => "560058_456d3988",
+              "updated_datetime" => "2019-04-17T13:53:00+01:00",
+              "service_request_id" => "560058",
+              "status" => "internal_referral",
+              "description" => "",
+              "media_url" => "",
+              "external_status_code" => 'RES',
            },
            {
               "update_id" => "560062_94e427db",
