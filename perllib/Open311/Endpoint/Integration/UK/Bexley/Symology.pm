@@ -73,7 +73,7 @@ sub _row_status {
 
 sub _row_external_status_code {
     my ($self, $row, $status) = @_;
-    return undef unless $status && $status eq 'not_councils_responsibility';
+    return undef unless $status && $status eq 'not_councils_responsibility' || $status eq 'action_scheduled';
     return $row->{'Event Type'};
 }
 
