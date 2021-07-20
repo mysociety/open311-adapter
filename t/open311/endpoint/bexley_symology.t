@@ -509,6 +509,7 @@ subtest "GET updates OK" => sub {
               "status" => "action_scheduled",
               "description" => "",
               "media_url" => "",
+              "external_status_code" => 'ROH',
            },
            {
               "update_id" => "560063_c5f60f35",
