@@ -6,6 +6,7 @@ use LWP::UserAgent;
 
 with 'Role::Config';
 with 'Role::Logger';
+with 'Role::Memcached';
 
 use JSON::MaybeXS;
 
@@ -26,7 +27,7 @@ has 'requests_endpoint' => (
 
 has 'services_endpoint' => (
     is => 'ro',
-    default => sub { shift->endpoint_url . 'FixMyStreetInfo' }
+    default => sub { shift->endpoint_url . 'FixMyStreetInfoV2' }
 );
 
 has 'updates_endpoint' => (
@@ -185,15 +186,26 @@ sub get_updates {
 sub get_services {
     my ($self, $args) = @_;
 
-    my $services = $self->get($self->services_endpoint . '?summary');
+    my $key = "get_services";
+    my $expiry = 300; # cache all these API calls for 5 minutes
+    my $services = $self->memcache->get($key);
 
-    my @services;
-
-    for my $service (@{ $services->{CategoryInformation} }) {
-        push @services, $service;
+    if ($services) {
+        $self->logger->debug("Found memcached entry for $key");
+        return @$services;
     }
 
-    return @services;
+    $self->logger->debug("No memcached entry found for $key. Fetching services from Salesforce");
+
+    $services = [];
+    my $response = $self->get($self->services_endpoint . '?summary');
+    for my $service (@{ $response->{CategoryInformation} }) {
+        push @$services, $service;
+    }
+
+    $self->memcache->set($key, $services, $expiry);
+
+    return @$services;
 }
 
 sub get_service {
