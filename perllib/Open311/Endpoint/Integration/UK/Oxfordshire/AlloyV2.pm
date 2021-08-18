@@ -3,6 +3,13 @@ package Open311::Endpoint::Integration::UK::Oxfordshire::AlloyV2;
 use Moo;
 extends 'Open311::Endpoint::Integration::AlloyV2';
 
+use Open311::Endpoint::Service::UKCouncil::Alloy::Oxfordshire;
+
+has service_class  => (
+    is => 'ro',
+    default => 'Open311::Endpoint::Service::UKCouncil::Alloy::Oxfordshire'
+);
+
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
     $args{jurisdiction_id} = 'oxfordshire_alloy_v2';
