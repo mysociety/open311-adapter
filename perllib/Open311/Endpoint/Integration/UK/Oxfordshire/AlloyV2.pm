@@ -25,22 +25,12 @@ sub process_attributes {
 
     my $attributes = $self->SUPER::process_attributes($args);
 
-    # Take the contact info from the service request and find/create
-    # a matching contact
-    my $contact_resource_id = $self->_find_or_create_contact($args);
-
     # For category we use the category and not the group
     my ( $group, $category ) = split('_', $args->{service_code});
     my $group_code = $self->_find_category_code($category) || $self->config->{default_category_attribute_value};
     push @$attributes, {
         attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{category},
         value => [ $group_code ],
-    };
-
-    # Attach the caller to the inspection attributes
-    push @$attributes, {
-        attributeCode => $self->config->{contact}->{attribute_id},
-        value => [ $contact_resource_id ],
     };
 
     return $attributes;

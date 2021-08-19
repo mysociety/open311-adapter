@@ -1,0 +1,79 @@
+{
+  "api_key": "api_key",
+  "api_url": "http://localhost/api/",
+  "rfs_design": "designs_lightingDefect_123456",
+  "attachment_folder_id": "",
+  "resource_attachment_attribute_id": "attributes_filesAttachableAttachments",
+  "service_attribute_overrides": {},
+
+  "category_list_code": "designs_faultType_123456",
+  "category_title_attribute": "attributes_faultTypeDescription_5eb062d76001580048c19b3e",
+
+  "parent_attribute_name": "Defects",
+
+  "service_whitelist": {
+    "Street Lighting": {
+      "Lamp on during day": {},
+      "Flashing Lamp": {},
+      "Lamp appears dim": {},
+    }
+  },
+
+  "resource_attribute_defaults": {},
+
+  "request_to_resource_attribute_mapping": {
+    "title": 'attributes_defectsDescription',
+    "description": "attributes_lightingDefectCustomerComments_123456",
+    "fixmystreet_id": "attributes_lightingDefectCRMReference_123456",
+    "report_url": "attributes_lightingDefectFMSReport_123456",
+    "mayrise_id": "attributes_mayriseIdentifierMayriseIdentifier",
+    "unit_number": "attributes_streetLightingUnitsUnitNumber",
+    "usrn": "attributes_lightingDefectUSRN_123456",
+    "closest_address": "attributes_lightingDefectNearestCalculatedAddress_123456"
+  },
+  "request_to_resource_attribute_manual_mapping": {
+    "category": "attributes_lightingDefectFaultType_123456"
+  },
+
+  "ignored_attributes": [],
+
+  "created_datetime_attribute_id": "attributes_tasksRaisedTime",
+
+  "inspection_attribute_mapping": {
+      "status": 'attributes_defectsStatus',
+      "reason_for_closure": "",
+      "inspector_comments": "attributes_lightingDefectUpdateCustomer_123456",
+      "updates": "attributes_lightingDefectCustomerComments_123456"
+  },
+
+  "inspection_status_mapping": {},
+  "status_and_closure_mapping": {},
+  "inspection_closure_mapping": {},
+
+  "inspection_resource_name": "",
+
+  "ignored_defect_types": [
+  ],
+
+  "defect_sourcetype_category_mapping": {
+    "designs_lightingDefect_123456": {
+      "default": "",
+      "types": {
+        "5edf3f9b5f93330056cb375c": "Lamp on during day",
+        "5edf3fad61bbfb00565833eb": "Flashing Lamp",
+        "5ef0d9ae52b7860056cf3752": "Lamp appears dim",
+      }
+    }
+  },
+
+  "defect_status_mapping": {
+  },
+
+  "defect_resource_name": "designInterfaces_defects",
+
+  "defect_attribute_mapping": {
+      "title": "attributes_itemsSubtitle",
+      "description": "attributes_defectsDescription",
+      "status": "attributes_defectsStatus",
+  }
+}
