@@ -56,7 +56,7 @@
   ],
 
   "defect_sourcetype_category_mapping": {
-    "designs_lightingDefect_123456": {
+    "designs_lightingJob": {
       "default": "",
       "types": {
         "5edf3f9b5f93330056cb375c": "Lamp on during day",
@@ -69,7 +69,7 @@
   "defect_status_mapping": {
   },
 
-  "defect_resource_name": "designInterfaces_defects",
+  "defect_resource_name": "designs_lightingJob",
 
   "defect_attribute_mapping": {
       "title": "attributes_itemsSubtitle",

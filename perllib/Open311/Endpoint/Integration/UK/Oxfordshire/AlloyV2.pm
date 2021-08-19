@@ -27,7 +27,13 @@ sub process_attributes {
 
     # For category we use the category and not the group
     my ( $group, $category ) = split('_', $args->{service_code});
-    my $group_code = $self->_find_category_code($category) || $self->config->{default_category_attribute_value};
+
+    # Config contains a mapping from ID to category name
+    my $design = $self->config->{defect_resource_name};
+    my $mapping = $self->config->{defect_sourcetype_category_mapping}{$design}{types};
+    my %category_to_id = reverse %$mapping;
+    my $group_code = $category_to_id{$category} || $self->config->{default_category_attribute_value};
+
     push @$attributes, {
         attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{category},
         value => [ $group_code ],
