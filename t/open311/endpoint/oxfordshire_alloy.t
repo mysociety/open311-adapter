@@ -177,19 +177,6 @@ subtest 'fetch problems' => sub {
             address_id => "",
             zipcode => "",
             media_url => "",
-       }, {
-            service_request_id => "6128bf209399610254623a6c",
-            service_code => "Street Lighting_Twisted Lantern",
-            service_name => "Street Lighting_Twisted Lantern",
-            requested_datetime => "2021-08-27T10:32:00Z",
-            updated_datetime => "2021-08-27T10:32:00Z",
-            status => "open",
-            lat => 51.9036290685135,
-            long => -1.13017126223015,
-            address => "",
-            address_id => "",
-            zipcode => "",
-            media_url => "",
         } ], 'correct json returned';
 };
 

@@ -43,5 +43,14 @@ sub process_attributes {
 
 }
 
+# Not actually checking category, but checking status isn't Proposed (open)
+sub is_ignored_category {
+    my ($self, $defect) = @_;
+
+    my $mapping = $self->config->{defect_attribute_mapping};
+    my $attributes = $self->alloy->attributes_to_hash($defect);
+    my $status = $self->defect_status($attributes->{$mapping->{status}}->[0]);
+    return 1 if $status eq 'open';
+}
 
 1;
