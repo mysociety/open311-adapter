@@ -23,6 +23,11 @@ sub service_request_content {
 sub process_attributes {
     my ($self, $args) = @_;
 
+    if ($args->{attributes}{closest_address}) {
+        $args->{attributes}{closest_address} =~ s/^Nearest[^:]*: //;
+        $args->{attributes}{closest_address} =~ s/\n+Nearest.*$//s;
+    }
+
     my $attributes = $self->SUPER::process_attributes($args);
 
     # For category we use the category and not the group
