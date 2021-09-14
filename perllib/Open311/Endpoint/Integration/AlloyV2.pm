@@ -202,8 +202,8 @@ sub post_service_request {
 
     # XXX try this first so we bail if we can't upload the files
     my $files = [];
-    if ( $self->config->{resource_attachment_attribute_id} && @{$args->{media_url}}) {
-        $files = $self->upload_attachments($args);
+    if ( $self->config->{resource_attachment_attribute_id} && (@{$args->{media_url}} || @{$args->{uploads}})) {
+        $files = $self->upload_media($args);
     }
 
     # post it up
@@ -437,7 +437,7 @@ sub post_service_request_update {
     if ( $self->config->{resource_attachment_attribute_id} && @{ $args->{media_url} }) {
         push @$updated_attributes, {
             attributeCode => $self->config->{resource_attachment_attribute_id},
-            value => $self->upload_attachments($args)
+            value => $self->upload_media($args)
         };
     }
 
@@ -955,15 +955,21 @@ sub _get_attachments {
     return @photos;
 }
 
-sub upload_attachments {
+sub upload_media {
     my ($self, $args) = @_;
 
-    # grab the URLs and download its content
-    my $media_urls = $args->{media_url};
+    if ( @{ $args->{media_url} }) {
+        return $self->upload_urls( $args->{media_url} );
+    } elsif ( @{ $args->{uploads} } ) {
+        return $self->upload_attachments( $args->{uploads} );
+    }
+}
 
-    my @photos = $self->_get_attachments($args->{media_url});
+sub upload_urls {
+    my ($self, $media_urls) = @_;
 
-    my $folder_id = $self->config->{attachment_folder_id};
+    # download the photo from provided URLs
+    my @photos = $self->_get_attachments($media_urls);
 
     # upload the file to the folder, with a FMS-related name
     my @resource_ids = map {
@@ -974,6 +980,21 @@ sub upload_attachments {
             is_file => 1
         )->{fileItemId};
     } @photos;
+
+    return \@resource_ids;
+}
+
+sub upload_attachments {
+    my ($self, $uploads) = @_;
+
+    my @resource_ids = map {
+        $self->alloy->api_call(
+            call => "file",
+            filename => $_->filename,
+            body=> path($_)->slurp,
+            is_file => 1
+        )->{fileItemId};
+    } @{ $uploads };
 
     return \@resource_ids;
 }
