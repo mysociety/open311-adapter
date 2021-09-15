@@ -75,6 +75,7 @@ use Open311::Endpoint;
 use Data::Dumper;
 use JSON::MaybeXS;
 use Path::Tiny;
+use HTTP::Request::Common;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
@@ -293,6 +294,85 @@ subtest "create problem with file" => sub {
     attributes => [
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
         { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
+        { attributeCode => 'attributes_itemsGeometry', value => {
+            coordinates => [
+                0.1,
+                50
+            ],
+            type => "Point"
+        } },
+        { attributeCode => 'attributes_workflowActionPatchLinkAttributeCode', value => "FixMyStreet" },
+    ],
+    designCode => 'designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6',
+    parents => { "attribute_design_code" => [ '39dhd38dhdkdnxj' ] },
+    }
+    , 'correct json sent';
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => 12345
+        } ], 'correct json returned';
+
+    restore_time;
+};
+
+subtest "check send report with a photo as an upload" => sub {
+    set_fixed_time('2020-06-17T16:28:30Z');
+    %sent = ();
+    my $file = Web::Dispatch::Upload->new(
+        headers => '',
+        tempname => path(__FILE__)->dirname . '/files/bartec/image.jpg',
+        filename => 'image.jpg',
+        size => 10,
+    );
+
+    my $req = POST '/requests.json',
+        Content_Type => 'form-data',
+        Content => [
+            jurisdiction_id => 'dummy',
+            api_key => 'test',
+            service_code => 'Kerbs_Missing',
+            address_string => '23 Acacia Avenue',
+            first_name => 'Bob',
+            last_name => 'Mould',
+            email => 'test@example.com',
+            description => 'description',
+            lat => '50',
+            long => '0.1',
+            uploads => [ $file ],
+            'attribute[description]' => 'description',
+            'attribute[title]' => '1',
+            'attribute[report_url]' => 'http://localhost/1',
+            'attribute[asset_resource_id]' => '39dhd38dhdkdnxj',
+            'attribute[easting]' => 1,
+            'attribute[northing]' => 2,
+            'attribute[category]' => 'Kerbs_Missing',
+            'attribute[fixmystreet_id]' => 1,
+        ];
+    my $res = $endpoint->run_test_request($req);
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is $sent{file}, "This is a fake image\n", "file content ok";
+
+    is_deeply $sent{'item/12345'},
+    {
+        attributes => [
+            { attributeCode => 'attributes_filesAttachableAttachments', value => [ 'fileid' ] }
+        ],
+        signature => '5d32469bb4e1b9015001430b',
+    };
+
+    # order these so comparison works
+    $sent{item}->{attributes} = [ sort { $a->{attributeCode} cmp $b->{attributeCode} } @{ $sent{item}->{attributes} } ];
+    is_deeply $sent{item},
+    {
+    attributes => [
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
+        { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2020-06-17T16:28:30Z' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
         { attributeCode => 'attributes_itemsGeometry', value => {
