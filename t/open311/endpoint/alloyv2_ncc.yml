@@ -143,6 +143,7 @@
   "defect_attribute_mapping": {
       "description": "attributes_description",
       "status": "attributes_defectsStatus",
+      "requested_datetime": "attributes_defectsReportedDate",
       "created": 1000603,
       "number": 1003788, # this is the DEF-NNN and not resourceId
       "fixmystreet_id": 1011576,

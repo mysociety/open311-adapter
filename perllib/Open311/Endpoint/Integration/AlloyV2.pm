@@ -684,8 +684,8 @@ sub get_service_requests {
         $args{title} = $attributes->{attributes_itemsTitle};
         $args{service} = $service;
         $args{service_request_id} = $request->{itemId};
-        $args{requested_datetime} = $self->date_to_truncated_dt( $request->{start} );
-        $args{updated_datetime} = $self->date_to_truncated_dt( $request->{start} );
+        $args{requested_datetime} = $self->date_to_truncated_dt( $attributes->{$mapping->{requested_datetime}} );
+        $args{updated_datetime} = $self->date_to_truncated_dt( $attributes->{$mapping->{requested_datetime}} );
 
         my $request = $self->new_request( %args );
 

@@ -7,11 +7,14 @@
       "itemId": "4947505",
       "designCode": "designs_shelterDamaged1000813_5d323d2efe2ad80354bbd71b",
       "collection": "Live",
-      "start": "2019-01-02T11:29:16Z",
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-inspection-unknown",
       "colour": "#99cf22",
       "attributes":[
+        {
+          "attributeCode": "attributes_defectsReportedDate",
+          "value": "2019-01-02T11:29:16Z"
+        },
         {
           "attributeCode": "attributes_defectsStatus",
           "value": ["5c8bdfb98ae862230019dc20"]
@@ -44,11 +47,14 @@
       "itemId": "4947598",
       "designCode": "designs_gritBin193939393_asdhfaiuasdf93d",
       "collection": "Live",
-      "start": "2019-01-01T14:34:53Z",
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-inspection-unknown",
       "colour": "#99cf22",
       "attributes":[
+        {
+          "attributeCode": "attributes_defectsReportedDate",
+          "value": "2019-01-01T14:34:53Z"
+        },
         {
           "attributeCode": "attributes_defectsStatus",
           "value": ["5c8bdfc88ae862230019dc22"]
@@ -77,11 +83,14 @@
       "itemId": "4947597",
       "designCode": "designs_gritBin193939393_asdhfaiuasdf93d",
       "collection": "Live",
-      "start": "2019-01-02T14:44:53Z",
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-inspection-unknown",
       "colour": "#99cf22",
       "attributes":[
+        {
+          "attributeCode": "attributes_defectsReportedDate",
+          "value": "2019-01-02T14:44:53Z"
+        },
         {
           "attributeCode": "attributes_defectsStatus",
           "value": ["5c8bdfc88ae862230019dc22"]
@@ -110,11 +119,14 @@
       "itemId": "3027031",
       "designCode": "designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6",
       "collection": "Live",
-      "start": "2019-01-01T00:00:07.123Z",
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-inspection-unknown",
       "colour": "#99cf22",
       "attributes":[
+        {
+          "attributeCode": "attributes_defectsReportedDate",
+          "value": "2019-01-01T00:00:07Z"
+        },
         {
           "attributeCode": "attributes_defectsStatus",
           "value": [""]
@@ -143,11 +155,14 @@
       "itemId": "4947608",
       "designCode": "designs_gritBin193939393_asdhfaiuasdf93d",
       "collection": "Live",
-      "start": "2019-01-01T13:54:53Z",
       "end": "9999-12-31T23:59:59.999Z",
       "icon": "icon-inspection-unknown",
       "colour": "#99cf22",
       "attributes":[
+        {
+          "attributeCode": "attributes_defectsReportedDate",
+          "value": "2019-01-01T13:54:53Z"
+        },
         {
           "attributeCode": "attributes_defectsStatus",
           "value": ["5c8bdfc88ae862230019dc22"]
