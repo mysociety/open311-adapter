@@ -773,7 +773,7 @@ subtest "check fetch update with unicode comment" => sub {
     $responses{'GET FixMyStreetUpdates updates'} = '[{
         "Status": "Investigating",
         "id": "a086E000001gcVRQAY",
-        "Comments": "This has ünicöde in"
+        "Comments": "This one’s got ünicöde in"
     }]';
 
     my $res = $endpoint->run_test_request(
@@ -788,9 +788,9 @@ subtest "check fetch update with unicode comment" => sub {
     [ {
         status => 'investigating',
         service_request_id => 'a086E000001gcVRQAY',
-        description => 'This has ünicöde in',
+        description => 'This one’s got ünicöde in',
         updated_datetime => '2014-01-01T11:59:40Z',
-        update_id => 'a086E000001gcVRQAY_d29ca6e6e819a627d2d6e1d64373946e',
+        update_id => 'a086E000001gcVRQAY_03e91e398401ede1c3f242f43825126d',
         media_url => '',
     } ], 'correct json returned';
 };

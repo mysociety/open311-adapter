@@ -104,7 +104,7 @@ sub get_service_request_updates {
             $comment = '';
             $digest = md5_hex($update->{Status} . '_' . $update_time);
         } else {
-            $digest = md5_hex($comment);
+            $digest = md5_hex(encode_utf8($comment));
         }
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
