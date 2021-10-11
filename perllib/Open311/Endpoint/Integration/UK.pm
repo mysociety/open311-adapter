@@ -116,7 +116,12 @@ sub confirm_upload {
 
             foreach ($dir->children( qr/\.json$/ )) {
                 my $id = $_->basename('.json');
-                my $data = decode_json($_->slurp_utf8);
+                my $data = do {
+                    my $fh = $_->openr_utf8;
+                    local $/;
+                    decode_json(scalar <$fh>);
+                };
+
                 my $success = $integ->upload_enquiry_documents($id, $data);
                 if ($success) {
                     $dir->child($id)->remove_tree; # Files for upload
