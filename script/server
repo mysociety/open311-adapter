@@ -1,7 +1,17 @@
 #!/bin/sh
+#
+# Runs a server for the UK endpoint
 
 set -e
 cd "$(dirname "$0")/.."
 
 export OPEN_ADAPTER_PORT=${OPEN_ADAPTER_PORT=5000}
-./bin/run --port $OPEN_ADAPTER_PORT --server Starman --workers 2 perllib/Open311/Endpoint/Integration/UK.pm
+
+# By default, if no arguments given, runs a server on port 5000 with
+# auto-reloading. Provide arguments to override everything.
+
+if [ -z "$1" ]; then
+    set -- --port $OPEN_ADAPTER_PORT --Reload perllib,conf
+fi
+
+./bin/run --server Starman --workers 2 perllib/Open311/Endpoint/Integration/UK.pm "$@"
