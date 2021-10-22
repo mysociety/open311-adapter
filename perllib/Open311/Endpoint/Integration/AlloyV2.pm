@@ -452,6 +452,7 @@ sub _get_inspection_updates {
 
     my $updates = $self->fetch_updated_resources($self->config->{rfs_design}, $args->{start_date});
     my $mapping = $self->config->{inspection_attribute_mapping};
+    return () unless $mapping;
     for my $update (@$updates) {
         next unless $self->_accept_updated_resource($update, $start_time, $end_time);
 
