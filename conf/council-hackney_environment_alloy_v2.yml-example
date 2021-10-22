@@ -1,0 +1,68 @@
+{
+  "api_key": "",
+  "api_url": "",
+  "rfs_design": '',
+  "attachment_folder_id": '',
+  "resource_attachment_attribute_id": "",
+  "service_attribute_overrides": {},
+
+  "category_list_code": "",
+
+  "parent_attribute_name": "",
+
+  "service_whitelist": {
+  },
+
+  "default_category_attribute_value": "",
+
+  "resource_attribute_defaults": {
+  },
+
+  "request_to_resource_attribute_mapping": {
+  },
+  "request_to_resource_attribute_manual_mapping": {
+  },
+
+  "ignored_attributes": [
+  ],
+
+  "created_datetime_attribute_id": '',
+
+  "inspection_attribute_mapping": {
+  },
+
+  "inspection_status_mapping": {
+  },
+
+  "inspection_closure_mapping": {
+  },
+
+  "inspection_resource_name": "",
+
+  "ignored_defect_types": [
+  ],
+
+  "defect_sourcetype_category_mapping": {
+  },
+
+  "defect_status_mapping": {
+  },
+
+  "defect_resource_name": "",
+
+  "defect_attribute_mapping": {
+  },
+
+  "defect_target_days_mapping": {
+  },
+
+  "contact": {
+      "code": "",
+      "attribute_id": "",
+      "acceptance_datetime_attribute": "",
+      "attribute_defaults": {
+      },
+      "attribute_mapping": {
+      },
+  }
+}
