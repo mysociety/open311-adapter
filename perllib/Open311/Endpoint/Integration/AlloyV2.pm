@@ -393,15 +393,16 @@ sub post_service_request_update {
     my ($self, $args) = @_;
 
     my $resource_id = $args->{service_request_id};
-    my $inspection = $self->alloy->api_call(call => "item/$resource_id")->{item};
+    my $item = $self->alloy->api_call(call => "item/$resource_id")->{item};
 
-    my $attributes = $self->alloy->attributes_to_hash($inspection);
-    my $updates = $attributes->{$self->config->{inspection_attribute_mapping}->{updates}} || '';
+    my $attributes = $self->alloy->attributes_to_hash($item);
+    my $attribute_code = $self->config->{inspection_attribute_mapping}->{updates} || $self->config->{defect_attribute_mapping}->{updates};
+    my $updates = $attributes->{$attribute_code} || '';
 
     $updates = $self->_generate_update($args, $updates);
 
     my $updated_attributes = [{
-        attributeCode => $self->config->{inspection_attribute_mapping}->{updates},
+        attributeCode => $attribute_code,
         value => $updates
     }];
 
