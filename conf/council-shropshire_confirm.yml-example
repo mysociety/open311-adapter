@@ -1,0 +1,11 @@
+endpoint_url: ""
+username: ""
+password: ""
+tenant_id: ""
+server_timezone: ""
+cutoff_enquiry_date: ""
+service_whitelist: {}
+ignored_attributes: []
+forward_status_mapping: {}
+reverse_status_mapping: {}
+
