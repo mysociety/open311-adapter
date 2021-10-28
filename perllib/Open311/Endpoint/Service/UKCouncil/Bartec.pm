@@ -87,6 +87,13 @@ sub _build_attributes {
             required => 0,
             automated => "hidden_field",
         ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => "contributed_by",
+            description => "Email address of staff member who added report",
+            datatype => "string",
+            required => 0,
+            automated => "server_set",
+        ),
     );
 
     return \@attributes;

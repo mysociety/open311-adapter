@@ -496,7 +496,7 @@ sub ServiceRequests_Notes_Create {
         'ServiceRequestID' => $args->{srid},
         'NoteTypeID' => $args->{note_type},
         'Note' => SOAP::Utils::encode_data($args->{note}),
-        'Comment' => 'Note added by FixMyStreet',
+        'Comment' => $args->{comment} || 'Note added by FixMyStreet',
     );
 
     my $elem = SOAP::Data->value( make_soap_structure( %req ) );

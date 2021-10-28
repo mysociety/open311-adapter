@@ -229,11 +229,17 @@ sub _attach_note {
         $note .= $asset_details;
     }
 
-    my $res = $integ->ServiceRequests_Notes_Create({
+    my $note_params = {
         srid => $sr->{ServiceRequest}->{id},
         note_type => $type,
         note => $note,
-    });
+    };
+
+    if (my $contributed_by = $args->{attributes}->{contributed_by}) {
+        $note_params->{comment} = "Logged by $contributed_by\n\nNote added by FixMyStreet";
+    }
+
+    my $res = $integ->ServiceRequests_Notes_Create($note_params);
 
     if ( $res->{Errors}->{Message} ) {
         $self->logger->warn("failed to attach note for report "
