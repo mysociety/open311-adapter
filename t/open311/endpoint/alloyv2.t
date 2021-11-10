@@ -223,8 +223,9 @@ subtest "create basic problem" => sub {
     is_deeply $sent,
     {
     attributes => [
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181ClosestAddress1009855_5d3245d1fe2ad806f8df06bb', value => undef },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
-        { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
         { attributeCode => 'attributes_itemsGeometry', value => {
@@ -268,6 +269,7 @@ subtest "create problem with file" => sub {
         'attribute[title]' => '1',
         'attribute[report_url]' => 'http://localhost/1',
         'attribute[asset_resource_id]' => '39dhd38dhdkdnxj',
+        'attribute[closest_address]' => '1 Test Street, Testville, TE57 1AB',
         'attribute[easting]' => 1,
         'attribute[northing]' => 2,
         'attribute[category]' => 'Kerbs_Missing',
@@ -292,8 +294,9 @@ subtest "create problem with file" => sub {
     is_deeply $sent{item},
     {
     attributes => [
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181ClosestAddress1009855_5d3245d1fe2ad806f8df06bb', value => '1 Test Street, Testville, TE57 1AB' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
-        { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
         { attributeCode => 'attributes_itemsGeometry', value => {
@@ -346,6 +349,7 @@ subtest "check send report with a photo as an upload" => sub {
             'attribute[title]' => '1',
             'attribute[report_url]' => 'http://localhost/1',
             'attribute[asset_resource_id]' => '39dhd38dhdkdnxj',
+            'attribute[closest_address]' => '1 Test Street, Testville, TE57 1AB',
             'attribute[easting]' => 1,
             'attribute[northing]' => 2,
             'attribute[category]' => 'Kerbs_Missing',
@@ -371,8 +375,9 @@ subtest "check send report with a photo as an upload" => sub {
     is_deeply $sent{item},
     {
     attributes => [
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181ClosestAddress1009855_5d3245d1fe2ad806f8df06bb', value => '1 Test Street, Testville, TE57 1AB' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
-        { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2020-06-17T16:28:30Z' },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2020-06-17T16:28:30Z' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
         { attributeCode => 'attributes_itemsGeometry', value => {
@@ -415,6 +420,7 @@ subtest "create problem with no resource_id" => sub {
         'attribute[title]' => '1',
         'attribute[report_url]' => 'http://localhost/1',
         'attribute[asset_resource_id]' => '',
+        'attribute[closest_address]' => '1 Test Street, Testville, TE57 1AB',
         'attribute[easting]' => 1,
         'attribute[northing]' => 2,
         'attribute[category]' => 'Kerbs_Missing',
@@ -429,8 +435,9 @@ subtest "create problem with no resource_id" => sub {
     is_deeply $sent,
     {
     attributes => [
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181ClosestAddress1009855_5d3245d1fe2ad806f8df06bb', value => '1 Test Street, Testville, TE57 1AB' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', value => "description" },
-        { attributeCode  => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
+        { attributeCode => 'attributes_enquiryInspectionRFS1001181ReportedDateTime1009861_5d3245d7fe2ad806f8dfbb1f', value => '2014-01-01T12:00:00Z' },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', value => 1 },
         { attributeCode => 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', value => 1 },
         { attributeCode => 'attributes_itemsGeometry', value => {
@@ -871,6 +878,16 @@ subtest "check fetch service metadata" => sub {
             order => 8,
             description => "Asset resource ID",
             automated => 'hidden_field',
+          },
+          {
+            variable => 'true',
+            code => "closest_address",
+            datatype => "string",
+            required => 'false',
+            datatype_description => '',
+            order => 9,
+            description => "Closest address",
+            automated => 'server_set',
           },
         ]
     }, 'correct json returned';

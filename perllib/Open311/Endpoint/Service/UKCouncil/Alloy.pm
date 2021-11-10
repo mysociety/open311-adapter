@@ -44,6 +44,13 @@ sub _build_attributes {
             required => 1,
             automated => 'hidden_field',
         ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => "closest_address",
+            description => "Closest address",
+            datatype => "string",
+            required => 0,
+            automated => "server_set",
+        ),
     );
 
     return \@attributes;
