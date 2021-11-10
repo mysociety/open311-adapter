@@ -287,6 +287,11 @@ sub NewEnquiry {
         SOAP::Data->name($_ => $value)->type("")
     } keys %enq;
 
+    my $tag_types = {
+        singlevaluelist => 'EnqAttribValueCode',
+        datetime => 'EnqAttribDateValue',
+    };
+
     for my $code (keys %{ $args->{attributes} }) {
         next if grep {$code eq $_} ('easting', 'northing', 'fixmystreet_id', 'closest_address');
         my $value = substr($args->{attributes}->{$code}, 0, 2000);
@@ -296,7 +301,7 @@ sub NewEnquiry {
         # to Confirm results in an error, so just skip over it.
         next if (!$value && $service_types{$code} eq 'singlevaluelist' && !$attributes_required{$code});
 
-        my $tag = $service_types{$code} eq 'singlevaluelist' ? 'EnqAttribValueCode' : 'EnqAttribStringValue';
+        my $tag = $tag_types->{$service_types{$code}} || 'EnqAttribStringValue';
         push @elements, SOAP::Data->name('EnquiryAttribute' => \SOAP::Data->value(
             SOAP::Data->name('EnqAttribTypeCode' => SOAP::Utils::encode_data($code))->type(""),
             SOAP::Data->name($tag => SOAP::Utils::encode_data($value))->type(""),

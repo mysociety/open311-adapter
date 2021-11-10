@@ -46,6 +46,7 @@ $open311->mock(perform_request => sub {
                         { EnqAttribTypeCode => 'QUES', },
                         { EnqAttribTypeCode => 'QUES2', },
                         { EnqAttribTypeCode => 'IGN', },
+                        { EnqAttribTypeCode => 'SINC', },
                     ],
                 } ] },
                 { ServiceCode => 'HM', ServiceName => 'Highways', EnquirySubject => [ { SubjectCode => "PHL" } ] },
@@ -61,6 +62,7 @@ $open311->mock(perform_request => sub {
                 { EnqAttribTypeCode => 'QUES2', MandatoryFlag => 'false', EnqAttribTypeName => 'Bad question',
                   EnquiryAttributeValue => [] },
                 { EnqAttribTypeCode => 'IGN', MandatoryFlag => 'false', EnqAttribTypeName => 'Ignored question' },
+                { EnqAttribTypeCode => 'SINC', MandatoryFlag => 'false', EnqAttribTypeName => 'Abandoned since', EnqAttribTypeFlag => 'D' },
             ],
             } }
         };
@@ -207,6 +209,15 @@ subtest "GET wrapped Service List Description" => sub {
       <datatype_description></datatype_description>
       <description>Better question text</description>
       <order>12</order>
+      <required>false</required>
+      <variable>true</variable>
+    </attribute>
+    <attribute>
+      <code>SINC</code>
+      <datatype>datetime</datatype>
+      <datatype_description></datatype_description>
+      <description>Abandoned since</description>
+      <order>13</order>
       <required>false</required>
       <variable>true</variable>
     </attribute>

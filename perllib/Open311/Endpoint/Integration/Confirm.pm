@@ -721,6 +721,7 @@ sub _parse_attributes {
     $attribute_types = [ $attribute_types ] if $attribute_types && ref $attribute_types ne 'ARRAY';
     for (@$attribute_types) {
         my $code = $_->{EnqAttribTypeCode};
+        my $flag = $_->{EnqAttribTypeFlag} || '';
 
         my $required = $_->{MandatoryFlag} eq 'true' ? 1 : 0;
         my $desc = $self->attribute_descriptions->{$code} || $_->{EnqAttribTypeName};
@@ -735,7 +736,7 @@ sub _parse_attributes {
                 $_->{EnqAttribValueCode} => $name
             }
         } @{ $enquiry_attributes };
-        my $type = %values ? 'singlevaluelist' : 'string';
+        my $type = $flag eq 'D' ? 'datetime' : %values ? 'singlevaluelist' : 'string';
 
 
         # printf "\n\nXXXXXXXX $code\n\n\n" if $type eq 'singlevaluelist';
