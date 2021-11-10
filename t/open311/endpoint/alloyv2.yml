@@ -61,6 +61,7 @@
     "title": 'attributes_enquiryInspectionRFS1001181Summary1009859_5d3245d4fe2ad806f8dfbb15', # summary
     "description": 'attributes_enquiryInspectionRFS1001181Explanation1009860_5d3245d5fe2ad806f8dfbb1a', # explanation
     "fixmystreet_id": 'attributes_enquiryInspectionRFS1001181SourceID1009855_5d3245d1fe2ad806f8dfbb06', # Source ID
+    "closest_address": 'attributes_enquiryInspectionRFS1001181ClosestAddress1009855_5d3245d1fe2ad806f8df06bb',
     #"category": 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', # category
   },
   "request_to_resource_attribute_manual_mapping": {
