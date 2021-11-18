@@ -584,7 +584,7 @@ sub _get_defect_updates_resource {
         $fms_id = undef if $linked_defect;
 
         # we don't care about linked defects until they have been scheduled
-        my $status = $self->defect_status($attributes->{$mapping->{status}});
+        my $status = $self->defect_status($attributes->{$mapping->{status}}, $attributes);
         next if $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
 
         my @version_ids = $self->get_versions_of_resource($update->{itemId});
@@ -601,7 +601,7 @@ sub _get_defect_updates_resource {
 
             $resource = $resource->{item};
             my $attributes = $self->alloy->attributes_to_hash($resource);
-            my $status = $self->defect_status($attributes->{$mapping->{status}});
+            my $status = $self->defect_status($attributes->{$mapping->{status}}, $attributes);
 
             my %args = (
                 status => $status,
@@ -676,7 +676,7 @@ sub _get_service_requests_resource {
 
         my $attributes = $self->alloy->attributes_to_hash($request);
         $args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
-        $args{status} = $self->defect_status($attributes->{$mapping->{status}}->[0]);
+        $args{status} = $self->defect_status($attributes->{$mapping->{status}}->[0], $attributes);
 
         #XXX check this no longer required
         next if grep { $_ =~ /_FIXMYSTREET_ID$/ && $attributes->{$_} } keys %{ $attributes };
