@@ -170,11 +170,6 @@ sub post_service_request {
     my ($self, $service, $args) = @_;
     die "No such service" unless $service;
 
-    # Get the service code from the args/whatever
-    # get the appropriate source type
-    my $sources = $self->alloy->get_sources();
-    my $source = $sources->[0]; # we only have one source at the moment
-
     # this is a display only thing for the website
     delete $args->{attributes}->{emergency};
 
@@ -198,7 +193,7 @@ sub post_service_request {
     # Call out to process_attributes which can manipulate the resource
     # attributes (apply defaults, calculate values) as required.
     # This may be overridden by a subclass for council-specific things.
-    $resource->{attributes} = $self->process_attributes($source, $args);
+    $resource->{attributes} = $self->process_attributes($args);
 
     # XXX try this first so we bail if we can't upload the files
     my $files = [];
@@ -875,7 +870,7 @@ sub get_defect_category {
 }
 
 sub process_attributes {
-    my ($self, $source, $args) = @_;
+    my ($self, $args) = @_;
 
     # TODO: Right now this applies defaults regardless of the source type
     # This is OK whilst we have a single design, but we might need to

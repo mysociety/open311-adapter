@@ -50,9 +50,9 @@ sub services {
 }
 
 sub process_attributes {
-    my ($self, $source, $args) = @_;
+    my ($self, $args) = @_;
 
-    my $attributes = $self->SUPER::process_attributes($source, $args);
+    my $attributes = $self->SUPER::process_attributes($args);
 
     # The way the reporter's contact information gets included with a
     # inspection is Northamptonshire-specific, so it's handled here.
