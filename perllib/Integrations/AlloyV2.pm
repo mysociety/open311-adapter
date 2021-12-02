@@ -122,55 +122,6 @@ sub get_parent_attributes {
     }
 }
 
-sub get_sources {
-    my $self = shift;
-
-    my $key = "get_sources";
-    my $expiry = 1800; # cache all these API calls for 30 minutes
-    my $sources = $self->memcache->get($key);
-    unless ($sources) {
-        $sources = [];
-        my $type_mapping = $self->get_valuetype_mapping();
-        my @designs = $self->get_designs;
-        for my $design (@designs) {
-
-            my $source = {
-                code => $design->{code},
-                description => $design->{name},
-            };
-
-            my @attributes = ();
-            my $design_attributes = $design->{attributes};
-            for my $attribute (@$design_attributes) {
-                next unless $attribute->{required};
-
-                my $datatype = $type_mapping->{$attribute->{type}} || "string";
-                my %values = ();
-                if ($datatype eq 'singlevaluelist' && $attribute->{attributeOptionTypeId}) {
-                    # Fetch all the options for this attribute from the API
-                    my $options = $self->api_call(call => "attribute-option-type/$attribute->{attributeOptionTypeId}")->{optionList};
-                    for my $option (@$options) {
-                        $values{$option->{optionId}} = $option->{optionDescription};
-                    }
-                }
-
-                push @attributes, {
-                    description => $attribute->{name},
-                    name => $attribute->{name},
-                    id => $attribute->{code},
-                    required => $attribute->{required},
-                    datatype => $datatype,
-                    values => \%values,
-                };
-            }
-            $source->{attributes} = \@attributes;
-            push @$sources, $source;
-        }
-        $self->memcache->set($key, $sources, $expiry);
-    }
-    return $sources;
-}
-
 sub update_attributes {
     my ($self, $values, $map, $attributes) = @_;
 
