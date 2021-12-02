@@ -62,6 +62,8 @@ $integration->mock('api_call', sub {
                 $content = path(__FILE__)->sibling('json/alloyv2/occ_categories_search.json')->slurp;
             } elsif ($type eq 'designs_lightingJob') {
                 $content = path(__FILE__)->sibling('json/alloyv2/occ_lightingjob_search.json')->slurp;
+            } elsif ($type eq 'designs_damageReport') {
+                $content = path(__FILE__)->sibling('json/alloyv2/occ_damagereport_search.json')->slurp;
             }
         }
     } else {
@@ -177,7 +179,21 @@ subtest 'fetch problems' => sub {
             address_id => "",
             zipcode => "",
             media_url => "",
-        } ], 'correct json returned';
+        }, {
+            service_request_id => "615c8aaca3e810015b7106e6",
+            service_code => "Street Lighting_Vehicle damage",
+            service_name => "Street Lighting_Vehicle damage",
+            requested_datetime => "2021-10-05T17:26:00Z",
+            updated_datetime => "2021-10-05T17:26:00Z",
+            status => "action_scheduled",
+            lat => 52.05927,
+            long => -1.348509,
+            address => "",
+            address_id => "",
+            zipcode => "",
+            media_url => "",
+        }
+    ], 'correct json returned';
 };
 
 done_testing;

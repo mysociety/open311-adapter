@@ -1,0 +1,11 @@
+{"page":1,"pageSize":20,"results":[
+    {"itemId":"615c8aaca3e810015b7106e6","designCode":"designs_damageReport","collection":"Live","start":"9999-12-31T23:59:59.999Z","attributes":[
+    {"attributeCode":"attributes_tasksStatus","value":["5bc5bdd281d088d177342c73"]},
+{"attributeCode":"attributes_damageReportJobType_","value":["5edf44e0509dce00562aa79b"]},
+{"attributeCode":"attributes_itemsGeometry","value":{"type":"Point","coordinates":[-1.348509,52.05927]}},
+{"attributeCode":"attributes_tasksRaisedTime","value":"2021-10-05T17:26:00.000Z"},
+{"attributeCode":"attributes_jobsJobNumber","value":443867},
+{"attributeCode":"attributes_itemsTitle","value":"Job:443867"},
+{"attributeCode":"attributes_itemsSubtitle","value":"Damage Report"}
+    ],"signature":"615c8aada3e810015b7106ed"}
+]}

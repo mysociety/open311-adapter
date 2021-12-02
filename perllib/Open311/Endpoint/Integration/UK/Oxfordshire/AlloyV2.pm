@@ -35,6 +35,7 @@ sub process_attributes {
 
     # Config contains a mapping from ID to category name
     my $design = $self->config->{defect_resource_name};
+    $design = $design->[0] if ref $design eq 'ARRAY';
     my $mapping = $self->config->{defect_sourcetype_category_mapping}{$design}{types};
     my %category_to_id = reverse %$mapping;
     my $group_code = $category_to_id{$category} || $self->config->{default_category_attribute_value};

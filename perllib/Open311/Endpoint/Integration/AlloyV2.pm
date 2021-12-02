@@ -546,13 +546,24 @@ sub _get_defect_updates {
     my ( $self, $args, $start_time, $end_time ) = @_;
 
     my @updates;
-    # updates to defects
+    my $resources = $self->config->{defect_resource_name};
+    $resources = [ $resources ] unless ref $resources eq 'ARRAY';
+    foreach (@$resources) {
+        push @updates, $self->_get_defect_updates_resource($_, $args->{start_date}, $start_time, $end_time);
+    }
+    return @updates;
+}
+
+sub _get_defect_updates_resource {
+    my ($self, $resource_name, $start_date, $start_time, $end_time) = @_;
+
+    my @updates;
     my $closure_mapping = $self->config->{inspection_closure_mapping};
     my %reverse_closure_mapping = map { $closure_mapping->{$_} => $_ } keys %{$closure_mapping};
 
     my $mapping = $self->config->{defect_attribute_mapping};
 
-    my $updates = $self->fetch_updated_resources($self->config->{defect_resource_name}, $args->{start_date});
+    my $updates = $self->fetch_updated_resources($resource_name, $start_date);
     for my $update (@$updates) {
         next if $self->is_ignored_category( $update );
 
@@ -613,7 +624,19 @@ sub _get_defect_updates {
 sub get_service_requests {
     my ($self, $args) = @_;
 
-    my $requests = $self->fetch_updated_resources($self->config->{defect_resource_name}, $args->{start_date});
+    my $resources = $self->config->{defect_resource_name};
+    $resources = [ $resources ] unless ref $resources eq 'ARRAY';
+    my @requests;
+    foreach (@$resources) {
+        push @requests, $self->_get_service_requests_resource($_, $args->{start_date});
+    }
+    return @requests;
+}
+
+sub _get_service_requests_resource {
+    my ($self, $resource_name, $start_date) = @_;
+
+    my $requests = $self->fetch_updated_resources($resource_name, $start_date);
     my @requests;
     my $mapping = $self->config->{defect_attribute_mapping};
     for my $request (@$requests) {

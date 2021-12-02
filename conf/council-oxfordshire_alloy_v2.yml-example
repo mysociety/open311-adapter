@@ -49,7 +49,8 @@
   "defect_status_mapping": {
   },
 
-  "defect_resource_name": "",
+  # A single item, or a list. If a list, the first is used for the category lookup at sending of reports
+  "defect_resource_name": [],
 
   "defect_attribute_mapping": {
   },
