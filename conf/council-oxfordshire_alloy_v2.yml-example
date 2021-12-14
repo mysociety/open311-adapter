@@ -24,9 +24,6 @@
   "request_to_resource_attribute_manual_mapping": {
   },
 
-  "ignored_attributes": [
-  ],
-
   "created_datetime_attribute_id": '',
 
   "inspection_attribute_mapping": {

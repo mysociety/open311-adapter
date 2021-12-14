@@ -117,10 +117,6 @@ has reverse_whitelist => (
 sub services {
     my $self = shift;
 
-    my $request_to_resource_attribute_mapping = $self->config->{request_to_resource_attribute_mapping};
-    my %remapped_resource_attributes = map { $_ => 1 } values %$request_to_resource_attribute_mapping;
-    my %ignored_attributes = map { $_ => 1 } @{ $self->config->{ignored_attributes} };
-
     my @services = ();
     for my $group (sort keys %{ $self->service_whitelist }) {
         my $whitelist = $self->service_whitelist->{$group};

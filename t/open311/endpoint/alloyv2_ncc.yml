@@ -67,14 +67,6 @@
     "category": 'attributes_enquiryInspectionRFS1001181Category1011685_5d3245dbfe2ad806f8dfbb33', # category
   },
 
-  # There are some Alloy resource attributes which we never want to include
-  # in our Open311 services - they may be irrelevant, or have values
-  # calculated at the time the resource is POSTed to Alloy.
-  # List these Alloy attribute IDs here.
-  "ignored_attributes": [
-  ],
-
-
   # Alloy doesn't seem to natively have a way to indicate the time
   # that a resource was created, and instead stores the report datetime
   # in a resource attribute. This attribute varies by council, so

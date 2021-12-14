@@ -39,8 +39,6 @@
     "category": "attributes_lightingDefectFaultType_123456"
   },
 
-  "ignored_attributes": [],
-
   "created_datetime_attribute_id": "attributes_tasksRaisedTime",
 
   "inspection_attribute_mapping": {
