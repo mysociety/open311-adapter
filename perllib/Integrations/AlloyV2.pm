@@ -39,10 +39,9 @@ sub api_call {
     $method = $body ? 'POST' : 'GET' unless $method;
     my $uri = URI->new( $self->config->{api_url} . $call );
 
-    $args{params}->{token} = $self->config->{api_key};
-
     $uri->query_form(%{ $args{params} });
     my $request = HTTP::Request->new($method, $uri);
+    $request->header(Authorization => 'Bearer ' . $self->config->{api_key});
     if ($args{is_file}) {
         $request = HTTP::Request::Common::POST(
             $uri,
@@ -50,6 +49,7 @@ sub api_call {
             'content-disposition' => "attachment; filename=\"$args{filename}\"",
             Content => $body
         );
+        $request->header(Authorization => 'Bearer ' . $self->config->{api_key});
     } elsif ($body) {
         $request->content_type('application/json; charset=UTF-8');
         $request->content(encode_json($body));
