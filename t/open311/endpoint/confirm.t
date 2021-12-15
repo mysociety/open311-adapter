@@ -152,6 +152,17 @@ subtest "GET Service List" => sub {
     <service_name>Flooding</service_name>
     <type>realtime</type>
   </service>
+  <service>
+    <description>Different type of flooding</description>
+    <groups>
+      <group>Flooding &amp; Drainage</group>
+    </groups>
+    <keywords></keywords>
+    <metadata>true</metadata>
+    <service_code>ABC_DEF_1</service_code>
+    <service_name>Different type of flooding</service_name>
+    <type>realtime</type>
+  </service>
 </services>
 XML
     is $res->content, $expected

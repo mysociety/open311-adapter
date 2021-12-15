@@ -30,13 +30,15 @@ Subclasses must override this or no Open311 services will be published!
 Returns a hashref which groups services together and optionally provides
 an overridden name for each service.
 
-For example, the following hashref will publish 5 Open311 services:
+For example, the following hashref will publish 7 Open311 services:
 
 {
     'Roads' => {
         RO_PH => 1,
         RO_GB => 1,
         RO_LP => "Faded Markings",
+        RM_TR_1 => "Tree",
+        RM_TR_2 => "Hedge",
     },
     'Lighting' => {
         LG_SL => 1,
@@ -44,11 +46,12 @@ For example, the following hashref will publish 5 Open311 services:
     }
 }
 
-3 services will be published with their group set to 'Roads', and two in
+5 services will be published with their group set to 'Roads', and two in
 the 'Lighting' group. RO_PH, RO_GB, LG_SL, and LG_BL will take the subject
 name from Confirm as their Open311 service name. RO_LP shows how the Confirm
 default can be overridden, and this service will be published as 'Faded
-Markings'.
+Markings'. RM_TR_1 and RM_TR_2 will both map to Confirm RM_TR; this
+enables one Confirm code to have multiple services.
 
 I opted for a whitelist instead of a blacklist because Councils tend to have
 hundreds of available service/subject codes in their Confirm instances but
@@ -564,9 +567,11 @@ sub _services {
     for my $group (sort keys %$service_whitelist) {
         my $whitelist = $fetch_all_services ? \%services : $self->service_whitelist->{$group};
         for my $code (keys %{ $whitelist }) {
-            my $subject = $services{$code}->{subject};
+            my ($serv, $subj, $extra) = split /_/, $code;
+            my $confirm_code = join("_", $serv, $subj);
+            my $subject = $services{$confirm_code}->{subject};
             if (!$subject) {
-                $self->logger->error("$code doesn't exist in Confirm.");
+                $self->logger->error("$confirm_code doesn't exist in Confirm.");
                 next;
             }
             my $name = $subject->{SubjectName};
@@ -585,9 +590,11 @@ sub _services {
         }
     }
     for my $code (sort keys %service_codes) {
+        my ($serv, $subj, $extra) = split /_/, $code;
+        my $confirm_code = join("_", $serv, $subj);
         my %service = %{ $service_codes{$code} };
         my $o311_service = $self->service_class->new(%service);
-        for (@{$services{$code}->{attribs}}) {
+        for (@{$services{$confirm_code}->{attribs}}) {
             push @{$o311_service->attributes}, $_;
         }
         push @services, $o311_service;

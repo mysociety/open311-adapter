@@ -7,6 +7,7 @@ default_site_code: 999999
 service_whitelist:
   Flooding & Drainage:
     ABC_DEF: Flooding
+    ABC_DEF_1: Different type of flooding
   Flooding:
     ABC_DEF: Flooding
 reverse_status_mapping:
