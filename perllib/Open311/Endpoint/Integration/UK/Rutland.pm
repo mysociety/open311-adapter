@@ -1,5 +1,5 @@
 package Open311::Endpoint::Integration::UK::Rutland;
-use parent 'Open311::Endpoint::Integration::SalesForce';
+use parent 'Open311::Endpoint::Integration::SalesForce::Rutland';
 
 use Moo;
 

@@ -47,10 +47,10 @@ use JSON::MaybeXS;
 use Path::Tiny;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
-use Open311::Endpoint::Integration::SalesForceRest;
-use Integrations::SalesForceRest;
+use Open311::Endpoint::Integration::SalesForce::EastSussex;
+use Integrations::SalesForce::EastSussex;
 
-my $endpoint = Open311::Endpoint::Integration::SalesForceRest->new( jurisdiction_id => 'eastsussex_salesforce' );
+my $endpoint = Open311::Endpoint::Integration::SalesForce::EastSussex->new( jurisdiction_id => 'eastsussex_salesforce' );
 
 my %responses = (
     'GET Case/describe ' => path(__FILE__)->parent(1)->realpath->child('services.json')->slurp,
@@ -64,7 +64,7 @@ my %responses = (
 
 my @sent;
 
-my $integration = Test::MockModule->new('Integrations::SalesForceRest');
+my $integration = Test::MockModule->new('Integrations::SalesForce::EastSussex');
 $integration->mock('_build_config_file', sub {
     path(__FILE__)->sibling('eastsussex.yml');
 });
@@ -102,7 +102,7 @@ subtest "converts validFrom correctly" => sub {
             out => [5,16,25,26,32,33],
         }
     ) {
-        is_deeply Integrations::SalesForceRest::_get_pos($test->{in}), $test->{out}, "converts correctly";
+        is_deeply Integrations::SalesForce::EastSussex::_get_pos($test->{in}), $test->{out}, "converts correctly";
     }
 };
 

@@ -1,5 +1,5 @@
 package Open311::Endpoint::Integration::UK::EastSussex;
-use parent 'Open311::Endpoint::Integration::SalesForceRest';
+use parent 'Open311::Endpoint::Integration::SalesForce::EastSussex';
 
 use Moo;
 

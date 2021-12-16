@@ -1,4 +1,4 @@
-package Open311::Endpoint::Integration::SalesForceRest;
+package Open311::Endpoint::Integration::SalesForce::EastSussex;
 
 use Moo;
 extends 'Open311::Endpoint';
@@ -7,7 +7,7 @@ with 'Open311::Endpoint::Role::mySociety';
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::UKCouncil::Salesforce;
 
-use Integrations::SalesForceRest;
+use Integrations::SalesForce::EastSussex;
 
 use DateTime::Format::Strptime;
 use Types::Standard ':all';
@@ -62,7 +62,7 @@ has whitelist => (
     }
 );
 
-sub integration_class { 'Integrations::SalesForceRest' }
+sub integration_class { 'Integrations::SalesForce::EastSussex' }
 
 sub get_integration {
     my $self = shift;

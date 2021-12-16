@@ -1,4 +1,4 @@
-package Open311::Endpoint::Integration::SalesForce;
+package Open311::Endpoint::Integration::SalesForce::Rutland;
 
 use Moo;
 extends 'Open311::Endpoint';
@@ -9,7 +9,7 @@ use Open311::Endpoint::Service::Request::SalesForce;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 
-use Integrations::SalesForce;
+use Integrations::SalesForce::Rutland;
 
 use Encode qw(encode_utf8);
 use Digest::MD5 qw(md5_hex);
@@ -39,7 +39,7 @@ sub parse_datetime {
 
 sub reverse_status_mapping {}
 
-sub integration_class { 'Integrations::SalesForce' }
+sub integration_class { 'Integrations::SalesForce::Rutland' }
 
 sub get_integration {
     my $self = shift;
