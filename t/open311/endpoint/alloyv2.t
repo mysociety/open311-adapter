@@ -154,6 +154,13 @@ $integration->mock('api_call', sub {
             $content = '{ "item": { "designCode": "a_design_code" } }';
         } elsif ( $call =~ 'item-log/item/(.*)$' ) {
             $content = path(__FILE__)->sibling("json/alloyv2/item_log_$1.json")->slurp;
+        } elsif ( $call =~ 'item/(\w+)/parents' ) {
+            my $fh = path(__FILE__)->sibling("json/alloyv2/item_$1_parents.json");
+            if ( $fh->exists ) {
+                $content = $fh->slurp;
+            } else {
+                $content = '{ "results": [] }';
+            }
         } elsif ( $call =~ 'item/(\w+)' ) {
             $content = path(__FILE__)->sibling("json/alloyv2/item_$1.json")->slurp;
         } else {

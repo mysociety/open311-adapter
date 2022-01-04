@@ -85,10 +85,6 @@
         {
           "attributeCode": "attributes_ancillaryItems1000793TargetDate1011490_5d32405bfe2ad806f8dfb4a3",
           "value": "2019-12-19T00:00:00.000Z"
-        },
-        {
-          "attributeCode": "attributes_defectsWithInspectionsDefectInspection",
-          "value": [ "3027032" ]
         }
       ],
       "signature": "5d324086b4e1b90150f946a0",
@@ -208,12 +204,6 @@
           "attributeCode": "attributes_defectsStatus",
           "value": [
             "5c8bdfb58ae862230019dc1f"
-          ]
-        },
-        {
-          "attributeCode": "attributes_defectsWithInspectionsDefectInspection",
-          "value": [
-            "5c8bdfc88ae862230019dc22"
           ]
         },
         {

@@ -890,29 +890,24 @@ sub _get_defect_inspection {
     my ($self, $defect, $service_request_id) = @_;
 
     my $linked_defect;
-    # if it has a parent that is an enquiry get the resource id of the inspection and use that
-    # as the external id so updates are added to the report that created the inspection
-    my $attributes = $self->alloy->attributes_to_hash( $defect );
-    for my $attribute (keys %$attributes) {
-        if ( $attribute =~ /DefectInspection/) { # request for service
-            $linked_defect = 1;
-            $service_request_id = $attributes->{$attribute}->[0];
-            last;
-        }
+    my @inspections = $self->_get_defect_inspection_parents($defect);
+    if (@inspections) {
+        $linked_defect = 1;
+        $service_request_id = $inspections[0];
     }
-
     return ($linked_defect, $service_request_id);
 }
 
 sub _get_defect_inspection_parents {
     my ($self, $defect) = @_;
 
-    my $linked_defect;
-    for my $parent_info (@{ $defect->{parents} } ) {
-        $linked_defect = 1 if $parent_info->{attribute} =~ 'Request'; # request for service
+    my $parents = $self->alloy->api_call(call => "item/$defect->{itemId}/parents")->{results};
+    my @linked_defects;
+    foreach (@$parents) {
+        push @linked_defects, $_->{itemId} if $_->{designCode} eq $self->config->{rfs_design};
     }
 
-    return $linked_defect;
+    return @linked_defects;
 }
 
 sub _get_attachments {
