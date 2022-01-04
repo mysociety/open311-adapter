@@ -60,6 +60,8 @@ $integration->mock('api_call', sub {
             $content = '{}';
             if ($type eq 'designs_faultType_123456') {
                 $content = path(__FILE__)->sibling('json/alloyv2/occ_categories_search.json')->slurp;
+            } elsif ($type eq 'designs_lightingJob') {
+                $content = path(__FILE__)->sibling('json/alloyv2/occ_lightingjob_search.json')->slurp;
             }
         }
     } else {
@@ -69,6 +71,13 @@ $integration->mock('api_call', sub {
             $content = path(__FILE__)->sibling('json/alloyv2/occ_design_resource.json')->slurp;
         } elsif ( $call eq 'item/abcdef' ) {
             $content = '{ "item": { "designCode": "designs_streetLights" } }';
+        } elsif ( $call =~ 'item/(\w+)/parents' ) {
+            my $fh = path(__FILE__)->sibling("json/alloyv2/occ_item_$1_parents.json");
+            if ( $fh->exists ) {
+                $content = $fh->slurp;
+            } else {
+                $content = '{ "results": [] }';
+            }
         }
     }
 
@@ -139,6 +148,48 @@ subtest "create basic problem" => sub {
     is_deeply decode_json($res->content),
         [ {
             "service_request_id" => 12345
+        } ], 'correct json returned';
+};
+
+subtest 'fetch problems' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.json',
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        start_date => "2021-08-01T12:00:00Z",
+        end_date => "2021-08-02T12:00:00Z",
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            service_request_id => "61278c1e80483601696619b1",
+            service_code => "Street Lighting_HIT",
+            service_name => "Street Lighting_HIT",
+            requested_datetime => "2021-08-26T12:42:07Z",
+            updated_datetime => "2021-08-26T12:42:07Z",
+            status => "action_scheduled",
+            lat => 51.53706,
+            long => -0.909062,
+            address => "",
+            address_id => "",
+            zipcode => "",
+            media_url => "",
+       }, {
+            service_request_id => "6128bf209399610254623a6c",
+            service_code => "Street Lighting_Twisted Lantern",
+            service_name => "Street Lighting_Twisted Lantern",
+            requested_datetime => "2021-08-27T10:32:00Z",
+            updated_datetime => "2021-08-27T10:32:00Z",
+            status => "open",
+            lat => 51.9036290685135,
+            long => -1.13017126223015,
+            address => "",
+            address_id => "",
+            zipcode => "",
+            media_url => "",
         } ], 'correct json returned';
 };
 

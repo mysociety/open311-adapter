@@ -1,0 +1,10 @@
+{"page":1,"pageSize":20,"results":[
+    {"itemId":"61278d8d211c790251bc67c5","designCode":"designs_lightingDefect_123456","collection":"Live","start":"2021-08-26T12:48:13.193Z","end":"9999-12-31T23:59:59.999Z","icon":"icon-defect-electric","colour":"#f9bc13","locked":false,"attributes":[
+        {"attributeCode":"attributes_itemsTitle","value":"DEF-92"},
+        {"attributeCode":"attributes_itemsSubtitle","value":"Lighting Defect"}
+    ],"signature":"61278da6e75424016f88ac73"
+    },
+    {"itemId":"609179b7fbe013016cfdd552","designCode":"designs_streetLights","collection":"Live","start":"2021-08-26T12:48:40.598Z","end":"9999-12-31T23:59:59.999Z","icon":"icon-stl-lamp","colour":"#f7971d","locked":false,"attributes":[
+        {"attributeCode":"attributes_streetLightingUnitsUnitNumber","value":"026"}
+    ],"signature":"61278da8e75424016f88aca4"}
+]}

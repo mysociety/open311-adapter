@@ -1,0 +1,5 @@
+{"page":1,"pageSize":20,"results":[
+    {"itemId":"60917613fbe013016cef8cd2","designCode":"designs_streetLights","collection":"Live","start":"2021-08-27T10:32:16.829Z","end":"9999-12-31T23:59:59.999Z","icon":"icon-stl-lamp","colour":"#f7971d","locked":false,"attributes":[
+        {"attributeCode":"attributes_streetLightingUnitsUnitNumber","value":"022"}
+    ],"signature":"6128bf30e75424016fbcb4fe"}
+]}

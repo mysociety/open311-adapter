@@ -16,6 +16,8 @@
       "Lamp on during day": {},
       "Flashing Lamp": {},
       "Lamp appears dim": {},
+      "Twisted Lantern": {},
+      "HIT": {},
     }
   },
 
@@ -61,19 +63,25 @@
       "types": {
         "5edf3f9b5f93330056cb375c": "Lamp on during day",
         "5edf3fad61bbfb00565833eb": "Flashing Lamp",
+        "5edf400b61bbfb00565833fb": "Twisted Lantern",
+        "5edf401a5f93330056cb3783": "HIT",
         "5ef0d9ae52b7860056cf3752": "Lamp appears dim",
       }
     }
   },
 
   "defect_status_mapping": {
+    "5bc5bdd281d088d177342c73": "action_scheduled", # Issued
+    "5bc5bdd281d088d177342c74": "in_progress", # In Progress
+    "5bc5bdd281d088d177342c76": "fixed", # Completed
+    "60ae59cd5bfa7a023102ef2e": "duplicate", # Duplicate
   },
 
   "defect_resource_name": "designs_lightingJob",
 
   "defect_attribute_mapping": {
-      "title": "attributes_itemsSubtitle",
       "description": "attributes_defectsDescription",
-      "status": "attributes_defectsStatus",
+      "status": "attributes_tasksStatus",
+      "requested_datetime": "attributes_tasksRaisedTime",
   }
 }

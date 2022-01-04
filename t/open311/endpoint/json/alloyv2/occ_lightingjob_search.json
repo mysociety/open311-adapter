@@ -1,0 +1,29 @@
+{"page":1,"pageSize":20,"results":[
+    {"itemId":"61278c1e80483601696619b1","designCode":"designs_lightingJob","collection":"Live","start":"2021-08-26T12:42:07.013Z","attributes":[{"attributeCode":"attributes_tasksStatus","value":["5bc5bdd281d088d177342c73"]},
+{"attributeCode":"attributes_lightingJobJobType_5eb065b164de500048d5dddb","value":["5edf401a5f93330056cb3783"]},
+{"attributeCode":"attributes_tasksDescription","value":"South assign test"},
+{"attributeCode":"attributes_itemsGeometry","value":{"type":"Point","coordinates":[-0.909062,51.53706]}},
+{"attributeCode":"attributes_tasksRaisedTime","value":"2021-08-26T12:42:07.000Z"},
+{"attributeCode":"attributes_jobsJobNumber","value":199.0},
+{"attributeCode":"attributes_itemsTitle","value":"Job:199"},
+{"attributeCode":"attributes_itemsSubtitle","value":"Lighting Job"},
+{"attributeCode":"attributes_tasksTeam","value":["60d5896467351a023299065a"]}
+    ],"signature":"61278c218048360169661a5f"},
+{"itemId":"61278da3e75424016f88abd2","designCode":"designs_lightingJob","collection":"Live","start":"2021-08-26T12:48:36.222Z","attributes":[{"attributeCode":"attributes_tasksStatus","value":["5bc5bdd281d088d177342c73"]},
+{"attributeCode":"attributes_lightingJobJobType_5eb065b164de500048d5dddb","value":["5edf401a5f93330056cb3783"]},
+{"attributeCode":"attributes_tasksDescription","value":"2"},
+{"attributeCode":"attributes_itemsGeometry","value":{"type":"Point","coordinates":[-1.439349,51.587806]}},
+{"attributeCode":"attributes_tasksRaisedTime","value":"2021-08-26T12:48:36.000Z"},
+{"attributeCode":"attributes_jobsJobNumber","value":201.0},
+{"attributeCode":"attributes_itemsTitle","value":"Job:201"},
+{"attributeCode":"attributes_itemsSubtitle","value":"Lighting Job"},
+{"attributeCode":"attributes_tasksTeam","value":["60d589847bf4d202305e2b86"]}
+],"signature":"61278da5e75424016f88ac46"},
+{"itemId":"6128bf209399610254623a6c","designCode":"designs_lightingJob","collection":"Live","start":"2021-08-27T10:32:00.651Z","locked":false,"attributes":[{"attributeCode":"attributes_tasksStatus","value":["5bc5bdd281d088d177342c72"]},
+{"attributeCode":"attributes_lightingJobJobType_5eb065b164de500048d5dddb","value":["5edf400b61bbfb00565833fb"]},
+{"attributeCode":"attributes_tasksRaisedTime","value":"2021-08-27T10:32:00.000Z"},
+{"attributeCode":"attributes_itemsSubtitle","value":"Lighting Job"},
+{"attributeCode":"attributes_itemsTitle","value":"Job:207"},
+{"attributeCode":"attributes_jobsJobNumber","value":207.0},
+{"attributeCode":"attributes_itemsGeometry","value":{"type":"Point","coordinates":[-1.13017126223015,51.9036290685135]}}
+],"signature":"6128bfbde75424016fbd05b7"}]}
