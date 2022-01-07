@@ -117,7 +117,7 @@ $integration->mock('api_call', sub {
             $content = '{ "page":1,"pageSize":20,"results":[{"value":{"attributeCode":"attributes_fake","value":4.0}}] }';
         } elsif ( $call =~ 'aqs/query' ) {
             my $type = $body->{aqs}->{properties}->{dodiCode};
-            my $time = $body->{aqs}->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
+            my $time = $body->{aqs}->{children}->[0]->{children}->[0]->{children}->[1]->{properties}->{value}->[0];
             $content = '{}';
             if ( $type =~ /DEFECT/i ) {
                 if ( $time =~ /2019-01-02/ ) {

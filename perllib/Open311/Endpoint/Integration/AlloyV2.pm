@@ -450,7 +450,7 @@ sub _get_inspection_updates {
 
     my @updates;
 
-    my $updates = $self->fetch_updated_resources($self->config->{rfs_design}, $args->{start_date});
+    my $updates = $self->fetch_updated_resources($self->config->{rfs_design}, $args->{start_date}, $args->{end_date});
     my $mapping = $self->config->{inspection_attribute_mapping};
     for my $update (@$updates) {
         next unless $self->_accept_updated_resource($update, $start_time, $end_time);
@@ -549,13 +549,13 @@ sub _get_defect_updates {
     my $resources = $self->config->{defect_resource_name};
     $resources = [ $resources ] unless ref $resources eq 'ARRAY';
     foreach (@$resources) {
-        push @updates, $self->_get_defect_updates_resource($_, $args->{start_date}, $start_time, $end_time);
+        push @updates, $self->_get_defect_updates_resource($_, $args, $start_time, $end_time);
     }
     return @updates;
 }
 
 sub _get_defect_updates_resource {
-    my ($self, $resource_name, $start_date, $start_time, $end_time) = @_;
+    my ($self, $resource_name, $args, $start_time, $end_time) = @_;
 
     my @updates;
     my $closure_mapping = $self->config->{inspection_closure_mapping};
@@ -563,7 +563,7 @@ sub _get_defect_updates_resource {
 
     my $mapping = $self->config->{defect_attribute_mapping};
 
-    my $updates = $self->fetch_updated_resources($resource_name, $start_date);
+    my $updates = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date});
     for my $update (@$updates) {
         next if $self->is_ignored_category( $update );
 
@@ -628,15 +628,15 @@ sub get_service_requests {
     $resources = [ $resources ] unless ref $resources eq 'ARRAY';
     my @requests;
     foreach (@$resources) {
-        push @requests, $self->_get_service_requests_resource($_, $args->{start_date});
+        push @requests, $self->_get_service_requests_resource($_, $args);
     }
     return @requests;
 }
 
 sub _get_service_requests_resource {
-    my ($self, $resource_name, $start_date) = @_;
+    my ($self, $resource_name, $args) = @_;
 
-    my $requests = $self->fetch_updated_resources($resource_name, $start_date);
+    my $requests = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date});
     my @requests;
     my $mapping = $self->config->{defect_attribute_mapping};
     for my $request (@$requests) {
@@ -696,7 +696,7 @@ sub get_request_description {
 }
 
 sub fetch_updated_resources {
-    my ($self, $code, $start_date) = @_;
+    my ($self, $code, $start_date, $end_date) = @_;
 
     my @results;
 
@@ -706,18 +706,35 @@ sub fetch_updated_resources {
             attributes => ["all"],
         },
         children => [{
-            type =>  "GreaterThan",
-            children =>  [{
-                type =>  "ItemProperty",
-                properties =>  {
-                    itemPropertyName =>  "lastEditDate"
-                }
-            },
-            {
-                type =>  "DateTime",
-                properties =>  {
-                    value =>  [$start_date]
-                }
+            type => "And",
+            children => [{
+                type =>  "GreaterThan",
+                children =>  [{
+                    type =>  "ItemProperty",
+                    properties =>  {
+                        itemPropertyName =>  "lastEditDate"
+                    }
+                },
+                {
+                    type =>  "DateTime",
+                    properties =>  {
+                        value =>  [$start_date]
+                    }
+                }]
+            }, {
+                type =>  "LessThan",
+                children =>  [{
+                    type =>  "ItemProperty",
+                    properties =>  {
+                        itemPropertyName =>  "lastEditDate"
+                    }
+                },
+                {
+                    type =>  "DateTime",
+                    properties =>  {
+                        value =>  [$end_date]
+                    }
+                }]
             }]
         }]
     };
