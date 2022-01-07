@@ -463,7 +463,9 @@ sub _get_inspection_updates {
             # we have to fetch all the updates as we need them to check if the
             # comments have changed. once we've fetched them we can throw away the
             # ones that don't match the date range.
-            my $resource = $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
+            my $resource = try {
+                $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
+            };
             next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
 
             $resource = $resource->{item};
@@ -590,7 +592,9 @@ sub _get_defect_updates_resource {
             my $update_dt = $self->date_to_truncated_dt($date);
             next unless $update_dt >= $start_time && $update_dt <= $end_time;
 
-            my $resource = $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
+            my $resource = try {
+                $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
+            };
             next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
 
             $resource = $resource->{item};
