@@ -588,6 +588,8 @@ sub _get_defect_updates_resource {
             next unless $self->_valid_update_date($update, $date);
 
             my $update_dt = $self->date_to_truncated_dt($date);
+            next unless $update_dt >= $start_time && $update_dt <= $end_time;
+
             my $resource = $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
             next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
 
