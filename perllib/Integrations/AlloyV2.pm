@@ -33,6 +33,7 @@ sub api_call {
 
     my $ua = LWP::UserAgent->new(
         agent => "FixMyStreet/open311-adapter",
+        timeout => 5*60,
     );
     my $method = $args{method};
     $method = $body ? 'POST' : 'GET' unless $method;
