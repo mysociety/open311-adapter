@@ -434,33 +434,32 @@ sub _generate_update {
 sub get_service_request_updates {
     my ($self, $args) = @_;
 
-    my $start_time = $self->date_to_dt($args->{start_date});
-    my $end_time = $self->date_to_dt($args->{end_date});
-
     my @updates;
-
-    push @updates, $self->_get_inspection_updates($args, $start_time, $end_time);
-    push @updates, $self->_get_defect_updates($args, $start_time, $end_time);
+    push @updates, $self->_get_inspection_updates($args);
+    push @updates, $self->_get_defect_updates($args);
 
     return sort { $a->updated_datetime <=> $b->updated_datetime } @updates;
 }
 
 sub _get_inspection_updates {
-    my ($self, $args, $start_time, $end_time) = @_;
+    my ($self, $args) = @_;
+
+    my $start_time = $self->date_to_dt($args->{start_date});
+    my $end_time = $self->date_to_dt($args->{end_date});
 
     my @updates;
 
     my $updates = $self->fetch_updated_resources($self->config->{rfs_design}, $args->{start_date}, $args->{end_date});
     my $mapping = $self->config->{inspection_attribute_mapping};
     for my $update (@$updates) {
-        next unless $self->_accept_updated_resource($update, $start_time, $end_time);
+        next unless $self->_accept_updated_resource($update);
 
         # We need to fetch all versions that changed in the time wanted
         my @version_ids = $self->get_versions_of_resource($update->{itemId});
 
         my $last_description = '';
         foreach my $date (@version_ids) {
-            next unless $self->_valid_update_date($update, $date, $start_time, $end_time);
+            next unless $self->_valid_update_date($update, $date);
             # we have to fetch all the updates as we need them to check if the
             # comments have changed. once we've fetched them we can throw away the
             # ones that don't match the date range.
@@ -543,19 +542,22 @@ sub _status_and_closure_mapping {
 }
 
 sub _get_defect_updates {
-    my ( $self, $args, $start_time, $end_time ) = @_;
+    my ( $self, $args ) = @_;
 
     my @updates;
     my $resources = $self->config->{defect_resource_name};
     $resources = [ $resources ] unless ref $resources eq 'ARRAY';
     foreach (@$resources) {
-        push @updates, $self->_get_defect_updates_resource($_, $args, $start_time, $end_time);
+        push @updates, $self->_get_defect_updates_resource($_, $args);
     }
     return @updates;
 }
 
 sub _get_defect_updates_resource {
-    my ($self, $resource_name, $args, $start_time, $end_time) = @_;
+    my ($self, $resource_name, $args) = @_;
+
+    my $start_time = $self->date_to_dt($args->{start_date});
+    my $end_time = $self->date_to_dt($args->{end_date});
 
     my @updates;
     my $closure_mapping = $self->config->{inspection_closure_mapping};
@@ -583,7 +585,7 @@ sub _get_defect_updates_resource {
 
         my @version_ids = $self->get_versions_of_resource($update->{itemId});
         foreach my $date (@version_ids) {
-            next unless $self->_valid_update_date($update, $date, $start_time, $end_time);
+            next unless $self->_valid_update_date($update, $date);
 
             my $update_dt = $self->date_to_truncated_dt($date);
             my $resource = $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
