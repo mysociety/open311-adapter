@@ -282,6 +282,24 @@ subtest "GET services" => sub {
       "metadata" => "true"
    },
    {
+      "service_name" => "Assisted collection add",
+      "service_code" => "2149-add",
+      "keywords" => "",
+      "description" => "Assisted collection add",
+      "group" => "Waste",
+      "type" => "realtime",
+      "metadata" => "true"
+   },
+   {
+      "service_name" => "Assisted collection remove",
+      "service_code" => "2149-remove",
+      "keywords" => "",
+      "description" => "Assisted collection remove",
+      "group" => "Waste",
+      "type" => "realtime",
+      "metadata" => "true"
+   },
+   {
       "service_name" => "Report missed collection",
       "service_code" => "missed",
       "keywords" => "",

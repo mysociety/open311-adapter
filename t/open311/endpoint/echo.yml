@@ -9,12 +9,18 @@ service_whitelist:
   2118: 'Gate not closed'
   2119: 'Waste spillage'
   2148: 'General Enquiry'
+  2149-add: 'Assisted collection add'
+  2149-remove: 'Assisted collection remove'
 
 service_to_event_type:
   missed:
     531: 2095
     534: 2101
     536: 2096
+  2149-add:
+    531: 2149
+  2149-remove:
+    531: 2149
 
 service_id_override:
   2104: 547
