@@ -82,7 +82,7 @@ $lwp->mock(get => sub {
 });
 $lwp->mock(request => sub {
     my ($ua, $req) = @_;
-    return HTTP::Response->new(200, 'OK', [], '{"access_token":"123"}') if $req->uri =~ /oauth\/token/;
+    return HTTP::Response->new(200, 'OK', [], '{"access_token":"123","expires_in":3600}') if $req->uri =~ /oauth\/token/;
     # A file upload
     my $data = decode_json($req->content);
     is $data->{enquiryNumber}, 2001;

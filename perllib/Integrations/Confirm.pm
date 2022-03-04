@@ -90,7 +90,7 @@ has oauth_token => (
             }
             my $content = decode_json($response->content);
             $token = decode_base64($content->{access_token});
-            $self->memcache->set('oauth_token', $token, $content->{expires_in});
+            $self->memcache->set('oauth_token', $token, time() + $content->{expires_in});
         }
         return $token;
     },
