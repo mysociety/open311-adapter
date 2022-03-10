@@ -443,6 +443,49 @@ subtest "create problem with multiple photos" => sub {
 
 };
 
+subtest "create problem with unrecognised attribute" => sub {
+    set_fixed_time('2014-01-01T12:00:00Z');
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        jurisdiction_id => 'rutland',
+        api_key => 'test',
+        service_code => 'POT',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        'attribute[description]' => 'description',
+        'attribute[external_id]' => '1',
+        'attribute[title]' => '1',
+        'attribute[testing]' => 'Should be ignored',
+    );
+    ok $res->is_success, 'valid request';
+
+    my $sent = pop @sent;
+    is_deeply decode_json($sent),
+    [{
+        detail__c => "description",
+        description__c => "description",
+        updated_datetime__c => "2014-01-01T12:00:00+0000",
+        status__c => "open",
+        lat__c => 50.0,
+        service_request_id__c => 1,
+        Service_Area__c => "POT",
+        requested_datetime__c => "2014-01-01T12:00:00+0000",
+        requestor_name__c => "Bob Mould",
+        title__c => "1",
+        interface_used__c => "Web interface",
+        long__c => 0.1,
+        contact_name__c => "Bob Mould",
+        contact_email__c => 'test@example.com',
+        agency_sent_datetime__c => "2014-01-01T12:00:00+0000",
+        agency_responsible__c => "Rutland County Council",
+    }] , 'correct json sent';
+};
+
 subtest "check fetch problem" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(

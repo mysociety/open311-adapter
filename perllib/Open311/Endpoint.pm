@@ -459,11 +459,11 @@ sub POST_Service_Request_input_schema {
         $attributes{ $section }{ $key } = $def;
     }
 
-    if ($service->allow_any_attributes) {
-        for my $key (grep { /^attribute\[\w+\]$/ } keys %$args) {
-            $attributes{optional}{$key} = '//str'
-                unless $attributes{required}{$key};
-        }
+    for my $key (grep { /^attribute\[\w+\]$/ } keys %$args) {
+        next if $attributes{optional}{$key} || $attributes{required}{$key};
+
+        $attributes{optional}{$key} = '//str';
+        $self->logger->warn("Unknown attribute: $key") unless $service->allow_any_attributes;
     }
 
     # we have to supply at least one of these, but can supply more

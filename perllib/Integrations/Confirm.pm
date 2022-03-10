@@ -292,7 +292,8 @@ sub NewEnquiry {
         datetime => 'EnqAttribDateValue',
     };
 
-    for my $code (keys %{ $args->{attributes} }) {
+    for my $code (map { $_->code } @{ $service->attributes }) {
+        next unless exists $args->{attributes}->{$code};
         next if grep {$code eq $_} ('easting', 'northing', 'fixmystreet_id', 'closest_address');
         my $value = substr($args->{attributes}->{$code}, 0, 2000);
 

@@ -140,7 +140,8 @@ sub post_request {
     };
 
     # add category specific attributes
-    for my $extra (keys %{ $args->{attributes} } ) {
+    for my $extra (map { $_->code } @{ $service->attributes}) {
+        next unless exists $args->{attributes}->{$extra};
         unless (exists $service->internal_attributes->{$extra}) {
             $values->{$extra} = $args->{attributes}->{$extra};
         }

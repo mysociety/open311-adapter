@@ -78,7 +78,6 @@ sub services {
             type => 'realtime',
             keywords => [qw/ bin /],
             group => 'sanitation',
-            allow_any_attributes => 1,
         )
     );
 }
