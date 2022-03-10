@@ -43,6 +43,9 @@
   "ignored_defect_types": [
   ],
 
+  # A mapping of FixMyStreet user role to Alloy Source ID
+  "defect_source_mapping": { },
+
   "defect_sourcetype_category_mapping": {
   },
 

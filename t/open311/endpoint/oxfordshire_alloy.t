@@ -121,6 +121,7 @@ subtest "create basic problem" => sub {
         'attribute[northing]' => 2,
         'attribute[mayrise_id]' => 'MID',
         'attribute[unit_number]' => '10',
+        'attribute[staff_role]' => 'Patrol',
     );
 
     my $sent = pop @sent;
@@ -138,10 +139,11 @@ subtest "create basic problem" => sub {
             { attributeCode => 'attributes_lightingDefectFMSReport_123456', value => "http://localhost/123" },
             { attributeCode => 'attributes_lightingDefectFaultType_123456', value => ["5edf3f9b5f93330056cb375c"] },
             { attributeCode => 'attributes_lightingDefectNearestCalculatedAddress_123456', value => "Closest" },
+            { attributeCode => 'attributes_lightingDefectSource_60953d', value => ['5ef1c835457bbc00569a9a3c'] },
             { attributeCode => 'attributes_lightingDefectUSRN_123456', value => "USRN" },
             { attributeCode => 'attributes_mayriseIdentifierMayriseIdentifier', value => "MID" },
             { attributeCode => 'attributes_streetLightingUnitsUnitNumber', value => "10" },
-            { attributeCode => 'attributes_tasksRaisedTime', value => $sent->{attributes}[10]{value} },
+            { attributeCode => 'attributes_tasksRaisedTime', value => $sent->{attributes}[11]{value} },
         ],
         designCode => 'designs_lightingDefect_123456',
         parents => { "attributes_defectsAssignableDefects" => [ 'abcdef' ] },

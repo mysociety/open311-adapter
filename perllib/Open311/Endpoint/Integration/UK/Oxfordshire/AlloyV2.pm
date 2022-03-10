@@ -45,6 +45,17 @@ sub process_attributes {
         value => [ $group_code ],
     };
 
+    # We also might have a source to associate
+    if (my $staff_role = $args->{attributes}{staff_role}) {
+        my $mapping = $self->config->{defect_source_mapping};
+        if (my $code = $mapping->{$staff_role}) {
+            push @$attributes, {
+                attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{source},
+                value => [$code],
+            };
+        }
+    }
+
     return $attributes;
 
 }

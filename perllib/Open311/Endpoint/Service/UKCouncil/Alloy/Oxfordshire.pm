@@ -37,6 +37,13 @@ sub _build_attributes {
             required => 1,
             automated => 'hidden_field',
         ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => "staff_role",
+            description => "Staff role",
+            datatype => "string",
+            required => 0,
+            automated => 'server_set',
+        ),
     );
 
     return \@attributes;
