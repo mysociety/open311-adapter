@@ -31,6 +31,13 @@ sub _build_attributes {
             automated => 'hidden_field',
         ),
         Open311::Endpoint::Service::Attribute->new(
+            code => "unit_type",
+            description => "Unit type",
+            datatype => "text",
+            required => 0,
+            automated => 'hidden_field',
+        ),
+        Open311::Endpoint::Service::Attribute->new(
             code => "mayrise_id",
             description => "Mayrise Identifier",
             datatype => "string",
