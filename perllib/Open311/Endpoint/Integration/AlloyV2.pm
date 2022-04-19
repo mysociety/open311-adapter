@@ -567,8 +567,6 @@ sub _get_defect_updates_resource {
     my $closure_mapping = $self->config->{inspection_closure_mapping};
     my %reverse_closure_mapping = map { $closure_mapping->{$_} => $_ } keys %{$closure_mapping};
 
-    my $mapping = $self->config->{defect_attribute_mapping};
-
     my $updates = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date});
     for my $update (@$updates) {
         next if $self->is_ignored_category( $update );
@@ -584,7 +582,7 @@ sub _get_defect_updates_resource {
         $fms_id = undef if $linked_defect;
 
         # we don't care about linked defects until they have been scheduled
-        my $status = $self->defect_status($attributes->{$mapping->{status}}, $attributes);
+        my $status = $self->defect_status($attributes);
         next if $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
 
         my @version_ids = $self->get_versions_of_resource($update->{itemId});
@@ -601,7 +599,7 @@ sub _get_defect_updates_resource {
 
             $resource = $resource->{item};
             my $attributes = $self->alloy->attributes_to_hash($resource);
-            my $status = $self->defect_status($attributes->{$mapping->{status}}, $attributes);
+            my $status = $self->defect_status($attributes);
 
             my %args = (
                 status => $status,
@@ -676,7 +674,7 @@ sub _get_service_requests_resource {
 
         my $attributes = $self->alloy->attributes_to_hash($request);
         $args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
-        $args{status} = $self->defect_status($attributes->{$mapping->{status}}->[0], $attributes);
+        $args{status} = $self->defect_status($attributes);
 
         #XXX check this no longer required
         next if grep { $_ =~ /_FIXMYSTREET_ID$/ && $attributes->{$_} } keys %{ $attributes };
@@ -767,7 +765,10 @@ sub get_status_with_closure {
 }
 
 sub defect_status {
-    my ($self, $status) = @_;
+    my ($self, $defect) = @_;
+
+    my $mapping = $self->config->{defect_attribute_mapping};
+    my $status = $defect->{$mapping->{status}};
 
     $status = $status->[0] if ref $status eq 'ARRAY';
     return $self->config->{defect_status_mapping}->{$status} || 'open';

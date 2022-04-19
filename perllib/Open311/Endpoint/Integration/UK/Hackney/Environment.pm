@@ -17,7 +17,7 @@ around BUILDARGS => sub {
 };
 
 sub defect_status {
-    my ($self, $status, $defect) = @_;
+    my ($self, $defect) = @_;
 
     my $return_status;
 
@@ -32,7 +32,7 @@ sub defect_status {
         return $reason_mapping->{$reason} if $task_mapping->{$task_status} eq 'Cancelled';
     }
 
-    return $self->SUPER::defect_status($status);
+    return $self->SUPER::defect_status($defect);
 }
 
 
