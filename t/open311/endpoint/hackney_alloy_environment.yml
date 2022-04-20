@@ -1,0 +1,124 @@
+{
+  "api_key": "apikey",
+  "api_url": "http://localhost/api/",
+  "rfs_design": "designs_fixMyStreetDefect",
+  "resource_attachment_attribute_id": "attributes_filesAttachableAttachments",
+  "service_attribute_overrides": {},
+
+  "category_list_code": "designs_fMSCategory",
+  "category_title_attribute": "attributes_itemsTitle",
+  "parent_attribute_name": "Defects",
+
+  "service_whitelist": {
+     "Littering and cleanliness": {
+        "Graffiti": 1,
+        "Fly Tipping": 1,
+        "Gully": 1,
+      }
+    },
+
+  "default_category_attribute_value": "testtest",
+
+  "request_to_resource_attribute_mapping": {
+    "title": "attributes_fixedMyStreetDefectFMSReportTitle",
+    "description": "attributes_defectsDescription",
+    "fixmystreet_id": "attributes_fixedMyStreetDefectFMSID",
+    "closest_address": "attributes_fixedMyStreetDefectFMSNearestAddress",
+    "requested_datetime": "attributes_defectsReportedDate",
+    "graffiti_offensive": "attributes_fixedMyStreetDefectGraffitiOffensive",
+    "graffiti_size": "attributes_fixedMyStreetDefectGraffitiSize",
+    "graffiti_landtype": "attributes_fixedMyStreetDefectGraffitiType",
+  },
+
+  "request_to_resource_attribute_manual_mapping": {
+    "category": "attributes_fixedMyStreetDefectFMSCategory",
+    },
+
+  "defect_sourcetype_category_mapping": {
+    "designs_fixedMyStreetDefect": {
+      "default": "",
+      "types": {
+       "613f2ffffffff201591d720f": "Graffiti",
+       "613f2ffffffff101577025e2": "Fly Tipping",
+       "613f2ffffffff201591d735e": "Gully",
+       "6167fffffffffb015939de47": "Dog Fouling",
+       "6167ffffffffff015b868f1c": "Fly Posting",
+       "6167fffffffffb015939df9f": "Littering",
+       "6167fffffffff8015d0c4633": "Overflowing Public Bin",
+       "6167fffffffff901660d5860": "Drug Paraphernalia / Needless",
+       "6167fffffffff901660d5910": "Public Bin Contamination"
+      }
+      }
+    },
+
+  "defect_status_mapping": {
+    "5c8bdffffffff2230019dc1e": "open",
+    "5c8bdffffffff2230019dc1f": "investigating",
+    "5c8bdffffffff2230019dc20": "in_progress",
+    "5c8bdffffffff2230019dc21": "action_scheduled",
+    "5c8bdffffffff2230019dc22": "fixed",
+    "5c8bdffffffff2230019dc23": "closed",
+    "5c8bdffffffff2230019dc24": "not_councils_responsibility",
+    "5c8bdffffffff2230019dc25": "duplicate",
+    },
+
+  "inspection_closure_mapping": {
+  },
+
+
+  "defect_resource_name": "designs_fixedMyStreetDefect",
+
+  "defect_attribute_mapping": {
+     "title": "attributes_itemsTitle",
+     "requested_datetime": "attributes_defectsReportedDate",
+     "category": "attributes_fixedMyStreetDefectFMSCategory",
+     "summary": "attributes_defectsDescription",
+     "description": "attributes_defectsDescription",
+     "name": "attributes_fixedMyStreetDefectCustomerName",
+     "email": "attributes_fixedMyStreetDefectCustomerEmail",
+     "phone": "attributes_fixedMyStreetDefectCustomerContactNumber",
+     "fixmystreet_id": "attributes_fixedMyStreetDefectFMSID",
+     "status": "attributes_defectsStatus",
+     "task_status": "attributes_tasksStatus",
+     "cancellation_reason": "attributes_fixedMyStreetDefectFixMyStreetCancellationReason",
+     "updates": "attributes_fixedMyStreetDefectFixMyStreetNotes",
+  },
+
+  "task_status_mapping": {
+    "5bc5bffffffff8d177342c73": "Issued",
+    "5bc5bffffffff8d177342c77": "To Invoice",
+    "5bc5bffffffff8d177342c78": "Invoiced",
+    "5dea7ffffffff011c4dcc997": "Completed by Contractor V1",
+    "5bc5bffffffff8d177342c74": "In Progress",
+    "5bc5bffffffff8d177342c79": "Cancelled",
+    "5bc5bffffffff8d177342c75": "On Hold",
+    "5bc5bffffffff8d177342c76": "Completed",
+    "5bc5bffffffff8d177342c72": "Proposed",
+    "61606ffffffff50159f2c9f2": "Referred",
+  },
+
+  "cancellation_reason_mapping": {
+    "617807ffffffff015d18e75f": "not_councils_responsibility",
+    "617807ffffffff0159055baf": "no_further_action",
+    "617808ffffffff0158f6feae": "duplicate",
+  },
+
+    "contact": {
+      "code": "designs_contacts",
+      "attribute_id": "attributes_fixedMyStreetDefectContactDetails",
+      "search_attribute_code_email": "attributes_contactsEmail",
+      "search_attribute_code_phone": "attributes_contactsPhone",
+      "acceptance_datetime_attribute": "",
+      "attribute_defaults": {
+        "attributes_protectedDataConsentRecordedBy" : [ '5e1f46fffffffffffff163c6' ]
+      },
+      "attribute_mapping": {
+          "first_name": "attributes_contactsFirstName",
+          "last_name": "attributes_contactsLastName",
+          "email": "attributes_contactsEmail",
+          "phone": "attributes_contactsPhone",
+	        "created": "attributes_protectedDataDateRecorded",
+      },
+  }
+
+}

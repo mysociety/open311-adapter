@@ -1,0 +1,22 @@
+{
+    "page": 1,
+    "pageSize": 20,
+    "results": [
+        {
+            "itemId": "abcdea5823d4d9016616c151",
+            "designCode": "designs_contacts",
+            "collection": "Live",
+            "icon": "icon-user",
+            "colour": "#25aae1",
+            "locked": false,
+            "context": "Customer",
+            "attributes": [
+                {
+                    "attributeCode": "attributes_contactsEmail",
+                    "value": "test@example.com"
+                }
+            ],
+            "signature": "abcdea5823d4d9016616c156"
+        }
+    ]
+}

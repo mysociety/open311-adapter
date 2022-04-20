@@ -1,0 +1,78 @@
+{
+    "page": 1,
+    "pageSize": 20,
+    "results": [
+        {
+            "itemId": "abcde0d6dcf79201591d720f",
+            "designCode": "designs_fMSCategory",
+            "collection": "Live",
+            "icon": "icon-shape-circle",
+            "colour": "#3d8fbd",
+            "locked": false,
+            "context": "Customer",
+            "attributes": [
+                {
+                    "attributeCode": "attributes_fMSCategoryFMSCategory",
+                    "value": "Graffiti"
+                },
+                {
+                    "attributeCode": "attributes_itemsTitle",
+                    "value": "Graffiti"
+                },
+                {
+                    "attributeCode": "attributes_itemsSubtitle",
+                    "value": "FMS Category"
+                }
+            ],
+            "signature": "abcde158e092d7016b69f41b"
+        },
+        {
+            "itemId": "abcde0e5227cd101577025e2",
+            "designCode": "designs_fMSCategory",
+            "collection": "Live",
+            "icon": "icon-shape-circle",
+            "colour": "#3d8fbd",
+            "locked": false,
+            "context": "Customer",
+            "attributes": [
+                {
+                    "attributeCode": "attributes_fMSCategoryFMSCategory",
+                    "value": "Fly Tipping"
+                },
+                {
+                    "attributeCode": "attributes_itemsTitle",
+                    "value": "Fly Tipping"
+                },
+                {
+                    "attributeCode": "attributes_itemsSubtitle",
+                    "value": "FMS Category"
+                }
+            ],
+            "signature": "abcde158e092d7016b69f41c"
+        },
+        {
+            "itemId": "abcde0f5dcf79201591d735e",
+            "designCode": "designs_fMSCategory",
+            "collection": "Live",
+            "icon": "icon-shape-circle",
+            "colour": "#3d8fbd",
+            "locked": false,
+            "context": "Customer",
+            "attributes": [
+                {
+                    "attributeCode": "attributes_fMSCategoryFMSCategory",
+                    "value": "Gully"
+                },
+                {
+                    "attributeCode": "attributes_itemsTitle",
+                    "value": "Gully"
+                },
+                {
+                    "attributeCode": "attributes_itemsSubtitle",
+                    "value": "FMS Category"
+                }
+            ],
+            "signature": "abcde158e092d7016b69f41d"
+        }
+   ]
+}
