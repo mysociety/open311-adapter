@@ -18,6 +18,7 @@ my %config_filenames = (
     'Open311::Endpoint::Integration::UK::EastSussex' => 'eastsussex_salesforce',
     'Open311::Endpoint::Integration::UK::Hounslow' => 'hounslow_confirm',
     'Open311::Endpoint::Integration::UK::IslandRoads' => 'island_roads_confirm',
+    'Open311::Endpoint::Integration::UK::Kingston' => 'kingston_echo',
     'Open311::Endpoint::Integration::UK::Lincolnshire' => 'lincolnshire_confirm',
     'Open311::Endpoint::Integration::UK::Rutland' => 'rutland',
     'Open311::Endpoint::Integration::UK::Shropshire' => 'shropshire_confirm',
