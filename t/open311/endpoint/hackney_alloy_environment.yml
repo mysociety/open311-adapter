@@ -1,7 +1,7 @@
 {
   "api_key": "apikey",
   "api_url": "http://localhost/api/",
-  "rfs_design": "designs_fixMyStreetDefect",
+  "rfs_design": "designs_fixedMyStreetDefect",
   "resource_attachment_attribute_id": "attributes_filesAttachableAttachments",
   "service_attribute_overrides": {},
 

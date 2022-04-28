@@ -54,10 +54,28 @@ $integration->mock('api_call', sub {
             my $type = $body->{aqs}->{properties}->{dodiCode};
             $content = '{}';
             if ($type eq 'designs_fMSCategory') {
-                $content = path(__FILE__)->sibling('json/alloyv2/hackney_environment_categories_search.json')->slurp;
+                $content = path(__FILE__)->sibling('json/hackney_environment/categories_search.json')->slurp;
             } elsif ($type eq 'designs_contacts') {
-                $content = path(__FILE__)->sibling('json/alloyv2/hackney_environment_contacts_search.json')->slurp;
+                $content = path(__FILE__)->sibling('json/hackney_environment/contacts_search.json')->slurp;
+            } elsif ($type eq 'designs_fixedMyStreetDefect') {
+                $content = path(__FILE__)->sibling('json/hackney_environment/defects_search.json')->slurp;
             }
+        } elsif ( $call =~ 'item-log/item/([^/]*)/reconstruct' ) {
+            my $id = $1;
+            my $date = $body->{date};
+            $date =~ s/\D//g;
+            warn path(__FILE__)->sibling("json/hackney_environment/reconstruct_${id}_$date.json");
+            $content = path(__FILE__)->sibling("json/hackney_environment/reconstruct_${id}_$date.json")->slurp;
+        }
+    } elsif ( $call =~ 'item-log/item/(.*)$' ) {
+        $content = path(__FILE__)->sibling("json/hackney_environment/item_log_$1.json")->slurp;
+    } elsif ( $call =~ 'item/(\w+)/parents' ) {
+        my $fh = path(__FILE__)->sibling("json/hackney_environment/item_$1_parents.json");
+        if ( $fh->exists ) {
+            warn $fh;
+            $content = $fh->slurp;
+        } else {
+            $content = '{ "results": [] }';
         }
     }
 
@@ -121,7 +139,7 @@ subtest "create basic problem" => sub {
             { attributeCode => 'attributes_fixedMyStreetDefectGraffitiType', value => "public land" },
             { attributeCode => 'attributes_itemsGeometry', value => { coordinates => [ 0.1, 50 ], type => "Point" } },
         ],
-        designCode => 'designs_fixMyStreetDefect',
+        designCode => 'designs_fixedMyStreetDefect',
         parents => { },
     }, 'correct json sent';
 
@@ -129,6 +147,37 @@ subtest "create basic problem" => sub {
         [ {
             "service_request_id" => 12345
         } ], 'correct json returned';
+};
+
+subtest "check fetch updates" => sub {
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2022-04-20T07:43:46Z&end_date=2022-04-20T19:43:46Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [
+        {
+            description => "",
+            media_url => "",
+            service_request_id => "625ffffffffae7015ac40c5b",
+            status => "open",
+            update_id => "625fffffff62a1016ce7f779",
+            updated_datetime => "2022-04-20T08:19:26Z"
+        },
+        {
+            description => "",
+            media_url => "",
+            service_request_id => "625ffffffffae7015ac40c5b",
+            # this is derived from the Hackney Environment-specific defect_status code
+            status => "not_councils_responsibility",
+            update_id => "625fe4b24edcdb01584733b2",
+            updated_datetime => "2022-04-20T10:47:14Z"
+        }
+    ], 'correct json returned';
 };
 
 done_testing;

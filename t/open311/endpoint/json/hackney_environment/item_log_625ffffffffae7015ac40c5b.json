@@ -1,0 +1,30 @@
+{
+    "page": 1,
+    "pageSize": 20,
+    "results": [
+        {
+            "itemId": "625ffffffffae7015ac40c5b",
+            "designCode": "designs_fixedMyStreetDefect",
+            "action": "Edit",
+            "causes": [],
+            "date": "2022-04-20T10:47:14.612Z",
+            "username": "staffuser"
+        },
+        {
+            "itemId": "625ffffffffae7015ac40c5b",
+            "designCode": "designs_fixedMyStreetDefect",
+            "action": "Edit",
+            "causes": [],
+            "date": "2022-04-20T08:19:26.005Z",
+            "username": "fmsuser"
+        },
+        {
+            "itemId": "625ffffffffae7015ac40c5b",
+            "designCode": "designs_fixedMyStreetDefect",
+            "action": "Create",
+            "causes": [],
+            "date": "2022-04-19T19:17:20.652Z",
+            "username": "fmsuser"
+        }
+    ]
+}
