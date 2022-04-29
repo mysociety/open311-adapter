@@ -23,20 +23,23 @@ has service_whitelist => ( is => 'ro' );
 
 # A mapping of service code and Echo service ID to event type
 # (used for the case of multiple event types behind one service)
-has service_to_event_type => ( is => 'ro' );
+has service_to_event_type => ( is => 'ro', default => sub { {} } );
 
 # A mapping when a particular event type requires a particular
 # service, not the service chosen by the user
 has service_id_override => ( is => 'ro' );
 
 # A mapping from event type data field name to Open311 request field name
-has data_key_open311_map => ( is => 'ro' );
+has data_key_open311_map => ( is => 'ro', default => sub { {} } );
 
 # A mapping of event type data field name and its default, for any request
-has default_data_all => ( is => 'ro' );
+has default_data_all => ( is => 'ro', default => sub { {} } );
 
 # A mapping of event type to data field defaults only for that event type
-has default_data_event_type => ( is => 'ro' );
+has default_data_event_type => ( is => 'ro', default => sub { {} } );
+
+# A prefix to use in the default client reference (with FMS ID appended)
+has client_reference_prefix => ( is => 'ro', default => 'FMS' );
 
 has service_class => ( is => 'ro', default => 'Open311::Endpoint::Service::UKCouncil::Echo' );
 
@@ -159,6 +162,17 @@ sub post_service_request {
     return $request;
 }
 
+sub client_reference {
+    my ($self, $args) = @_;
+    my $prefix = $self->client_reference_prefix;
+    my $id = $args->{attributes}{fixmystreet_id};
+    my $client_reference = "$prefix-$id";
+    if ( $args->{attributes}{client_reference} ) {
+        $client_reference = $args->{attributes}{client_reference};
+    }
+    return $client_reference;
+}
+
 sub process_service_request_args {
     my $self = shift;
     my $args = shift;
@@ -166,11 +180,7 @@ sub process_service_request_args {
     my $event_type = $args->{service_code};
     my $service = $args->{attributes}{service_id} || '';
     my $uprn = $args->{attributes}{uprn};
-    my $fixmystreet_id = $args->{attributes}{fixmystreet_id} || '';
-    my $client_reference = "FMS-$fixmystreet_id";
-    if ( $args->{attributes}{client_reference} ) {
-        $client_reference = $args->{attributes}{client_reference};
-    }
+    my $client_reference = $self->client_reference($args);
 
     # Missed collections have different event types depending
     # on the service

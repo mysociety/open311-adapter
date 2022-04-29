@@ -1,0 +1,12 @@
+url: http://kingston.example.org/
+username: username
+password: password
+
+client_reference_prefix: RBK
+
+service_whitelist:
+  1638: 'Garden subscription'
+
+service_id_override:
+  1638: 409
+

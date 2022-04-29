@@ -2,6 +2,7 @@ url: ""
 username: ""
 password: ""
 
+client_reference_prefix: "RBK"
 service_whitelist: {}
 service_to_event_type: {}
 service_id_override: {}
