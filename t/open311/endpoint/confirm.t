@@ -62,6 +62,7 @@ use Test::More;
 use Test::LongString;
 use Test::MockModule;
 use Test::Output;
+use Test::Warn;
 
 use JSON::MaybeXS;
 use Path::Tiny;
@@ -291,8 +292,8 @@ subtest "POST OK" => sub {
     $IC = 'CS';
     $SIC = 'DP';
     $DC = 'OTS';
-    my $res = $endpoint->run_test_request( 
-        POST => '/requests.json', 
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
         api_key => 'test',
         service_code => 'ABC_DEF',
         address_string => '22 Acacia Avenue',
@@ -319,8 +320,8 @@ subtest "POST OK with logged time omitted" => sub {
     $IC = 'CS';
     $SIC = 'DP';
     $DC = 'OTS';
-    my $res = $endpoint2->run_test_request( 
-        POST => '/requests.json', 
+    my $res = $endpoint2->run_test_request(
+        POST => '/requests.json',
         api_key => 'test',
         service_code => 'ABC_DEF',
         address_string => '22 Acacia Avenue',
@@ -367,6 +368,37 @@ subtest "POST OK with unrecognised attribute" => sub {
         [ {
             "service_request_id" => 2001
         } ], 'correct json returned';
+};
+
+subtest 'POST with failed document storage' => sub {
+    $open311->mock(
+        _store_enquiry_documents => sub { die 'Something bad happened' }, );
+
+    my $res;
+    warning_is {
+        $res = $endpoint->run_test_request(
+            POST                        => '/requests.json',
+            api_key                     => 'test',
+            service_code                => 'ABC_DEF',
+            address_string              => '22 Acacia Avenue',
+            first_name                  => 'Bob',
+            last_name                   => 'Mould',
+            'attribute[easting]'        => 100,
+            'attribute[northing]'       => 100,
+            'attribute[fixmystreet_id]' => 1001,
+            'attribute[title]'          => 'Title',
+            'attribute[description]'    => 'This is the details',
+            'attribute[report_url]'     => 'http://example.com/report/1001',
+        )
+    }
+    'Document storage failed: Something bad happened', 'warning is generated';
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json( $res->content ),
+        [ { "service_request_id" => 2001 } ], 'correct json returned';
+
+    $open311->unmock('_store_enquiry_documents');
 };
 
 subtest 'POST update' => sub {

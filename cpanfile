@@ -49,3 +49,4 @@ requires 'Test::MockModule';
 requires 'Test::MockTime';
 requires 'Test::More';
 requires 'Test::Output';
+requires 'Test::Warn';

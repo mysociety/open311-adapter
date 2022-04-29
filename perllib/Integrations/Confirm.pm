@@ -355,7 +355,8 @@ sub NewEnquiry {
 
     my $external_id = $response->{OperationResponse}->{NewEnquiryResponse}->{Enquiry}->{EnquiryNumber};
 
-    $self->_store_enquiry_documents($external_id, $args);
+    eval { $self->_store_enquiry_documents( $external_id, $args ) };
+    warn "Document storage failed: $@" if $@;
 
     return $external_id;
 }
