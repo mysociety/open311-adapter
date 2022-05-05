@@ -34,6 +34,6 @@ TMPDIR=$(mktemp -d) || exit 1
 trap 'rm -rf "$TMPDIR"' EXIT
 cd $TMPDIR
 
-curl -sSO -u $OPTION_updates_sftp__username:$OPTION_updates_sftp__password \
-    "sftp://$OPTION_updates_sftp__host$OPTION_updates_sftp__dir/$FILENAME" || ( echo "Couldn't fetch $FILENAME. Updates may have been missed." && exit 1 )
+export SSHPASS=$OPTION_updates_sftp__password
+echo "get $OPTION_updates_sftp__dir/$FILENAME" | sshpass -e sftp -oBatchMode=no -b - $OPTION_updates_sftp__username@$OPTION_updates_sftp__host > $FILENAME || ( echo "Couldn't fetch $FILENAME. Updates may have been missed." && exit 1 )
 mv $FILENAME $OPTION_updates_sftp__out
