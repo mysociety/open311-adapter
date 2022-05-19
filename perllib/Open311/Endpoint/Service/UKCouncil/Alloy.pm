@@ -41,7 +41,7 @@ sub _build_attributes {
             code => "asset_resource_id",
             description => "Asset resource ID",
             datatype => "string",
-            required => 1,
+            required => 0,
             automated => 'hidden_field',
         ),
     );
