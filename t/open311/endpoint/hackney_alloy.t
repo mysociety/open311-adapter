@@ -64,7 +64,6 @@ $integration->mock('api_call', sub {
             my $id = $1;
             my $date = $body->{date};
             $date =~ s/\D//g;
-            warn path(__FILE__)->sibling("json/hackney_environment/reconstruct_${id}_$date.json");
             $content = path(__FILE__)->sibling("json/hackney_environment/reconstruct_${id}_$date.json")->slurp;
         }
     } elsif ( $call =~ 'item-log/item/(.*)$' ) {
@@ -72,7 +71,6 @@ $integration->mock('api_call', sub {
     } elsif ( $call =~ 'item/(\w+)/parents' ) {
         my $fh = path(__FILE__)->sibling("json/hackney_environment/item_$1_parents.json");
         if ( $fh->exists ) {
-            warn $fh;
             $content = $fh->slurp;
         } else {
             $content = '{ "results": [] }';
