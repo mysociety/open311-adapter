@@ -312,6 +312,7 @@ sub learn_additional_types {
             'no_further_action',
             'internal_referral',
             'reopen',
+            'for_triage',
         )
     );
     $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/status_extended_upper',
@@ -327,6 +328,7 @@ sub learn_additional_types {
             'NO_FURTHER_ACTION',
             'INTERNAL_REFERRAL',
             'REOPEN',
+            'FOR_TRIAGE',
         )
     );
     $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/service_request_update',

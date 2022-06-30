@@ -19,6 +19,7 @@ has status => (
         'no_further_action',
         'internal_referral',
         'reopen',
+        'for_triage',
     ],
 );
 
