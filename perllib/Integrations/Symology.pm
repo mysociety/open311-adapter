@@ -206,6 +206,7 @@ sub SOAP::Serializer::as_EventActionSend {
         EventDescription => '',
         UserName => $value->{UserName},
         Description => $value->{Description},
+        NextAction => $value->{NextAction},
     ));
     return [$name, {'xsi:type' => 'tns:EventActionSend', %$attr}, $elem];
 }

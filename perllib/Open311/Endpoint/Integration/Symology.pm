@@ -235,6 +235,10 @@ sub process_service_request_update_args {
         $request->{Description} .= "\n\n[ This update contains a photo, see: " . $args->{media_url}->[0] . " ]";
     }
 
+    if ($args->{nsg_ref}) {
+        $request->{NextAction} = $self->post_add_next_action_update($args->{nsg_ref});
+    }
+
     return $request;
 }
 

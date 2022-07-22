@@ -28,6 +28,15 @@ sub process_service_request_args {
     return @args;
 }
 
+sub post_add_next_action_update {
+    my $self = shift;
+    my $nsg = shift;
+
+    my $lookup = $self->endpoint_config->{nsgref_to_action};
+
+    return $lookup->{$nsg || ''} || 'S6';
+}
+
 sub event_action_event_type {
     my ($self, $args) = @_;
     return do {

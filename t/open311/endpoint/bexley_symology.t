@@ -86,7 +86,8 @@ $soap_lite->mock(call => sub {
         my $photo_desc = "\n\n[ This update contains a photo, see: http://example.org/photo/1.jpeg ]";
         my $report_id = $request[2];
         my $code = $report_id == UPDATE_REPORT_ID_CLOSING ? 'CR' : 'CCA';
-        is_deeply \@request, [ 'ServiceCode', 1001, $report_id, $code, '', 'FMS', "This is the update$photo_desc" ];
+        my $nsg_ref = $report_id == UPDATE_REPORT_ID ? 'S6' : undef;
+        is_deeply \@request, [ 'ServiceCode', 1001, $report_id, $code, '', 'FMS', "This is the update$photo_desc", $nsg_ref ];
         return {
             StatusCode => 0,
             StatusMessage => 'Event Loaded',
@@ -425,6 +426,7 @@ subtest "POST with bad rules fails" => sub {
 subtest "POST update OK" => sub {
     my $res = $endpoint->run_test_request(
         POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'bexley',
         api_key => 'test',
         updated_datetime => '2019-03-01T12:00:00Z',
         service_code => 'AbanVeh',
@@ -436,6 +438,7 @@ subtest "POST update OK" => sub {
         service_request_id_ext => UPDATE_REPORT_ID,
         update_id => 456,
         media_url => 'http://example.org/photo/1.jpeg',
+        nsg_ref => '123/456'
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;

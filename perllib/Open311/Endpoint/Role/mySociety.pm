@@ -183,6 +183,13 @@ sub POST_Service_Request_Update_input_schema {
         }
     }
 
+    # Allow nsg_ref through for Bexley XXX
+    if (($args->{jurisdiction_id} || '') eq 'bexley') {
+        if ($args->{'nsg_ref'}) {
+	        $attributes->{optional}{'nsg_ref'} = '//str';
+        }
+    }
+
     return $attributes;
 }
 
@@ -270,7 +277,7 @@ sub format_updates {
                     ),
                     (
                         map {
-                            $_ => $self->w3_dt->format_datetime( $update->$_ ), 
+                            $_ => $self->w3_dt->format_datetime( $update->$_ ),
                         }
                         qw/
                             updated_datetime
