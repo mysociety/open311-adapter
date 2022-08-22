@@ -21,6 +21,10 @@ has jurisdiction_id => ( is => 'ro' );
 # types behind one service) to event type description
 has service_whitelist => ( is => 'ro' );
 
+# A mapping of service code to service code (used when the
+# incoming service codes don't match that actually in use)
+has service_mapping => ( is => 'ro', default => sub { {} } );
+
 # A mapping of service code and Echo service ID to event type
 # (used for the case of multiple event types behind one service)
 has service_to_event_type => ( is => 'ro', default => sub { {} } );
@@ -181,6 +185,10 @@ sub process_service_request_args {
     my $service = $args->{attributes}{service_id} || '';
     my $uprn = $args->{attributes}{uprn};
     my $client_reference = $self->client_reference($args);
+
+    # Sometimes we need to map our incoming service IDs
+    $service = $self->service_mapping->{$service}
+        if $self->service_mapping->{$service};
 
     # Missed collections have different event types depending
     # on the service

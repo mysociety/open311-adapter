@@ -22,6 +22,7 @@ my %config_filenames = (
     'Open311::Endpoint::Integration::UK::Lincolnshire' => 'lincolnshire_confirm',
     'Open311::Endpoint::Integration::UK::Rutland' => 'rutland',
     'Open311::Endpoint::Integration::UK::Shropshire' => 'shropshire_confirm',
+    'Open311::Endpoint::Integration::UK::Sutton' => 'sutton_echo',
     'Open311::Endpoint::Integration::UK::Hampshire' => 'hampshire_confirm',
 );
 

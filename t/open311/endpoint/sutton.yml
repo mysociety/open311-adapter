@@ -1,0 +1,51 @@
+url: http://sutton.example.org/
+username: username
+password: password
+
+client_reference_prefix: LBS
+
+service_whitelist:
+  missed: 'Report missed collection'
+  1635: 'Request new container'
+  1638: 'Garden Subscription'
+  1569: 'General Enquiry'
+
+service_mapping:
+    2238: 405
+    2242: 405
+    2239: 408
+    2240: 408
+    2241: 408
+    2247: 409
+
+service_id_override:
+  1638: 409
+  1635: 412
+
+service_to_event_type:
+  missed:
+    405: 1566
+    408: 1568
+    409: 1568
+
+data_key_open311_map:
+  First Name: 'first_name'
+  Surname: 'last_name'
+  Email: 'email'
+  Telephone: 'phone'
+
+default_data_all:
+  Resident Requires Feedback: 1
+
+default_data_event_type:
+  # 1566:
+  #   Refuse Bin: 1
+  #   Refuse Bag: 1
+  # 1568:
+  #   Container Mix: 1
+  #   Paper: 1
+  #   Food: 1
+  #   Garden: 1
+  1635:
+    Action: 1 # Deliver
+    Reason: 3 # Change Capacity
