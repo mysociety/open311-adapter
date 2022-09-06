@@ -136,14 +136,21 @@ sub service {
     my $extended = $self->get_integration->service_extended_data_map;
     if ( my $data = $extended->{ $id } ) {
         for my $q ( sort { $a->{order} <=> $b->{order} } @$data ) {
-            my $a = Open311::Endpoint::Service::Attribute->new(
+            my %params = (
                 code => $q->{code},
                 variable => 1,
                 required => $q->{required} ? 1 : 0,
                 description => $q->{description},
-                datatype => 'singlevaluelist',
-                values => { map { $_->[0] => $_->[1] } @{ $q->{values} } },
             );
+            # Need to ensure we only set values if its actually a list field,
+            # as even an empty array confuses the schema validator.
+            if ( $q->{values} ) {
+                $params{datatype} = 'singlevaluelist';
+                $params{values} = { map { $_->[0] => $_->[1] } @{ $q->{values} } };
+            } else {
+                $params{datatype} = 'string';
+            }
+            my $a = Open311::Endpoint::Service::Attribute->new(%params);
             push @{ $service->attributes }, $a;
         }
     }

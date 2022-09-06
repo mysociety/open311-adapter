@@ -114,6 +114,33 @@
                 <Comments/>
               </RecordStamp>
             </Field>
+            <Field>
+              <ID>6773</ID>
+              <SequenceNumber>40</SequenceNumber>
+              <FieldName>ITEM_01</FieldName>
+              <DataType>String</DataType>
+              <Mandatory>true</Mandatory>
+              <UniqueValue>false</UniqueValue>
+              <Caption>ITEM 01</Caption>
+              <Locked>false</Locked>
+              <Tooltip>ITEM 01</Tooltip>
+              <Numeric>
+                  <Minimum xsi:nil="true" />
+                  <Maximum xsi:nil="true" />
+              </Numeric>
+              <Date>
+                  <Minimum xsi:nil="true" />
+                  <Maximum xsi:nil="true" />
+              </Date>
+              <String>
+                  <Minimum xsi:nil="true" />
+                  <Maximum>50</Maximum>
+              </String>
+              <RecordStamp>
+                  <AddedBy>dev_lware</AddedBy>
+                  <DateAdded>2022-01-28T16:38:13.833</DateAdded>
+              </RecordStamp>
+          </Field>
           </Fields>
           <RecordStamp xmlns="http://www.bartec-systems.com">
             <AddedBy>proj_amiller</AddedBy>
