@@ -640,10 +640,9 @@ sub json_web_api_call {
     return decode_json($response->content);
 }
 
-sub job_id_for_enquiry {
+sub get_enquiry_json {
     my ($self, $enquiry_id) = @_;
-    my $data = $self->json_web_api_call("/enquiries/$enquiry_id");
-    return $data->{primaryJobNumber};
+    return $self->json_web_api_call("/enquiries/$enquiry_id");
 }
 
 sub documents_for_job {

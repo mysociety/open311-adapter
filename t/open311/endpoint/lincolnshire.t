@@ -31,10 +31,24 @@ my $open311 = Test::MockModule->new('Integrations::Confirm');
 $open311->mock(perform_request => sub {
     my ($self, $op) = @_; # Don't care about subsequent ops
     $op = $$op;
+    if ($op->name && $op->name eq 'GetEnquiryLookups') {
+        return {
+            OperationResponse => { GetEnquiryLookupsResponse => { TypeOfService => [
+                { ServiceCode => 'ABC', ServiceName => 'Graffiti', EnquirySubject => [ { SubjectCode => "DEF" } ] },
+            ] } }
+        };
+    } elsif ( $op->name && $op->name eq 'GetEnquiry' ) {
+        return { OperationResponse => [
+          { GetEnquiryResponse => { Enquiry => {
+            ServiceCode => 'ABC', SubjectCode => 'DEF', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z'
+          } } },
+        ] };
+    }
     $op = $op->value;
     if ($op->name eq 'GetEnquiryStatusChanges') {
         my %req = map { $_->name => $_->value } ${$op->value}->value;
         return { OperationResponse => { GetEnquiryStatusChangesResponse => { UpdatedEnquiry => [
+            { EnquiryNumber => 2003, EnquiryStatusLog => [ { EnquiryLogNumber => 5, LogEffectiveTime => '2022-10-23T12:00:00Z', LoggedTime => '2022-10-23T12:00:00Z', EnquiryStatusCode => 'INP' } ] },
             { EnquiryNumber => 2020, EnquiryStatusLog => [ { EnquiryLogNumber => 5, LogEffectiveTime => '2022-10-23T12:00:00Z', LoggedTime => '2022-10-23T12:00:00Z', EnquiryStatusCode => 'FIX' } ] },
         ] } } };
     }
@@ -73,6 +87,23 @@ subtest 'fetching of completion photos' => sub {
     );
     ok $res->is_success, 'valid request' or diag $res->content;
     is $res->content, 'data';
+};
+
+subtest 'pass user forename, surname and email from Confirm in Get Service Requests call' => sub {
+    my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
+    my $lwp = Test::MockModule->new('LWP::UserAgent');
+    $lwp->mock(request => sub {
+        my ($ua, $req) = @_;
+        return HTTP::Response->new(200, 'OK', [], '{"access_token":"123","expires_in":3600}') if $req->uri =~ /oauth\/token/;
+        return HTTP::Response->new(200, 'OK', [], '{"customers":[{"contact":{"fullName":"John Smith", "email":"john@example.org"}}]}') if $req->uri =~ /enquiries\/2003/;
+    });
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.xml?jurisdiction_id=lincolnshire_confirm&start_date=2022-10-23T00:00:00Z&end_date=2022-10-24T00:00:00Z',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+    contains_string $res->content, '<contact_name>John Smith</contact_name>';
+    contains_string $res->content, '<contact_email>john@example.org</contact_email>';
+
 };
 
 done_testing;

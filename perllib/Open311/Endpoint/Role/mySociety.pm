@@ -395,6 +395,8 @@ sub learn_additional_types {
                 agency_responsible => '//str',
                 service_notice => '//str',
                 non_public => '//str',
+                contact_name => '//str',
+                contact_email => '//str',
             },
         }
     );

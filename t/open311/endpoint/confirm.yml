@@ -24,3 +24,4 @@ service_enquiry_class_code:
 base_url: http://example.com/
 web_url: http://example.org/web/api
 cutoff_enquiry_date: 2018-04-12T12:00:00
+include_private_customer_details: 1

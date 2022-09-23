@@ -353,6 +353,10 @@ has fetch_reports_private => (
     default => 0,
 );
 
+has include_private_customer_details => (
+    is => 'ro',
+    default => 0,
+);
 
 has date_parser => (
     is => 'ro',
@@ -546,7 +550,7 @@ sub photo_urls_for_update {
     my ($self, $enquiry_id) = @_;
     my $integ = $self->get_integration;
 
-    my $job_id = $integ->job_id_for_enquiry($enquiry_id) or return;
+    my $job_id = $integ->get_enquiry_json($enquiry_id)->{primaryJobNumber} or return;
     my $documents = $integ->documents_for_job($job_id) or return;
 
     my @ids = map { $_->{documentNo} } grep { $self->photo_filter($_) } @$documents;
@@ -729,6 +733,15 @@ sub get_service_requests {
 
         if ( $self->fetch_reports_private || $private_services{$code} ) {
             $args{non_public} = 1;
+        }
+
+        if ( $self->include_private_customer_details ) {
+            my $json = $integ->get_enquiry_json($enquiry->{EnquiryNumber});
+            if (my $customers = ( $json->{customers} || [] )) {
+                my $customer = $customers->[0];
+                $args{contact_name}  = $customer->{contact}->{fullName} || '';
+                $args{contact_email} = $customer->{contact}->{email} || '';
+            }
         }
 
         my $request = $self->new_request( %args );
