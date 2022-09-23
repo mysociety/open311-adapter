@@ -10,7 +10,7 @@ with 'Role::Logger';
 use Open311::Endpoint::Service::UKCouncil::Confirm;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::Request::Update::mySociety;
-use Open311::Endpoint::Service::Request::CanBeNonPublic;
+use Open311::Endpoint::Service::Request::Confirm;
 use Integrations::Confirm;
 
 use Path::Tiny;
@@ -411,7 +411,7 @@ sub process_service_request_args {
 
 has '+request_class' => (
     is => 'ro',
-    default => 'Open311::Endpoint::Service::Request::CanBeNonPublic',
+    default => 'Open311::Endpoint::Service::Request::Confirm',
 );
 
 has 'integration_class' => (

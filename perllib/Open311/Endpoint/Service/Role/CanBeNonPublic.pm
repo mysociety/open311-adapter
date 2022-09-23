@@ -1,9 +1,6 @@
-package Open311::Endpoint::Service::Request::CanBeNonPublic;
-use Moo;
-use MooX::HandlesVia;
-extends 'Open311::Endpoint::Service::Request::ExtendedStatus';
+package Open311::Endpoint::Service::Role::CanBeNonPublic;
+use Moo::Role;
 
-use DateTime;
 use Types::Standard ':all';
 
 has 'optional_fields' => (
@@ -17,6 +14,5 @@ has non_public => (
     isa => Str,
     default => 0
 );
-
 
 1;

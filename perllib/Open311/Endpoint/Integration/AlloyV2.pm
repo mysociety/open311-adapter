@@ -35,7 +35,7 @@ with 'Role::Logger';
 use Integrations::AlloyV2;
 use Open311::Endpoint::Service::UKCouncil::Alloy;
 use Open311::Endpoint::Service::Attribute;
-use Open311::Endpoint::Service::Request::CanBeNonPublic;
+use Open311::Endpoint::Service::Request::Alloy;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 
 use Path::Tiny;
@@ -47,7 +47,7 @@ has jurisdiction_id => (
 
 has '+request_class' => (
     is => 'ro',
-    default => 'Open311::Endpoint::Service::Request::CanBeNonPublic',
+    default => 'Open311::Endpoint::Service::Request::Alloy',
 );
 
 has '+identifier_types' => (
