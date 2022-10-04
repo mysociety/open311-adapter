@@ -23,7 +23,6 @@ my %config_filenames = (
     'Open311::Endpoint::Integration::UK::Rutland' => 'rutland',
     'Open311::Endpoint::Integration::UK::Shropshire' => 'shropshire_confirm',
     'Open311::Endpoint::Integration::UK::Hampshire' => 'hampshire_confirm',
-    'Open311::Endpoint::Integration::UK::NorthamptonshireAlloyV2' => 'northamptonshire_alloy_v2',
 );
 
 foreach ($endpoint->plugins) {
