@@ -103,6 +103,11 @@
                   <Sequence>20</Sequence>
                   <Value>Some - W02</Value>
                 </Values>
+                <Values>
+                  <ID>2461</ID>
+                  <Sequence>30</Sequence>
+                  <Value>Plenty</Value>
+                </Values>
                 <RecordStamp>
                   <AddedBy>proj_amiller</AddedBy>
                   <DateAdded>2019-05-03T16:22:47.22</DateAdded>

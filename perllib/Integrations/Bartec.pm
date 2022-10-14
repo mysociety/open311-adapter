@@ -547,8 +547,13 @@ sub get_extended_data {
                 if ( $field->{ValueList} ) {
                     my $values = $self->_coerce_to_array( $field->{ValueList}, 'Values' );
                     my @answers = map {
+                        # reset $1 to a known empty value. For some reason
+                        # on macOS $1 might be 'darwin' at this point, and if
+                        # the Value regex doesn't match that value will be
+                        # carried through.
+                        "" =~ /(.*)/;
                         $_->{Value} =~ /(.+) -/;
-                        [ $_->{Value}, $1 ];
+                        [ $_->{Value}, $1 || $_->{Value} ];
                     } @$values;
                     $conf->{values} = \@answers;
                 }

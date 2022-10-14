@@ -409,6 +409,10 @@ subtest "check fetch service" => sub {
                     key => 'Lots - W01',
                 },
                 {
+                    name => 'Plenty',
+                    key => 'Plenty',
+                },
+                {
                     name => 'Some',
                     key => 'Some - W02',
                 }
