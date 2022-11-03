@@ -129,7 +129,7 @@ $bexley_end->mock(_get_update_files => sub {
 17/04/2019 13:53,04/04/2019,560058,RECORDED,,SI6,SI6MOB,IR,RES,1
 17/04/2019 14:08,04/04/2019,560062,RECORDED,,SI5,NCR,CR,,1
 EOF
-    \<<EOF
+    \<<EOF,
 "History Date/Time","Recorded Date","CRNo","Stage Desc.","Date Cleared","Maint. Stage","L.A.Code"
 24/09/2018 15:19,24/09/2018,2830,PROV.CLEAR,,CLAIMED,555830
 24/09/2018 20:34,24/09/2018,2832,PROV.CLEAR,,APPROVED,555831
@@ -143,6 +143,11 @@ EOF
 04/04/2019 08:28,04/04/2019,2857,MAINT,,ALLOCATED,555864
 02/05/2019 15:18,02/05/2019,2858,MAINT,,ORDERED,555865
 02/05/2019 17:03,02/05/2019,2860,MAINT,,ORDERED,555866
+EOF
+    \<<EOF,
+"History Date/Time","Recorded Date","CRNo","Stage Desc.","Date Cleared","Inspection","LCA","Action Due","Event Type","Stage","Maint.Recd.","L.A.Code","Maint. Stage"
+"17/08/2019 16:02",11/08/2019,00560250,"MAINT",,"","SI6MOB","","",7,17/08/2019,00000045,"ORDERED"
+"17/08/2019 16:35",11/08/2019,00560249,"MAINT",,"","SI1MOB","","",7,17/08/2019,00000046,"COMPLETED"
 EOF
 ] });
 
@@ -658,6 +663,22 @@ subtest "GET updates OK" => sub {
               "updated_datetime" => "2019-05-02T17:03:00+01:00",
               "service_request_id" => "2860",
               "status" => "investigating",
+              "description" => "",
+              "media_url" => "",
+           },
+           {
+              "update_id" => "00560250_5a00d101",
+              "updated_datetime" => "2019-08-17T16:02:00+01:00",
+              "service_request_id" => "560250",
+              "status" => "action_scheduled",
+              "description" => "",
+              "media_url" => "",
+           },
+           {
+              "update_id" => "00560249_d3a7b75c",
+              "updated_datetime" => "2019-08-17T16:35:00+01:00",
+              "service_request_id" => "560249",
+              "status" => "fixed",
               "description" => "",
               "media_url" => "",
            },

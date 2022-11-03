@@ -49,9 +49,18 @@ sub _update_status {
     my ($self, $row) = @_;
 
     my $status = do {
+        my $street_cleansing = exists $row->{'Maint.Recd.'};
         my $maint_stage = $row->{'Maint. Stage'} || '';
         my $action_due = $row->{'Action Due'} || '';
-        if ($maint_stage eq 'ORDERED') {
+        if ($street_cleansing) {
+            if ($maint_stage eq 'ORDERED') {
+                'action_scheduled'
+            } elsif ($maint_stage =~ /COMPLETED|APPROVED/) {
+                'fixed'
+            } else {
+                undef
+            }
+        } elsif ($maint_stage eq 'ORDERED') {
             'investigating'
         } elsif ($maint_stage eq 'COMMENCED' || $maint_stage eq 'ALLOCATED') {
             'action_scheduled'
