@@ -319,43 +319,51 @@ sub get_service_request_updates {
         } });
 
         while (my $row = $csv->getline_hr($fh)) {
-            next unless $row->{date_history};
+            next unless $row->{CRNo} && $row->{date_history};
             my $dt = $self->date_formatter->parse_datetime($row->{date_history});
             next unless $dt >= $start_time && $dt <= $end_time;
 
-            my $update = $self->_process_csv_row($row);
+            my ($update, $id) = $self->_process_csv_row($row, $dt);
             # The same row might appear in multiple files (e.g. for Central Beds
             # each 30 minute CSV contains 90 minutes of data) so skip if we've
             # already seen this row.
-            next if !$update || $seen{$update->update_id};
+            next if !$update || $seen{$id};
 
             push @updates, $update;
-            $seen{$update->update_id} = 1;
+            $seen{$id} = 1;
         }
     }
+
+    $self->post_process_csvs(\@updates, $start_time, $end_time);
 
     return @updates;
 }
 
-sub _row_external_status_code { return undef; }
+sub post_process_csvs { }
 
 sub _process_csv_row {
-    my ($self, $row) = @_;
-
-    my $dt = $self->date_formatter->parse_datetime($row->{date_history});
-
-    my $status = $self->_row_status($row);
-    my $external_status = $self->_row_external_status_code($row, $status);
-    return unless $status;
-    my $description = $self->_row_description($row);
+    my ($self, $row, $dt) = @_;
+    my $crno = $row->{CRNo};
 
     my $digest_key = join "-", map { $row->{$_} || '' } sort keys %$row;
     my $digest = substr(md5_hex($digest_key), 0, 8);
-    my $update_id = $row->{CRNo} . '_' . $digest;
+    my $update_id = $crno . '_' . $digest;
+
+    my $update = $self->_create_update_object($row, $row->{CRNo}, $dt, $update_id);
+    return ($update, $update->update_id) if $update;
+}
+
+sub _create_update_object {
+    my ($self, $row, $crno, $dt, $update_id) = @_;
+
+    my ($status, $external_status) = $self->_update_status($row);
+    return unless $status;
+    my $description = $self->_update_description($row);
+
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
         status => $status,
         update_id => $update_id,
-        service_request_id => $row->{CRNo}+0,
+        service_request_id => $crno+0,
         description => $description,
         updated_datetime => $dt,
         $external_status ? ( external_status_code => $external_status ) : (),

@@ -46,10 +46,10 @@ sub event_action_event_type {
     };
 }
 
-sub _row_status {
+sub _update_status {
     my ($self, $row) = @_;
 
-    return do {
+    my $status = do {
         my $maint_stage = $row->{'Maint. Stage'} || '';
         my $action_due = $row->{'Action Due'} || '';
         if ($maint_stage eq 'ORDERED') {
@@ -78,16 +78,20 @@ sub _row_status {
             'open' # XXX Might want to maintain existing status?
         }
     };
-}
 
-sub _row_external_status_code {
-    my ($self, $row, $status) = @_;
-    return undef unless $status && ( $status eq 'not_councils_responsibility'
+    my $esc = do {
+        if ($status && ( $status eq 'not_councils_responsibility'
                         || $status eq 'action_scheduled'
-                        || $status eq 'internal_referral' );
-    return $row->{'Event Type'};
+                        || $status eq 'internal_referral' )) {
+            $row->{'Event Type'};
+        } else {
+            undef
+        }
+    };
+
+    return ($status, $esc);
 }
 
-sub _row_description { '' } # lca description not used
+sub _update_description { '' } # lca description not used
 
 1;
