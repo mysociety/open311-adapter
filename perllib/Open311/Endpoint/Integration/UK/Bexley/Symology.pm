@@ -22,8 +22,7 @@ sub process_service_request_args {
     my @args = $self->SUPER::process_service_request_args(@_);
     my $request = $args[0];
 
-    my $lookup = $self->endpoint_config->{nsgref_to_action};
-    $request->{NextAction} = $lookup->{$request->{NSGRef} || ''} || 'S6';
+    $request->{NextAction} = $self->post_add_next_action_update($request->{NSGRef});
 
     return @args;
 }

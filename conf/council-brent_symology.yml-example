@@ -1,0 +1,39 @@
+endpoint_url: ''
+
+update_urls: []
+updates_sftp:
+  username: USER
+  password: PASSWORD
+  host: sftp.example.org
+  # the directory to fetch files from
+  dir: /csvs
+  # the local directly to store/read CSVs
+  out: /data/vhost/foo.example.org/symology_csvs/centralbedfordshire
+
+username: FMS
+customer_defaults:
+    CustomerType: ""
+
+category_mapping:
+  categoryA:
+    name: "Category A"
+    parameters:
+      ServiceCode: Code
+      RequestType: Type
+      AnalysisCode1: Code
+      AnalysisCode2: Code
+    questions:
+      - code: message
+        description: Please ring if between 1 and 2am
+        variable: false
+      - code: reportType
+        description: What is the report regarding?
+        values: [ ThingA, ThingB, ThingC ]
+    logic:
+      - rules:
+          - $attr.reportType
+          - ThingA
+        output:
+          Priority: P1
+
+nsgref_to_action: {}

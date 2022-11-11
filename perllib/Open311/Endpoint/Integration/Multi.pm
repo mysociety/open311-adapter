@@ -23,6 +23,7 @@ has integrations => (
 
 has integration_without_prefix => (
     is => 'ro',
+    default => '',
 );
 
 sub _call {
