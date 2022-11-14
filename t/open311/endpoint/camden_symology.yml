@@ -1,0 +1,34 @@
+username: FMS
+customer_defaults:
+  CustomerType: ""
+  ContactType: ""
+category_mapping:
+  Potholes:
+    group: Roads And Pavements
+    logic:
+    - output:
+        AnalysisCode1: A115
+        AnalysisCode2: A202
+        RequestType: W_HC
+      rules:
+      - $attr.issue
+      - Pothole in the pavement
+    - output:
+        AnalysisCode1: A115
+        AnalysisCode2: A201
+        RequestType: W_HC
+      rules:
+      - $attr.issue
+      - Pothole in the road
+    name: Potholes
+    parameters:
+      AnalysisCode1: ''
+      AnalysisCode2: ''
+      RequestType: ''
+      ServiceCode: ServiceCode
+    questions:
+    - code: issue
+      description: What is the issue?
+      values:
+      - Pothole in the pavement
+      - Pothole in the road

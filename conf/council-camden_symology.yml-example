@@ -1,0 +1,75 @@
+endpoint_url: ''
+endpoint_username: ''
+endpoint_password: ''
+
+username: FMSCUST
+
+request_defaults:
+  ServiceCode: CUST
+  Priority: ''
+
+update_urls: []
+
+updates_sftp:
+  username: USER
+  password: PASSWORD
+  host: sftp.example.org
+  # the directory to fetch files from
+  dir: /csvs
+  # the local directly to store/read CSVs
+  out: /data/vhost/foo.example.org/symology_csvs/camden
+
+
+# This maps the event codes from within Symology to Open311 statuses.
+event_status_mapping: {}
+
+
+# This config maps the incoming area_code Open311 ServiceRequest attribute
+# to the NextActionUserName field when raising an enquiry in Symology.
+area_to_username:
+  Area1: XY000348
+  Area2: XY000349
+  Area3: XY000350
+
+customer_defaults:
+  CustomerType: ""
+  ContactType: ""
+
+# For each category:
+#   name: The display name for the category
+#   group: Optional category group
+#   parameters: dictionary of default parameters to use
+#   questions: list of { code, description, variable, values* }
+#       dictionaries of extra attribute questions/messages
+#   logic: list of { rules, output } dictionaries where:
+#     rules is to be passed to YAML::Logic (all attribute answers in $attr)
+#     output is dictionary of values to update if the rules pass
+
+category_mapping:
+  categoryA:
+    name: "Category A"
+    parameters:
+      ServiceCode: Code
+      RequestType: Type
+      AnalysisCode1: Code
+      AnalysisCode2: Code
+    questions:
+      - code: message
+        description: Please ring if between 1 and 2am
+        variable: false
+      - code: reportType
+        description: What is the report regarding?
+        values: [ ThingA, ThingB, ThingC ]
+    logic:
+      - rules:
+          - $attr.reportType
+          - ThingA
+        output:
+          Priority: P1
+  categoryB:
+    name: "Category B"
+    parameters:
+      ServiceCode: Code
+      RequestType: Type
+      AnalysisCode1: Code
+      AnalysisCode2: Code
