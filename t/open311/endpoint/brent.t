@@ -29,6 +29,8 @@ my $brent_integ = Test::MockModule->new('Integrations::Symology');
 $brent_integ->mock(config => sub {
     {
         endpoint_url => 'http://www.example.org/',
+        endpoint_username => 'ep',
+        endpoint_password => 'password',
     }
 });
 
@@ -67,8 +69,10 @@ $soap_lite->mock(call => sub {
     # to be passed via SOAP to the server. We check the values here, then pass
     # back a mocked result.
     my ($cls, @args) = @_;
-    if ($args[0] eq 'SendRequestAdditionalGroup') {
-        my @request = ${$args[2]->value}->value;
+    if ($args[0] eq 'SendRequestAdditionalGroupAuthenticated') {
+        is $args[1]->value, 'ep';
+        is $args[2]->value, 'password';
+        my @request = ${$args[4]->value}->value;
         is $request[REPORT_NSGREF]->value, NSGREF;
         my $next_action = Open311::Endpoint::Integration::UK::Brent::Symology->new->endpoint_config->{nsgref_to_action}{+NSGREF};
         is $request[REPORT_NEXTACTION]->value, $next_action; # Worked out automatically from 0
@@ -87,8 +91,8 @@ $soap_lite->mock(call => sub {
                 }
             }
         };
-    } elsif ($args[0] eq 'SendEventAction') {
-        my @request = map { $_->value } ${$args[2]->value}->value;
+    } elsif ($args[0] eq 'SendEventActionAuthenticated') {
+        my @request = map { $_->value } ${$args[4]->value}->value;
         my $photo_desc = "\n\n[ This update contains a photo, see: http://example.org/photo/1.jpeg ]";
         my $report_id = $request[2];
         my $code = '';

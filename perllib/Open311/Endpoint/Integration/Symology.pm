@@ -198,10 +198,7 @@ sub post_service_request {
     my @args = $self->process_service_request_args($args);
     $self->logger->debug(encode_json(\@args));
 
-    my $response = $self->get_integration->SendRequestAdditionalGroup(
-        undef, # Not needed
-        @args
-    );
+    my $response = $self->get_integration->send_request(@args);
 
     my $crno = $self->check_error($response, 'SendRequest');
 
@@ -248,10 +245,7 @@ sub post_service_request_update {
     my @args = $self->process_service_request_update_args($args);
     $self->logger->debug(encode_json(\@args));
 
-    my $response = $self->get_integration->SendEventAction(
-        undef, # Not needed
-        @args
-    );
+    my $response = $self->get_integration->send_update(@args);
 
     $self->check_error($response, 'SendEventAction');
 

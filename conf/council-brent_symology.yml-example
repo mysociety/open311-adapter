@@ -1,4 +1,6 @@
 endpoint_url: ''
+endpoint_username: ''
+endpoint_password: ''
 
 update_urls: []
 updates_sftp:

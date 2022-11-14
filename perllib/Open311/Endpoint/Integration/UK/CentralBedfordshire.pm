@@ -88,7 +88,7 @@ sub _process_csv_row {
 sub _updates_for_crno {
     my ($self, $crno, $start, $end) = @_;
 
-    my $response = $self->get_integration->GetRequestAdditionalGroup(
+    my $response = $self->get_integration->get_request(
         "SERV",
         $crno
     );
