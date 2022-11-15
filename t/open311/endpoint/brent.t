@@ -80,7 +80,7 @@ $soap_lite->mock(call => sub {
         my $photo_desc = "\n\n[ This report contains a photo, see: http://example.org/photo/1.jpeg ]";
         my $burnt = 'No';
         is $request[REPORT_DESC]->value, "This is the details$photo_desc\n\nBurnt out?: $burnt\n\nCar details: Details";
-        is $request[REPORT_PRIORITY]->value, "N";
+        is $request[REPORT_PRIORITY]->value, "P";
         return {
             StatusCode => 0,
             StatusMessage => 'Success',

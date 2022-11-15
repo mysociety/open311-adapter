@@ -1,5 +1,7 @@
 services:
 username: FMS
+request_defaults:
+    Priority: "P"
 customer_defaults:
     CustomerType: "PB"
 category_mapping:

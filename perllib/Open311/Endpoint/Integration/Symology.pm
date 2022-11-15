@@ -50,6 +50,11 @@ has customer_defaults => (
     default => sub { $_[0]->endpoint_config->{customer_defaults} }
 );
 
+has request_defaults => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{request_defaults} }
+);
+
 has external_id_prefix => (
     is => 'lazy',
     default => sub { $_[0]->endpoint_config->{external_id_prefix} || "" }
@@ -106,6 +111,7 @@ sub process_service_request_args {
     die "Could not find category mapping for $service_code\n" unless $codes;
 
     my $request = {
+        %{$self->request_defaults || {}},
         Description => $args->{description},
         UserName => $self->username,
         %{$codes->{parameters}},

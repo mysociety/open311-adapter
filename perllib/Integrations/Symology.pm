@@ -208,7 +208,7 @@ sub SOAP::Serializer::as_RequestSend {
         RecordedTime => $dt->strftime('%H:%M:%S'),
         UserName => $value->{UserName},
         RequestType => $value->{RequestType},
-        Priority => $value->{Priority} || 'N',
+        Priority => $value->{Priority} // 'N',
         AnalysisCode1 => $value->{AnalysisCode1},
         AnalysisCode2 => $value->{AnalysisCode2},
         Location => $value->{Location} || '',
