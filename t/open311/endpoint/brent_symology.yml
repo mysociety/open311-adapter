@@ -2,13 +2,13 @@ services:
 username: FMS
 request_defaults:
     Priority: "P"
+    ServiceCode: 'ServiceCode'
 customer_defaults:
     CustomerType: "PB"
 category_mapping:
     AbanVeh:
         name: 'Abandoned vehicles'
         parameters:
-            ServiceCode: 'ServiceCode'
             RequestType: 'ReqType'
             AnalysisCode1: 'A1'
             AnalysisCode2: 'A2'

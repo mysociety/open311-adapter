@@ -52,7 +52,7 @@ has customer_defaults => (
 
 has request_defaults => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{request_defaults} }
+    default => sub { $_[0]->endpoint_config->{request_defaults} || {} }
 );
 
 has external_id_prefix => (
@@ -111,7 +111,7 @@ sub process_service_request_args {
     die "Could not find category mapping for $service_code\n" unless $codes;
 
     my $request = {
-        %{$self->request_defaults || {}},
+        %{$self->request_defaults},
         Description => $args->{description},
         UserName => $self->username,
         %{$codes->{parameters}},
@@ -224,10 +224,11 @@ sub process_service_request_update_args {
 
     my $closed = $args->{status} =~ /FIXED|DUPLICATE|NOT_COUNCILS_RESPONSIBILITY|NO_FURTHER_ACTION|INTERNAL_REFERRAL|CLOSED/;
 
+    my $sym_service_code = $codes->{parameters}{ServiceCode} || $self->request_defaults->{ServiceCode};
     my $request = {
         closed => $closed,
         Description => $args->{description},
-        ServiceCode => $codes->{parameters}{ServiceCode},
+        ServiceCode => $sym_service_code,
         CRNo => $args->{service_request_id},
         fixmystreet_id => $self->external_id_prefix . $args->{service_request_id_ext},
         UserName => $self->username,
