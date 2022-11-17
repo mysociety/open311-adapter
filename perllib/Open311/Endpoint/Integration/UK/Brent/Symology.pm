@@ -13,6 +13,4 @@ sub event_action_event_type {
     return '';
 }
 
-# Fetching updates will not currently work due to missing functions/setup
-
 1;
