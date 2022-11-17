@@ -221,4 +221,6 @@ sub post_service_request_update {
     );
 }
 
+sub get_service_request_updates { }
+
 1;
