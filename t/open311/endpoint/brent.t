@@ -200,4 +200,38 @@ subtest "POST update OK" => sub {
         } ], 'correct json returned';
 };
 
+subtest "GET updates OK" => sub {
+#my $sftp = $endpoint->endpoint_config->{updates_sftp};
+#    $sftp->{out} = path(__FILE__)->sibling('files')->child('brent');
+
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?start_date=2018-11-27T00:00:00Z&end_date=2018-11-29T00:00:00Z',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    my $response = decode_json($res->content);
+    is_deeply $response,
+        [
+            {
+                description => "",
+                media_url => '',
+                service_request_id => 'Symology-323',
+                status => 'investigating',
+                update_id => 'Symology-00000323_6',
+                updated_datetime => '2018-11-28T15:05:00+00:00',
+                external_status_code => '19',
+            },
+            {
+                description => "Text going here explaining reason for no further action",
+                media_url => '',
+                service_request_id => 'Symology-323',
+                status => 'no_further_action',
+                update_id => 'Symology-00000323_8',
+                updated_datetime => '2018-11-28T15:05:00+00:00',
+                external_status_code => '21_NFA',
+            }
+        ], 'correct json returned';
+};
+
 done_testing;

@@ -174,6 +174,7 @@ $centralbeds_end->mock(endpoint_config => sub {
         external_id_prefix => "FMS",
     }
 });
+$centralbeds_end->mock(config_file => sub { path('t')->absolute });
 
 use Open311::Endpoint::Integration::UK::CentralBedfordshire;
 

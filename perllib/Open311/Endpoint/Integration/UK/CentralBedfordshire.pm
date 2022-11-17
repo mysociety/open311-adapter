@@ -44,10 +44,10 @@ sub process_service_request_args {
 # Symology API by calling the GetRequestAdditionalGroup method for each
 # enquiry mentioned in the CSVs and looking at the history entries there.
 sub post_process_files {
-    my ($self, $updates, $start_time, $end_time) = @_;
+    my ($self, $updates) = @_;
 
     my @updates;
-    push(@updates, @{ $self->_updates_for_crno($_, $start_time, $end_time) }) for @$updates;
+    push(@updates, @{ $self->_updates_for_crno($_) }) for @$updates;
 
     @$updates = @updates;
 }
@@ -58,7 +58,7 @@ sub _process_csv_row {
 }
 
 sub _updates_for_crno {
-    my ($self, $crno, $start, $end) = @_;
+    my ($self, $crno) = @_;
 
     my $response = $self->get_integration->get_request(
         "SERV",
@@ -71,26 +71,7 @@ sub _updates_for_crno {
         return [];
     }
 
-    my $history = $response->{Request}->{EventHistory}->{EventHistoryGet};
-    my @updates;
-    my $w3c = DateTime::Format::W3CDTF->new;
-    for my $event (@$history) {
-        # The event datetime is stored in two fields - both of which are datetimes
-        # but HistoryTime has today's date and HistoryDate has a midnight timestamp.
-        # So we need to reconstruct it.
-        my $date = $w3c->parse_datetime($event->{HistoryDate});
-        my $time = $w3c->parse_datetime($event->{HistoryTime});
-        $date->set(hour => $time->hour, minute => $time->minute, second => $time->second);
-        $date->set_time_zone("Europe/London");
-        next unless $date >= $start && $date <= $end;
-
-        my $update_id = $crno . '_' . $event->{LineNo};
-        my $update = $self->_create_update_object($event, $crno, $date, $update_id);
-        next unless $update;
-        push @updates, $update;
-    }
-
-    return \@updates;
+    return $self->_process_request_history($response, 'full');
 }
 
 1;

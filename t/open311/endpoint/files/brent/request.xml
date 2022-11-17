@@ -1,0 +1,285 @@
+<GetRequestResult>
+ <Request>
+  <RegionSite>47114652</RegionSite>
+  <NSGRef>47114652</NSGRef>
+  <UnitID>000000000</UnitID>
+  <UnitName/>
+  <UnitNumber/>
+  <RecordedDate>2018-11-28</RecordedDate>
+  <RecordedTime>15:05</RecordedTime>
+  <UserName>SY000025</UserName>
+  <RequestType>HP03</RequestType>
+  <Priority>HWH</Priority>
+  <AnalysisCode1>HIGH</AnalysisCode1>
+  <AnalysisCode2/>
+  <Location/>
+  <ExternalRef/>
+  <Description>TEST 1 - Request Clearing with No Further Action</Description>
+  <Easting>0</Easting>
+  <Northing>0</Northing>
+  <OutWebRequestID/>
+  <OutCRNo>00000323</OutCRNo>
+  <InterfaceType>0</InterfaceType>
+  <Address1>MARKET STREET</Address1>
+  <Address2>ABERAERON</Address2>
+  <Town>ABERAERON</Town>
+  <Locality/>
+  <UnitLocation/>
+  <RequestTypeDesc>Pothole</RequestTypeDesc>
+  <PriorityDesc>Highways High</PriorityDesc>
+  <AnalysisCode1Desc>Highways (Reactive)</AnalysisCode1Desc>
+  <AnalysisCode2Desc/>
+  <StageCode>09</StageCode>
+  <StageDescription>CLEARED</StageDescription>
+  <MaintenanceStage/>
+  <ThisEventLineNo>0012</ThisEventLineNo>
+  <Customers>
+    <CustomerGet>
+      <CustomerShortCode>SAMPLE EX</CustomerShortCode>
+      <CustomerTitle>Sir</CustomerTitle>
+      <CustomerFirstName>Ex</CustomerFirstName>
+      <CustomerLastName>Sample</CustomerLastName>
+      <CustomerSuffix/>
+      <CustomerFullName/>
+      <CustomerAddress1></CustomerAddress1>
+      <CustomerAddress2></CustomerAddress2>
+      <CustomerAddress3></CustomerAddress3>
+      <CustomerAddress4/>
+      <CustomerAddress5/>
+      <CustomerPostCode/>
+      <CustomerTelNo/>
+      <CustomerFaxNo/>
+      <CustomerReference/>
+      <CustomerEmail/>
+      <CustomerType/>
+      <ContactType/>
+      <InitialDate/>
+      <InitialTime/>
+      <ReceivedDate/>
+      <ReceivedTime/>
+      <CustomerID>000002482</CustomerID>
+      <CustomerTypeDesc/>
+      <ContactTypeDesc/>
+    </CustomerGet>
+  </Customers>
+  <AdditionalFields/>
+  <EventHistory>
+    <EventHistoryGet>
+      <LineNo>1</LineNo>
+      <HistoryDate>2018-11-28</HistoryDate>
+      <HistoryTime>15:05</HistoryTime>
+      <HistoryEvent>Request recorded</HistoryEvent>
+      <HistoryReference/>
+      <HistoryDescription/>
+      <HistoryUsername>SY000025</HistoryUsername>
+      <HistoryUserdesc>Ex Sample</HistoryUserdesc>
+      <HistoryAuthoriser/>
+      <HistoryDoneDate/>
+      <HistoryDoneTime/>
+      <HistoryType>01</HistoryType>
+      <HistoryAction/>
+      <HistoryActionUsername/>
+      <HistoryEventType/>
+      <HistoryEventDescription/>
+    </EventHistoryGet>
+    <EventHistoryGet>
+      <LineNo>2</LineNo>
+      <HistoryDate>2018-11-28</HistoryDate>
+      <HistoryTime>15:05</HistoryTime>
+      <HistoryEvent>Customer added</HistoryEvent>
+      <HistoryReference>SAMPLE EX</HistoryReference>
+      <HistoryDescription/>
+      <HistoryUsername>SY000025</HistoryUsername>
+      <HistoryUserdesc>Ex Sample</HistoryUserdesc>
+      <HistoryAuthoriser/>
+      <HistoryDoneDate/>
+      <HistoryDoneTime/>
+      <HistoryType>02</HistoryType>
+      <HistoryAction/>
+      <HistoryActionUsername/>
+      <HistoryEventType/>
+      <HistoryEventDescription/>
+    </EventHistoryGet>
+    <EventHistoryGet>
+      <LineNo>3</LineNo>
+      <HistoryDate>2018-11-28</HistoryDate>
+      <HistoryTime>15:05</HistoryTime>
+      <HistoryEvent>Action recorded</HistoryEvent>
+      <HistoryReference>YBONTACT/YBONT(4)</HistoryReference>
+      <HistoryDescription/>
+      <HistoryUsername>SY000025</HistoryUsername>
+      <HistoryUserdesc>Ex Sample</HistoryUserdesc>
+      <HistoryAuthoriser/>
+      <HistoryDoneDate/>
+      <HistoryDoneTime/>
+      <HistoryType>22</HistoryType>
+      <HistoryAction>YBONTACT</HistoryAction>
+      <HistoryActionUsername>YBONT</HistoryActionUsername>
+      <HistoryEventType/>
+      <HistoryEventDescription/>
+    </EventHistoryGet>
+    <EventHistoryGet>
+      <LineNo>4</LineNo>
+      <HistoryDate>2018-11-28</HistoryDate>
+      <HistoryTime>15:05</HistoryTime>
+      <HistoryEvent>Action cleared</HistoryEvent>
+      <HistoryReference>YBONTACT/YBONT(3)</HistoryReference>
+      <HistoryDescription/>
+      <HistoryUsername>SY000025</HistoryUsername>
+      <HistoryUserdesc>Ex Sample</HistoryUserdesc>
+      <HistoryAuthoriser/>
+      <HistoryDoneDate>2018-11-28</HistoryDoneDate>
+      <HistoryDoneTime>15:05</HistoryDoneTime>
+      <HistoryType>23</HistoryType>
+      <HistoryAction>YBONTACT</HistoryAction>
+      <HistoryActionUsername>YBONT</HistoryActionUsername>
+      <HistoryEventType/>
+      <HistoryEventDescription/>
+    </EventHistoryGet>
+    <EventHistoryGet>
+      <LineNo>5</LineNo>
+      <HistoryDate>2018-11-28</HistoryDate>
+      <HistoryTime>15:05</HistoryTime>
+      <HistoryEvent>Event recorded</HistoryEvent>
+      <HistoryReference>REFI Refer to Highways Inspector</HistoryReference>
+      <HistoryDescription/>
+      <HistoryUsername>SY000025</HistoryUsername>
+      <HistoryUserdesc>Ex Sample</HistoryUserdesc>
+      <HistoryAuthoriser/>
+      <HistoryDoneDate>2018-11-28</HistoryDoneDate>
+      <HistoryDoneTime>15:05</HistoryDoneTime>
+      <HistoryType>21</HistoryType>
+      <HistoryAction/>
+      <HistoryActionUsername/>
+      <HistoryEventType>REFI</HistoryEventType>
+      <HistoryEventDescription>Refer to Highways Inspector</HistoryEventDescription>
+    </EventHistoryGet>
+    <EventHistoryGet>
+      <LineNo>6</LineNo>
+      <HistoryDate>2018-11-28</HistoryDate>
+      <HistoryTime>15:05</HistoryTime>
+      <HistoryEvent>Standard inspection</HistoryEvent>
+      <HistoryReference>HWI Highways Inspection (7)</HistoryReference>
+      <HistoryDescription/>
+      <HistoryUsername>SY000025</HistoryUsername>
+      <HistoryUserdesc>Ex Sample</HistoryUserdesc>
+      <HistoryAuthoriser/>
+      <HistoryDoneDate/>
+      <HistoryDoneTime/>
+      <HistoryType>19</HistoryType>
+      <HistoryAction>HWINSP</HistoryAction>
+      <HistoryActionUsername>CN000038</HistoryActionUsername>
+      <HistoryEventType/>
+      <HistoryEventDescription/>
+    </EventHistoryGet>
+    <EventHistoryGet>
+      <LineNo>7</LineNo>
+      <HistoryDate>2018-11-28</HistoryDate>
+      <HistoryTime>15:05</HistoryTime>
+      <HistoryEvent>Inspection cleared</HistoryEvent>
+      <HistoryReference>HWI Highways Inspection (6)</HistoryReference>
+      <HistoryDescription>Text going here explaining reason for no further action</HistoryDescription>
+      <HistoryUsername>SY000025</HistoryUsername>
+      <HistoryUserdesc>Ex Sample</HistoryUserdesc>
+      <HistoryAuthoriser/>
+      <HistoryDoneDate>2018-11-28</HistoryDoneDate>
+      <HistoryDoneTime>15:05</HistoryDoneTime>
+      <HistoryType>20</HistoryType>
+      <HistoryAction>HWINSP</HistoryAction>
+      <HistoryActionUsername>CN000038</HistoryActionUsername>
+      <HistoryEventType/>
+      <HistoryEventDescription/>
+    </EventHistoryGet>
+    <EventHistoryGet>
+      <LineNo>8</LineNo>
+      <HistoryDate>2018-11-28</HistoryDate>
+      <HistoryTime>15:05</HistoryTime>
+      <HistoryEvent>Event recorded</HistoryEvent>
+      <HistoryReference>NFA No Further Action (Y Bont to Close)</HistoryReference>
+      <HistoryDescription>Text going here explaining reason for no further action</HistoryDescription>
+      <HistoryUsername>SY000025</HistoryUsername>
+      <HistoryUserdesc>Ex Sample</HistoryUserdesc>
+      <HistoryAuthoriser/>
+      <HistoryDoneDate>2018-11-28</HistoryDoneDate>
+      <HistoryDoneTime>15:05</HistoryDoneTime>
+      <HistoryType>21</HistoryType>
+      <HistoryAction/>
+      <HistoryActionUsername/>
+      <HistoryEventType>NFA</HistoryEventType>
+      <HistoryEventDescription>No Further Action (Y Bont to Close)</HistoryEventDescription>
+    </EventHistoryGet>
+    <EventHistoryGet>
+      <LineNo>9</LineNo>
+      <HistoryDate>2018-11-28</HistoryDate>
+      <HistoryTime>15:05</HistoryTime>
+      <HistoryEvent>Action recorded</HistoryEvent>
+      <HistoryReference>YBONTACT/YBONT(10)</HistoryReference>
+      <HistoryDescription>Text going here explaining reason for no further action</HistoryDescription>
+      <HistoryUsername>SY000025</HistoryUsername>
+      <HistoryUserdesc>Ex Sample</HistoryUserdesc>
+      <HistoryAuthoriser/>
+      <HistoryDoneDate/>
+      <HistoryDoneTime/>
+      <HistoryType>22</HistoryType>
+      <HistoryAction>YBONTACT</HistoryAction>
+      <HistoryActionUsername>YBONT</HistoryActionUsername>
+      <HistoryEventType/>
+      <HistoryEventDescription/>
+    </EventHistoryGet>
+    <EventHistoryGet>
+      <LineNo>10</LineNo>
+      <HistoryDate>2018-11-28</HistoryDate>
+      <HistoryTime>15:08</HistoryTime>
+      <HistoryEvent>Action cleared</HistoryEvent>
+      <HistoryReference>YBONTACT/YBONT(9)</HistoryReference>
+      <HistoryDescription>In this case, Y Bont has contacted the customer by email (CCOE). Other contact options include: contact in person (CCOR), letter (CCOL) or phone (CCOP)</HistoryDescription>
+      <HistoryUsername>SY000025</HistoryUsername>
+      <HistoryUserdesc>Ex Sample</HistoryUserdesc>
+      <HistoryAuthoriser/>
+      <HistoryDoneDate>2018-11-28</HistoryDoneDate>
+      <HistoryDoneTime>15:08</HistoryDoneTime>
+      <HistoryType>23</HistoryType>
+      <HistoryAction>YBONTACT</HistoryAction>
+      <HistoryActionUsername>YBONT</HistoryActionUsername>
+      <HistoryEventType/>
+      <HistoryEventDescription/>
+    </EventHistoryGet>
+    <EventHistoryGet>
+      <LineNo>11</LineNo>
+      <HistoryDate>2018-11-28</HistoryDate>
+      <HistoryTime>15:08</HistoryTime>
+      <HistoryEvent>Event recorded</HistoryEvent>
+      <HistoryReference>CCOE Customer Contacted by Email</HistoryReference>
+      <HistoryDescription>In this case, Y Bont has contacted the customer by email (CCOE). Other contact options include: contact in person (CCOR), letter (CCOL) or phone (CCOP)</HistoryDescription>
+      <HistoryUsername>SY000025</HistoryUsername>
+      <HistoryUserdesc>Ex Sample</HistoryUserdesc>
+      <HistoryAuthoriser/>
+      <HistoryDoneDate>2018-11-28</HistoryDoneDate>
+      <HistoryDoneTime>15:08</HistoryDoneTime>
+      <HistoryType>21</HistoryType>
+      <HistoryAction/>
+      <HistoryActionUsername/>
+      <HistoryEventType>CCOE</HistoryEventType>
+      <HistoryEventDescription>Customer Contacted by Email</HistoryEventDescription>
+    </EventHistoryGet>
+    <EventHistoryGet>
+      <LineNo>12</LineNo>
+      <HistoryDate>2018-11-28</HistoryDate>
+      <HistoryTime>15:08</HistoryTime>
+      <HistoryEvent>Request cleared</HistoryEvent>
+      <HistoryReference/>
+      <HistoryDescription/>
+      <HistoryUsername>SY000025</HistoryUsername>
+      <HistoryUserdesc>Ex Sample</HistoryUserdesc>
+      <HistoryAuthoriser/>
+      <HistoryDoneDate/>
+      <HistoryDoneTime/>
+      <HistoryType>07</HistoryType>
+      <HistoryAction/>
+      <HistoryActionUsername/>
+      <HistoryEventType/>
+      <HistoryEventDescription/>
+    </EventHistoryGet>
+  </EventHistory>
+ </Request>
+</GetRequestResult>

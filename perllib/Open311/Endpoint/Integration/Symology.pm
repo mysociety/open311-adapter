@@ -8,8 +8,10 @@ use DateTime::Format::W3CDTF;
 use Digest::MD5 qw(md5_hex);
 use Moo;
 use JSON::MaybeXS;
+use Path::Tiny;
 use Text::CSV;
 use YAML::Logic;
+use XML::Simple qw(:strict);
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
@@ -29,6 +31,9 @@ has date_formatter => ( is => 'lazy', default => sub {
         time_zone => 'Europe/London',
     );
 });
+
+has start_time => ( is => 'rw' );
+has end_time => ( is => 'rw' );
 
 has category_mapping => (
     is => 'lazy',
@@ -303,8 +308,8 @@ sub _get_update_files {
 
     # If we have an SFTP server, use that
     if (my $sftp_config = $self->sftp_config) {
-        my $dir = $sftp_config->{out};
-        my @files = glob "$dir/*.CSV";
+        my $dir = path($sftp_config->{out})->absolute($self->config_file->parent);
+        my @files = glob "$dir/*.CSV $dir/*.xml";
         return \@files;
     }
 
@@ -321,6 +326,8 @@ sub get_service_request_updates {
     my $w3c = DateTime::Format::W3CDTF->new;
     my $start_time = $w3c->parse_datetime($args->{start_date});
     my $end_time = $w3c->parse_datetime($args->{end_date});
+    $self->start_time($start_time);
+    $self->end_time($end_time);
 
     my %seen;
     my @updates;
@@ -328,28 +335,39 @@ sub get_service_request_updates {
     foreach (@$files) {
         open my $fh, '<', $_;
 
-        my $csv = Text::CSV->new;
-        $csv->header($fh, { munge_column_names => {
-            "History Date/Time" => "date_history",
-        } });
+        if (/\.csv/i) {
+            my $csv = Text::CSV->new;
+            $csv->header($fh, { munge_column_names => {
+                "History Date/Time" => "date_history",
+            } });
 
-        while (my $row = $csv->getline_hr($fh)) {
-            next unless $row->{CRNo} && $row->{date_history};
-            my $dt = $self->date_formatter->parse_datetime($row->{date_history});
-            next unless $dt >= $start_time && $dt <= $end_time;
+            while (my $row = $csv->getline_hr($fh)) {
+                next unless $row->{CRNo} && $row->{date_history};
+                my $dt = $self->date_formatter->parse_datetime($row->{date_history});
+                next unless $dt >= $start_time && $dt <= $end_time;
 
-            my ($update, $id) = $self->_process_csv_row($row, $dt);
-            # The same row might appear in multiple files (e.g. for Central Beds
-            # each 30 minute CSV contains 90 minutes of data) so skip if we've
-            # already seen this row.
-            next if !$update || $seen{$id};
+                my ($update, $id) = $self->_process_csv_row($row, $dt);
+                # The same row might appear in multiple files (e.g. for Central Beds
+                # each 30 minute CSV contains 90 minutes of data) so skip if we've
+                # already seen this row.
+                next if !$update || $seen{$id};
 
-            push @updates, $update;
-            $seen{$id} = 1;
+                push @updates, $update;
+                $seen{$id} = 1;
+            }
+        } elsif (/\.xml/i) {
+            my $x = XML::Simple->new(
+                KeyAttr => [],
+                NoAttr => 1,
+                SuppressEmpty => '',
+                ForceArray => [ "CustomerGet", "EventHistoryGet" ],
+            );
+            my $xml = $x->XMLin($fh);
+            push @updates, @{ $self->_process_request_history($xml, 'separate') };
         }
     }
 
-    $self->post_process_files(\@updates, $start_time, $end_time);
+    $self->post_process_files(\@updates);
 
     return @updates;
 }
@@ -366,6 +384,40 @@ sub _process_csv_row {
 
     my $update = $self->_create_update_object($row, $row->{CRNo}, $dt, $update_id);
     return ($update, $update->update_id) if $update;
+}
+
+sub _process_request_history {
+    my ($self, $request, $date_type) = @_;
+
+    my $crno = $request->{Request}{OutCRNo};
+    my $history = $request->{Request}->{EventHistory}->{EventHistoryGet};
+    my @updates;
+    my $w3c = DateTime::Format::W3CDTF->new;
+    my $iso_d = DateTime::Format::Strptime->new( pattern => '%Y-%m-%d', time_zone => 'Europe/London' );
+    my $iso_t = DateTime::Format::Strptime->new( pattern => '%H:%M', time_zone => 'Europe/London' );
+    for my $event (@$history) {
+        my ($date, $time);
+        if ($date_type eq 'full') {
+            # The event datetime is stored in two fields - both of which are datetimes
+            # but HistoryTime has today's date and HistoryDate has a midnight timestamp.
+            # So we need to reconstruct it.
+            $date = $w3c->parse_datetime($event->{HistoryDate});
+            $time = $w3c->parse_datetime($event->{HistoryTime});
+        } elsif ($date_type eq 'separate') {
+            $date = $iso_d->parse_datetime($event->{HistoryDate});
+            $time = $iso_t->parse_datetime($event->{HistoryTime});
+        }
+        $date->set(hour => $time->hour, minute => $time->minute, second => $time->second);
+        $date->set_time_zone("Europe/London");
+        next unless $date >= $self->start_time && $date <= $self->end_time;
+
+        my $update_id = $crno . '_' . $event->{LineNo};
+        my $update = $self->_create_update_object($event, $crno, $date, $update_id);
+        next unless $update;
+        push @updates, $update;
+    }
+
+    return \@updates;
 }
 
 sub _create_update_object {

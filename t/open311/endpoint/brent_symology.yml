@@ -1,10 +1,18 @@
 services:
 username: FMS
+updates_sftp:
+  out: 'files/brent'
 request_defaults:
     Priority: "P"
     ServiceCode: 'ServiceCode'
 customer_defaults:
     CustomerType: "PB"
+event_status_mapping:
+  19: 'investigating'
+  21:
+    field: 'HistoryEventType'
+    values:
+      NFA: 'no_further_action'
 category_mapping:
     AbanVeh:
         name: 'Abandoned vehicles'
