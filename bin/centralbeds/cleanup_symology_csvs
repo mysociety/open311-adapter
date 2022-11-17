@@ -1,9 +1,0 @@
-#!/bin/bash
-
-set -eu
-
-source /data/mysociety/shlib/deployfns
-read_conf "$(dirname "$0")/../../conf/council-centralbedfordshire_symology.yml"
-
-# Delete any old CSV files
-find $OPTION_updates_sftp__out -name '*.CSV' -ctime 2 -delete
