@@ -39,39 +39,11 @@ sub process_service_request_args {
     return @args;
 }
 
-sub _get_csvs {
-    my $self = shift;
-
-    my $dir = $self->endpoint_config->{updates_sftp}->{out};
-    my @files = glob "$dir/*.CSV";
-    return \@files;
-}
-
-sub _update_description {
-    my ($self, $event) = @_;
-
-    # return join " :: ", $event->{HistoryType}, $event->{HistoryEventType}, $event->{HistoryEventDescription}, $event->{HistoryEvent}, $event->{HistoryReference}, $event->{HistoryDescription};
-    # XXX Should this happen for all events or only certain types?
-    return $event->{HistoryDescription};
-}
-
-sub _update_status {
-    my ($self, $event) = @_;
-
-    my $map = $self->endpoint_config->{event_status_mapping}->{$event->{HistoryType}};
-    return unless $map;
-    return ( $map, $event->{HistoryType} ) unless ref $map eq 'HASH';
-    my $field = $map->{field};
-    my $external_status = $event->{HistoryType} . "_" . $event->{$field};
-    $map = $map->{values};
-    return ( $map->{$event->{$field}}, $external_status );
-}
-
 # Unlike Bexley, the CSV from the SFTP doesn't have everything we need to
 # build the ServiceRequestUpdates. We can get the full picture from the
 # Symology API by calling the GetRequestAdditionalGroup method for each
 # enquiry mentioned in the CSVs and looking at the history entries there.
-sub post_process_csvs {
+sub post_process_files {
     my ($self, $updates, $start_time, $end_time) = @_;
 
     my @updates;

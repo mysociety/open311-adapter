@@ -113,7 +113,7 @@ my $bexley_end = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexl
 $bexley_end->mock('_build_config_file', sub {
     path(__FILE__)->sibling('bexley_symology.yml');
 });
-$bexley_end->mock(_get_csvs => sub {
+$bexley_end->mock(_get_update_files => sub {
     [ \<<EOF,
 "History Date/Time","Recorded Date","CRNo","Stage Desc.","Date Cleared","Inspection","LCA","Action Due","Event Type","Stage"
 13/03/2017 07:31,12/03/2019,569810,RECORDED,,NI1,N1,NI1MOB,Ignored,1

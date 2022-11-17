@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# Delete any old files downloaded from SFTP
+
+set -eu
+
+source /data/mysociety/shlib/deployfns
+
+read_conf "$(dirname "$0")/../../conf/council-centralbedfordshire_symology.yml"
+find $OPTION_updates_sftp__out -iname '*.CSV' -ctime 2 -delete

@@ -60,6 +60,11 @@ has external_id_prefix => (
     default => sub { $_[0]->endpoint_config->{external_id_prefix} || "" }
 );
 
+has sftp_config => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{updates_sftp} }
+);
+
 # May want something like Confirm's service_assigned_officers
 
 sub services {
@@ -293,12 +298,21 @@ sub check_error {
     }
 }
 
-sub _get_csvs {
+sub _get_update_files {
     my $self = shift;
+
+    # If we have an SFTP server, use that
+    if (my $sftp_config = $self->sftp_config) {
+        my $dir = $sftp_config->{out};
+        my @files = glob "$dir/*.CSV";
+        return \@files;
+    }
+
+    # Otherwise, fetch from URLs
     my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
-    my @csv_files = map { $ua->get($_) } @{$self->update_urls};
-    @csv_files = map { $_->content_ref } @csv_files;
-    return \@csv_files;
+    my @files = map { $ua->get($_) } @{$self->update_urls};
+    @files = map { $_->content_ref } @files;
+    return \@files;
 }
 
 sub get_service_request_updates {
@@ -310,8 +324,8 @@ sub get_service_request_updates {
 
     my %seen;
     my @updates;
-    my $csv_files = $self->_get_csvs;
-    foreach (@$csv_files) {
+    my $files = $self->_get_update_files;
+    foreach (@$files) {
         open my $fh, '<', $_;
 
         my $csv = Text::CSV->new;
@@ -335,12 +349,12 @@ sub get_service_request_updates {
         }
     }
 
-    $self->post_process_csvs(\@updates, $start_time, $end_time);
+    $self->post_process_files(\@updates, $start_time, $end_time);
 
     return @updates;
 }
 
-sub post_process_csvs { }
+sub post_process_files { }
 
 sub _process_csv_row {
     my ($self, $row, $dt) = @_;
@@ -369,6 +383,26 @@ sub _create_update_object {
         updated_datetime => $dt,
         $external_status ? ( external_status_code => $external_status ) : (),
     );
+}
+
+sub _update_description {
+    my ($self, $event) = @_;
+
+    # return join " :: ", $event->{HistoryType}, $event->{HistoryEventType}, $event->{HistoryEventDescription}, $event->{HistoryEvent}, $event->{HistoryReference}, $event->{HistoryDescription};
+    # XXX Should this happen for all events or only certain types?
+    return $event->{HistoryDescription};
+}
+
+sub _update_status {
+    my ($self, $event) = @_;
+
+    my $map = $self->endpoint_config->{event_status_mapping}->{$event->{HistoryType}};
+    return unless $map;
+    return ( $map, $event->{HistoryType} ) unless ref $map eq 'HASH';
+    my $field = $map->{field};
+    my $external_status = $event->{HistoryType} . "_" . $event->{$field};
+    $map = $map->{values};
+    return ( $map->{$event->{$field}}, $external_status );
 }
 
 1;

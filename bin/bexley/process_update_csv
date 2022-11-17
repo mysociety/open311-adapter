@@ -16,7 +16,7 @@ has csv_location => (
     is => 'ro'
 );
 
-sub _get_csvs {
+sub _get_update_files {
     my $self = shift;
     return [ $self->csv_location ];
 }
