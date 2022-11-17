@@ -4,7 +4,7 @@ set -eu
 
 source /data/mysociety/shlib/deployfns
 
-for COBRAND in centralbedfordshire; do
+for COBRAND in brent camden centralbedfordshire; do
 
     read_conf "$(dirname "$0")/../../conf/council-"$COBRAND"_symology.yml"
 
