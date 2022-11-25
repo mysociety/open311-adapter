@@ -14,12 +14,12 @@ around check_for_data_value => sub {
 
     my $service = $args->{attributes}{service_id} || '';
 
-    return 1 if $name eq 'Container Mix' && ($service eq '2241' || $service eq '2250');
-    return 1 if $name eq 'Paper' && ($service eq '2240' || $service eq '2249');
+    return 1 if $name eq 'Container Mix' && ($service eq '2241' || $service eq '2250' || $service eq '2246' || $service eq '3571');
+    return 1 if $name eq 'Paper' && ($service eq '2240' || $service eq '2249' || $service eq '2632');
     return 1 if $name eq 'Food' && ($service eq '2239' || $service eq '2248');
     return 1 if $name eq 'Garden' && $service eq '2247';
     return 1 if $name eq 'Refuse Bag' && $service eq '2242';
-    return 1 if $name eq 'Refuse Bin' && ($service eq '2238' || $service eq '2243');
+    return 1 if $name eq 'Refuse Bin' && ($service eq '2238' || $service eq '2243' || $service eq '3576');
 
     return $class->$orig($name, $args, $request, $parent_name);
 };
