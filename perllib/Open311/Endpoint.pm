@@ -548,7 +548,7 @@ sub POST_Service_Request {
     my $service = $self->service($service_code, $args);
 
     for my $k (keys %$args) {
-        if ($k =~ /^attribute\[([\w\-]+)\]$/) {
+        if ($k =~ /^attribute\[(.+)\]$/) {
             my $value = delete $args->{$k};
             $args->{attributes}{$1} = $value;
         }

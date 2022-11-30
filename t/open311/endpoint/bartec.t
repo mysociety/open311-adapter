@@ -426,6 +426,15 @@ subtest "check fetch service" => sub {
             datatype_description => '',
             order => 18,
             description => "ITEM 01",
+          },
+          {
+            variable => 'true',
+            code => "HAS SPACE",
+            datatype => "string",
+            required => 'false',
+            datatype_description => '',
+            order => 19,
+            description => "HAS SPACE",
           }
         ]
     },
@@ -569,6 +578,7 @@ subtest "check send report with extended info & ampersands " => sub {
         'attribute[RubbishType]' => 'Food - L02',
         'attribute[RubbishDepth]' => 'Lots - W01',
         'attribute[ITEM_01]' => 'Speakers',
+        'attribute[HAS SPACE]' => 'Yes it does',
     );
 
     is $sent{Service_Request_Document_Create}, undef, "skip document create if no photo";
@@ -612,6 +622,10 @@ subtest "check send report with extended info & ampersands " => sub {
                 {
                     FieldName => 'ITEM_01',
                     FieldValue => 'Speakers'
+                },
+                {
+                    FieldName => 'HAS SPACE',
+                    FieldValue => 'Yes it does'
                 }
             ]
         },
