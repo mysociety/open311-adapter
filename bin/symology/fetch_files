@@ -17,10 +17,9 @@ for COBRAND in $@; do
     cd $TMPDIR
 
     export SSHPASS=$OPTION_updates_sftp__password
-    echo "get $OPTION_updates_sftp__dir" | sshpass -e sftp -oBatchMode=no -r -b - $OPTION_updates_sftp__username@$OPTION_updates_sftp__host >/dev/null
-    DIR=${OPTION_updates_sftp__dir##*/}
-    if ls -A1q "$DIR" | grep -q .; then
-        mv "$DIR"/* $OPTION_updates_sftp__out
+    echo "get $OPTION_updates_sftp__dir data" | sshpass -e sftp -oBatchMode=no -r -b - $OPTION_updates_sftp__username@$OPTION_updates_sftp__host >/dev/null
+    if ls -A1q "data" | grep -q .; then
+        mv data/* $OPTION_updates_sftp__out
     fi
 
 done
