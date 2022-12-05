@@ -13,6 +13,6 @@ has jurisdiction_id => (
 );
 
 # Updates from FMS should always have a GN11 code, meaning "Customer called"
-sub event_action_event_type { 'GN11'}
+sub event_action_event_type { ''}
 
 1;
