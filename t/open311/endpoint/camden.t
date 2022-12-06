@@ -66,7 +66,7 @@ $soap_lite->mock(call => sub {
         my @request = map { $_->value } ${$args[2]->value}->value;
         my $photo_desc = "\n\n[ This update contains a photo, see: http://example.org/photo/1.jpeg ]";
         my $report_id = $request[2];
-        is_deeply \@request, [ 'ServiceCode', 1001, $report_id, "GN11", '', 'FMS', "This is the update$photo_desc", undef ];
+        is_deeply \@request, [ 'ServiceCode', 1001, $report_id, "NOTE", '', 'FMS', "This is the update$photo_desc", undef ];
         return {
             StatusCode => 0,
             StatusMessage => 'Event Loaded',
