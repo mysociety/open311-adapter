@@ -8,8 +8,10 @@ use DateTime::Format::W3CDTF;
 use Digest::MD5 qw(md5_hex);
 use Moo;
 use JSON::MaybeXS;
+use LWP::UserAgent;
 use Path::Tiny;
 use Text::CSV;
+use Try::Tiny;
 use YAML::Logic;
 use XML::Simple qw(:strict);
 
@@ -332,7 +334,7 @@ sub get_service_request_updates {
     my %seen;
     my @updates;
     my $files = $self->_get_update_files;
-    foreach (@$files) {
+    FILE: foreach (@$files) {
         open my $fh, '<', $_;
 
         if (/\.xml/i) {
@@ -347,9 +349,14 @@ sub get_service_request_updates {
         } else {
             # Assume CSV, ones fetched via URL all are
             my $csv = Text::CSV->new;
-            $csv->header($fh, { munge_column_names => {
-                "History Date/Time" => "date_history",
-            } });
+            try {
+                $csv->header($fh, { munge_column_names => {
+                    "History Date/Time" => "date_history",
+                } });
+            } catch {
+                no warnings 'exiting';
+                next FILE;
+            };
 
             while (my $row = $csv->getline_hr($fh)) {
                 next unless $row->{CRNo} && $row->{date_history};

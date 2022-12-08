@@ -130,6 +130,9 @@ $bexley_end->mock(_get_update_files => sub {
 17/04/2019 14:08,04/04/2019,560062,RECORDED,,SI5,NCR,CR,,1
 EOF
     \<<EOF,
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+EOF
+    \<<EOF,
 "History Date/Time","Recorded Date","CRNo","Stage Desc.","Date Cleared","Maint. Stage","L.A.Code"
 24/09/2018 15:19,24/09/2018,2830,PROV.CLEAR,,CLAIMED,555830
 24/09/2018 20:34,24/09/2018,2832,PROV.CLEAR,,APPROVED,555831
