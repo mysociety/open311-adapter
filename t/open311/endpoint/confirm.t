@@ -87,6 +87,9 @@ $open311->mock(perform_request => sub {
             ServiceCode => 'ABC', SubjectCode => 'DEF', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z'
           } } },
           { GetEnquiryResponse => { Enquiry => {
+            ServiceCode => 'ABC', SubjectCode => 'DEF', EnquiryStatusCode => 'FOR', EnquiryDescription => 'this is a for triage report', EnquiryNumber => '2013', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z'
+          } } },
+          { GetEnquiryResponse => { Enquiry => {
             ServiceCode => 'ABC', SubjectCode => 'DEF', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm with no easting/northing', EnquiryNumber => '2004', EnquiryLogTime => '2018-04-17T12:34:57Z', LoggedTime => '2018-04-17T12:34:57Z'
           } } },
           { GetEnquiryResponse => { Enquiry => {
