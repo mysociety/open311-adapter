@@ -39,6 +39,11 @@ sub parse_datetime {
 
 sub reverse_status_mapping {}
 
+has '+request_class' => (
+    is => 'ro',
+    default => 'Open311::Endpoint::Service::Request::SalesForce',
+);
+
 sub integration_class { 'Integrations::SalesForce::Rutland' }
 
 sub get_integration {
@@ -127,7 +132,7 @@ sub get_service_requests {
     my $requests = $integ->get_requests();
 
     my $w3c = DateTime::Format::W3CDTF->new;
-    my @updates = ();
+    my @requests = ();
 
     my $start_time = $args->{start_date} ?
         DateTime::Format::W3CDTF->parse_datetime($args->{start_date})
@@ -148,7 +153,7 @@ sub get_service_requests {
         next if $start_time && $update_time < $start_time;
 
         my $service = $self->service( $request->{Service_Area__c} );
-        push @updates, Open311::Endpoint::Service::Request::SalesForce->new(
+        push @requests, $self->new_request(
             service => $service,
             status => $self->reverse_status_mapping($request->{Status__c}),
             service_request_id => $request->{Id},
@@ -159,7 +164,7 @@ sub get_service_requests {
             latlong => [ $request->{lat__c}, $request->{long__c}],
         );
     }
-    return @updates;
+    return @requests;
 }
 
 sub get_service_request {

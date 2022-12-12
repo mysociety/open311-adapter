@@ -25,6 +25,11 @@ has bartec => (
     default => sub { $_[0]->integration_class->new(config_filename => $_[0]->jurisdiction_id) }
 );
 
+has '+request_class' => (
+    is => 'ro',
+    default => 'Open311::Endpoint::Service::Request::ExtendedStatus',
+);
+
 has integration_class => (
     is => 'ro',
     default => 'Integrations::Bartec'
@@ -497,7 +502,7 @@ sub get_service_requests {
 
         $args{service} = $service;
 
-        push @requests, Open311::Endpoint::Service::Request::ExtendedStatus->new( %args );
+        push @requests, $self->new_request( %args );
     }
 
     return @requests;
