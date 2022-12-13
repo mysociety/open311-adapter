@@ -81,6 +81,7 @@ $soap_lite->mock(call => sub {
         my $burnt = 'No';
         is $request[REPORT_DESC]->value, "This is the details$photo_desc\n\nBurnt out?: $burnt\n\nCar details: Details";
         is $request[REPORT_PRIORITY]->value, "P";
+        is $request[REPORT_LOCATION]->value, 'Report title';
         return {
             StatusCode => 0,
             StatusMessage => 'Success',
@@ -165,6 +166,7 @@ subtest "POST service request OK" => sub {
         'attribute[easting]' => EASTING,
         'attribute[northing]' => NORTHING,
         'attribute[fixmystreet_id]' => 123,
+        'attribute[title]' => 'Report title'
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
