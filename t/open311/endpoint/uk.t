@@ -7,7 +7,6 @@ BEGIN { $ENV{TEST_MODE} = 1; }
 
 test_multi(0, 'Open311::Endpoint::Integration::UK',
     'Open311::Endpoint::Integration::UK::BANES' => 'banes_confirm',
-    'Open311::Endpoint::Integration::UK::Bromley' => 'bromley_echo',
     'Open311::Endpoint::Integration::UK::Buckinghamshire' => 'buckinghamshire_confirm',
     'Open311::Endpoint::Integration::UK::Camden' => 'camden_symology',
     'Open311::Endpoint::Integration::UK::CentralBedfordshire' => 'centralbedfordshire_symology',
@@ -33,6 +32,11 @@ test_multi(1, 'Open311::Endpoint::Integration::UK::Bexley',
 test_multi(1, 'Open311::Endpoint::Integration::UK::Brent',
     'Open311::Endpoint::Integration::UK::Brent::Symology' => 'brent_symology',
     'Open311::Endpoint::Integration::UK::Brent::Echo' => 'brent_echo',
+);
+
+test_multi(0, 'Open311::Endpoint::Integration::UK::Bromley',
+    'Open311::Endpoint::Integration::UK::Bromley::Echo' => 'bromley_echo',
+    #'Open311::Endpoint::Integration::UK::Bromley::Passthrough' => 'www.bromley.gov.uk',
 );
 
 test_multi(1, 'Open311::Endpoint::Integration::UK::Peterborough',

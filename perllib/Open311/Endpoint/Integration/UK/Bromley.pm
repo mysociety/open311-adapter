@@ -1,34 +1,40 @@
+=head1 NAME
+
+Open311::Endpoint::Integration::UK::Bromley - Bromley integration set-up
+
+=head1 SYNOPSIS
+
+Bromley will have multiple backends, so is set up as a subclass
+of the Multi integration.
+
+=head1 DESCRIPTION
+
+=cut
+
 package Open311::Endpoint::Integration::UK::Bromley;
 
-use DateTime;
 use Moo;
-extends 'Open311::Endpoint::Integration::Echo';
+extends 'Open311::Endpoint::Integration::Multi';
 
-around BUILDARGS => sub {
-    my ($orig, $class, %args) = @_;
-    $args{jurisdiction_id} = 'bromley_echo';
-    return $class->$orig(%args);
-};
+use Module::Pluggable
+    search_path => ['Open311::Endpoint::Integration::UK::Bromley'],
+    instantiate => 'new';
 
-around process_service_request_args => sub {
-    my ($orig, $class, $args) = @_;
-    my $request = $class->$orig($args);
-    # Assisted collection
-    if ($request->{event_type} == 2149) {
-        my $date = DateTime->today(time_zone => "Europe/London");
-        if ($args->{service_code} eq "2149-add") {
-            $args->{attributes}{"Assisted_Action"} = 1;
-            $args->{attributes}{"Assisted_Start_Date"} = $date->strftime("%d/%m/%Y");
-            $args->{attributes}{"Assisted_End_Date"} = "01/01/2050";
-            $date->add(years => 2);
-            $args->{attributes}{"Review_Date"} = $date->strftime("%d/%m/%Y");
-        } elsif ($args->{service_code} eq "2149-remove") {
-            $args->{attributes}{"Assisted_Action"} = 2;
-            $args->{attributes}{"Assisted_End_Date"} = $date->strftime("%d/%m/%Y");
-        }
-    }
-    return $request;
-};
+has jurisdiction_id => (
+    is => 'ro',
+    default => 'bromley',
+);
 
-1;
+=pod
 
+Bromley was previously only an Echo backend in open311-adapter, so we
+maintain its categories/IDs without any backend prefix.
+
+=cut
+
+has integration_without_prefix => (
+    is => 'ro',
+    default => 'Echo',
+);
+
+__PACKAGE__->run_if_script;

@@ -10,7 +10,7 @@ sub _build_config_file { path(__FILE__)->sibling("echo.yml")->stringify }
 package Open311::Endpoint::Integration::UK::Bromley::Dummy;
 use Path::Tiny;
 use Moo;
-extends 'Open311::Endpoint::Integration::UK::Bromley';
+extends 'Open311::Endpoint::Integration::UK::Bromley::Echo';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
     $args{jurisdiction_id} = 'bromley_dummy';
