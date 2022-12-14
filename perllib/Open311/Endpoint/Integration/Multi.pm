@@ -80,7 +80,7 @@ sub _map_with_new_id {
 }
 
 sub _map_from_new_id {
-    my ($self, $code) = @_;
+    my ($self, $code, $type) = @_;
 
     my $names = join('|', grep { $_ ne $self->integration_without_prefix } map { $_->{name} } @{$_[0]->integrations});
     my ($integration, $service_code) = $code =~ /^($names)-(.*)/;
@@ -116,7 +116,7 @@ prefixed again.
 sub service {
     my ($self, $service_id, $args) = @_;
     # Extract integration from service code and pass to correct child
-    my ($integration, $service_code) = $self->_map_from_new_id($service_id);
+    my ($integration, $service_code) = $self->_map_from_new_id($service_id, 'service');
     my $service = $self->_call('service', $integration, $service_code, $args);
     ($service) = $self->_map_with_new_id(service_code => [$integration, $service]);
     return $service;
@@ -133,7 +133,7 @@ parent will be calling service() again.
 sub post_service_request {
     my ($self, $service, $args) = @_;
     # Extract integration from service code and set up to pass to child
-    my ($integration, $service_code) = $self->_map_from_new_id($service->service_code);
+    my ($integration, $service_code) = $self->_map_from_new_id($service->service_code, 'service');
     my $integration_args = { %$args, service_code => $service_code };
     # Strip off the integration part of the service code from the service object
     my $integration_service = (ref $service)->new(%$service, service_code => $service_code);
@@ -148,8 +148,8 @@ sub post_service_request_update {
 
     # Cobrand needs to send the service_code through with updates
     # (see Bexley's open311_munge_update_params in FMS for example)
-    my ($integration, $service_code) = $self->_map_from_new_id($args->{service_code});
-    my ($integration2, $service_request_id) = $self->_map_from_new_id($args->{service_request_id});
+    my ($integration, $service_code) = $self->_map_from_new_id($args->{service_code}, 'service');
+    my ($integration2, $service_request_id) = $self->_map_from_new_id($args->{service_request_id}, 'request');
     die "$integration did not equal $integration2\n" if $integration ne $integration2;
 
     my $integration_args = {
