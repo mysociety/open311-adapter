@@ -5,6 +5,11 @@ use Carp 'croak';
 use YAML::XS qw(LoadFile Load);
 use Types::Standard qw( Maybe Str );
 
+has config_filename => (
+    is => 'ro',
+    default => '',
+);
+
 has config_file => (
     is => 'ro',
     isa => Maybe[Str],
@@ -16,7 +21,8 @@ around BUILDARGS => sub {
     my %args = @_;
 
     die unless $args{jurisdiction_id}; # Must have one by here
-    $args{config_file} //= path(__FILE__)->parent(5)->realpath->child("conf/council-$args{jurisdiction_id}.yml")->stringify;
+    my $file = $args{config_filename} || "council-$args{jurisdiction_id}.yml";
+    $args{config_file} //= path(__FILE__)->parent(5)->realpath->child("conf/$file")->stringify;
 
     if (my $config_data = $args{config_data}) {
         my $config = Load($config_data) or croak "Couldn't load config from string";

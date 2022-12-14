@@ -172,19 +172,28 @@ sub POST_Service_Request_Update_input_schema {
             account_id => '//str',
             service_request_id_ext => '//num',
             public_anonymity_required => Open311::Endpoint::Schema->enum('//str', 'TRUE', 'FALSE'),
+            email_alerts_requested => Open311::Endpoint::Schema->enum('//str', 'TRUE', 'FALSE'),
             service_code => $self->get_identifier_type('service_code'),
         }
     };
 
+    my $jurisdiction = $args->{jurisdiction_id} || '';
+
+    # Bromley has a different update_id key than elsewhere
+    if ($jurisdiction eq 'bromley') {
+        $attributes->{required}{update_id_ext} = $self->get_identifier_type('update_id');
+        delete $attributes->{required}{update_id};
+    }
+
     # Allow attributes through for Oxfordshire XXX
-    if (($args->{jurisdiction_id} || '') eq 'oxfordshire') {
+    if ($jurisdiction eq 'oxfordshire') {
         for my $key (grep { /^attribute\[\w+\]$/ } keys %$args) {
             $attributes->{optional}{$key} = '//str';
         }
     }
 
     # Allow nsg_ref through for Bexley XXX
-    if (($args->{jurisdiction_id} || '') eq 'bexley') {
+    if ($jurisdiction eq 'bexley') {
         if ($args->{'nsg_ref'}) {
 	        $attributes->{optional}{'nsg_ref'} = '//str';
         }
