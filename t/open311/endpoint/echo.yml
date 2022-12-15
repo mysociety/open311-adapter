@@ -11,6 +11,11 @@ service_whitelist:
   2148: 'General Enquiry'
   2149-add: 'Assisted collection add'
   2149-remove: 'Assisted collection remove'
+  Highways:
+    2135: Flytipping
+    2136: Flyposting
+  Superhighways:
+    2135: Flytipping
 
 waste_services:
   - 2104

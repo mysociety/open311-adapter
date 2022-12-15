@@ -55,20 +55,40 @@ sub services {
 
     my $services = $self->service_whitelist;
     my %waste_services = map { $_ => 1 } @{$self->waste_services};
+    my %services;
     my @services = map {
-        my $id = $_;
-        my $name = $services->{$_};
-        my $service = $self->service_class->new(
-            service_name => $name,
-            service_code => $_,
-            description => $name,
-            $waste_services{$_} ? (
-                group => 'Waste',
-                keywords => ['waste_only']
-            ) : (),
-            allow_any_attributes => 1,
-        );
-        $service;
+        my ($group, $cats);
+        if (ref $services->{$_} eq 'HASH') {
+            # Group + services
+            $group = $_;
+            $cats = $services->{$_};
+        } else {
+            # Just a service
+            $cats = { $_ => $services->{$_} };
+        }
+        my @services;
+        foreach (sort keys %$cats) {
+            if ($services{$_}) {
+                push @{$services{$_}->groups}, $group;
+                next;
+            }
+            my $name = $cats->{$_};
+            my $service = $self->service_class->new(
+                service_name => $name,
+                service_code => $_,
+                description => $name,
+                $waste_services{$_} ? (
+                    group => 'Waste',
+                    keywords => ['waste_only']
+                ) : $group ? (
+                    groups => [$group]
+                ) : (),
+                allow_any_attributes => 1,
+            );
+            push @services, $service;
+            $services{$_} = $service;
+        }
+        @services;
     } sort keys %$services;
     return @services;
 }

@@ -300,6 +300,24 @@ subtest "GET services" => sub {
       "metadata" => "true"
    },
    {
+      "service_name" => "Flytipping",
+      "service_code" => "2135",
+      "keywords" => "",
+      "description" => "Flytipping",
+      "groups" => ["Highways", "Superhighways"],
+      "type" => "realtime",
+      "metadata" => "true"
+   },
+   {
+      "service_name" => "Flyposting",
+      "service_code" => "2136",
+      "keywords" => "",
+      "description" => "Flyposting",
+      "groups" => ["Highways"],
+      "type" => "realtime",
+      "metadata" => "true"
+   },
+   {
       "service_name" => "Report missed collection",
       "service_code" => "missed",
       "keywords" => "",
