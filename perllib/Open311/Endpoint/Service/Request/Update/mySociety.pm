@@ -12,6 +12,7 @@ has status => (
         'closed',
         'fixed',
         'in_progress',
+        'planned',
         'action_scheduled',
         'investigating',
         'duplicate',
