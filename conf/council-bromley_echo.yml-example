@@ -3,6 +3,7 @@ username: ""
 password: ""
 
 service_whitelist: {}
+waste_services: []
 service_to_event_type: {}
 service_id_override: {}
 data_key_open311_map: {}

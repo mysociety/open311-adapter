@@ -237,7 +237,7 @@ subtest "GET services" => sub {
 
     is_deeply decode_json($res->content), [
    {
-      "keywords" => "",
+      "keywords" => "waste_only",
       "service_name" => "Request new container",
       "service_code" => EVENT_TYPE_REQUEST,
       "metadata" => "true",
@@ -246,7 +246,7 @@ subtest "GET services" => sub {
       "group" => "Waste"
    },
    {
-      "keywords" => "",
+      "keywords" => "waste_only",
       "service_name" => "Garden Subscription",
       "service_code" => EVENT_TYPE_SUBSCRIBE,
       "metadata" => "true",
@@ -256,7 +256,7 @@ subtest "GET services" => sub {
    },
    {
       "description" => "Gate not closed",
-      "group" => "Waste",
+      "group" => "",
       "metadata" => "true",
       "type" => "realtime",
       "service_code" => "2118",
@@ -267,7 +267,7 @@ subtest "GET services" => sub {
       "service_name" => "Waste spillage",
       "service_code" => "2119",
       "keywords" => "",
-      "group" => "Waste",
+      "group" => "",
       "description" => "Waste spillage",
       "metadata" => "true",
       "type" => "realtime"
@@ -277,7 +277,7 @@ subtest "GET services" => sub {
       "service_code" => EVENT_TYPE_ENQUIRY,
       "keywords" => "",
       "description" => "General Enquiry",
-      "group" => "Waste",
+      "group" => "",
       "type" => "realtime",
       "metadata" => "true"
    },
@@ -286,7 +286,7 @@ subtest "GET services" => sub {
       "service_code" => "2149-add",
       "keywords" => "",
       "description" => "Assisted collection add",
-      "group" => "Waste",
+      "group" => "",
       "type" => "realtime",
       "metadata" => "true"
    },
@@ -295,7 +295,7 @@ subtest "GET services" => sub {
       "service_code" => "2149-remove",
       "keywords" => "",
       "description" => "Assisted collection remove",
-      "group" => "Waste",
+      "group" => "",
       "type" => "realtime",
       "metadata" => "true"
    },
@@ -304,7 +304,7 @@ subtest "GET services" => sub {
       "service_code" => "missed",
       "keywords" => "",
       "description" => "Report missed collection",
-      "group" => "Waste",
+      "group" => "",
       "type" => "realtime",
       "metadata" => "true"
    },

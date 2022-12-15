@@ -21,6 +21,9 @@ has jurisdiction_id => ( is => 'ro' );
 # types behind one service) to event type description
 has service_whitelist => ( is => 'ro' );
 
+# A list of which service codes are waste services
+has waste_services => ( is => 'ro', default => sub { [] } );
+
 # A mapping of service code to service code (used when the
 # incoming service codes don't match that actually in use)
 has service_mapping => ( is => 'ro', default => sub { {} } );
@@ -51,6 +54,7 @@ sub services {
     my $self = shift;
 
     my $services = $self->service_whitelist;
+    my %waste_services = map { $_ => 1 } @{$self->waste_services};
     my @services = map {
         my $id = $_;
         my $name = $services->{$_};
@@ -58,7 +62,10 @@ sub services {
             service_name => $name,
             service_code => $_,
             description => $name,
-            group => 'Waste',
+            $waste_services{$_} ? (
+                group => 'Waste',
+                keywords => ['waste_only']
+            ) : (),
             allow_any_attributes => 1,
         );
         $service;

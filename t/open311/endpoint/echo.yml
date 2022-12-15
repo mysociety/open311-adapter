@@ -12,6 +12,10 @@ service_whitelist:
   2149-add: 'Assisted collection add'
   2149-remove: 'Assisted collection remove'
 
+waste_services:
+  - 2104
+  - 2106
+
 service_to_event_type:
   missed:
     531: 2095
