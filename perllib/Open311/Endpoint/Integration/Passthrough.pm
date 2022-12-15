@@ -42,6 +42,15 @@ has jurisdiction_id => ( is => 'ro' );
 has endpoint => ( is => 'ro' );
 has api_key => ( is => 'ro' );
 
+=head2 ignore_services
+
+Provide a list of service codes that should be ignored and not passed back from
+the proxied backend.
+
+=cut
+
+has ignore_services => ( is => 'ro', => default => sub { [] } );
+
 has updates_url => ( is => 'ro', default => 'servicerequestupdates.xml' );
 
 sub service_request_content {
@@ -117,7 +126,9 @@ sub services {
     my ($self, $args) = @_;
     my $xml = $self->_request(GET => 'services.xml');
     my @services;
+    my %ignore = map { $_ => 1 } @{$self->ignore_services};
     foreach (@{$xml->{service}}) {
+        next if $ignore{$_->{service_code}};
         my $service = Open311::Endpoint::Service->new(%$_);
         if ($_->{metadata} eq 'true') {
             # An empty one is enough to get the metadata true passed out
