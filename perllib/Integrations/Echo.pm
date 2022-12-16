@@ -118,18 +118,46 @@ sub extensible_data {
 sub PostEvent {
     my ($self, $args) = @_;
 
-    my $uprn = ixhash(
-        Key => 'Uprn',
-        Type => 'PointAddress',
-        Value => [
-            # Must be a string, not a long
-            { 'msArray:anyType' => SOAP::Data->value($args->{uprn})->type('string') },
-        ],
-    );
-    my $source = ixhash(
-        EventObjectType => 'Source',
-        ObjectRef => $uprn,
-    );
+    my $source;
+    if ($args->{uprn}) {
+        my $uprn = ixhash(
+            Key => 'Uprn',
+            Type => 'PointAddress',
+            Value => [
+                # Must be a string, not a long
+                { 'msArray:anyType' => SOAP::Data->value($args->{uprn})->type('string') },
+            ],
+        );
+        $source = ixhash(
+            EventObjectType => 'Source',
+            ObjectRef => $uprn,
+        );
+    } elsif ($args->{usrn}) {
+        my $usrn = ixhash(
+            Key => 'Usrn',
+            Type => 'Street',
+            Value => [
+                # Must be a string, not a long
+                { 'msArray:anyType' => SOAP::Data->value($args->{usrn})->type('string') },
+            ],
+        );
+        $source = ixhash(
+            EventObjectType => 'Source',
+            ObjectRef => $usrn,
+            Location => ixhash(
+                Latitude => $args->{lat},
+                Longitude => $args->{long},
+            ),
+        );
+    } else {
+        $source = ixhash(
+            EventObjectType => 'Source',
+            Location => ixhash(
+                Latitude => $args->{lat},
+                Longitude => $args->{long},
+            ),
+        );
+    }
     my $data = ixhash(
         $args->{data} ? (Data => extensible_data($args->{data})) : (),
         ClientReference => $args->{client_reference},

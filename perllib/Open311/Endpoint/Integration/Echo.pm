@@ -231,6 +231,9 @@ sub process_service_request_args {
         event_type => $event_type,
         service => $service,
         uprn => $uprn,
+        usrn => $args->{attributes}{usrn},
+        lat => $args->{lat},
+        long => $args->{long},
         client_reference => $client_reference,
         data => [],
     };
