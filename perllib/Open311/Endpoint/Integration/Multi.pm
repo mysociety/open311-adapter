@@ -1,6 +1,7 @@
 package Open311::Endpoint::Integration::Multi;
 
 use Moo;
+use Try::Tiny;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 
@@ -39,7 +40,12 @@ sub _all {
     my @all;
     foreach (@{$self->integrations}) {
         my $name = $_->{name};
-        my @results = $_->{class}->$fn($args);
+        my @results = try {
+            $_->{class}->$fn($args);
+        } catch {
+            warn "The call to $fn in $name failed with error: $_\n";
+            ();
+        };
         @results = map { [ $name, $_ ] } @results;
         push @all, @results;
     }

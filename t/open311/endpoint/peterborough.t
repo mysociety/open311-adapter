@@ -7,6 +7,7 @@ use JSON::MaybeXS;
 use Test::More;
 use Test::MockModule;
 use Test::LongString;
+use Test::Output;
 
 sub new_service {
     Open311::Endpoint::Service->new(description => $_[0], service_code => $_[0], service_name => $_[0]);
@@ -79,6 +80,32 @@ subtest 'GET service requests' => sub {
     <zipcode></zipcode>
   </request>
 </service_requests>
+CONTENT
+
+};
+
+$ezytreev->mock(get_service_request_updates => sub {
+    die "There was a problem";
+});
+
+subtest 'GET service request updates' => sub {
+    my $res;
+    stderr_like {
+        $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.xml?jurisdiction_id=peterborough&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z'
+    );
+    } qr/
+        The[ ]call[ ]to[ ]get_service_request_updates[ ]in[ ]Bartec[ ]failed[ ]with[ ]error .*
+        The[ ]call[ ]to[ ]get_service_request_updates[ ]in[ ]Confirm[ ]failed[ ]with[ ]error .*
+        The[ ]call[ ]to[ ]get_service_request_updates[ ]in[ ]Ezytreev[ ]failed[ ]with[ ]error
+    /sx;
+
+    ok $res->is_success, 'xml success'
+        or diag $res->content;
+    is_string $res->content, <<CONTENT, 'xml string ok';
+<?xml version="1.0" encoding="utf-8"?>
+<service_request_updates>
+</service_request_updates>
 CONTENT
 
 };
