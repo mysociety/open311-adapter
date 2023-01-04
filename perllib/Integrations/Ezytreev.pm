@@ -15,7 +15,7 @@ has ua => (
         my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
         my $uri = URI->new($_[0]->config->{endpoint_url});
         my $netloc = $uri->host . ":" . $uri->port;
-        $ua->credentials($netloc, $uri->host, $_[0]->config->{username}, $_[0]->config->{password});
+        $ua->credentials($netloc, "", $_[0]->config->{username}, $_[0]->config->{password});
         return $ua;
     },
 );
