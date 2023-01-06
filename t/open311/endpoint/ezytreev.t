@@ -268,23 +268,25 @@ subtest "GET service" => sub {
 XML
 };
 
+my @request_data = (
+    POST => '/requests.json',
+    api_key => 'test',
+    service_code => 'FallenTree',
+    first_name => 'Bob',
+    last_name => 'Mould',
+    description => "This is the details",
+    lat => 51,
+    long => -1,
+    'attribute[easting]' => 100,
+    'attribute[northing]' => 100,
+    'attribute[fixmystreet_id]' => 1001,
+    'attribute[description]' => "",
+    'attribute[report_url]' => "",
+    'attribute[title]' => "",
+);
+
 subtest "POST service request OK" => sub {
-    my $res = $endpoint->run_test_request(
-        POST => '/requests.json',
-        api_key => 'test',
-        service_code => 'FallenTree',
-        first_name => 'Bob',
-        last_name => 'Mould',
-        description => "This is the details",
-        lat => 51,
-        long => -1,
-        'attribute[easting]' => 100,
-        'attribute[northing]' => 100,
-        'attribute[fixmystreet_id]' => 1001,
-        'attribute[description]' => "",
-        'attribute[report_url]' => "",
-        'attribute[title]' => "",
-    );
+    my $res = $endpoint->run_test_request(@request_data);
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
@@ -341,6 +343,21 @@ subtest 'POST service request update OK' => sub {
     is_deeply decode_json($res->content),
         [{ update_id => '42' }],
         'correct json returned';
+};
+
+$lwp->mock(request => sub {
+    my ($ua, $req) = @_;
+    if ($req->uri =~ /UpdateEnquiry/) {
+        return HTTP::Response->new(400, 'Bad request', [], '{"errors":{"Surname":["Too long"]},"status":"400","title":"Validation error"}');
+    }
+});
+
+subtest "POST service request bad" => sub {
+    my $res = $endpoint->run_test_request(@request_data);
+    ok !$res->is_success, 'invalid request';
+    my $json = decode_json($res->content);
+    is $json->[0]{code}, 500;
+    like $json->[0]{description}, qr/Failed to send report to ezytreev: 400 Validation error Surname:Too long/;
 };
 
 done_testing;

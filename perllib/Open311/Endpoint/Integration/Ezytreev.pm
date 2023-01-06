@@ -83,7 +83,15 @@ sub post_service_request {
         EnquiryOY => $args->{attributes}->{northing},
         TreeCodes => $args->{attributes}->{tree_code},
     });
-    die "Failed to send report to ezytreev" unless $response->is_success;
+
+    if (!$response->is_success) {
+        my $msg = decode_json($response->content);
+        my $error = "Failed to send report to ezytreev: $msg->{status} $msg->{title}";
+        foreach (keys %{$msg->{errors}}) {
+            $error .= " $_:" . join(' / ', @{$msg->{errors}{$_}});
+        }
+        die $error;
+    }
 
     # Enquiry ID is the body of the response
     my $enquiry_id = $response->content;
