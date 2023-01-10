@@ -459,7 +459,7 @@ sub POST_Service_Request_input_schema {
         $attributes{ $section }{ $key } = $def;
     }
 
-    for my $key (grep { /^attribute\[\w+\]$/ } keys %$args) {
+    for my $key (grep { /^attribute\[.+\]$/ } keys %$args) {
         next if $attributes{optional}{$key} || $attributes{required}{$key};
 
         $attributes{optional}{$key} = '//str';
