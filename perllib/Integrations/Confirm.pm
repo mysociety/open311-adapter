@@ -69,6 +69,22 @@ has 'customer_type_code' => (
     default => sub { $_[0]->config->{customer_type_code} }
 );
 
+# Set this config value to true to send the FixMyStreet report ID into the
+# CustomerReference field when raising enquiries, as required by some Confirm
+# clients.
+has 'send_customer_ref_field' => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{send_customer_ref_field} }
+);
+
+# Set this config value to true to not send the FixMyStreet report ID into the
+# EnquiryReference field when raising enquiries, as required by some Confirm
+# clients.
+has 'skip_enquiry_ref_field' => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{skip_enquiry_ref_field} }
+);
+
 # If a particular service requires an enquiry class code, we can look this up here
 sub service_enquiry_class_code {
     my ($self, $service_code) = @_;
@@ -263,7 +279,6 @@ sub NewEnquiry {
         EnquiryNumber => 1,
         EnquiryX => $args->{attributes}->{easting},
         EnquiryY => $args->{attributes}->{northing},
-        EnquiryReference => $args->{attributes}->{fixmystreet_id},
         EnquiryDescription => substr($args->{description}, 0, 2000),
         ServiceCode => $service_code,
         SubjectCode => $subject_code,
@@ -279,6 +294,9 @@ sub NewEnquiry {
         $enq{ContactName} = $args->{first_name} . " " . $args->{last_name};
         $enq{ContactEmail} = $args->{email};
         $enq{ContactPhone} = $args->{phone};
+    }
+    unless ( $self->skip_enquiry_ref_field ) {
+        $enq{EnquiryReference} = $args->{attributes}->{fixmystreet_id};
     }
     if ($args->{location}) {
         $enq{EnquiryLocation} = substr($args->{location}, 0, 2000);
@@ -345,6 +363,9 @@ sub NewEnquiry {
     }
     if (my $customer_type = $self->customer_type_code) {
         push @customer, SOAP::Data->name('CustomerTypeCode' => SOAP::Utils::encode_data($customer_type))->type("");
+    }
+    if ( $self->send_customer_ref_field ) {
+        push @customer, SOAP::Data->name('CustomerReference' => SOAP::Utils::encode_data($args->{attributes}->{fixmystreet_id}))->type("");
     }
     push @elements, SOAP::Data->name('EnquiryCustomer' => \SOAP::Data->value(@customer));
 
