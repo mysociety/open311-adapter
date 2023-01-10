@@ -258,26 +258,26 @@ CONTENT
         }, 'json structure ok';
 };
 subtest "POST Service Request validation" => sub {
-    my $res = $endpoint->run_test_request( 
-        POST => '/requests.json', 
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
     );
     ok ! $res->is_success, 'no service_code';
 
-    $res = $endpoint->run_test_request( 
-        POST => '/requests.json', 
+    $res = $endpoint->run_test_request(
+        POST => '/requests.json',
         service_code => 'BIN',
     );
     ok ! $res->is_success, 'no api_key';
 
-    $res = $endpoint->run_test_request( 
-        POST => '/requests.json', 
+    $res = $endpoint->run_test_request(
+        POST => '/requests.json',
         api_key => 'test',
         service_code => 'BADGER', # has moved the goalposts
     );
     ok ! $res->is_success, 'bad service_code';
 
-    $res = $endpoint->run_test_request( 
-        POST => '/requests.json', 
+    $res = $endpoint->run_test_request(
+        POST => '/requests.json',
         api_key => 'test',
         service_code => 'POT',
         address_string => '22 Acacia Avenue',
@@ -286,8 +286,8 @@ subtest "POST Service Request validation" => sub {
     );
     ok ! $res->is_success, 'no required attributes';
 
-    $res = $endpoint->run_test_request( 
-        POST => '/requests.json', 
+    $res = $endpoint->run_test_request(
+        POST => '/requests.json',
         api_key => 'test',
         service_code => 'POT',
         address_string => '22 Acacia Avenue',
@@ -306,6 +306,7 @@ subtest "POST Service Request validation" => sub {
         first_name => 'Bob',
         last_name => 'Mould',
         'attribute[shape]' => 'starfish',
+        'attribute[What is this?]' => 'starfish',
     );
     ok $res->is_success, 'any attributes let through';
     shift @{$endpoint->_requests}; # Remove after success
@@ -316,8 +317,8 @@ my $id = 0;
 subtest "POST Service Request valid test" => sub {
 
     set_fixed_time('2014-01-01T12:00:00Z');
-    my $res = $endpoint->run_test_request( 
-        POST => '/requests.json', 
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
         api_key => 'test',
         service_code => 'POT',
         address_string => '22 Acacia Avenue',
@@ -336,8 +337,8 @@ subtest "POST Service Request valid test" => sub {
         } ], 'correct json returned';
 
     set_fixed_time('2014-02-01T12:00:00Z');
-    $res = $endpoint->run_test_request( 
-        POST => '/requests.xml', 
+    $res = $endpoint->run_test_request(
+        POST => '/requests.xml',
         api_key => 'test',
         service_code => 'POT',
         address_string => '22 Acacia Avenue',
