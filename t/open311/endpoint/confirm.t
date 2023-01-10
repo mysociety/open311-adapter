@@ -4,6 +4,12 @@ use Moo;
 extends 'Integrations::Confirm';
 sub _build_config_file { path(__FILE__)->sibling("confirm.yml")->stringify }
 
+package Integrations::Confirm::DummyCustomerRef;
+use Path::Tiny;
+use Moo;
+extends 'Integrations::Confirm';
+sub _build_config_file { path(__FILE__)->sibling("confirm_customer_ref.yml")->stringify }
+
 package Open311::Endpoint::Integration::UK::Dummy;
 use Path::Tiny;
 use Moo;
@@ -52,6 +58,18 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 has integration_class => (is => 'ro', default => 'Integrations::Confirm::Dummy');
+
+package Open311::Endpoint::Integration::UK::DummyCustomerRef;
+use Path::Tiny;
+use Moo;
+extends 'Open311::Endpoint::Integration::Confirm';
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{jurisdiction_id} = 'confirm_dummy_customer_ref';
+    $args{config_file} = path(__FILE__)->sibling("confirm_customer_ref.yml")->stringify;
+    return $class->$orig(%args);
+};
+has integration_class => (is => 'ro', default => 'Integrations::Confirm::DummyCustomerRef');
 
 package main;
 
@@ -103,11 +121,16 @@ $open311->mock(perform_request => sub {
         my %req = map { $_->name => $_->value } ${$op->value}->value;
         is $req{SiteCode}, 999999;
         is $req{EnquiryClassCode}, 'TEST';
-        if ($req{EnquiryReference} == 1002) {
+        if (defined $req{EnquiryReference} && $req{EnquiryReference} == 1002) {
             ok !defined $req{LoggedTime}, 'LoggedTime omitted';
         }
-        if ($req{EnquiryReference} == 1003) {
+        if (defined $req{EnquiryReference} && $req{EnquiryReference} == 1003) {
             ok !defined $req{EnquiryAttribute}, 'extra "testing" attribute is ignored';
+        }
+        if ($req{EnquiryDescription} eq 'Customer Ref report') {
+            ok !defined $req{EnquiryReference}, 'EnquiryReference is skipped';
+            my %cust = map { $_->name => $_->value } ${$req{EnquiryCustomer}}->value;
+            is $cust{CustomerReference}, '1001';
         }
         return { OperationResponse => { NewEnquiryResponse => { Enquiry => { EnquiryNumber => 2001 } } } };
     } elsif ($op->name eq 'EnquiryUpdate') {
@@ -408,6 +431,36 @@ subtest 'POST with failed document storage' => sub {
 
     $open311->unmock('_store_enquiry_documents');
 };
+
+subtest "POST OK with FMS ID in customer ref field" => sub {
+    my $endpoint3 = Open311::Endpoint::Integration::UK::DummyCustomerRef->new;
+    $IC = 'CS';
+    $SIC = 'DP';
+    $DC = 'OTS';
+    my $res = $endpoint3->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'ABC_DEF',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "Customer Ref report",
+        'attribute[easting]' => 100,
+        'attribute[northing]' => 100,
+        'attribute[fixmystreet_id]' => 1001,
+        'attribute[title]' => 'Title',
+        'attribute[description]' => 'Customer Ref report',
+        'attribute[report_url]' => 'http://example.com/report/1001',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => 2001
+        } ], 'correct json returned';
+};
+
 
 subtest 'POST update' => sub {
     my $res = $endpoint->run_test_request(

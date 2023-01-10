@@ -263,7 +263,6 @@ sub NewEnquiry {
         EnquiryNumber => 1,
         EnquiryX => $args->{attributes}->{easting},
         EnquiryY => $args->{attributes}->{northing},
-        EnquiryReference => $args->{attributes}->{fixmystreet_id},
         EnquiryDescription => substr($args->{description}, 0, 2000),
         ServiceCode => $service_code,
         SubjectCode => $subject_code,
@@ -279,6 +278,9 @@ sub NewEnquiry {
         $enq{ContactName} = $args->{first_name} . " " . $args->{last_name};
         $enq{ContactEmail} = $args->{email};
         $enq{ContactPhone} = $args->{phone};
+    }
+    unless ( $self->config->{skip_enquiry_ref_field} ) {
+        $enq{EnquiryReference} = $args->{attributes}->{fixmystreet_id};
     }
     if ($args->{location}) {
         $enq{EnquiryLocation} = substr($args->{location}, 0, 2000);
@@ -345,6 +347,9 @@ sub NewEnquiry {
     }
     if (my $customer_type = $self->customer_type_code) {
         push @customer, SOAP::Data->name('CustomerTypeCode' => SOAP::Utils::encode_data($customer_type))->type("");
+    }
+    if ( $self->config->{send_customer_ref_field} ) {
+        push @customer, SOAP::Data->name('CustomerReference' => SOAP::Utils::encode_data($args->{attributes}->{fixmystreet_id}))->type("");
     }
     push @elements, SOAP::Data->name('EnquiryCustomer' => \SOAP::Data->value(@customer));
 
