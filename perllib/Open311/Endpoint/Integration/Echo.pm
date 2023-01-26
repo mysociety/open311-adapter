@@ -244,10 +244,17 @@ sub process_service_request_args {
 sub post_service_request_update {
     my ($self, $args) = @_;
 
-    my $response = $self->get_integration->PerformEventAction($args);
+    my $update_id;
+    if ($args->{description}) {
+        my $response = $self->get_integration->PerformEventAction($args);
+        $update_id = $response->{EventActionGuid};
+    } else {
+        $update_id = 'BLANK';
+    }
+
     return Open311::Endpoint::Service::Request::Update->new(
         status => lc $args->{status},
-        update_id => $response->{EventActionGuid},
+        update_id => $update_id,
     );
 }
 

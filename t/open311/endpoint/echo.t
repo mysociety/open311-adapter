@@ -461,6 +461,25 @@ subtest "POST update OK" => sub {
         } ], 'correct json returned';
 };
 
+subtest "POST blank update OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        update_id => '678',
+        updated_datetime => '2020-06-18T12:00:00Z',
+        service_request_id => 'test-12345',
+        status => 'OPEN',
+        description => '',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => 'BLANK',
+        } ], 'correct json returned';
+};
+
 subtest "POST subscription request OK" => sub {
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
