@@ -16,6 +16,7 @@ use v5.14;
 
 use Moo;
 use JSON::MaybeXS;
+use MIME::Base64 qw(encode_base64);
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
@@ -129,6 +130,13 @@ A prefix to use in the default client reference (with FMS ID appended).
 has client_reference_prefix => ( is => 'ro', default => 'FMS' );
 
 has service_class => ( is => 'ro', default => 'Open311::Endpoint::Service::UKCouncil::Echo' );
+
+has ua => (
+    is => 'lazy',
+    default => sub {
+        LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter")
+    },
+);
 
 =head1 DESCRIPTION
 
@@ -254,6 +262,10 @@ sub _get_data_value {
     return $self->default_data_all->{$name} if $self->default_data_all->{$name};
     return $self->default_data_event_type->{$request->{event_type}}{$name}
         if $self->default_data_event_type->{$request->{event_type}}{$name};
+    if ($name eq 'Image' && $args->{media_url}->[0]) {
+        my $photo = $self->ua->get($args->{media_url}->[0]);
+        return encode_base64($photo->content);
+    }
     return undef;
 }
 

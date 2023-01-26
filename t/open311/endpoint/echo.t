@@ -38,6 +38,11 @@ use constant EVENT_TYPE_REQUEST => 2104;
 use constant EVENT_TYPE_ENQUIRY => 2148;
 use constant EVENT_TYPE_SUBSCRIBE => 2106;
 
+my $lwp = Test::MockModule->new('LWP::UserAgent');
+$lwp->mock(get => sub {
+    return HTTP::Response->new(200, 'OK', [], 'Hello');
+});
+
 my $soap_lite = Test::MockModule->new('SOAP::Lite');
 $soap_lite->mock(call => sub {
     # This is called when a test below makes a SOAP call, along with the data
@@ -78,9 +83,12 @@ $soap_lite->mock(call => sub {
             } elsif ( $uprn == 1000002 ) {
                 is @data, 6, 'Name, source, type, subscription request and container stuff';
             }
+        } elsif ($event_type == EVENT_TYPE_REQUEST) {
+            is $uprn, 1000001;
+            is @data, 4, 'Name, source and container stuff';
         } else {
             is $uprn, 1000001;
-            is @data, 4, 'Name, source and (container stuff or notes)';
+            is @data, 5, 'Name, source, notes, and image';
         }
         my @first_name = ${$data[0]->value}->value;
         is $first_name[0]->value, 1001;
@@ -123,6 +131,10 @@ $soap_lite->mock(call => sub {
             my @notes = ${$data[3]->value}->value;
             is $notes[0]->value, 1008;
             is $notes[1]->value, 'These are some notes 🎉';
+
+            my @image = ${$data[4]->value}->value;
+            is $image[0]->value, 1009;
+            is $image[1]->value, "SGVsbG8=\n";
 
             # Check serialisation as well
             my $envelope = $cls->serializer->envelope(method => $method, @notes);
@@ -203,6 +215,7 @@ $soap_lite->mock(call => sub {
                         ] },
                     },
                     { Id => 1008, Name => "Notes" },
+                    { Id => 1009, Name => "Image" },
                 ] },
             });
         }
@@ -435,6 +448,7 @@ subtest "POST general enquiry OK" => sub {
         'attribute[uprn]' => 1000001,
         'attribute[fixmystreet_id]' => 2000123,
         'attribute[Notes]' => "These are some notes 🎉",
+        'media_url' => 'http://example.org/photo/1.jpeg',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
