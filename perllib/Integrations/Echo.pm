@@ -171,7 +171,7 @@ sub PostEvent {
 sub PerformEventAction {
     my ($self, $args) = @_;
     my $ref = ixhash(
-        Key => 'Id',
+        Key => 'Guid',
         Type => 'Event',
         Value => [ { 'msArray:anyType' => $args->{service_request_id} }, ],
     );
