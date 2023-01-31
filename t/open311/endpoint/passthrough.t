@@ -170,7 +170,10 @@ $lwp->mock(request => sub {
     my ($ua, $req) = @_;
     return HTTP::Response->new(200, 'OK', [], $expected_services) if $req->uri =~ /services\.xml/;
     return HTTP::Response->new(200, 'OK', [], $expected_defn) if $req->uri =~ /services\/ABC_DEF\.xml/;
-    return HTTP::Response->new(200, 'OK', [], $expected_updates) if $req->method eq 'GET' && $req->uri =~ /servicerequestupdates\.xml/;
+    if ($req->method eq 'GET' && $req->uri =~ /servicerequestupdates\.xml/) {
+        unlike $req->uri, qr/end_date/;
+        return HTTP::Response->new(200, 'OK', [], $expected_updates);
+    }
     return HTTP::Response->new(200, 'OK', [], $expected_requests) if $req->method eq 'GET' && $req->uri =~ /requests\.xml/;
     return HTTP::Response->new(200, 'OK', [], $expected_request_post) if $req->method eq 'POST' && $req->uri =~ /requests\.xml/;
     return HTTP::Response->new(200, 'OK', [], $expected_update_post) if $req->method eq 'POST' && $req->uri =~ /servicerequestupdates\.xml/;
@@ -232,7 +235,8 @@ subtest 'POST update' => sub {
 
 subtest 'GET update' => sub {
     my $res = $endpoint->run_test_request(
-        GET => '/servicerequestupdates.xml?start_date=2018-01-01T00:00:00Z&end_date=2018-02-01T00:00:00Z',
+        # No end date to check is okay
+        GET => '/servicerequestupdates.xml?start_date=2018-01-01T00:00:00Z',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
     is_string $res->content, $expected_updates, 'xml string ok' or diag $res->content;

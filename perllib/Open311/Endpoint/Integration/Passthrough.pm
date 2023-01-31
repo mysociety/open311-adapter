@@ -219,6 +219,8 @@ Fetches a list of updates from the backend.
 
 sub get_service_request_updates {
     my ($self, $args) = @_;
+    # Remove any blank parameters
+    $args = { map { $_ => $args->{$_} } grep { length $args->{$_} } keys %$args };
     my $xml = $self->_request(GET => $self->updates_url, $args);
     my @updates;
     foreach (@{$xml->{request_update}}) {
