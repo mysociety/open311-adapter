@@ -16,6 +16,10 @@ service_map:
     Missed food:
       group: Missed collection
       category: Food
+  Bulky goods:
+    Bulky collection:
+      group: Bulky goods
+      category: Bulky collection
 
 extended_data:
    Rubbish (Street cleansing):
@@ -71,3 +75,4 @@ address_match:
 
 service_keywords:
   6: [ waste_only ]
+  7: [ waste_only ]

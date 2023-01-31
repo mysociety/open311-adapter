@@ -211,12 +211,13 @@ sub post_service_request {
         $self->logger->warn("failed to attach note to ServiceRequest: " . $res->{ServiceCode} . " (FMS ID " . $args->{attributes}->{fixmystreet_id} . ")");
     };
 
-
     try {
-        if ( @{ $args->{media_url} }) {
-            $self->upload_urls($sr->{ServiceRequest}->{id}, $args);
+        $args->{service_name} = $service->service_name;
+
+        if ( @{ $args->{media_url} } ) {
+            $self->upload_urls( $sr->{ServiceRequest}->{id}, $args );
         } elsif ( @{ $args->{uploads} } ) {
-            $self->upload_attachments($sr->{ServiceRequest}->{id}, $args);
+            $self->upload_attachments( $sr->{ServiceRequest}->{id}, $args );
         }
     } catch {
         $self->logger->warn("failed to upload photos for ServiceRequest: " . $res->{ServiceCode} . " (FMS ID " . $args->{attributes}->{fixmystreet_id} . ")");
@@ -549,11 +550,11 @@ sub upload_attachments {
         };
     } @{ $args->{uploads} };
 
-    $self->_put_photos($request_id, $args, \@photos);
+    $self->_put_photos( $request_id, $args, \@photos );
 }
 
 sub _put_photos {
-    my ($self, $request_id, $args, $photos) = @_;
+    my ( $self, $request_id, $args, $photos ) = @_;
 
     my $photo_id = $args->{attributes}->{fixmystreet_id};
     my $i = 1;
@@ -563,6 +564,7 @@ sub _put_photos {
             id => $photo_id . $i,
             name => $photo->{filename},
             content => $photo->{data},
+            service_name => $args->{service_name},
         });
         if ( $res->{Errors}->{Message} ) {
             $self->logger->warn("failed to attach photo for report "

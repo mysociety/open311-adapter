@@ -469,12 +469,17 @@ sub Service_Request_Document_Create {
     my $dt = DateTime->now(time_zone => 'Europe/London');
     my $time = DateTime::Format::W3CDTF->new->format_datetime($dt);
 
+    my $comment
+        = $args->{service_name} =~ /BULKY COLLECTION/i
+        ? 'Bulky waste photo'
+        : 'Photo uploaded from FixMyStreet';
+
     my %req = (
         'bar1:token' => $self->token,
         'bar1:ServiceRequestID' => $args->{srid},
         'bar1:Public' => 'true',
         'bar1:DateTaken' => $time,
-        'bar1:Comment' => 'Photo uploaded from FixMyStreet',
+        'bar1:Comment' => $comment,
         'bar1:AttachedDocument' => {
             'bar2:FileExtension' => 'jpg',
             'bar2:ID' => $args->{id},
