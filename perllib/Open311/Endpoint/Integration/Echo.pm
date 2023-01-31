@@ -1,3 +1,15 @@
+=head1 NAME
+
+Open311::Endpoint::Integration::Echo - An integration with the Echo backend
+
+=head1 SYNOPSIS
+
+This integration lets us post reports (as Events) and updates (as Event
+Actions) to Echo. There is no way to fetch updates, these are instead
+pushed to us by Echo or fetched directly.
+
+=cut
+
 package Open311::Endpoint::Integration::Echo;
 
 use v5.14;
@@ -17,38 +29,104 @@ use Open311::Endpoint::Service::Request::Update;
 
 has jurisdiction_id => ( is => 'ro' );
 
-# A mapping from event type ID (or string if multiple event
-# types behind one service) to event type description
+=head1 CONFIGURATION
+
+=head2 service_whitelist
+
+A mapping from event type ID (or string if multiple event types behind one
+service) to event type description. Groups are also supported, by having
+a sub-mapping under the group name. For example:
+
+  service_whitelist:
+    102: 'Request new container'
+    missed: 'Report missed collection'
+    Graffiti and fly-posting:
+      201: 'Offensive graffiti'
+      202: 'Non-offensive graffit
+
+=cut
+
 has service_whitelist => ( is => 'ro' );
 
-# A list of which service codes are waste services
+=head2 waste_services
+
+A list of which service codes are waste services,
+so that information can be passed back.
+
+=cut
+
 has waste_services => ( is => 'ro', default => sub { [] } );
 
-# A mapping of service code to service code (used when the
-# incoming service codes don't match that actually in use)
+=head2 service_mapping
+
+A mapping of 'service code' to service code (used when the
+incoming service codes don't match that actually in use).
+
+=cut
+
 has service_mapping => ( is => 'ro', default => sub { {} } );
 
-# A mapping of service code and Echo service ID to event type
-# (used for the case of multiple event types behind one service)
+=head2 service_to_event_type
+
+A mapping of service code and Echo service ID to event type (used
+for the case of multiple event types behind one service).
+
+=cut
+
 has service_to_event_type => ( is => 'ro', default => sub { {} } );
 
-# A mapping when a particular event type requires a particular
-# service, not the service chosen by the user
+=head2 service_id_override
+
+A mapping when a particular event type requires a particular
+service, not the service chosen by the user
+
+=cut
+
 has service_id_override => ( is => 'ro' );
 
-# A mapping from event type data field name to Open311 request field name
+=head2 data_key_open311_map
+
+A mapping from event type data field name to Open311 request field name,
+for fields that are not attributes (e.g. first_name, email).
+
+=cut
+
 has data_key_open311_map => ( is => 'ro', default => sub { {} } );
 
-# A mapping of event type data field name and its default, for any request
+=head2 default_data_all
+
+A mapping of event type data field name and its default, for any request.
+
+=cut
+
 has default_data_all => ( is => 'ro', default => sub { {} } );
 
-# A mapping of event type to data field defaults only for that event type
+=head2 default_data_event_type
+
+A mapping of event type to data field defaults only for that event type.
+
+=cut
+
 has default_data_event_type => ( is => 'ro', default => sub { {} } );
 
-# A prefix to use in the default client reference (with FMS ID appended)
+=head2 client_reference_prefix
+
+A prefix to use in the default client reference (with FMS ID appended).
+
+=cut
+
 has client_reference_prefix => ( is => 'ro', default => 'FMS' );
 
 has service_class => ( is => 'ro', default => 'Open311::Endpoint::Service::UKCouncil::Echo' );
+
+=head1 DESCRIPTION
+
+=head2 services
+
+This returns a list of Echo services from the service_whitelist, and whether
+they are waste servies or not.
+
+=cut
 
 sub services {
     my $self = shift;
@@ -106,6 +184,15 @@ sub get_integration {
     return $integ;
 }
 
+=head2 check_for_data_value
+
+Any attributes passed to us are checked to see if their names match against any
+of the extensible data on the relevant event type. Spaces can be replaced by
+underscores, and a full Parent_Name can be used for sub-data elements. Defaults
+can be looked up in C<default_data_all> and C<default_data_event_type>.
+
+=cut
+
 # For each event type data field, we will take a value
 # from the main request if mapped, provided attributes,
 # or any given defaults
@@ -135,6 +222,15 @@ sub _get_data_value {
         if $self->default_data_event_type->{$request->{event_type}}{$name};
     return undef;
 }
+
+=head2 post_service_request
+
+This function processes the incoming arguments, looks up the relevant event
+type in Echo, tries to match any incoming data to the fields in the event type,
+and then posts a new event to Echo. If you need multiple entries for a data
+field, you can pass in multiple values separated by C<::>.
+
+=cut
 
 sub post_service_request {
     my ($self, $service, $args) = @_;
@@ -193,6 +289,13 @@ sub post_service_request {
     return $request;
 }
 
+=head2 client_reference
+
+If we're passed a C<client_reference> attribute, use that directly, otherwise
+use the configured prefix plus the C<fixmystreet_id>.
+
+=cut
+
 sub client_reference {
     my ($self, $args) = @_;
     my $prefix = $self->client_reference_prefix;
@@ -203,6 +306,13 @@ sub client_reference {
     }
     return $client_reference;
 }
+
+=head2 process_service_request_args
+
+Using the configuration, this constructs a request object from the incoming data.
+The service or event_type (service code) may be overridden or changed.
+
+=cut
 
 sub process_service_request_args {
     my $self = shift;
@@ -241,6 +351,13 @@ sub process_service_request_args {
     return $request;
 }
 
+=head2 post_service_request_update
+
+This takes an incoming update and, if it has text content, posts it as an Event
+Action on the relevant event.
+
+=cut
+
 sub post_service_request_update {
     my ($self, $args) = @_;
 
@@ -257,6 +374,13 @@ sub post_service_request_update {
         update_id => $update_id,
     );
 }
+
+=head2 get_service_request_updates
+
+This is not possible, so we have a blank function in order to not error when
+used as part of a Multi integration.
+
+=cut
 
 sub get_service_request_updates { }
 
