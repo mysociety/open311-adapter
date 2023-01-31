@@ -221,6 +221,7 @@ sub get_service_request_updates {
     my ($self, $args) = @_;
     # Remove any blank parameters
     $args = { map { $_ => $args->{$_} } grep { length $args->{$_} } keys %$args };
+    $args->{api_key} = $self->api_key;
     my $xml = $self->_request(GET => $self->updates_url, $args);
     my @updates;
     foreach (@{$xml->{request_update}}) {
@@ -241,6 +242,7 @@ Fetches a list of requests from the backend.
 
 sub get_service_requests {
     my ($self, $args) = @_;
+    $args->{api_key} = $self->api_key;
     my $xml = $self->_request(GET => "requests.xml", $args);
     my @requests;
     foreach (@{$xml->{request}}) {

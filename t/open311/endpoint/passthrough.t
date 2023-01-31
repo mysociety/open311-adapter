@@ -172,6 +172,7 @@ $lwp->mock(request => sub {
     return HTTP::Response->new(200, 'OK', [], $expected_defn) if $req->uri =~ /services\/ABC_DEF\.xml/;
     if ($req->method eq 'GET' && $req->uri =~ /servicerequestupdates\.xml/) {
         unlike $req->uri, qr/end_date/;
+        like $req->uri, qr/api_key=123/;
         return HTTP::Response->new(200, 'OK', [], $expected_updates);
     }
     return HTTP::Response->new(200, 'OK', [], $expected_requests) if $req->method eq 'GET' && $req->uri =~ /requests\.xml/;
