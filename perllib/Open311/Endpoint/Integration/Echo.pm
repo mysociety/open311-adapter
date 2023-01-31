@@ -66,6 +66,17 @@ incoming service codes don't match that actually in use).
 
 has service_mapping => ( is => 'ro', default => sub { {} } );
 
+=head2 service_extra_data
+
+This lets you list extra attributes that should be added for a particular
+category. It is a mapping from service code to a sub-mapping of attribute key
+and either "1" (for a non-required hidden field) or a text string description
+for a textarea required question field.
+
+=cut
+
+has service_extra_data => ( is => 'ro', default => sub { {} } );
+
 =head2 service_to_event_type
 
 A mapping of service code and Echo service ID to event type (used
@@ -124,7 +135,8 @@ has service_class => ( is => 'ro', default => 'Open311::Endpoint::Service::UKCou
 =head2 services
 
 This returns a list of Echo services from the service_whitelist, and whether
-they are waste servies or not.
+they are waste servies or not. It includes any attributes listed in the
+C<service_extra_data> configuration.
 
 =cut
 
@@ -163,6 +175,28 @@ sub services {
                 ) : (),
                 allow_any_attributes => 1,
             );
+
+            my $data = $self->service_extra_data->{$_};
+            foreach (sort keys %$data) {
+                my %params;
+                if ($data->{$_} eq '1') {
+                    %params = (
+                        code => $_,
+                        description => $_,
+                        required => 0,
+                        datatype => 'string',
+                        automated => 'hidden_field',
+                    );
+                } else {
+                    %params = (
+                        code => $_,
+                        description => $data->{$_},
+                        required => 1,
+                        datatype => 'text',
+                    );
+                }
+                push @{$service->attributes}, Open311::Endpoint::Service::Attribute->new(%params);
+            }
             push @services, $service;
             $services{$_} = $service;
         }

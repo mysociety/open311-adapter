@@ -331,18 +331,20 @@ subtest "GET services" => sub {
 
 subtest "GET service" => sub {
     my $res = $endpoint->run_test_request(
-        GET => '/services/missed.json',
+        GET => '/services/2149-add.json',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
     is_deeply decode_json($res->content), {
-      "service_code" => "missed",
+      "service_code" => "2149-add",
       "attributes" => [
           { code => 'uprn', order => 1, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'UPRN reference' },
           { code => 'property_id', order => 2, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Property ID' },
           { code => 'service_id', order => 3, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Service ID' },
           { code => 'fixmystreet_id', order => 4, required => 'true', variable => 'false', datatype => 'string', datatype_description => '', automated => 'server_set', description => 'external system ID' },
+          { code => 'Exact_Location', order => 5, required => 'true', variable => 'true', datatype => 'text', datatype_description => '', description => 'Exact location of containers' },
+          { code => 'staff_form', order => 6, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'staff_form' },
       ],
     }, 'correct json returned';
 };

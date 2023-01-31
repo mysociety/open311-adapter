@@ -17,6 +17,11 @@ service_whitelist:
   Superhighways:
     2135: Flytipping
 
+service_extra_data:
+  2149-add:
+    staff_form: 1
+    Exact_Location: Exact location of containers
+
 waste_services:
   - 2104
   - 2106
