@@ -340,8 +340,9 @@ subtest "GET service" => sub {
       "service_code" => "missed",
       "attributes" => [
           { code => 'uprn', order => 1, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'UPRN reference' },
-          { code => 'service_id', order => 2, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'server_set', description => 'Service ID' },
-          { code => 'fixmystreet_id', order => 3, required => 'true', variable => 'false', datatype => 'string', datatype_description => '', automated => 'server_set', description => 'external system ID' },
+          { code => 'property_id', order => 2, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Property ID' },
+          { code => 'service_id', order => 3, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Service ID' },
+          { code => 'fixmystreet_id', order => 4, required => 'true', variable => 'false', datatype => 'string', datatype_description => '', automated => 'server_set', description => 'external system ID' },
       ],
     }, 'correct json returned';
 };

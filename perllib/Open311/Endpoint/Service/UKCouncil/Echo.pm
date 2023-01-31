@@ -18,11 +18,18 @@ sub _build_attributes {
             automated => 'hidden_field',
         ),
         Open311::Endpoint::Service::Attribute->new(
+            code => "property_id",
+            description => "Property ID",
+            datatype => "string",
+            required => 0,
+            automated => 'hidden_field',
+        ),
+        Open311::Endpoint::Service::Attribute->new(
             code => "service_id",
             description => "Service ID",
             datatype => "string",
             required => 0,
-            automated => 'server_set',
+            automated => 'hidden_field',
         ),
         Open311::Endpoint::Service::Attribute->new(
             code => 'fixmystreet_id',

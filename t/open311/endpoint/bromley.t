@@ -53,11 +53,21 @@ subtest "Get service definition with no prefix" => sub {
             },
             {
               'order' => 2,
+              'code' => 'property_id',
+              'description' => 'Property ID',
+              'datatype_description' => '',
+              'datatype' => 'string',
+              'automated' => 'hidden_field',
+              'required' => 'false',
+              'variable' => 'true'
+            },
+            {
+              'order' => 3,
               'code' => 'service_id',
               'description' => 'Service ID',
               'datatype_description' => '',
               'datatype' => 'string',
-              'automated' => 'server_set',
+              'automated' => 'hidden_field',
               'required' => 'false',
               'variable' => 'true'
             },
@@ -67,7 +77,7 @@ subtest "Get service definition with no prefix" => sub {
               'datatype' => 'string',
               'automated' => 'server_set',
               'variable' => 'false',
-              'order' => 3,
+              'order' => 4,
               'code' => 'fixmystreet_id',
               'description' => 'external system ID'
             }
