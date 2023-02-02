@@ -333,12 +333,22 @@ sub NewEnquiry {
         ));
     }
 
-    my @customer = (
-        SOAP::Data->name('CustomerEmail' => SOAP::Utils::encode_data($args->{email}))->type(""),
-        SOAP::Data->name('CustomerPhone' => SOAP::Utils::encode_data($args->{phone}))->type(""),
-        SOAP::Data->name('CustomerForename' => SOAP::Utils::encode_data($args->{first_name}))->type(""),
-        SOAP::Data->name('CustomerSurname' => SOAP::Utils::encode_data($args->{last_name}))->type(""),
-    );
+    my @customer;
+
+    unless ( $self->config->{skip_customer_contact_fields} ) {
+        push @customer,
+            SOAP::Data->name(
+            'CustomerEmail' => SOAP::Utils::encode_data( $args->{email} ) )
+            ->type(""),
+            SOAP::Data->name(
+            'CustomerPhone' => SOAP::Utils::encode_data( $args->{phone} ) )
+            ->type(""),
+            SOAP::Data->name( 'CustomerForename' =>
+                SOAP::Utils::encode_data( $args->{first_name} ) )->type(""),
+            SOAP::Data->name( 'CustomerSurname' =>
+                SOAP::Utils::encode_data( $args->{last_name} ) )->type("");
+    }
+
     if (my $enquiry_method = $self->enquiry_method_code) {
         push @customer, SOAP::Data->name('EnquiryMethodCode' => SOAP::Utils::encode_data($enquiry_method))->type("");
     }
