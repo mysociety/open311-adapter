@@ -1,0 +1,24 @@
+url: "https://example.org/"
+username: "un"
+password: "pw"
+
+service_whitelist:
+  935: 'Non-offensive graffiti'
+  943: Fly-posting
+
+service_to_event_type: {}
+
+service_id_override:
+  935: 277
+
+data_key_open311_map:
+  First Name: first_name
+
+data_key_attribute_map:
+  Exact Location: title
+  Notes: description
+
+default_data_all:
+  Source: 2
+
+default_data_event_type: {}

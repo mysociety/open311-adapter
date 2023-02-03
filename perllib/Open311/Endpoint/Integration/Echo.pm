@@ -105,6 +105,16 @@ for fields that are not attributes (e.g. first_name, email).
 
 has data_key_open311_map => ( is => 'ro', default => sub { {} } );
 
+=head2 data_key_attribute_map
+
+A mapping from event type data field name to Open311 attribute field name.
+Ideally, things are passed through from FMS with the same name, but this
+is for if they are not. This only applies to non-waste services.
+
+=cut
+
+has data_key_attribute_map => ( is => 'ro', default => sub { {} } );
+
 =head2 default_data_all
 
 A mapping of event type data field name and its default, for any request.
@@ -254,10 +264,13 @@ sub check_for_data_value {
 
 sub _get_data_value {
     my ($self, $name, $args, $request) = @_;
+    my %waste_services = map { $_ => 1 } @{$self->waste_services};
     (my $name_with_underscores = $name) =~ s/ /_/g;
     # skip emails if it's an anonymous user
     return undef if $self->data_key_open311_map->{$name} && $self->data_key_open311_map->{$name} eq 'email' && $args->{attributes}->{contributed_as} && $args->{attributes}->{contributed_as} eq 'anonymous_user';
     return $args->{$self->data_key_open311_map->{$name}} if $self->data_key_open311_map->{$name};
+    return $args->{attributes}{$self->data_key_attribute_map->{$name}}
+        if $self->data_key_attribute_map->{$name} && !$waste_services{$request->{event_type}};
     return $args->{attributes}{$name_with_underscores} if length $args->{attributes}{$name_with_underscores};
     return $self->default_data_all->{$name} if $self->default_data_all->{$name};
     return $self->default_data_event_type->{$request->{event_type}}{$name}

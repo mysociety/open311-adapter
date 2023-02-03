@@ -1,9 +1,14 @@
+package SOAP::Result;
+use Object::Tiny qw(method result);
+
+package main;
 use strict;
 use warnings;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
 use JSON::MaybeXS;
+use YAML::XS qw(LoadFile);
 use Path::Tiny;
 use Test::More;
 use Test::MockModule;
@@ -15,9 +20,19 @@ sub new_service {
     Open311::Endpoint::Service->new(description => $_[0], service_code => $_[0], service_name => $_[0]);
 }
 
+my $echo_int = Test::MockModule->new('Integrations::Echo');
+$echo_int->mock('config', sub {
+    my $cfg = path(__FILE__)->sibling('brent_echo.yml');
+    my $config = LoadFile($cfg) or die $!;
+    return $config;
+});
+
 my $echo = Test::MockModule->new('Open311::Endpoint::Integration::UK::Brent::Echo');
-$echo->mock(services => sub {
-    return ( new_service('A_BC'), new_service('D_EF') );
+$echo->mock('BUILDARGS', sub {
+    my $cls = shift;
+    my $cfg = path(__FILE__)->sibling('brent_echo.yml');
+    my $config = LoadFile($cfg) or die $!;
+    return $echo->original('BUILDARGS')->($cls, %$config, @_);
 });
 
 my $symology = Test::MockModule->new('Open311::Endpoint::Integration::UK::Brent::Symology');
@@ -107,6 +122,60 @@ $soap_lite->mock(call => sub {
                 }
             }
         };
+    } elsif ($args[0]->name eq 'PostEvent') {
+        my @params = ${$args[3]->value}->value;
+
+        my $client_ref = $params[1]->value;
+        is $client_ref, 'FMS-234';
+
+        my $event_type = $params[3]->value;
+        my $service_id = $params[4]->value;
+        is $event_type, 935;
+        is $service_id, 277;
+
+        # Check the USRN has been included
+        my @event_object = ${${$params[2]->value}->value->value}->value;
+        is $event_object[0]->value, 'Source';
+        my @object_ref = ${$event_object[1]->value}->value;
+        is $object_ref[0]->value, 'Usrn';
+        is $object_ref[1]->value, 'Street';
+        my $usrn = ${$object_ref[2]->value}->value->value->value->value;
+
+        my @data = ${$params[0]->value}->value->value;
+        if ($event_type == 935) {
+             is $usrn, '123/4567';
+             is @data, 4, 'Name and source is only extra data';
+        }
+        my @first_name = ${$data[0]->value}->value;
+        is $first_name[0]->value, 1001;
+        is $first_name[1]->value, 'Bob';
+        my @source = ${$data[1]->value}->value;
+        is $source[0]->value, 1003;
+        is $source[1]->value, 2;
+        my @loc = ${$data[2]->value}->value;
+        is $loc[0]->value, 1010;
+        is $loc[1]->value, "Report title";
+        my @notes = ${$data[3]->value}->value;
+        is $notes[0]->value, 1008;
+        is $notes[1]->value, 'Report details';
+
+        return SOAP::Result->new(result => {
+            EventGuid => '1234',
+        });
+    } elsif ($args[0]->name eq 'GetEventType') {
+        my @params = ${$args[3]->value}->value;
+        my $event_type = ${$params[2]->value}->value->value->value;
+        if ( $event_type == 935 ) {
+            return SOAP::Result->new(result => {
+                Datatypes => { ExtensibleDatatype => [
+                    { Id => 1001, Name => "First Name" },
+                    { Id => 1002, Name => "Surname" },
+                    { Id => 1003, Name => "Source" },
+                    { Id => 1010, Name => "Exact Location" },
+                    { Id => 1008, Name => "Notes" },
+                ] },
+            });
+        }
     } else {
         is $args[0], '';
     }
@@ -123,18 +192,18 @@ subtest "GET Service List" => sub {
         or diag $res->content;
     is_deeply decode_json($res->content),
         [ {
-          "service_code" => "Echo-A_BC",
-          "service_name" => "A_BC",
-          "description" => "A_BC",
-          "metadata" => "false",
+          "service_code" => "Echo-935",
+          "service_name" => "Non-offensive graffiti",
+          "description" => "Non-offensive graffiti",
+          "metadata" => "true",
           "group" => "",
           "keywords" => "",
           "type" => "realtime"
         }, {
-          "service_code" => "Echo-D_EF",
-          "service_name" => "D_EF",
-          "description" => "D_EF",
-          "metadata" => "false",
+          "service_code" => "Echo-943",
+          "service_name" => "Fly-posting",
+          "description" => "Fly-posting",
+          "metadata" => "true",
           "group" => "",
           "keywords" => "",
           "type" => "realtime"
@@ -174,6 +243,33 @@ subtest "POST service request OK" => sub {
     is_deeply decode_json($res->content),
         [ {
             "service_request_id" => "Symology-1001"
+        } ], 'correct json returned';
+};
+
+subtest "POST Echo service request OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'Echo-935',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        media_url => 'http://example.org/photo/1.jpeg',
+        'attribute[usrn]' => NSGREF,
+        #'attribute[easting]' => EASTING,
+        #'attribute[northing]' => NORTHING,
+        'attribute[fixmystreet_id]' => 234,
+        'attribute[title]' => 'Report title',
+        'attribute[description]' => 'Report details',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => "Echo-1234"
         } ], 'correct json returned';
 };
 

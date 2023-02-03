@@ -6,5 +6,6 @@ service_whitelist: {}
 service_to_event_type: {}
 service_id_override: {}
 data_key_open311_map: {}
+data_key_attribute_map: {}
 default_data_all: {}
 default_data_event_type: {}
