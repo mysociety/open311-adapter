@@ -1,0 +1,68 @@
+{
+  "api_key": "api_key",
+  "api_url": "http://localhost/api/",
+  "rfs_design": "designs_customerReportDefect_62e43ee75039cb015e3287e9",
+  "resource_attachment_attribute_id": "attributes_filesAttachableAttachments",
+
+  "category_list_code": "designs_subCategoryList_62d6a1ade83074015715dab2",
+  "category_title_attribute": "attributes_itemsTitle",
+
+  "parent_attribute_name": "Defects",
+
+  "service_whitelist": {
+    "Drainage": {
+      "Blocked Ditch": 1,
+      "Damaged Gully": 1,
+      "Highways Cover - Missing": 1
+    }
+  },
+
+  "resource_attribute_defaults": {},
+
+  "request_to_resource_attribute_mapping": {
+    "description": "attributes_customerReportDefectReportedIssueText_636b830bd1026a0394a10de1",
+    "fixmystreet_id": "attributes_customerReportDefectCRMReference_62e43eea0d2c1a0153b1c561",
+    "status": "attributes_customerReportDefectCustomerStatus_63690956d76320038c423af5",
+    "title": "attributes_defectsDescription",
+  },
+  "request_to_resource_attribute_manual_mapping": {
+    "category": "attributes_customerReportDefectSubCategory_62e43eed0d2c1a0153b1c56e",
+  },
+
+  "created_datetime_attribute_id": "attributes_defectsReportedDate",
+
+  "inspection_attribute_mapping": {
+  },
+
+  "inspection_status_mapping": {},
+  "inspection_closure_mapping": {},
+
+  "ignored_defect_types": [
+  ],
+
+  "defect_status_mapping": {
+  },
+
+  "defect_resource_name": [],
+
+  "defect_attribute_mapping": {
+  },
+
+  "contact": {
+      "code": "designs_contacts",
+      "attribute_id": "attributes_defectsReporters",
+      "search_attribute_code_email": "attributes_contactsEmail",
+      "search_attribute_code_phone": "attributes_contactsPhone",
+      "attribute_defaults": {
+        "attributes_protectedDataConsentRecordedBy" : [ '6376488b0d792a03909a00ae' ]
+      },
+      "attribute_mapping": {
+          "first_name": "attributes_contactsFirstName",
+          "last_name": "attributes_contactsLastName",
+          "email": "attributes_contactsEmail",
+          "phone": "attributes_contactsPhone",
+	      "created": "attributes_protectedDataDateRecorded",
+      },
+  }
+
+}

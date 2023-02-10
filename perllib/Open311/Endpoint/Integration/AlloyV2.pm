@@ -1189,6 +1189,27 @@ sub upload_attachments {
     return \@resource_ids;
 }
 
+=head2 _search_for_code
+
+This looks up the provided code design in Alloy, returning its data.
+
+=cut
+
+sub _search_for_code {
+    my ($self, $code) = @_;
+    my $results = $self->alloy->search({
+        properties => {
+            dodiCode => $code,
+            attributes => ["all"],
+            collectionCode => "Live"
+        },
+    });
+    for (@$results) {
+        $_->{attributes} = $self->alloy->attributes_to_hash($_);
+    }
+    return $results;
+}
+
 =head2 _find_category_code
 
 This looks up the C<category_list_code> design in Alloy, and finds the entry
@@ -1200,18 +1221,9 @@ category.
 sub _find_category_code {
     my ($self, $category) = @_;
 
-    my $results = $self->alloy->search( {
-            properties => {
-                dodiCode => $self->config->{category_list_code},
-                attributes => ["all"],
-                collectionCode => "Live"
-            },
-        }
-    );
-
+    my $results = $self->_search_for_code($self->config->{category_list_code});
     for my $cat ( @{ $results } ) {
-        my $a = $self->alloy->attributes_to_hash($cat);
-        return $cat->{itemId} if $a->{$self->config->{category_title_attribute}} eq $category;
+        return $cat->{itemId} if $cat->{attributes}{$self->config->{category_title_attribute}} eq $category;
     }
 }
 

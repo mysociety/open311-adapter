@@ -1,0 +1,386 @@
+{
+   "pageSize" : 20,
+   "page" : 1,
+   "results" : [
+      {
+         "attributes" : [
+            {
+               "value" : "Blocked Ditch",
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879"
+            },
+            {
+               "value" : "Blocked Ditch",
+               "attributeCode" : "attributes_itemsTitle"
+            },
+            {
+               "attributeCode" : "attributes_itemsSubtitle",
+               "value" : "Drainage"
+            }
+         ],
+         "itemId" : "635138684d1475016745070f",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "collection" : "Live"
+      },
+      {
+         "attributes" : [
+            {
+               "value" : "Blocked Drain",
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879"
+            },
+            {
+               "attributeCode" : "attributes_itemsTitle",
+               "value" : "Blocked Drain"
+            },
+            {
+               "value" : "Drainage",
+               "attributeCode" : "attributes_itemsSubtitle"
+            }
+         ],
+         "itemId" : "635138684d14750167450711",
+         "collection" : "Live",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b"
+      },
+      {
+         "collection" : "Live",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "itemId" : "635138684d14750167450713",
+         "attributes" : [
+            {
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879",
+               "value" : "Blocked Gully"
+            },
+            {
+               "value" : "Blocked Gully",
+               "attributeCode" : "attributes_itemsTitle"
+            },
+            {
+               "value" : "Drainage",
+               "attributeCode" : "attributes_itemsSubtitle"
+            }
+         ]
+      },
+      {
+         "attributes" : [
+            {
+               "value" : "Blocked Pipework",
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879"
+            },
+            {
+               "attributeCode" : "attributes_itemsTitle",
+               "value" : "Blocked Pipework"
+            },
+            {
+               "attributeCode" : "attributes_itemsSubtitle",
+               "value" : "Drainage"
+            }
+         ],
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "collection" : "Live",
+         "itemId" : "635138684d14750167450715"
+      },
+      {
+         "attributes" : [
+            {
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879",
+               "value" : "Damaged / Missing Gully Grid"
+            },
+            {
+               "value" : "Damaged / Missing Gully Grid",
+               "attributeCode" : "attributes_itemsTitle"
+            },
+            {
+               "value" : "Drainage",
+               "attributeCode" : "attributes_itemsSubtitle"
+            }
+         ],
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "collection" : "Live",
+         "itemId" : "635138684d14750167450717"
+      },
+      {
+         "itemId" : "635138684d14750167450719",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "collection" : "Live",
+         "attributes" : [
+            {
+               "value" : "Damaged Gully",
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879"
+            },
+            {
+               "value" : "Damaged Gully",
+               "attributeCode" : "attributes_itemsTitle"
+            },
+            {
+               "attributeCode" : "attributes_itemsSubtitle",
+               "value" : "Drainage"
+            }
+         ]
+      },
+      {
+         "attributes" : [
+            {
+               "value" : "Damaged Surface Water Drain",
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879"
+            },
+            {
+               "value" : "Damaged Surface Water Drain",
+               "attributeCode" : "attributes_itemsTitle"
+            },
+            {
+               "attributeCode" : "attributes_itemsSubtitle",
+               "value" : "Drainage"
+            }
+         ],
+         "itemId" : "635138684d1475016745071b",
+         "collection" : "Live",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b"
+      },
+      {
+         "attributes" : [
+            {
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879",
+               "value" : "Flooding / Standing Water"
+            },
+            {
+               "attributeCode" : "attributes_itemsTitle",
+               "value" : "Flooding / Standing Water"
+            },
+            {
+               "value" : "Drainage",
+               "attributeCode" : "attributes_itemsSubtitle"
+            }
+         ],
+         "collection" : "Live",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "itemId" : "635138684d1475016745071d"
+      },
+      {
+         "itemId" : "635138684d1475016745071f",
+         "collection" : "Live",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "attributes" : [
+            {
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879",
+               "value" : "Highways Cover - Loose / Damaged"
+            },
+            {
+               "value" : "Highways Cover - Loose / Damaged",
+               "attributeCode" : "attributes_itemsTitle"
+            },
+            {
+               "attributeCode" : "attributes_itemsSubtitle",
+               "value" : "Drainage"
+            }
+         ]
+      },
+      {
+         "attributes" : [
+            {
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879",
+               "value" : "Highways Cover - Missing"
+            },
+            {
+               "attributeCode" : "attributes_itemsTitle",
+               "value" : "Highways Cover - Missing"
+            },
+            {
+               "attributeCode" : "attributes_itemsSubtitle",
+               "value" : "Drainage"
+            }
+         ],
+         "itemId" : "635138684d14750167450721",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "collection" : "Live"
+      },
+      {
+         "attributes" : [
+            {
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879",
+               "value" : "Other Drain / Gully issues"
+            },
+            {
+               "attributeCode" : "attributes_itemsTitle",
+               "value" : "Other Drain / Gully issues"
+            },
+            {
+               "attributeCode" : "attributes_itemsSubtitle",
+               "value" : "Drainage"
+            }
+         ],
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "collection" : "Live",
+         "itemId" : "635138684d14750167450723"
+      },
+      {
+         "attributes" : [
+            {
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879",
+               "value" : "Utilities Cover - Loose / Damaged"
+            },
+            {
+               "value" : "Utilities Cover - Loose / Damaged",
+               "attributeCode" : "attributes_itemsTitle"
+            },
+            {
+               "value" : "Drainage",
+               "attributeCode" : "attributes_itemsSubtitle"
+            }
+         ],
+         "collection" : "Live",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "itemId" : "635138684d14750167450725"
+      },
+      {
+         "itemId" : "635138684d14750167450727",
+         "collection" : "Live",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "attributes" : [
+            {
+               "value" : "Utilities Cover - Missing",
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879"
+            },
+            {
+               "attributeCode" : "attributes_itemsTitle",
+               "value" : "Utilities Cover - Missing"
+            },
+            {
+               "value" : "Drainage",
+               "attributeCode" : "attributes_itemsSubtitle"
+            }
+         ]
+      },
+      {
+         "attributes" : [
+            {
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879",
+               "value" : "Pothole"
+            },
+            {
+               "value" : "Pothole",
+               "attributeCode" : "attributes_itemsTitle"
+            },
+            {
+               "attributeCode" : "attributes_itemsSubtitle",
+               "value" : "Highways"
+            }
+         ],
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "collection" : "Live",
+         "itemId" : "636b790f5d062a0387ae39f7"
+      },
+      {
+         "collection" : "Live",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "itemId" : "636b7c93d76320038c5e49cf",
+         "attributes" : [
+            {
+               "value" : "Uneven Surface",
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879"
+            },
+            {
+               "attributeCode" : "attributes_itemsTitle",
+               "value" : "Uneven Surface"
+            },
+            {
+               "value" : "Highways",
+               "attributeCode" : "attributes_itemsSubtitle"
+            }
+         ]
+      },
+      {
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "collection" : "Live",
+         "itemId" : "636b7ca4d76320038c5e4b28",
+         "attributes" : [
+            {
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879",
+               "value" : "Flags - broken / missing"
+            },
+            {
+               "value" : "Flags - broken / missing",
+               "attributeCode" : "attributes_itemsTitle"
+            },
+            {
+               "value" : "Highways",
+               "attributeCode" : "attributes_itemsSubtitle"
+            }
+         ]
+      },
+      {
+         "attributes" : [
+            {
+               "value" : "Flags - rocking",
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879"
+            },
+            {
+               "attributeCode" : "attributes_itemsTitle",
+               "value" : "Flags - rocking"
+            },
+            {
+               "attributeCode" : "attributes_itemsSubtitle",
+               "value" : "Highways"
+            }
+         ],
+         "itemId" : "636b7cb1d1026a0394a07940",
+         "collection" : "Live",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b"
+      },
+      {
+         "itemId" : "636b7cbd5d062a0387ae9ec3",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "collection" : "Live",
+         "attributes" : [
+            {
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879",
+               "value" : "Kerb - broken / missing / dislodged"
+            },
+            {
+               "attributeCode" : "attributes_itemsTitle",
+               "value" : "Kerb - broken / missing / dislodged"
+            },
+            {
+               "attributeCode" : "attributes_itemsSubtitle",
+               "value" : "Highways"
+            }
+         ]
+      },
+      {
+         "itemId" : "636b7ccbd1026a0394a07e55",
+         "collection" : "Live",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "attributes" : [
+            {
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879",
+               "value" : "Bollard - damaged / missing"
+            },
+            {
+               "value" : "Bollard - damaged / missing",
+               "attributeCode" : "attributes_itemsTitle"
+            },
+            {
+               "value" : "Highways",
+               "attributeCode" : "attributes_itemsSubtitle"
+            }
+         ]
+      },
+      {
+         "itemId" : "636b7cd65d062a0387aea089",
+         "collection" : "Live",
+         "designCode" : "designs_customerReportList_62e2616919215701594ed68b",
+         "attributes" : [
+            {
+               "value" : "Signs - damaged / missing",
+               "attributeCode" : "attributes_customerReportListIssueReported_62e2616d1ceb190155008879"
+            },
+            {
+               "attributeCode" : "attributes_itemsTitle",
+               "value" : "Signs - damaged / missing"
+            },
+            {
+               "value" : "Highways",
+               "attributeCode" : "attributes_itemsSubtitle"
+            }
+         ]
+      }
+   ]
+}

@@ -1,0 +1,56 @@
+{
+  "api_key": "",
+  "api_url": "",
+  "rfs_design": '',
+  "resource_attachment_attribute_id": "",
+
+  "category_list_code": "",
+  "category_title_attribute": "",
+
+  "parent_attribute_name": "",
+
+  "service_whitelist": {
+  },
+
+  "resource_attribute_defaults": {
+  },
+
+  "request_to_resource_attribute_mapping": {
+  },
+  "request_to_resource_attribute_manual_mapping": {
+  },
+
+  "created_datetime_attribute_id": '',
+
+  "inspection_attribute_mapping": {
+  },
+
+  "inspection_status_mapping": {
+  },
+
+  "inspection_closure_mapping": {
+  },
+
+  "ignored_defect_types": [
+  ],
+
+  "defect_sourcetype_category_mapping": {
+  },
+
+  "defect_status_mapping": {
+  },
+
+  "defect_resource_name": [],
+
+  "defect_attribute_mapping": {
+  },
+
+  "contact": {
+      "code": "",
+      "attribute_id": "",
+      "attribute_defaults": {
+      },
+      "attribute_mapping": {
+      },
+  }
+}

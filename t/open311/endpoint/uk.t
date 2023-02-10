@@ -8,6 +8,7 @@ BEGIN { $ENV{TEST_MODE} = 1; }
 test_multi(0, 'Open311::Endpoint::Integration::UK',
     'Open311::Endpoint::Integration::UK::BANES' => 'banes_confirm',
     'Open311::Endpoint::Integration::UK::Buckinghamshire' => 'buckinghamshire_confirm',
+    'Open311::Endpoint::Integration::UK::BuckinghamshireAlloy' => 'buckinghamshire_alloy',
     'Open311::Endpoint::Integration::UK::Camden' => 'camden_symology',
     'Open311::Endpoint::Integration::UK::CentralBedfordshire' => 'centralbedfordshire_symology',
     'Open311::Endpoint::Integration::UK::CheshireEast' => 'cheshireeast_confirm',
