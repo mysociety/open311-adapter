@@ -2,9 +2,7 @@
   "api_key": "",
   "api_url": "",
   "rfs_design": '',
-  "attachment_folder_id": '',
   "resource_attachment_attribute_id": "",
-  "service_attribute_overrides": {},
 
   "category_list_code": "",
   "category_title_attribute": "",
@@ -35,8 +33,6 @@
   "inspection_closure_mapping": {
   },
 
-  "inspection_resource_name": "",
-
   "ignored_defect_types": [
   ],
 
@@ -55,13 +51,9 @@
   "defect_attribute_mapping": {
   },
 
-  "defect_target_days_mapping": {
-  },
-
   "contact": {
       "code": "",
       "attribute_id": "",
-      "acceptance_datetime_attribute": "",
       "attribute_defaults": {
       },
       "attribute_mapping": {

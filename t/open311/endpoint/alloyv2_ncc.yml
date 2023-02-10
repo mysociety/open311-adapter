@@ -5,12 +5,8 @@
   "rfs_design": 'designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6', # "Enquiry Inspection RFS"
   "defect_inspection_parent_id": 1001181,
   "irg_config_code": "ASSET_INSPECTIONS",
-  "attachment_folder_id": 52,
   "resource_attachment_attribute_id": "attributes_filesAttachableAttachments",
   "update_cutoff_date": "2019-01-01T00:00:00Z",
-
-  "service_attribute_overrides": {
-  },
 
   "category_list_code": "designs_listFixMyStreetCategories1001257_5d3210e1fe2ad806f8df98c1",
   "category_title_attribute": "title",
@@ -111,8 +107,6 @@
     }
   },
 
-  "inspection_resource_name": "INSPECTION_ST INSPECTION_ST_USER_INSPECTION_-_ENQUIRY_-_REQUEST_FOR_SERVICE",
-
   "ignored_defect_types": [
   ],
 
@@ -144,11 +138,8 @@
   "contact": {
       "code": "designs_fMSContacts1001214_5d321178fe2ad80354bbc0a7",
       "attribute_id": "attributes_enquiryInspectionRFS1001181FMSContact1010927_5d3245d9fe2ad806f8dfbb29",
-      "source_id": "2636",
-      "search_entity_code": "USER_ST USER_ST_FMS_CONTACTS",
       "search_attribute_code_email": "STU_USER_ST_FMS_CONTACTS_ATT_EMAIL",
       "search_attribute_code_phone": "STU_USER_ST_FMS_CONTACTS_ATT_PHONE",
-      "acceptance_datetime_attribute": "",
       "attribute_defaults": {
           "attributes_fMSContacts1001214ConsentGivenGDPR1010923_5d321187fe2ad80354bbc0c1": 'true' # GDPR consent
       },

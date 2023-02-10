@@ -2,9 +2,7 @@
   "api_key": "api_key",
   "api_url": "http://localhost/api/",
   "rfs_design": "designs_lightingDefect_123456",
-  "attachment_folder_id": "",
   "resource_attachment_attribute_id": "attributes_filesAttachableAttachments",
-  "service_attribute_overrides": {},
 
   "category_list_code": "designs_faultType_123456",
   "category_title_attribute": "attributes_faultTypeDescription_5eb062d76001580048c19b3e",
