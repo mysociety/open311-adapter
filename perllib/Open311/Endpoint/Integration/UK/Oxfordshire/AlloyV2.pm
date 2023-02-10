@@ -1,3 +1,11 @@
+=head1 NAME
+
+Open311::Endpoint::Integration::UK::Oxfordshire::AlloyV2 - Oxfordshire-specific parts of its Alloy integration
+
+=head1 DESCRIPTION
+
+=cut
+
 package Open311::Endpoint::Integration::UK::Oxfordshire::AlloyV2;
 
 use Moo;
@@ -19,6 +27,18 @@ around BUILDARGS => sub {
 sub service_request_content {
     '/open311/service_request_extended'
 }
+
+=head2 process_attributes
+
+This calls the default function, but also tidies up C<closest_address> (which
+is then used in an attribute mapping), sets the category attribute using
+C<request_to_resource_attribute_manual_mapping>'s category key and
+C<defect_sourcetype_category_mapping> to look up the category ID from there,
+and if C<staff_role> was passed in, use C<defect_source_mapping> lookup on
+that and C<request_to_resource_attribute_manual_mapping>'s source key to set
+the correct attribute.
+
+=cut
 
 sub process_attributes {
     my ($self, $args) = @_;
@@ -60,7 +80,13 @@ sub process_attributes {
 
 }
 
-# Not actually checking category, but checking status isn't Proposed (open)
+=head2 is_ignored_category
+
+Overriding the default of ignoring C<ignored_defect_types>, we instead
+ignore any report or update which has a status of open (Proposed).
+
+=cut
+
 sub is_ignored_category {
     my ($self, $defect) = @_;
 

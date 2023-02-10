@@ -1,3 +1,22 @@
+=head1 NAME
+
+Open311::Endpoint::Integration::AlloyV2 - An integration with the Alloy backend
+
+=head1 SYNOPSIS
+
+This integration lets us post reports and updates to and from Alloy. It calls
+posted reports 'inspections' and fetches reports as 'defects', and fetches
+updates on both, but these are sometimes misnamed - 'inspections' are usually
+defects in Alloy, and 'defects' could also be jobs.
+
+=head1 CONFIGURATION
+
+Alloy is entirely customisable, so a 'design' can contain any collection of
+unique attributes. So our configuration needs to consist of a number of
+mappings of data we hold to how it will fit into what is present in Alloy.
+
+=cut
+
 package Open311::Endpoint::Integration::AlloyV2;
 
 use Digest::MD5 qw(md5_hex);
@@ -89,6 +108,12 @@ has service_class  => (
     default => 'Open311::Endpoint::Service::UKCouncil::Alloy'
 );
 
+=head2 service_whitelist
+
+This is a mapping of Alloy services, from group to categories, each category
+being a key with value 1 or {}. (Not sure why.)
+
+=cut
 
 has service_whitelist => (
     is => 'ro',
@@ -114,6 +139,15 @@ has reverse_whitelist => (
     }
 );
 
+=head1 DESCRIPTION
+
+=head2 services
+
+This returns a list of Alloy services from the C<service_whitelist>,
+with no extra attributes possible.
+
+=cut
+
 sub services {
     my $self = shift;
 
@@ -137,6 +171,16 @@ sub services {
 
     return @services;
 }
+
+=head2 post_service_request
+
+Requests are posted to the C<rfs_design> configuration value. If an asset is
+passed, its design is looked up, and that design's C<parent_attribute_name>
+attribute is set as the item's parent. Attributes are processed by
+L</process_attributes>. An item is then created in Alloy, and photos uploaded
+and linked in the C<resource_attachment_attribute_id> attribute.
+
+=cut
 
 sub post_service_request {
     my ($self, $service, $args) = @_;
@@ -267,6 +311,13 @@ sub _set_parent_attribute {
     }
 }
 
+=head2 _find_or_create_contact
+
+This searches Alloy for the provided email, returning either the found item ID
+or creating a new contact if none found.
+
+=cut
+
 sub _find_or_create_contact {
     my ($self, $args) = @_;
 
@@ -276,6 +327,14 @@ sub _find_or_create_contact {
         return $self->_create_contact($args)->{item}->{itemId};
     }
 }
+
+=head2 _find_contact
+
+This searches the C<contact.code> design in Alloy for either an email or phone,
+using the C<contact.search_attribute_code_email> or
+C<contact.search_attribute_code_phone> attributes.
+
+=cut
 
 sub _find_contact {
     my ($self, $email, $phone) = @_;
@@ -331,6 +390,14 @@ sub _find_contact {
     return $contact;
 }
 
+=head2 _create_contact
+
+This creates a C<contact.code> item. It gets defaults from
+C<contact.attribute_defaults>, a mapping of attribute and value, and
+C<contact.attribute_mapping> to map Open311 data to Alloy attribute.
+
+=cut
+
 sub _create_contact {
     my ($self, $args) = @_;
 
@@ -385,6 +452,14 @@ sub _create_contact {
     );
 }
 
+=head2 post_service_request_update
+
+This fetches the relevant item from Alloy and adds the update text to the
+relevant attribute as given in either the C<inspection_attribute_mapping> or
+C<defect_attribute_mapping> updates key. It also uploads a photo if given.
+
+=cut
+
 sub post_service_request_update {
     my ($self, $args) = @_;
 
@@ -428,6 +503,12 @@ sub _generate_update {
     return $updates;
 }
 
+=head2 get_service_request_updates
+
+Fetching updates fetches both 'inspections' and 'defects'.
+
+=cut
+
 sub get_service_request_updates {
     my ($self, $args) = @_;
 
@@ -437,6 +518,36 @@ sub get_service_request_updates {
 
     return sort { $a->updated_datetime <=> $b->updated_datetime } @updates;
 }
+
+=head3 'Inspections'
+
+'Inspection' updates fetch the C<rfs_design> resources that have been updated
+in the relevant time frame, fetching previous versions of each item.
+It uses C<inspection_attribute_mapping> for attribute mapping:
+
+=over 4
+
+=item C<status>
+
+Used to find the attribute to then use as a key in C<inspection_status_mapping>
+to work out a state for the update.
+
+=item C<reason_for_closure>
+
+Used to find the attribute containing the external status code. It also, if the
+status is closed, uses C<inspection_closure_mapping> to perhaps change to a
+different status based on the C<reason_for_closure>.
+C<status_and_closure_mapping> is a mapping from status to status and reason for
+closure that can be used to override these at the end.
+
+=item C<inspector_comments>
+
+Used to find the attribute to look at to see if the comments have changed, for
+providing as the text update.
+
+=back
+
+=cut
 
 sub _get_inspection_updates {
     my ($self, $args) = @_;
@@ -541,6 +652,32 @@ sub _status_and_closure_mapping {
     return ($status, $reason_for_closure);
 }
 
+=head3 'Defects'
+
+'Defect' updates can fetch more than one design from C<defect_resource_name>,
+it being either a string or an array. This also fetches any items altered in
+the time frame. It ignores any whose designCode matches any entry in
+C<ignored_defect_types>. It has the possibility of working out the FMS ID from
+an attribute, but this is unused.
+
+It fetches the item's parents to find any that have a C<rfs_design> designCode,
+assuming that's the 'inspection' associated with the 'defect' (or indeed, the
+defect associated with the job).
+
+It uses the C<defect_attribute_mapping> status entry to find the attribute
+containing the status, and then uses C<defect_status_mapping> to map that
+Alloy value to a status.
+
+If the status is open or investigating and there is a linked defect, the update
+is skipped.
+
+Previous versions are fetched, as with 'inspections', their status worked out;
+there are no text attributes checked here. It has some special code that I'm
+not sure still applies, to prevent FMS adding phantom updates due to confusion
+over external status codes.
+
+=cut
+
 sub _get_defect_updates {
     my ( $self, $args ) = @_;
 
@@ -624,6 +761,29 @@ sub _get_defect_updates_resource {
 
     return @updates;
 }
+
+=head2 get_service_requests
+
+This also uses the C<defect_resource_name>, either a string or an array, to
+fetch any new reports in those designs. As with updates, it fetches any
+resources updated in the time window. It ignores any in C<ignored_defect_types>
+or any with a C<rfs_design> parent.
+
+It uses C<defect_sourcetype_category_mapping> on the designCode to fetch a
+default and a possible types mapping, which it uses to set a category if it
+finds an attribute with a particular fixed list of matches. It also might
+use the C<service_whitelist> to add the group name to the category.
+
+If it doesn't match a category, or it's not a known category, it skips the
+item. It also skips if it finds an attribute ending C<_FIXMYSTREET_ID>.
+
+It fetches the geometry, converting any non-point into a point. It uses
+C<defect_attribute_mapping> description key to fetch the description text,
+status (plus C<defect_status_mapping> as with updates) to fetch a status,
+requested_datetime to fetch the time, but always uses the fixed
+attributes_itemsTitle for the title.
+
+=cut
 
 sub get_service_requests {
     my ($self, $args) = @_;
@@ -892,6 +1052,17 @@ sub get_defect_category {
     return "${group}_$category";
 }
 
+=head2 process_attributes
+
+Normally extended by a particular integration subclass. This function
+uses the C<resource_attribute_defaults> configuration to set any default
+attributes, then loops through C<request_to_resource_attribute_mapping>
+a mapping from passed-in attributes to Alloy attribute IDs, and then if
+C<created_datetime_attribute_id> is set to an Alloy attribute, sets that
+to the current time. Geometry is also set to the lat/long passed in.
+
+=cut
+
 sub process_attributes {
     my ($self, $args) = @_;
 
@@ -1011,6 +1182,14 @@ sub upload_attachments {
 
     return \@resource_ids;
 }
+
+=head2 _find_category_code
+
+This looks up the C<category_list_code> design in Alloy, and finds the entry
+with a C<category_title_attribute> attribute that matches the provided
+category.
+
+=cut
 
 sub _find_category_code {
     my ($self, $category) = @_;
