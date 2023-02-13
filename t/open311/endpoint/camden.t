@@ -36,6 +36,9 @@ use constant {
     REPORT_NEXTACTION => 15,
     UPDATE_REPORT_ID => 123,
     UPDATE_REPORT_ID_CLOSING => 234,
+    FIELDS_FIELDLINE => 0,
+    FIELDS_VALUETYPE => 1,
+    FIELDS_VALUE => 2,
 };
 
 my $soap_lite = Test::MockModule->new('SOAP::Lite');
@@ -46,12 +49,16 @@ $soap_lite->mock(call => sub {
     my ($cls, @args) = @_;
     if ($args[0] eq 'SendRequestAdditionalGroup') {
         my @request = ${$args[2]->value}->value;
+        my @fields = ${$args[4]->value}->value;
         is $request[REPORT_NSGREF]->value, NSGREF;
         is $request[REPORT_NEXTACTION]->value, undef;
         is $request[REPORT_NORTHING]->value, NORTHING;
         is $request[REPORT_EASTING]->value, EASTING;
         my $photo_desc = "\n\n[ This report contains a photo, see: http://example.org/photo/1.jpeg ]";
         is $request[REPORT_DESC]->value, "This is the details$photo_desc\n\nWhat is the issue?: Pothole in the road";
+        is $fields[0][FIELDS_FIELDLINE]->value, 10;
+        is $fields[0][FIELDS_VALUETYPE]->value, 8;
+        is $fields[0][FIELDS_VALUE]->value, "http://example.org/photo/1.jpeg";
         return {
             StatusCode => 0,
             StatusMessage => 'Success',
