@@ -41,7 +41,8 @@ default_data_event_type:
   # 1566:
   #   Refuse Bin: 1
   #   Refuse Bag: 1
-  # 1568:
+  1568:
+    Payment Type: 1
   #   Container Mix: 1
   #   Paper: 1
   #   Food: 1

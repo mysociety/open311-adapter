@@ -21,6 +21,9 @@ around check_for_data_value => sub {
     return 1 if $name eq 'Refuse Bag' && $service eq '2242';
     return 1 if $name eq 'Refuse Bin' && ($service eq '2238' || $service eq '2243' || $service eq '3576');
 
+    my $method = $args->{attributes}{LastPayMethod} || '';
+    return 2 if $name eq 'Payment Type' && $method eq 3; # DD
+
     return $class->$orig($name, $args, $request, $parent_name);
 };
 

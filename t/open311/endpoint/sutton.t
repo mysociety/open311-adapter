@@ -57,6 +57,9 @@ $soap_lite->mock(call => sub {
             my @bin = ${$data[0]->value}->value;
             is $bin[0]->value, 2000;
             is $bin[1]->value, 1;
+            my @type = ${$data[1]->value}->value;
+            is $type[0]->value, 1009;
+            is $type[1]->value, 2;
         } elsif ($client_ref eq 'LBS-2000125') {
             is $event_type, 1568;
             is $service_id, 408;
@@ -64,6 +67,9 @@ $soap_lite->mock(call => sub {
             my @paper = ${$data[0]->value}->value;
             is $paper[0]->value, 2002;
             is $paper[1]->value, 1;
+            my @type = ${$data[1]->value}->value;
+            is $type[0]->value, 1009;
+            is $type[1]->value, 1;
         }
         return SOAP::Result->new(result => {
             EventGuid => '1234',
@@ -81,6 +87,7 @@ $soap_lite->mock(call => sub {
                 { Id => 2000, Name => "Refuse Bin" },
                 { Id => 2001, Name => "Container Mix" },
                 { Id => 2002, Name => "Paper" },
+                { Id => 1009, Name => "Payment Type" },
             ] },
         });
     } else {
@@ -124,6 +131,7 @@ subtest "POST missed bin OK" => sub {
         service_code => EVENT_TYPE_MISSED,
         'attribute[fixmystreet_id]' => 2000124,
         'attribute[service_id]' => 2238,
+        'attribute[LastPayMethod]' => 3,
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -139,6 +147,7 @@ subtest "POST missed mixed+paper OK" => sub {
         service_code => EVENT_TYPE_MISSED,
         'attribute[fixmystreet_id]' => 2000125,
         'attribute[service_id]' => 2240,
+        'attribute[LastPayMethod]' => 2,
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
