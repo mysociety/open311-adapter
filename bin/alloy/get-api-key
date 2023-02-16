@@ -1,0 +1,53 @@
+#!/usr/bin/env perl
+#
+# This script fetches a new API key for an Alloy instance
+# Provide email and password as two parameters
+
+use v5.14;
+use warnings;
+
+BEGIN {
+    use File::Basename qw(dirname);
+    use File::Spec;
+    my $d = dirname(File::Spec->rel2abs($0));
+    require "$d/../../setenv.pl";
+}
+
+use DateTime;
+use Integrations::AlloyV2;
+
+my $email = shift;
+my $password = shift;
+die 'Please provide email and password' unless $email && $password;
+
+# Get global token
+my $int = Integrations::AlloyV2->new({ config => { api_url => 'https://api.uk.alloyapp.io/api/', api_key => '' } });
+my $res = $int->api_call( call => 'session', body => { email => $email, password => $password });
+my $token = $res->{token};
+$int->config->{api_key} = $token;
+
+# Get list of customers
+say "Customers:";
+$res = $int->api_call( call => "customer" );
+my $i = 1;
+foreach (@{$res->{results}}) {
+    say "  $i: $_->{name}";
+    $i++;
+
+}
+
+# Pick a customer, get its token
+print "Which customer? ";
+my $customer = <>;
+my $code = $res->{results}[$customer-1]{code};
+$res = $int->api_call( call => "session/customer/$code", body => {} );
+$token = $res->{token};
+$int->config->{api_key} = $token;
+
+# Get an API key
+$res = $int->api_call( call => "api-key", body => {
+    "label" => "string",
+    "enabled" => 1,
+    "expireAt" => DateTime->now->add(years => 10)->iso8601,
+});
+say "API key: $res->{apiKey}";
