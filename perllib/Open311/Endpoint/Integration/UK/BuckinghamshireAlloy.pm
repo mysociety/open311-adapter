@@ -67,4 +67,29 @@ sub process_attributes {
 #    }
 #}
 
+=head2 _get_inspection_status
+
+This uses the default way of looking up the status mapping, but then
+looks up the status in Alloy in order to fetch the external status code
+stored there to send back to FMS.
+
+=cut
+
+sub _get_inspection_status {
+    my ($self, $attributes, $mapping) = @_;
+
+    my $status = 'open';
+    my $ext_code;
+    if ($attributes->{$mapping->{status}}) {
+        my $status_code = $attributes->{$mapping->{status}}->[0];
+        $status = $self->inspection_status($status_code);
+
+        my $status_obj = $self->alloy->api_call(call => "item/$status_code");
+        $status_obj = $status_obj->{item};
+        my $status_attributes = $self->alloy->attributes_to_hash($status_obj);
+        $ext_code = $status_attributes->{$mapping->{external_status_code}};
+    }
+    return ($status, $ext_code);
+}
+
 1;

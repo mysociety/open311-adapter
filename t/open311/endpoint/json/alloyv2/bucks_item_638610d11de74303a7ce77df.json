@@ -1,0 +1,25 @@
+{
+  "item": {
+    "itemId": "638610d11de74303a7ce77df",
+    "designCode": "designs_customerStatusList_6369087107e7e903890a1341",
+    "attributes": [
+      {
+        "attributeCode": "attributes_customerStatusListStatusCode_636909eed76320038c42461c",
+        "value": "060"
+      },
+      {
+        "attributeCode": "attributes_customerStatusListStatusDescription_63690886d76320038c422aa2",
+        "value": "Acknowledged"
+      },
+      {
+        "attributeCode": "attributes_itemsTitle",
+        "value": "060  Acknowledged"
+      },
+      {
+        "attributeCode": "attributes_itemsSubtitle",
+        "value": "Acknowledged"
+      }
+    ],
+    "signature": "63ee12204a8f10038d71dae8"
+  }
+}

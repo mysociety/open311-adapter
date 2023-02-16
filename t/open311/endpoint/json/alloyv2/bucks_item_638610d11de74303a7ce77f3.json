@@ -1,0 +1,25 @@
+{
+  "item": {
+    "itemId": "638610d11de74303a7ce77f3",
+    "designCode": "designs_customerStatusList_6369087107e7e903890a1341",
+    "attributes": [
+      {
+        "attributeCode": "attributes_customerStatusListStatusCode_636909eed76320038c42461c",
+        "value": "306"
+      },
+      {
+        "attributeCode": "attributes_customerStatusListStatusDescription_63690886d76320038c422aa2",
+        "value": "Works programmed (2days)"
+      },
+      {
+        "attributeCode": "attributes_itemsTitle",
+        "value": "306  Works programmed (2days)"
+      },
+      {
+        "attributeCode": "attributes_itemsSubtitle",
+        "value": "Works programmed (2days)"
+      }
+    ],
+    "signature": "63ee06fd87202f03ae7f05de"
+  }
+}

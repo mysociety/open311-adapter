@@ -58,14 +58,23 @@ $integration->mock('api_call', sub {
             $content = '{}';
             if ($type eq 'designs_subCategoryList_62d6a1ade83074015715dab2') {
                 $content = path(__FILE__)->sibling('json/alloyv2/bucks_categories_search.json')->slurp;
+            } elsif ($type eq 'designs_customerReportDefect_62e43ee75039cb015e3287e9') {
+                $content = path(__FILE__)->sibling('json/alloyv2/bucks_defects_search.json')->slurp;
             }
+        } elsif ( $call =~ 'item-log/item/([^/]*)/reconstruct' ) {
+            my $id = $1;
+            my $date = $body->{date};
+            $date =~ s/\D//g;
+            $content = path(__FILE__)->sibling("json/alloyv2/bucks_reconstruct_${id}_$date.json")->slurp;
         }
-    } else {
-        if ( $call eq 'design/designs_streetLights' ) {
-            $content = path(__FILE__)->sibling('json/alloyv2/occ_design_resource.json')->slurp;
-        } elsif ( $call eq 'item/abcdef' ) {
-            $content = '{ "item": { "designCode": "designs_streetLights" } }';
-        }
+    } elsif ( $call eq 'design/designs_streetLights' ) {
+        $content = path(__FILE__)->sibling('json/alloyv2/occ_design_resource.json')->slurp;
+    } elsif ( $call =~ 'item-log/item/(.*)$' ) {
+        $content = path(__FILE__)->sibling("json/alloyv2/bucks_item_log_$1.json")->slurp;
+    } elsif ( $call eq 'item/abcdef' ) {
+        $content = '{ "item": { "designCode": "designs_streetLights" } }';
+    } elsif ( $call =~ 'item/(.*)' ) {
+        $content = path(__FILE__)->sibling("json/alloyv2/bucks_item_$1.json")->slurp;
     }
 
     $content ||= '[]';
@@ -130,5 +139,38 @@ subtest "create basic problem" => sub {
             "service_request_id" => 12345
         } ], 'correct json returned';
 };
+
+subtest "check fetch updates" => sub {
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2023-02-16T07:43:46Z&end_date=2023-02-16T19:43:46Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [
+        {
+            description => "",
+            media_url => "",
+            service_request_id => "63ee34826965f30390f01cda",
+            status => "open",
+            external_status_code => '060',
+            update_id => "63ee34826965f30390f01ce3",
+            updated_datetime => "2023-02-16T13:49:54Z"
+        },
+        {
+            description => "",
+            media_url => "",
+            service_request_id => "63ee34826965f30390f01cda",
+            status => "action_scheduled",
+            external_status_code => '306',
+            update_id => "63ee3490b016c303ae032113",
+            updated_datetime => "2023-02-16T13:50:08Z"
+        }
+    ], 'correct json returned';
+};
+
 
 done_testing;

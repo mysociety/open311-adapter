@@ -584,7 +584,7 @@ sub _get_inspection_updates {
 
             # only want to put a description in the update if it's changed so compare
             # it to the last one.
-            my $description = $attributes->{$mapping->{inspector_comments}} || '';
+            my $description = $attributes->{$mapping->{inspector_comments} || ''} || '';
             my $description_to_send = $description ne $last_description ? $description : '';
             $last_description = $description;
 
