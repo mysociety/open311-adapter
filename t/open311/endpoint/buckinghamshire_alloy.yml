@@ -6,6 +6,7 @@
 
   "category_list_code": "designs_subCategoryList_62d6a1ade83074015715dab2",
   "category_title_attribute": "attributes_itemsTitle",
+  "category_group_attribute": "attributes_subCategoryListCategory_62d6a1ae4fb4be015570baed",
 
   "parent_attribute_name": "Defects",
 
@@ -27,6 +28,7 @@
   },
   "request_to_resource_attribute_manual_mapping": {
     "category": "attributes_customerReportDefectSubCategory_62e43eed0d2c1a0153b1c56e",
+    "group": "attributes_customerReportDefectCategory_62e43eec5039cb015e3287fb",
   },
 
   "created_datetime_attribute_id": "attributes_defectsReportedDate",

@@ -113,6 +113,10 @@
             {
                "attributeCode" : "attributes_itemsSubtitle",
                "value" : "Drainage"
+            },
+            {
+               "attributeCode" : "attributes_subCategoryListCategory_62d6a1ae4fb4be015570baed",
+               "value" : [ "636b76649446c50391d4205b" ]
             }
          ]
       },

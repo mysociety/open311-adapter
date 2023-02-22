@@ -44,12 +44,12 @@ sub process_attributes {
     };
 
     my ($group, $category) = split('_', $args->{service_code});
-    #my $group_code = $self->_find_group_code($group);
-    my $cat_code = $self->_find_category_code($category);
-    #push @$attributes, {
-    #    attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{group},
-    #    value => [ $group_code ],
-    #};
+    my ($cat_code, $group_code) = $self->_find_category_and_group_codes($category);
+    $group_code = $group_code->[0] if ref $group_code eq 'ARRAY';
+    push @$attributes, {
+       attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{group},
+       value => [ $group_code ],
+    };
     push @$attributes, {
         attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{category},
         value => [ $cat_code ],
@@ -58,14 +58,28 @@ sub process_attributes {
     return $attributes;
 }
 
-#sub _find_group_code {
-#    my ($self, $group) = @_;
-#
-#    my $results = $self->_search_for_code($self->config->{group_list_code});
-#    for my $group (@$results) {
-#        return $group->{itemId} if $group->{attributes}{$self->config->{group_title_attribute}} eq $group;
-#    }
-#}
+=head2 _find_category_and_group_codes
+
+This looks up the C<category_list_code> design in Alloy, and finds the entry
+with a C<category_title_attribute> attribute that matches the provided
+category.
+
+It returns the entry's C<itemId> and the value of its
+C<category_group_attribute> attribute, the latter of which is required when
+creating new defects in Bucks Alloy.
+
+=cut
+
+sub _find_category_and_group_codes {
+    my ($self, $category) = @_;
+
+    my $results = $self->_search_for_code($self->config->{category_list_code});
+    for my $cat ( @{ $results } ) {
+        if ( $cat->{attributes}{$self->config->{category_title_attribute}} eq $category ) {
+            return ($cat->{itemId}, $cat->{attributes}{$self->config->{category_group_attribute}});
+        }
+    }
+}
 
 =head2 _get_inspection_status
 

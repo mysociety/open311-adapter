@@ -24,6 +24,7 @@ use utf8;
 
 use Test::More;
 use Test::MockModule;
+use Test::MockTime ':all';
 use Encode;
 use JSON::MaybeXS;
 use Path::Tiny;
@@ -91,6 +92,7 @@ $integration->mock('api_call', sub {
 });
 
 subtest "create basic problem" => sub {
+    set_fixed_time('2023-02-21T13:37:00Z');
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
         jurisdiction_id => 'dummy',
@@ -112,6 +114,7 @@ subtest "create basic problem" => sub {
         'attribute[easting]' => 1,
         'attribute[northing]' => 2,
     );
+    restore_time();
 
     my $sent = pop @sent;
     ok $res->is_success, 'valid request'
@@ -122,12 +125,13 @@ subtest "create basic problem" => sub {
     is_deeply $sent, {
         attributes => [
             { attributeCode => 'attributes_customerReportDefectCRMReference_62e43eea0d2c1a0153b1c561', value => 123 },
+            { attributeCode => 'attributes_customerReportDefectCategory_62e43eec5039cb015e3287fb', value => ["636b76649446c50391d4205b"] },
             { attributeCode => 'attributes_customerReportDefectCustomerStatus_63690956d76320038c423af5', value => undef },
             { attributeCode => 'attributes_customerReportDefectReportedIssueText_636b830bd1026a0394a10de1', value => "description" },
             { attributeCode => 'attributes_customerReportDefectSubCategory_62e43eed0d2c1a0153b1c56e', value => ["635138684d14750167450719"] },
             { attributeCode => 'attributes_defectsDescription', value => "title" },
-            { attributeCode => 'attributes_defectsReportedDate', value => $sent->{attributes}[5]{value} },
-            { 'attributeCode' => 'attributes_defectsReporters', 'value' => [ 12345 ] },
+            { attributeCode => 'attributes_defectsReportedDate', value => "2023-02-21T13:37:00Z" },
+            { attributeCode => 'attributes_defectsReporters', 'value' => [ 12345 ] },
             { attributeCode => 'attributes_itemsGeometry', value => { coordinates => [ 0.1, 50 ], type => "Point" } },
         ],
         designCode => 'designs_customerReportDefect_62e43ee75039cb015e3287e9',
