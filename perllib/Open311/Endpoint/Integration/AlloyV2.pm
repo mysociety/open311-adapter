@@ -716,7 +716,7 @@ sub _get_defect_updates_resource {
 
         # we don't care about linked defects until they have been scheduled
         my $status = $self->defect_status($attributes);
-        next if $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
+        next if $self->_skip_job_update($linked_defect, $status);
 
         my @version_ids = $self->get_versions_of_resource($update->{itemId});
         foreach my $date (@version_ids) {
@@ -760,6 +760,12 @@ sub _get_defect_updates_resource {
     }
 
     return @updates;
+}
+
+sub _skip_job_update {
+    my ($self, $linked_defect, $status) = @_;
+
+    return $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
 }
 
 =head2 get_service_requests

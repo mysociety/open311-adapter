@@ -94,4 +94,12 @@ sub is_ignored_category {
     return 1 if $status eq 'open';
 }
 
+# Oxfordshire don't want any job updates to be sent when there is a parent defect
+# The parent defect's status is the only change that matters
+sub _skip_job_update {
+    my ($self, $linked_defect) = @_;
+
+    return $linked_defect;
+}
+
 1;

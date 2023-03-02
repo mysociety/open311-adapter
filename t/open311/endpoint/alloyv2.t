@@ -63,6 +63,18 @@ sub _get_attachments {
     return HTTP::Response->new(200, 'OK', $h, "\x{ff}\x{d8}this is data");
 }
 
+package Open311::Endpoint::Integration::UK::Dummy::Oxfordshire;
+use Path::Tiny;
+use Moo;
+extends 'Open311::Endpoint::Integration::UK::Oxfordshire::AlloyV2';
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{jurisdiction_id} = 'dummy';
+    $args{config_file} = path(__FILE__)->sibling("oxfordshire_alloy.yml")->stringify;
+    return $class->$orig(%args);
+};
+has integration_class => (is => 'ro', default => 'Integrations::AlloyV2::Dummy');
+
 package main;
 
 use strict; use warnings;
@@ -85,6 +97,8 @@ use HTTP::Request::Common;
 BEGIN { $ENV{TEST_MODE} = 1; }
 
 my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
+my $oxfordshire_endpoint = Open311::Endpoint::Integration::UK::Dummy::Oxfordshire->new;
+
 
 my %responses = (
     resource => '{
@@ -543,6 +557,61 @@ subtest "check fetch updates" => sub {
     }
     ], 'correct json returned';
 };
+
+subtest "check fetch updates with cobrand skipping update where job has unchanged parent defect" => sub {
+    my $res = $oxfordshire_endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z&end_date=2019-03-01T02:00:00Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+        status => 'investigating',
+        service_request_id => '3027029',
+        description => '',
+        updated_datetime => '2019-01-01T00:22:40Z',
+        update_id => '5d32469bb4e1b90150014306',
+        media_url => '',
+    },
+    {
+        status => 'investigating',
+        service_request_id => '3027029',
+        description => 'This is an updated customer response',
+        updated_datetime => '2019-01-01T00:32:40Z',
+        update_id => '5d32469bb4e1b90150014305',
+        media_url => '',
+    },
+    {
+        status => 'investigating',
+        service_request_id => '3027030',
+        description => '',
+        updated_datetime => '2019-01-01T01:42:40Z',
+        update_id => '5d32469bb4e1b90150014307',
+        media_url => '',
+    },
+    {
+        status => 'not_councils_responsibility',
+        service_request_id => '3027031',
+        description => '',
+        updated_datetime => '2019-01-01T01:43:40Z',
+        update_id => '6d32469bb4e1b90150014305',
+        media_url => '',
+        external_status_code => '01b51bb5c0de101a004154b5',
+    },
+    {
+        status => 'investigating',
+        service_request_id => '3027034',
+        description => '',
+        updated_datetime => '2019-01-01T01:49:13Z',
+        update_id => '5d324086b4e1b90150f946a1',
+        media_url => '',
+    }
+    ], 'correct json returned';
+};
+
 
 subtest "create comment" => sub {
     my $res = $endpoint->run_test_request( 
