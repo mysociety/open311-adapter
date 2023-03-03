@@ -559,7 +559,7 @@ sub _put_photos {
     my $photo_id = $args->{attributes}->{fixmystreet_id};
     my $i = 1;
     for my $photo ( @$photos ) {
-        my $res = $self->get_integration->Service_Request_Document_Create({
+        my $res = $self->get_integration->ServiceRequest_Document_Create({
             srid => $request_id,
             id => $photo_id . $i,
             name => $photo->{filename},

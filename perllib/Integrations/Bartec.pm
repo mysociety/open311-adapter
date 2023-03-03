@@ -207,9 +207,9 @@ sub _methods {
             namespace  => 'http://bartec-systems.com/',
             parameters => [],
         },
-        'Service_Request_Document_Create' => {
+        'ServiceRequest_Document_Create' => {
             endpoint   => $self->collective_endpoint,
-            soapaction => 'http://bartec-systems.com/Service_Request_Document_Create',
+            soapaction => 'http://bartec-systems.com/ServiceRequest_Document_Create',
             namespace  => 'http://bartec-systems.com/',
             parameters => [],
         },
@@ -463,7 +463,7 @@ sub ServiceRequest_Create {
     return $self->_wrapper('ServiceRequest_Create', 1, $elem);
 }
 
-sub Service_Request_Document_Create {
+sub ServiceRequest_Document_Create {
     my ($self, $args) = @_;
 
     my $dt = DateTime->now(time_zone => 'Europe/London');
@@ -490,7 +490,7 @@ sub Service_Request_Document_Create {
 
     my $elem = SOAP::Data->value( make_soap_structure( %req ) );
 
-    return $self->_wrapper('Service_Request_Document_Create', 1, $elem);
+    return $self->_wrapper('ServiceRequest_Document_Create', 1, $elem);
 }
 
 sub ServiceRequests_Notes_Create {
