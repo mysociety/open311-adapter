@@ -252,7 +252,7 @@ sub _attach_note {
         $note_params->{comment} = "Logged by $contributed_by\n\nNote added by FixMyStreet";
     }
 
-    my $res = $integ->ServiceRequests_Notes_Create($note_params);
+    my $res = $integ->ServiceRequest_Note_Create($note_params);
 
     if ( $res->{Errors}->{Message} ) {
         $self->logger->warn("failed to attach note for report "

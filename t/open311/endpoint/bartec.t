@@ -53,14 +53,14 @@ sub ServiceRequest_Create {
     return path(__FILE__)->parent(1)->realpath->child($path)->slurp,
 }
 
-sub ServiceRequests_Notes_Create {
+sub ServiceRequest_Note_Create {
     my %args = @_;
 
     if ( $args{envelope} =~ /failing note/s ) {
-        return '<ServiceRequests_Notes_CreateResponse><ServiceRequests_Notes_CreateResult><Errors><Message>FAIL!</Message></Errors></ServiceRequests_Notes_CreateResult></ServiceRequests_Notes_CreateResponse>';
+        return '<ServiceRequest_Note_CreateResponse><ServiceRequest_Note_CreateResult><Errors><Message>FAIL!</Message></Errors></ServiceRequest_Note_CreateResult></ServiceRequest_Note_CreateResponse>';
     }
 
-    return '<ServiceRequests_Notes_CreateResult />';
+    return '<ServiceRequest_Note_CreateResult />';
 }
 
 sub ServiceRequest_Document_Create {
@@ -107,7 +107,7 @@ my %responses = (
     ServiceRequests_Get => \&ServiceRequests_Get,
     ServiceRequest_Document_Create => \&ServiceRequest_Document_Create,
     ServiceRequests_Notes_Types_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_notes_types_get.xml')->slurp,
-    ServiceRequests_Notes_Create => \&ServiceRequests_Notes_Create,
+    ServiceRequest_Note_Create => \&ServiceRequest_Note_Create,
     System_ExtendedDataDefinitions_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/extended_definitions.xml')->slurp,
 );
 
@@ -548,8 +548,8 @@ subtest "check send basic report" => sub {
         }
     }, 'correct request sent';
 
-    my $note_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Notes_Create} );
-    is_deeply $note_sent->body->{ServiceRequests_Notes_Create}, {
+    my $note_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Note_Create} );
+    is_deeply $note_sent->body->{ServiceRequest_Note_Create}, {
         token => 'ABC=',
         ServiceRequestID => '0001',
         NoteTypeID => 11,
@@ -648,8 +648,8 @@ subtest "check send report with extended info & ampersands " => sub {
         }
     }, 'correct request sent';
 
-    my $note_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Notes_Create} );
-    is_deeply $note_sent->body->{ServiceRequests_Notes_Create}, {
+    my $note_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Note_Create} );
+    is_deeply $note_sent->body->{ServiceRequest_Note_Create}, {
         token => 'ABC=',
         ServiceRequestID => '0001',
         NoteTypeID => 11,
@@ -759,8 +759,8 @@ subtest "check send report with assets" => sub {
         }
     }, 'correct request sent';
 
-    my $note_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Notes_Create} );
-    is_deeply $note_sent->body->{ServiceRequests_Notes_Create}, {
+    my $note_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Note_Create} );
+    is_deeply $note_sent->body->{ServiceRequest_Note_Create}, {
         token => 'ABC=',
         ServiceRequestID => '0001',
         NoteTypeID => 11,
