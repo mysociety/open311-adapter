@@ -182,7 +182,7 @@ sub post_service_request {
         %$args
     };
 
-    my $res = $integ->ServiceRequests_Create($service, $req);
+    my $res = $integ->ServiceRequest_Create($service, $req);
     unless ($res->{ServiceCode}) {
         my $err = $res->{Errors}->{Message};
         die "failed to send request " . $args->{attributes}->{fixmystreet_id} . ": $err";

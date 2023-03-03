@@ -93,7 +93,7 @@ has service_defaults => (
         my $services = $self->ServiceRequests_Types_Get;
 
         # Some services don't seem to have a default land type set, but
-        # ServiceRequests_Create nevertheless fails if the value isn't set -
+        # ServiceRequest_Create nevertheless fails if the value isn't set -
         # so have a fallback value in config in case it's needed.
         my $fallback_land_type = $self->config->{fallback_land_type};
 
@@ -201,9 +201,9 @@ sub _methods {
                 SOAP::Data->new(name => 'Date', type => 'dateTime'),
             ],
         },
-        'ServiceRequests_Create' => {
+        'ServiceRequest_Create' => {
             endpoint   => $self->collective_endpoint,
-            soapaction => 'http://bartec-systems.com/ServiceRequests_Create',
+            soapaction => 'http://bartec-systems.com/ServiceRequest_Create',
             namespace  => 'http://bartec-systems.com/',
             parameters => [],
         },
@@ -407,7 +407,7 @@ sub Premises_Get {
     return $r;
 }
 
-sub ServiceRequests_Create {
+sub ServiceRequest_Create {
     my ($self, $service, $values) = @_;
 
     my $dt = DateTime->now(time_zone => 'Europe/London');
@@ -432,11 +432,11 @@ sub ServiceRequests_Create {
         #source => $values->{Source},
         ExternalReference => $values->{attributes}->{fixmystreet_id},
         reporterContact => {
-            Forename => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => SOAP::Utils::encode_data($values->{first_name}) },
-            Surname => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => SOAP::Utils::encode_data($values->{last_name}) },
-            Email => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd'} , value => $values->{email} },
-            $values->{phone} ? ( Telephone => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd'} , value => $values->{phone} } ) : (),
-            ReporterType => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd'}, value => $values->{ReporterType} },
+            Forename => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd' }, value => SOAP::Utils::encode_data($values->{first_name}) },
+            Surname => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd' }, value => SOAP::Utils::encode_data($values->{last_name}) },
+            Email => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd'} , value => $values->{email} },
+            $values->{phone} ? ( Telephone => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd'} , value => $values->{phone} } ) : (),
+            ReporterType => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd'}, value => $values->{ReporterType} },
         },
     );
 
@@ -445,11 +445,11 @@ sub ServiceRequests_Create {
             my @data;
             for my $v ( @$data ) {
                 push @data, {
-                    FieldName => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => $v->{code} },
-                    FieldValue => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Create.xsd' }, value => $values->{attributes}->{$v->{code}} },
+                    FieldName => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd' }, value => $v->{code} },
+                    FieldValue => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd' }, value => $values->{attributes}->{$v->{code}} },
                 } if $values->{attributes}->{$v->{code}};
             }
-            $req{extendedData} = { ServiceRequests_CreateServiceRequests_CreateFields => \@data } if @data;
+            $req{extendedData} = { ServiceRequest_CreateServiceRequest_CreateFields => \@data } if @data;
         }
     }
 
@@ -460,7 +460,7 @@ sub ServiceRequests_Create {
 
     my $elem = SOAP::Data->value( make_soap_structure( %data ) );
 
-    return $self->_wrapper('ServiceRequests_Create', 1, $elem);
+    return $self->_wrapper('ServiceRequest_Create', 1, $elem);
 }
 
 sub Service_Request_Document_Create {

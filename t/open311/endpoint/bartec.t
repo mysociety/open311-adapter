@@ -40,14 +40,14 @@ sub ServiceRequests_Get {
     return path(__FILE__)->parent(1)->realpath->child($path)->slurp,
 }
 
-sub ServiceRequests_Create {
+sub ServiceRequest_Create {
     my %args = @_;
 
-    my $path = 'xml/bartec/servicerequests_create.xml';
+    my $path = 'xml/bartec/servicerequest_create.xml';
 
     my ($id) = $args{envelope} =~ /<External[^>]*>([^>]*)</;
     if ( $id eq '200' ) {
-        $path = "xml/bartec/servicerequests_create_error.xml";
+        $path = "xml/bartec/servicerequest_create_error.xml";
     }
 
     return path(__FILE__)->parent(1)->realpath->child($path)->slurp,
@@ -99,7 +99,7 @@ my %responses = (
   </AuthenticateResult>
 </AuthenticateResponse>',
     ServiceRequests_Types_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_types_get.xml')->slurp,
-    ServiceRequests_Create => \&ServiceRequests_Create,
+    ServiceRequest_Create => \&ServiceRequest_Create,
     ServiceRequests_Statuses_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_status_get.xml')->slurp,
     Premises_Get => \&Premises_Get,
     ServiceRequests_History_Get =>  \&ServiceRequests_History_Get,
@@ -517,11 +517,11 @@ subtest "check send basic report" => sub {
         ServiceCode => '0001',
     }, "correct request for servicerequests_get";
 
-    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Create} );
+    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Create} );
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
-    is_deeply $create_req->body->{ServiceRequests_Create}, {
+    is_deeply $create_req->body->{ServiceRequest_Create}, {
         DateRequested => '2020-06-17T17:28:30+01:00',
         token => 'ABC=',
         UPRN => 112233445566,
@@ -598,11 +598,11 @@ subtest "check send report with extended info & ampersands " => sub {
         ServiceCode => '0001',
     }, "correct request for servicerequests_get";
 
-    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Create} );
+    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Create} );
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
-    is_deeply $create_req->body->{ServiceRequests_Create}, {
+    is_deeply $create_req->body->{ServiceRequest_Create}, {
         DateRequested => '2020-06-17T17:28:30+01:00',
         token => 'ABC=',
         UPRN => 987654321,
@@ -619,7 +619,7 @@ subtest "check send report with extended info & ampersands " => sub {
             }
         },
         extendedData => {
-            ServiceRequests_CreateServiceRequests_CreateFields => [
+            ServiceRequest_CreateServiceRequest_CreateFields => [
                 {
                     FieldName => 'RubbishType',
                     FieldValue => 'Food - L02'
@@ -729,11 +729,11 @@ subtest "check send report with assets" => sub {
         ServiceCode => '0001',
     }, "correct request for servicerequests_get";
 
-    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Create} );
+    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Create} );
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
-    is_deeply $create_req->body->{ServiceRequests_Create}, {
+    is_deeply $create_req->body->{ServiceRequest_Create}, {
         DateRequested => '2020-06-17T17:28:30+01:00',
         token => 'ABC=',
         UPRN => 987654321,
@@ -798,11 +798,11 @@ subtest "check send report with a photo" => sub {
         media_url => 'http://example.com/1.1.jpg',
     );
 
-    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Create} );
+    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Create} );
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
-    is_deeply $create_req->body->{ServiceRequests_Create}, {
+    is_deeply $create_req->body->{ServiceRequest_Create}, {
         DateRequested => '2020-06-17T17:28:30+01:00',
         token => 'ABC=',
         UPRN => 987654321,
@@ -878,11 +878,11 @@ subtest "check send bulky report with a photo" => sub {
         media_url => 'http://example.com/1.1.jpg',
     );
 
-    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Create} );
+    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Create} );
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
-    is_deeply $create_req->body->{ServiceRequests_Create}, {
+    is_deeply $create_req->body->{ServiceRequest_Create}, {
         DateRequested => '2020-06-17T17:28:30+01:00',
         token => 'ABC=',
         UPRN => 987654321,
@@ -1004,11 +1004,11 @@ subtest "check send report with a photo as an upload" => sub {
         ];
     my $res = $endpoint->run_test_request($req);
 
-    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Create} );
+    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Create} );
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
-    is_deeply $create_req->body->{ServiceRequests_Create}, {
+    is_deeply $create_req->body->{ServiceRequest_Create}, {
         DateRequested => '2020-06-17T17:28:30+01:00',
         token => 'ABC=',
         UPRN => 987654321,
@@ -1094,11 +1094,11 @@ subtest "check send bulky report with a photo as an upload" => sub {
         ];
     my $res = $endpoint->run_test_request($req);
 
-    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequests_Create} );
+    my $create_req = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Create} );
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
-    is_deeply $create_req->body->{ServiceRequests_Create}, {
+    is_deeply $create_req->body->{ServiceRequest_Create}, {
         DateRequested => '2020-06-17T17:28:30+01:00',
         token => 'ABC=',
         UPRN => 987654321,

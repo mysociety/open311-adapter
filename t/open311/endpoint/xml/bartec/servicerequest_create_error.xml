@@ -1,0 +1,8 @@
+<ServiceRequest_CreateResponse xmlns="http://bartec-systems.com/">
+      <ServiceRequest_CreateResult RecordCount="int" xmlns="http://www.bartec-systems.com/ServiceRequests_Types_Get.xsd">
+        <Errors>
+          <Result xmlns="http://www.bartec-systems.com">1</Result>
+          <Message xmlns="http://www.bartec-systems.com">Error in 'API.pr_ServiceRequest_Create': Specified UPRN does not exist</Message>
+        </Errors>
+     </ServiceRequest_CreateResult>
+ </ServiceRequest_CreateResponse>
