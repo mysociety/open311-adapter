@@ -19,7 +19,7 @@ for COBRAND in $@; do
     export SSHPASS=$OPTION_updates_sftp__password
     echo "get $OPTION_updates_sftp__dir data" | sshpass -e sftp -oBatchMode=no -r -b - $OPTION_updates_sftp__username@$OPTION_updates_sftp__host >/dev/null
     if ls -A1q "data" | grep -q .; then
-        mv data/* $OPTION_updates_sftp__out
+        mv -n data/* $OPTION_updates_sftp__out
     fi
 
 done
