@@ -1,0 +1,64 @@
+#!/bin/bash
+#
+# This script removes old Symology update files from the SFTP server.
+#
+# Usage: bin/symology/cleanup_remote_files <cobrand> [<cobrand> ...]
+#
+# It uses the following options from conf/council-<cobrand>_symology.yml
+# configuration file:
+#
+#   updates_sftp:
+#       host: <host>
+#       username: <username>
+#       password: <password>
+#       dir: <directory>
+
+
+set -eu
+
+source /data/mysociety/shlib/deployfns
+
+for COBRAND in "$@"; do
+
+    read_conf "$(dirname "$0")/../../conf/council-"$COBRAND"_symology.yml"
+
+    # Ensure that the SSH keys for the SFTP server have been accepted
+    [ -e ~/.ssh/known_hosts ] || install -D -m 0644 /dev/null ~/.ssh/known_hosts
+    grep $OPTION_updates_sftp__host ~/.ssh/known_hosts >/dev/null || ssh-keyscan $OPTION_updates_sftp__host >> ~/.ssh/known_hosts
+
+    export SSHPASS="$OPTION_updates_sftp__password"
+
+    # Get the list of files on the remote server
+    # Use an array to handle filenames with spaces
+    FILE_LIST=()
+    while read -r FILE; do
+        FILE_LIST+=("$FILE")
+    done < <(sshpass -e sftp -q "$OPTION_updates_sftp__username@$OPTION_updates_sftp__host" << EOF
+cd $OPTION_updates_sftp__dir
+ls
+EOF
+)
+
+    # Calculate the timestamp of 1 week ago
+    ONE_WEEK_AGO=$(date --date="1 week ago" +%Y%m%d_%H%M%S)
+
+    # Build a list of filenames to remove
+    FILES_TO_REMOVE=()
+    for FILE in "${FILE_LIST[@]}"; do
+        FILE_TIMESTAMP=$(echo "$FILE" | cut -d'_' -f1-2)
+        if [[ "$FILE_TIMESTAMP" =~ ^[0-9]{8}_[0-9]{8}$ && "$FILE_TIMESTAMP" < "$ONE_WEEK_AGO" ]]; then
+            FILES_TO_REMOVE+=("$FILE")
+        fi
+    done
+
+    # Remove the files on the remote server
+    if [ ${#FILES_TO_REMOVE[@]} -gt 0 ]; then
+        BATCH_COMMAND="cd $OPTION_updates_sftp__dir"$'\n'
+        for FILE in "${FILES_TO_REMOVE[@]}"; do
+            BATCH_COMMAND+="rm \"$FILE\""$'\n'
+        done
+
+        echo "$BATCH_COMMAND" | sshpass -e sftp -q "$OPTION_updates_sftp__username@$OPTION_updates_sftp__host" > /dev/null
+    fi
+
+done
