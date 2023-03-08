@@ -32,6 +32,9 @@ use constant {
     UPDATE_REPORT_ID => 123,
     REQUEST_SERVICE_CODE => 1,
     REQUEST_CRNO => 2,
+    FIELDS_FIELDLINE => 0,
+    FIELDS_VALUETYPE => 1,
+    FIELDS_VALUE => 2,
 };
 
 use constant {
@@ -54,11 +57,15 @@ $soap_lite->mock(call => sub {
     my ($cls, @args) = @_;
     if ($args[0] eq 'SendRequestAdditionalGroup') {
         my @request = ${$args[2]->value}->value;
+        my @fields = ${$args[4]->value}->value;
         is $request[REPORT_NSGREF]->value, NSGREF;
         is $request[REPORT_NEXTACTION]->value, undef;
         is $request[REPORT_NORTHING]->value, NORTHING;
         my $photo_desc = "\n\n[ This report contains a photo, see: http://example.org/photo/1.jpeg ]";
         is $request[REPORT_DESC]->value, "This is the details$photo_desc";
+        is $fields[0][FIELDS_FIELDLINE]->value, 15;
+        is $fields[0][FIELDS_VALUETYPE]->value, 8;
+        is $fields[0][FIELDS_VALUE]->value, "http://example.org/photo/1.jpeg";
         is $request[REPORT_PRIORITY]->value, ($request[REPORT_REQUEST_TYPE]->value eq "Bridges" ? 'Priority1' : 'Priority2');
         if ( $request[REPORT_REQUEST_TYPE]->value eq "Potholes" ) {
             is $request[REPORT_NEXTACTIONUSERNAME]->value, 'POT00001';
