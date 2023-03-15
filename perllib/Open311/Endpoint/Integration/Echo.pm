@@ -26,7 +26,7 @@ with 'Role::Logger';
 use Integrations::Echo;
 use Open311::Endpoint::Service::Attribute;
 use Open311::Endpoint::Service::UKCouncil::Echo;
-use Open311::Endpoint::Service::Request::Update;
+use Open311::Endpoint::Service::Request::Update::mySociety;
 
 has jurisdiction_id => ( is => 'ro' );
 
@@ -428,7 +428,7 @@ sub post_service_request_update {
         $update_id = 'BLANK';
     }
 
-    return Open311::Endpoint::Service::Request::Update->new(
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
         status => lc $args->{status},
         update_id => $update_id,
     );

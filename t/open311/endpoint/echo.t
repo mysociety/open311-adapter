@@ -466,7 +466,7 @@ subtest "POST update OK" => sub {
         update_id => '678',
         updated_datetime => '2020-06-18T12:00:00Z',
         service_request_id => 'test-12345',
-        status => 'OPEN',
+        status => 'INVESTIGATING',
         description => 'This is the text of the update',
     );
     ok $res->is_success, 'valid request'
