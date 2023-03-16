@@ -5,8 +5,12 @@ password: "pw"
 service_whitelist:
   935: 'Non-offensive graffiti'
   943: Fly-posting
+  2891: 'Report missed collection'
 
 service_to_event_type: {}
+
+waste_services:
+ - 2891
 
 service_id_override:
   935: 277

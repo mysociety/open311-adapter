@@ -130,43 +130,58 @@ $soap_lite->mock(call => sub {
 
         my $event_type = $params[3]->value;
         my $service_id = $params[4]->value;
-        like $event_type, qr/^(935|943)$/;
-        is $service_id, 277;
 
+        like $event_type, qr/^(935|943|2891)$/;
+        if ($event_type =~ /^(935|943)/) {
+            is $service_id, 277;
+        } else {
+            is $service_id, 262, 'Service id updated to missed refuse collection';
+            my @data = ${$params[0]->value}->value->value;
+            is @data, 2, 'Extra data is refuse BIN and refuse BAG';
+            my @bin = ${$data[0]->value}->value;
+            my @bag = ${$data[1]->value}->value;
+            is $bin[0]->value, 1001;
+            is $bin[1]->value, 1, 'Refuse BIN has been ticked';
+            is $bag[0]->value, 1002;
+            is $bag[1]->value, 1, 'Refuse BAG has been ticked';
+        }
         # Check the USRN has been included
-        my @event_object = ${${$params[2]->value}->value->value}->value;
-        is $event_object[0]->value, 'Source';
-        my @object_ref = ${$event_object[1]->value}->value;
-        is $object_ref[0]->value, 'Usrn';
-        is $object_ref[1]->value, 'Street';
-        my $usrn = ${$object_ref[2]->value}->value->value->value->value;
+        if ($event_type =~ /^(935|943)/) {
+            my @event_object = ${${$params[2]->value}->value->value}->value;
+            is $event_object[0]->value, 'Source';
+            my @object_ref = ${$event_object[1]->value}->value;
+            is $object_ref[0]->value, 'Usrn';
+            is $object_ref[1]->value, 'Street';
+            my $usrn = ${$object_ref[2]->value}->value->value->value->value;
 
-        my @data = ${$params[0]->value}->value->value;
-        if ($event_type == 935) {
-             is $usrn, '123/4567';
-             is @data, 5, 'Name and source is only extra data';
-        } elsif ($event_type == 943) {
-             is $usrn, '123/4567';
-             is @data, 4, 'Name (no surname) and source is only extra data';
+            my @data = ${$params[0]->value}->value->value;
+
+            if ($event_type == 935) {
+                is $usrn, '123/4567';
+                is @data, 5, 'Name and source is only extra data';
+            } elsif ($event_type == 943) {
+                is $usrn, '123/4567';
+                is @data, 4, 'Name (no surname) and source is only extra data';
+            }
+            my $c = 0;
+            my @first_name = ${$data[$c++]->value}->value;
+            is $first_name[0]->value, 1001;
+            is $first_name[1]->value, 'Bob';
+            if ($event_type == 935 ) {
+                my @last = ${$data[$c++]->value}->value;
+                is $last[0]->value, 1002;
+                is $last[1]->value, 'Mould';
+            }
+            my @source = ${$data[$c++]->value}->value;
+            is $source[0]->value, 1003;
+            is $source[1]->value, 2;
+            my @loc = ${$data[$c++]->value}->value;
+            is $loc[0]->value, 1010;
+            is $loc[1]->value, "Report title";
+            my @notes = ${$data[$c++]->value}->value;
+            is $notes[0]->value, 1008;
+            is $notes[1]->value, 'Report details';
         }
-        my $c = 0;
-        my @first_name = ${$data[$c++]->value}->value;
-        is $first_name[0]->value, 1001;
-        is $first_name[1]->value, 'Bob';
-        if ($event_type == 935) {
-            my @last = ${$data[$c++]->value}->value;
-            is $last[0]->value, 1002;
-            is $last[1]->value, 'Mould';
-        }
-        my @source = ${$data[$c++]->value}->value;
-        is $source[0]->value, 1003;
-        is $source[1]->value, 2;
-        my @loc = ${$data[$c++]->value}->value;
-        is $loc[0]->value, 1010;
-        is $loc[1]->value, "Report title";
-        my @notes = ${$data[$c++]->value}->value;
-        is $notes[0]->value, 1008;
-        is $notes[1]->value, 'Report details';
 
         return SOAP::Result->new(result => {
             EventGuid => '1234',
@@ -174,7 +189,7 @@ $soap_lite->mock(call => sub {
     } elsif ($args[0]->name eq 'GetEventType') {
         my @params = ${$args[3]->value}->value;
         my $event_type = ${$params[2]->value}->value->value->value;
-        if ( $event_type == 935 || $event_type == 943 ) {
+        if ( $event_type == 935 || $event_type == 943) {
             return SOAP::Result->new(result => {
                 Datatypes => { ExtensibleDatatype => [
                     { Id => 1001, Name => "First Name" },
@@ -182,6 +197,13 @@ $soap_lite->mock(call => sub {
                     { Id => 1003, Name => "Source" },
                     { Id => 1010, Name => "Exact Location" },
                     { Id => 1008, Name => "Notes" },
+                ] },
+            });
+        } elsif ( $event_type == 2891) {
+            return SOAP::Result->new(result => {
+                Datatypes => { ExtensibleDatatype => [
+                    { Id => 1001, Name => "Refuse BIN" },
+                    { Id => 1002, Name => "Refuse BAG" },
                 ] },
             });
         }
@@ -201,6 +223,15 @@ subtest "GET Service List" => sub {
         or diag $res->content;
     is_deeply decode_json($res->content),
         [ {
+            'type' => 'realtime',
+            'service_code' => 'Echo-2891',
+            'service_name' => 'Report missed collection',
+            'group' => 'Waste',
+            'description' => 'Report missed collection',
+            'keywords' => 'waste_only',
+            'metadata' => 'true'
+        },
+        {
           "service_code" => "Echo-935",
           "service_name" => "Non-offensive graffiti",
           "description" => "Non-offensive graffiti",
@@ -301,6 +332,27 @@ subtest "POST other Echo service request OK" => sub {
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => "Echo-1234"
+        } ], 'correct json returned';
+};
+
+subtest "POST missed collection Echo service request OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'Echo-2891',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "Report missed collection",
+        lat => 51,
+        long => -1,
+        'attribute[fixmystreet_id]' => 234,
+        'attribute[service_id]' => 262,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
     is_deeply decode_json($res->content),
         [ {
             "service_request_id" => "Echo-1234"
