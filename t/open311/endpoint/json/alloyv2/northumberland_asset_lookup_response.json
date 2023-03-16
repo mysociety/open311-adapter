@@ -1,0 +1,50 @@
+{
+    "item": {
+        "itemId": "asset",
+        "designCode": "designs_nCCLightingUnit_62cd4755a76c5d014f282213",
+        "collection": "Live",
+        "icon": "icon-stl-lamp",
+        "colour": "#f9bc13",
+        "locked": false,
+        "context": "Customer",
+        "attributes": [
+            {
+                "attributeCode": "attributes_nCCLightingUnitLightingUnitNumber_62cd47b8e5a3d2015595f8c9",
+                "value": "77BR"
+            },
+            {
+                "attributeCode": "attributes_nCCLightingUnitLightingUnitLocation_62cd47d5d656b3015902b815",
+                "value": "JCT A695/A68 SOUTH EXlT RD"
+            },
+            {
+                "attributeCode": "attributes_nCCLightingUnitLightingUnitType_62cd494c27bec501568bfaf2",
+                "value": [
+                    "62cd4532f303ad016af6a821"
+                ]
+            },
+            {
+                "attributeCode": "attributes_nCCLightingUnitLightingUnitClass_62cd4970d656b3015902d5bd",
+                "value": "SL"
+            },
+            {
+                "attributeCode": "attributes_itemsGeometry",
+                "value": {
+                    "type": "Point",
+                    "coordinates": [
+                        -1.956529207099908,
+                        54.94827033718691
+                    ]
+                }
+            },
+            {
+                "attributeCode": "attributes_itemsTitle",
+                "value": "77BR"
+            },
+            {
+                "attributeCode": "attributes_itemsSubtitle",
+                "value": "JCT A695/A68 SOUTH EXlT RD"
+            }
+        ],
+        "signature": "62cd55d03a12230162bd9b0f"
+    }
+}

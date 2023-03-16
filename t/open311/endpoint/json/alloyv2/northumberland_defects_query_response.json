@@ -1,0 +1,82 @@
+{
+    "page": 1,
+    "pageSize": 100,
+    "results": [
+        {
+            "itemId": "defect_1",
+            "designCode": "designs_highwaysDefect_5d97070aca31500f34e0c766",
+            "collection": "Live",
+            "icon": "icon-defect",
+            "colour": "#aa0001",
+            "locked": false,
+            "context": "Customer",
+            "attributes": [
+                {
+                    "attributeCode": "attributes_highwaysDefaultsDefectType_638238f405cb250393764c8b",
+                    "value": [
+                        "62d1714fb313fb01595efa00"
+                    ]
+                },
+                {
+                    "attributeCode": "attributes_highwaysDefaultsPublishToFMS_63fe221a392f45036b6c6bcc",
+                    "value": true
+                },
+                {
+                    "attributeCode": "attributes_itemsTitle",
+                    "value": "Defect 1"
+                },
+                {
+                    "attributeCode": "attributes_itemsGeometry",
+                    "value": {
+                        "type": "Point",
+                        "coordinates": [
+                            -1.5910558931773362,
+                            55.09736792119588
+                        ]
+                    }
+                },
+                {
+                    "attributeCode": "attributes_defectsReportedDate",
+                    "value": "2023-03-23T00:00:00.000Z"
+                }
+            ],
+            "signature": "64149c300a618a0370228fc4"
+        },
+        {
+            "itemId": "defect_2",
+            "designCode": "designs_highwaysDefect_5d97070aca31500f34e0c766",
+            "collection": "Live",
+            "icon": "icon-defect",
+            "colour": "#aa0001",
+            "locked": false,
+            "context": "Customer",
+            "attributes": [
+                {
+                    "attributeCode": "attributes_highwaysDefaultsDefectType_638238f405cb250393764c8b",
+                    "value": [
+                        "62d1714fb313fb01595efa00"
+                    ]
+                },
+                {
+                    "attributeCode": "attributes_itemsTitle",
+                    "value": "Defect 2"
+                },
+                {
+                    "attributeCode": "attributes_itemsGeometry",
+                    "value": {
+                        "type": "Point",
+                        "coordinates": [
+                            -1.5910558931773362,
+                            55.09736792119588
+                        ]
+                    }
+                },
+                {
+                    "attributeCode": "attributes_defectsReportedDate",
+                    "value": "2023-03-23T00:00:00.000Z"
+                }
+            ],
+            "signature": "64149f190a618a0370229489"
+        }
+    ]
+}
