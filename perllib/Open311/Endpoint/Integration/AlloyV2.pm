@@ -1033,11 +1033,11 @@ sub is_ignored_category {
 
 sub get_defect_category {
     my ($self, $defect) = @_;
-    my $mapping = $self->config->{defect_sourcetype_category_mapping}->{ $defect->{designCode } };
+    my $source_map = $self->config->{defect_sourcetype_category_mapping};
+    my $category_map = $source_map->{ $defect->{designCode} } || $source_map->{default};
+    my $category = $category_map->{default};
 
-    my $category = $mapping->{default};
-
-    if ( $mapping->{types} ) {
+    if ( $category_map->{types} ) {
         my @attributes = @{$defect->{attributes}};
         my $type;
 
@@ -1047,7 +1047,7 @@ sub get_defect_category {
             }
         }
 
-        $category = $mapping->{types}->{$type} if $type && $mapping->{types}->{$type};
+        $category = $category_map->{types}->{$type} if $type && $category_map->{types}->{$type};
     }
 
     return '' unless $category;
