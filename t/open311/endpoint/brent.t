@@ -130,7 +130,7 @@ $soap_lite->mock(call => sub {
 
         my $event_type = $params[3]->value;
         my $service_id = $params[4]->value;
-        is $event_type, 935;
+        like $event_type, qr/^(935|943)$/;
         is $service_id, 277;
 
         # Check the USRN has been included
@@ -144,18 +144,27 @@ $soap_lite->mock(call => sub {
         my @data = ${$params[0]->value}->value->value;
         if ($event_type == 935) {
              is $usrn, '123/4567';
-             is @data, 4, 'Name and source is only extra data';
+             is @data, 5, 'Name and source is only extra data';
+        } elsif ($event_type == 943) {
+             is $usrn, '123/4567';
+             is @data, 4, 'Name (no surname) and source is only extra data';
         }
-        my @first_name = ${$data[0]->value}->value;
+        my $c = 0;
+        my @first_name = ${$data[$c++]->value}->value;
         is $first_name[0]->value, 1001;
         is $first_name[1]->value, 'Bob';
-        my @source = ${$data[1]->value}->value;
+        if ($event_type == 935) {
+            my @last = ${$data[$c++]->value}->value;
+            is $last[0]->value, 1002;
+            is $last[1]->value, 'Mould';
+        }
+        my @source = ${$data[$c++]->value}->value;
         is $source[0]->value, 1003;
         is $source[1]->value, 2;
-        my @loc = ${$data[2]->value}->value;
+        my @loc = ${$data[$c++]->value}->value;
         is $loc[0]->value, 1010;
         is $loc[1]->value, "Report title";
-        my @notes = ${$data[3]->value}->value;
+        my @notes = ${$data[$c++]->value}->value;
         is $notes[0]->value, 1008;
         is $notes[1]->value, 'Report details';
 
@@ -165,7 +174,7 @@ $soap_lite->mock(call => sub {
     } elsif ($args[0]->name eq 'GetEventType') {
         my @params = ${$args[3]->value}->value;
         my $event_type = ${$params[2]->value}->value->value->value;
-        if ( $event_type == 935 ) {
+        if ( $event_type == 935 || $event_type == 943 ) {
             return SOAP::Result->new(result => {
                 Datatypes => { ExtensibleDatatype => [
                     { Id => 1001, Name => "First Name" },
@@ -260,6 +269,31 @@ subtest "POST Echo service request OK" => sub {
         'attribute[usrn]' => NSGREF,
         #'attribute[easting]' => EASTING,
         #'attribute[northing]' => NORTHING,
+        'attribute[fixmystreet_id]' => 234,
+        'attribute[title]' => 'Report title',
+        'attribute[description]' => 'Report details',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => "Echo-1234"
+        } ], 'correct json returned';
+};
+
+subtest "POST other Echo service request OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'Echo-943',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        media_url => 'http://example.org/photo/1.jpeg',
+        'attribute[usrn]' => NSGREF,
         'attribute[fixmystreet_id]' => 234,
         'attribute[title]' => 'Report title',
         'attribute[description]' => 'Report details',

@@ -264,17 +264,19 @@ sub check_for_data_value {
 
 sub _get_data_value {
     my ($self, $name, $args, $request) = @_;
+    my $event_type = $request->{event_type};
     my %waste_services = map { $_ => 1 } @{$self->waste_services};
     (my $name_with_underscores = $name) =~ s/ /_/g;
     # skip emails if it's an anonymous user
     return undef if $self->data_key_open311_map->{$name} && $self->data_key_open311_map->{$name} eq 'email' && $args->{attributes}->{contributed_as} && $args->{attributes}->{contributed_as} eq 'anonymous_user';
     return $args->{attributes}{$name_with_underscores} if length $args->{attributes}{$name_with_underscores};
+    return $args->{$self->data_key_open311_map->{$event_type}{$name}} if $self->data_key_open311_map->{$event_type}{$name};
     return $args->{$self->data_key_open311_map->{$name}} if $self->data_key_open311_map->{$name};
     return $args->{attributes}{$self->data_key_attribute_map->{$name}}
-        if $self->data_key_attribute_map->{$name} && !$waste_services{$request->{event_type}};
+        if $self->data_key_attribute_map->{$name} && !$waste_services{$event_type};
     return $self->default_data_all->{$name} if $self->default_data_all->{$name};
-    return $self->default_data_event_type->{$request->{event_type}}{$name}
-        if $self->default_data_event_type->{$request->{event_type}}{$name};
+    return $self->default_data_event_type->{$event_type}{$name}
+        if $self->default_data_event_type->{$event_type}{$name};
     if ($name eq 'Image' && $args->{media_url}->[0]) {
         my $photo = $self->ua->get($args->{media_url}->[0]);
         return encode_base64($photo->content);
