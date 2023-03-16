@@ -62,8 +62,8 @@ $soap_lite->mock(call => sub {
 
         my @data = ${$params[0]->value}->value->value;
         is $uprn, 1000001;
-        if (@data == 5) {
-            is @data, 5, 'Various supplied data';
+        if (@data == 6) {
+            is @data, 6, 'Various supplied data';
             my @action = ${$data[0]->value}->value;
             is $action[0]->value, 1001;
             is $action[1]->value, 1;
@@ -79,6 +79,9 @@ $soap_lite->mock(call => sub {
             my @loc = ${$data[4]->value}->value;
             is $loc[0]->value, 1005;
             is $loc[1]->value, 'Behind the wall';
+            my @type = ${$data[5]->value}->value;
+            is $type[0]->value, 1007;
+            is $type[1]->value, 3;
         } else {
             is @data, 2, 'Various supplied data';
             my @action = ${$data[0]->value}->value;
@@ -103,6 +106,7 @@ $soap_lite->mock(call => sub {
                 { Id => 1004, Name => "Review Date" },
                 { Id => 1005, Name => "Exact Location" },
                 { Id => 1006, Name => "Notes" },
+                { Id => 1007, Name => "Container Type" },
             ] },
         });
     } else {
@@ -128,6 +132,7 @@ subtest "POST add assisted collection OK" => sub {
         'attribute[uprn]' => 1000001,
         'attribute[fixmystreet_id]' => 2000123,
         'attribute[Exact_Location]' => 'Behind the wall',
+        'attribute[Container_Type]' => 3,
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;

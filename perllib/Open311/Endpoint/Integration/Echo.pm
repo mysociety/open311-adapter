@@ -71,8 +71,8 @@ has service_mapping => ( is => 'ro', default => sub { {} } );
 
 This lets you list extra attributes that should be added for a particular
 category. It is a mapping from service code to a sub-mapping of attribute key
-and either "1" (for a non-required hidden field) or a text string description
-for a textarea required question field.
+and "1" (for a non-required hidden field), a text string description
+for a textarea required question field, or a hash for a dropdown list
 
 =cut
 
@@ -204,6 +204,14 @@ sub services {
                         required => 0,
                         datatype => 'string',
                         automated => 'hidden_field',
+                    );
+                } elsif (ref $data->{$_} eq 'HASH') {
+                    %params = (
+                        code => $_,
+                        description => $data->{$_}{description},
+                        required => 1,
+                        datatype => 'singlevaluelist',
+                        values => $data->{$_}{choices}
                     );
                 } else {
                     %params = (

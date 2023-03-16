@@ -348,7 +348,21 @@ subtest "GET service" => sub {
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
-
+    my $container_values =
+    [
+        {
+            'key' => '1',
+            'name' => 'Big'
+        },
+        {
+            'key' => '2',
+            'name' => 'Small'
+        },
+        {
+            'key' => '3',
+            'name' => 'Medium'
+        }
+    ];
     is_deeply decode_json($res->content), {
       "service_code" => "2149-add",
       "attributes" => [
@@ -356,8 +370,9 @@ subtest "GET service" => sub {
           { code => 'property_id', order => 2, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Property ID' },
           { code => 'service_id', order => 3, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Service ID' },
           { code => 'fixmystreet_id', order => 4, required => 'true', variable => 'false', datatype => 'string', datatype_description => '', automated => 'server_set', description => 'external system ID' },
-          { code => 'Exact_Location', order => 5, required => 'true', variable => 'true', datatype => 'text', datatype_description => '', description => 'Exact location of containers' },
-          { code => 'staff_form', order => 6, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'staff_form' },
+          { code => 'Container_Type', order => 5, required => 'true', variable => 'true', datatype => 'singlevaluelist', datatype_description => '', description => 'Type of container', values => $container_values} ,
+          { code => 'Exact_Location', order => 6, required => 'true', variable => 'true', datatype => 'text', datatype_description => '', description => 'Exact location of containers' },
+          { code => 'staff_form', order => 7, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'staff_form' },
       ],
     }, 'correct json returned';
 };

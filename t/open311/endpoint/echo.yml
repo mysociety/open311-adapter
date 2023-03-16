@@ -21,6 +21,12 @@ service_extra_data:
   2149-add:
     staff_form: 1
     Exact_Location: Exact location of containers
+    Container_Type:
+      description: Type of container
+      choices:
+        1: Big
+        2: Small
+        3: Medium
 
 waste_services:
   - 2104
