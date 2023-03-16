@@ -1238,4 +1238,22 @@ sub _find_category_code {
     }
 }
 
+=head2 _find_group_code
+
+This looks up the C<group_list_code> design in Alloy, finds the entry
+with a C<group_title_attribute> attribute that matches the provided
+group, and returns its item ID.
+
+=cut
+
+sub _find_group_code {
+    my ($self, $group) = @_;
+    my $results = $self->_search_for_code($self->config->{group_list_code});
+    for my $grp ( @{ $results } ) {
+        if ( $grp->{attributes}{$self->config->{group_title_attribute}} eq $group ) {
+            return $grp->{itemId};
+        }
+    }
+}
+
 1;

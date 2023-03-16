@@ -1,0 +1,470 @@
+{
+    "design": {
+        "name": "NCC_Lighting_Unit",
+        "code": "designs_nCCLightingUnit_62cd4755a76c5d014f282213",
+        "context": "Customer",
+        "implements": [
+            {
+                "code": "designInterfaces_items",
+                "parent": "designs_nCCLightingUnit_62cd4755a76c5d014f282213",
+                "context": "Customer"
+            },
+            {
+                "code": "designInterfaces_assetHeads",
+                "parent": "designs_nCCLightingUnit_62cd4755a76c5d014f282213",
+                "context": "Customer"
+            },
+            {
+                "code": "designInterfaces_assets",
+                "parent": "designInterfaces_assetHeads",
+                "context": "Core"
+            },
+            {
+                "code": "designInterfaces_itemsWithReports",
+                "parent": "designInterfaces_assets",
+                "context": "Core"
+            },
+            {
+                "code": "designInterfaces_networkReferenceable",
+                "parent": "designInterfaces_assetHeads",
+                "context": "Core"
+            },
+            {
+                "code": "designInterfaces_tasksAssignable",
+                "parent": "designInterfaces_assetHeads",
+                "context": "Core"
+            },
+            {
+                "code": "designInterfaces_defectsAssignable",
+                "parent": "designInterfaces_assetHeads",
+                "context": "Core"
+            },
+            {
+                "code": "designInterfaces_defaultTeams",
+                "parent": "designInterfaces_assetHeads",
+                "context": "Core"
+            },
+            {
+                "code": "designInterfaces_assignedBillingAccounts",
+                "parent": "designInterfaces_assetHeads",
+                "context": "Module"
+            }
+        ],
+        "attributes": [
+            {
+                "name": "Lighting_Unit_Number",
+                "code": "attributes_nCCLightingUnitLightingUnitNumber_62cd47b8e5a3d2015595f8c9",
+                "parent": "designs_nCCLightingUnit_62cd4755a76c5d014f282213",
+                "context": "Customer",
+                "type": "String",
+                "required": false,
+                "readonly": false,
+                "unique": false,
+                "tags": [],
+                "options": {
+                    "min": 1,
+                    "max": 20,
+                    "defaultValue": "?",
+                    "discriminator": "DodiAttributeOptionsStringWebModel"
+                }
+            },
+            {
+                "name": "Lighting_Unit_Location",
+                "code": "attributes_nCCLightingUnitLightingUnitLocation_62cd47d5d656b3015902b815",
+                "parent": "designs_nCCLightingUnit_62cd4755a76c5d014f282213",
+                "context": "Customer",
+                "type": "String",
+                "required": true,
+                "readonly": false,
+                "unique": false,
+                "tags": [],
+                "options": {
+                    "min": 1,
+                    "max": 100,
+                    "defaultValue": "?",
+                    "discriminator": "DodiAttributeOptionsStringWebModel"
+                }
+            },
+            {
+                "name": "Lighting_Unit_Type",
+                "code": "attributes_nCCLightingUnitLightingUnitType_62cd494c27bec501568bfaf2",
+                "parent": "designs_nCCLightingUnit_62cd4755a76c5d014f282213",
+                "context": "Customer",
+                "type": "Link",
+                "required": true,
+                "readonly": false,
+                "unique": false,
+                "tags": [],
+                "options": {
+                    "code": "designs_nCCLightingUnitType_62cd4317a98664015322a234",
+                    "graph": "Lookup",
+                    "weakReference": true,
+                    "defaultValue": [
+                        "62cd4907a76c5d014f2846bd"
+                    ],
+                    "discriminator": "DodiAttributeOptionsLinkWebModel"
+                }
+            },
+            {
+                "name": "Lighting_Unit_Class",
+                "code": "attributes_nCCLightingUnitLightingUnitClass_62cd4970d656b3015902d5bd",
+                "parent": "designs_nCCLightingUnit_62cd4755a76c5d014f282213",
+                "context": "Customer",
+                "type": "String",
+                "required": true,
+                "readonly": false,
+                "unique": false,
+                "tags": [],
+                "options": {
+                    "min": 1,
+                    "max": 10,
+                    "defaultValue": "?",
+                    "discriminator": "DodiAttributeOptionsStringWebModel"
+                }
+            },
+            {
+                "name": "Geometry",
+                "code": "attributes_itemsGeometry",
+                "parent": "designInterfaces_items",
+                "context": "Core",
+                "type": "GeoJson",
+                "required": false,
+                "readonly": false,
+                "unique": false,
+                "tags": [],
+                "options": {
+                    "allows": [
+                        "Point",
+                        "MultiPoint",
+                        "LineString",
+                        "MultiLineString",
+                        "Polygon",
+                        "MultiPolygon",
+                        "GeometryCollection"
+                    ],
+                    "discriminator": "DodiAttributeOptionsGeoJsonWebModel"
+                }
+            },
+            {
+                "name": "Title",
+                "code": "attributes_itemsTitle",
+                "parent": "designInterfaces_items",
+                "context": "Core",
+                "type": "String",
+                "required": false,
+                "readonly": false,
+                "unique": false,
+                "tags": [
+                    "Computed"
+                ],
+                "options": {
+                    "discriminator": "DodiAttributeOptionsStringWebModel"
+                }
+            },
+            {
+                "name": "Subtitle",
+                "code": "attributes_itemsSubtitle",
+                "parent": "designInterfaces_items",
+                "context": "Core",
+                "type": "String",
+                "required": false,
+                "readonly": false,
+                "unique": false,
+                "tags": [
+                    "Computed"
+                ],
+                "options": {
+                    "discriminator": "DodiAttributeOptionsStringWebModel"
+                }
+            },
+            {
+                "name": "Notes",
+                "code": "attributes_assetHeadsNotes",
+                "parent": "designInterfaces_assetHeads",
+                "context": "Core",
+                "type": "String",
+                "required": false,
+                "readonly": false,
+                "unique": false,
+                "tags": [],
+                "options": {
+                    "discriminator": "DodiAttributeOptionsStringWebModel"
+                }
+            },
+            {
+                "name": "Installed Date",
+                "code": "attributes_assetsInstalledDate",
+                "parent": "designInterfaces_assets",
+                "context": "Core",
+                "type": "DateTime",
+                "required": false,
+                "readonly": false,
+                "unique": false,
+                "tags": [],
+                "options": {
+                    "precision": "Minutes",
+                    "discriminator": "DodiAttributeOptionsDateTimeWebModel"
+                }
+            },
+            {
+                "name": "Reports",
+                "code": "attributes_itemsWithReportsItemLevelReport",
+                "parent": "designInterfaces_itemsWithReports",
+                "context": "Core",
+                "type": "Link",
+                "required": false,
+                "readonly": false,
+                "unique": false,
+                "tags": [],
+                "options": {
+                    "code": "designInterfaces_itemLevelReport",
+                    "graph": "Report",
+                    "weakReference": false,
+                    "defaultValue": [],
+                    "discriminator": "DodiAttributeOptionsLinkWebModel"
+                }
+            },
+            {
+                "name": "Network References",
+                "code": "attributes_networkReferenceableNetworkReferences",
+                "parent": "designInterfaces_networkReferenceable",
+                "context": "Core",
+                "type": "Link",
+                "required": false,
+                "readonly": false,
+                "unique": false,
+                "tags": [],
+                "options": {
+                    "code": "designInterfaces_networkReferences",
+                    "graph": "Network",
+                    "weakReference": false,
+                    "defaultValue": [],
+                    "discriminator": "DodiAttributeOptionsLinkWebModel"
+                }
+            },
+            {
+                "name": "Tasks",
+                "code": "attributes_tasksAssignableTasks",
+                "parent": "designInterfaces_tasksAssignable",
+                "context": "Core",
+                "type": "Link",
+                "required": false,
+                "readonly": false,
+                "unique": false,
+                "tags": [],
+                "options": {
+                    "code": "designInterfaces_tasks",
+                    "graph": "Task",
+                    "weakReference": false,
+                    "defaultValue": [],
+                    "discriminator": "DodiAttributeOptionsLinkWebModel"
+                }
+            },
+            {
+                "name": "Defects",
+                "code": "attributes_defectsAssignableDefects",
+                "parent": "designInterfaces_defectsAssignable",
+                "context": "Module",
+                "type": "Link",
+                "required": false,
+                "readonly": false,
+                "unique": false,
+                "tags": [],
+                "options": {
+                    "code": "designInterfaces_defects",
+                    "graph": "Defect",
+                    "weakReference": false,
+                    "defaultValue": [],
+                    "discriminator": "DodiAttributeOptionsLinkWebModel"
+                }
+            },
+            {
+                "name": "Default Team",
+                "code": "attributes_defaultTeamsDefaultTeam",
+                "parent": "designInterfaces_defaultTeams",
+                "context": "Core",
+                "type": "Link",
+                "required": false,
+                "readonly": false,
+                "unique": false,
+                "tags": [],
+                "options": {
+                    "code": "designs_teams",
+                    "graph": "Lookup",
+                    "weakReference": true,
+                    "max": 1,
+                    "defaultValue": [],
+                    "discriminator": "DodiAttributeOptionsLinkWebModel"
+                }
+            },
+            {
+                "name": "Billing Account",
+                "code": "attributes_assignedBillingAccountsBillingAccount",
+                "parent": "designInterfaces_assignedBillingAccounts",
+                "context": "Module",
+                "type": "Link",
+                "required": false,
+                "readonly": false,
+                "unique": false,
+                "tags": [],
+                "options": {
+                    "code": "designs_customerAccounts",
+                    "graph": "Lookup",
+                    "weakReference": true,
+                    "max": 1,
+                    "defaultValue": [],
+                    "discriminator": "DodiAttributeOptionsLinkWebModel"
+                }
+            }
+        ],
+        "metadata": {
+            "createdDate": "2022-07-12T10:05:09.407Z",
+            "createdUserUsername": "carldent",
+            "lastEditDate": "2023-02-03T10:51:58.690Z",
+            "lastEditUserUsername": "howardranyard",
+            "signature": "63dce74ef359f403916816a6"
+        },
+        "dodiTitle": {
+            "value": "{{attributes_nCCLightingUnitLightingUnitNumber_62cd47b8e5a3d2015595f8c9}}",
+            "parent": "designs_nCCLightingUnit_62cd4755a76c5d014f282213"
+        },
+        "dodiSubtitle": {
+            "value": "{{attributes_nCCLightingUnitLightingUnitLocation_62cd47d5d656b3015902b815}}",
+            "parent": "designs_nCCLightingUnit_62cd4755a76c5d014f282213"
+        },
+        "dodiColour": {
+            "value": "#f9bc13",
+            "parent": "designs_nCCLightingUnit_62cd4755a76c5d014f282213"
+        },
+        "dodiIcon": {
+            "value": "icon-stl-lamp",
+            "parent": "designs_nCCLightingUnit_62cd4755a76c5d014f282213"
+        },
+        "geometryRequired": {
+            "value": false,
+            "parent": "engine_defaultedProperties"
+        },
+        "geometryAllows": {
+            "values": [
+                "Point",
+                "MultiPoint",
+                "LineString",
+                "MultiLineString",
+                "Polygon",
+                "MultiPolygon",
+                "GeometryCollection"
+            ],
+            "parent": "engine_defaultedProperties"
+        },
+        "dodiCollections": {
+            "values": [
+                "Live",
+                "Archive",
+                "Template",
+                "Inventory"
+            ],
+            "parent": "designInterfaces_assets"
+        },
+        "discriminator": "DesignWebModel"
+    },
+    "operationsSummary": {
+        "canWrite": true,
+        "canDelete": true,
+        "canReadItems": true,
+        "canEditItems": true,
+        "canDeleteItems": true,
+        "canCreateItems": true,
+        "attributeOperationsSummary": [
+            {
+                "attributeCode": "attributes_nCCLightingUnitLightingUnitNumber_62cd47b8e5a3d2015595f8c9",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": true,
+                "canWriteItemAttribute": true
+            },
+            {
+                "attributeCode": "attributes_nCCLightingUnitLightingUnitLocation_62cd47d5d656b3015902b815",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": true,
+                "canWriteItemAttribute": true
+            },
+            {
+                "attributeCode": "attributes_nCCLightingUnitLightingUnitType_62cd494c27bec501568bfaf2",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": true,
+                "canWriteItemAttribute": true
+            },
+            {
+                "attributeCode": "attributes_nCCLightingUnitLightingUnitClass_62cd4970d656b3015902d5bd",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": true,
+                "canWriteItemAttribute": true
+            },
+            {
+                "attributeCode": "attributes_itemsGeometry",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": false,
+                "canWriteItemAttribute": true
+            },
+            {
+                "attributeCode": "attributes_itemsTitle",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": false,
+                "canWriteItemAttribute": false
+            },
+            {
+                "attributeCode": "attributes_itemsSubtitle",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": false,
+                "canWriteItemAttribute": false
+            },
+            {
+                "attributeCode": "attributes_assetHeadsNotes",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": false,
+                "canWriteItemAttribute": true
+            },
+            {
+                "attributeCode": "attributes_assetsInstalledDate",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": false,
+                "canWriteItemAttribute": true
+            },
+            {
+                "attributeCode": "attributes_itemsWithReportsItemLevelReport",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": false,
+                "canWriteItemAttribute": true
+            },
+            {
+                "attributeCode": "attributes_networkReferenceableNetworkReferences",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": false,
+                "canWriteItemAttribute": true
+            },
+            {
+                "attributeCode": "attributes_tasksAssignableTasks",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": false,
+                "canWriteItemAttribute": true
+            },
+            {
+                "attributeCode": "attributes_defectsAssignableDefects",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": false,
+                "canWriteItemAttribute": true
+            },
+            {
+                "attributeCode": "attributes_defaultTeamsDefaultTeam",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": false,
+                "canWriteItemAttribute": true
+            },
+            {
+                "attributeCode": "attributes_assignedBillingAccountsBillingAccount",
+                "canWriteDodiAttribute": true,
+                "canDeleteDodiAttribute": false,
+                "canWriteItemAttribute": true
+            }
+        ]
+    }
+}

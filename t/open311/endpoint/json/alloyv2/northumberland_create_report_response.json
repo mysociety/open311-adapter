@@ -1,0 +1,96 @@
+{
+    "item": {
+        "itemId": "642062376be3a0036bbbb64b",
+        "designCode": "designs_customerRequest_6386279ffb3d97038c4e03a9",
+        "collection": "Live",
+        "icon": "icon-misc-question-mark",
+        "colour": "#f9bc13",
+        "locked": false,
+        "context": "Customer",
+        "attributes": [
+            {
+                "attributeCode": "attributes_customerRequestFMSSummary_63862bd505cb250393c204d7",
+                "value": "FMS intergration testing please ignore"
+            },
+            {
+                "attributeCode": "attributes_customerRequestFixMyStreetID_63862c38bafbd20397883f72",
+                "value": "123"
+            },
+            {
+                "attributeCode": "attributes_customerRequestFMSDescription_63862bed05cb250393c2096d",
+                "value": "description"
+            },
+            {
+                "attributeCode": "attributes_tasksRaisedTime",
+                "value": "2023-02-21T13:37:00.000Z"
+            },
+            {
+                "attributeCode": "attributes_itemsGeometry",
+                "value": {
+                    "type": "Point",
+                    "coordinates": [
+                        0.1,
+                        50.0
+                    ]
+                }
+            },
+            {
+                "attributeCode": "attributes_customerRequestReporter_63f4c227dabda80390d2f0ab",
+                "value": [
+                    "6420576dac3acd036a974043"
+                ]
+            },
+            {
+                "attributeCode": "attributes_customerRequestRequestGroup_638627f005cb250393c1705a",
+                "value": [
+                    "61fafee3e3b879015205f7cb"
+                ]
+            },
+            {
+                "attributeCode": "attributes_customerRequestRequestCategory_63862851fb3d97038c4e1cfc",
+                "value": [
+                    "61fb016c4c5c56015448093f"
+                ]
+            },
+            {
+                "attributeCode": "attributes_customerRequestPotentialClaimant_6386291d3c591b038e8eef10",
+                "value": false
+            },
+            {
+                "attributeCode": "attributes_customerRequestFMSStatus_6391f99705cb2503934eb858",
+                "value": [
+                    "6391f9639e005f039665d65a"
+                ]
+            },
+            {
+                "attributeCode": "attributes_customerRequestOriginal_63dbb67c6965f303903c9f01",
+                "value": false
+            },
+            {
+                "attributeCode": "attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb",
+                "value": [
+                    "63fcaff2392f45036b52a20b"
+                ]
+            },
+            {
+                "attributeCode": "attributes_tasksStatus",
+                "value": [
+                    "asset"
+                ]
+            },
+            {
+                "attributeCode": "attributes_inspectionsInspectionNumber",
+                "value": 279391.0
+            },
+            {
+                "attributeCode": "attributes_itemsTitle",
+                "value": "Damaged / Missing / Facing Wrong Way "
+            },
+            {
+                "attributeCode": "attributes_itemsSubtitle",
+                "value": "Rasied: 21/02/2023 13:37 "
+            }
+        ],
+        "signature": "642062376be3a0036bbbb652"
+    }
+}

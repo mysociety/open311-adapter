@@ -1,0 +1,245 @@
+{
+  "api_key": "api_key",
+  "api_url": "http://localhost/api/",
+
+  "rfs_design": "designs_customerRequest_6386279ffb3d97038c4e03a9",
+
+  "resource_attachment_attribute_id": "attributes_filesAttachableAttachments",
+  "created_datetime_attribute_id": "attributes_tasksRaisedTime",
+
+  "category_list_code": "designs_cRMRequests_5d89e289ca31500a94693c9c",
+  "category_title_attribute": "attributes_itemsTitle",
+
+  "group_list_code": "designs_cRMRequestTypes_5d89dffaca31500a94693bde",
+  "group_title_attribute": "attributes_itemsTitle",
+
+  "parent_attribute_name": "Tasks",
+
+  "service_whitelist": {
+     "Bus Stops": {
+        "Shelter Damaged": 1,
+        "Sign/Pole Damaged": 1,
+     },
+     "Car Parks": {
+        "Barrier problem": 1,
+        "Faulty pay machine": 1,
+        "Fly tipping/rubbish bin overflowing": 1,
+        "Other car park issue": 1,
+        "Road surface/pothole": 1,
+        "Signs/lines issue": 1,
+     },
+     "Crash Barriers": {
+        "Crash Barriers - Damaged/Unsafe": 1,
+     },
+     "Drains": {
+        "Blocked Ditch": 1,
+        "Blocked Ditch Causing Flooding": 1,
+        "Blocked - flooding private property": 1,
+        "Blocked - flooding road/path": 1,
+        "Broken / Missing": 1,
+        "Damaged": 1,
+        "Loose / Raised / Sunken": 1,
+     },
+     "Footway/Footpath": {
+        "Failed Reinstatement": 1,
+        "Obstruction (Not Vegetation)": 1,
+        "Pothole": 1,
+        "Slabs - Missing": 1,
+        "Slabs - Uneven / Damaged / Cracked": 1,
+     },
+     "Highway Bridges": {
+        "Highway Bridges - Damaged/Unsafe": 1,
+     },
+     "Kerbs": {
+        "Kerbs - Damaged/Loose": 1,
+        "Kerbs - Missing": 1,
+     },
+     "Pedestrian Barriers": {
+        "Pedestrian Barriers - Damaged / Missing": 1,
+     },
+     "Rights of Way": {
+        "Bridge out of repair": 1,
+        "Deterrent (animal)": 1,
+        "Deterrent (notice)": 1,
+        "Erosion": 1,
+        "Gate out of repair": 1,
+        "Missing or damaged signpost": 1,
+        "Missing or damaged waymarking": 1,
+        "Missing structure": 1,
+        "Other Right of Way Issue": 1,
+        "Obstructed by boundary feature": 1,
+        "Obstructed by building": 1,
+        "Obstructed by tree(s)": 1,
+        "Overgrowing vegetation": 1,
+        "Ploughing/cropping": 1,
+        "Stile out of repair": 1,
+        "Surface out of repair": 1,
+     },
+     "Road Markings": {
+        "Road Markings - Worn/Faded": 1,
+     },
+     "Roads": {
+        "Damaged Speed Humps": 1,
+        "Flooding": 1,
+        "Highway Condition": 1,
+        "Mud on Road": 1,
+        "Potholes": 1,
+        "Spill - Oil/Diesel": 1,
+     },
+     "Safety Bollard": {
+        "Safety Bollard - Damaged/Missing": 1,
+     },
+     "Signs": {
+        "Damaged / Missing / Facing Wrong Way": 1,
+        "Obscured by vegetation or Dirty": 1,
+     },
+     "Street Lighting": {
+        "Damaged / Missing / Facing Wrong Way": 1,
+        "Obscured by vegetation or Dirty": 1,
+     },
+     "Traffic Signals / Crossings": {
+        "Damaged Control Box": 1,
+        "Damaged/Exposed Wiring / Vandalised": 1,
+        "Lamp/Bulb Failure": 1,
+        "Request Timing Review": 1,
+        "Signal Failure": 1,
+        "Signal Failure all out": 1,
+        "Signal Failure/Damaged - Toucan/Pelican": 1,
+        "Signal Head Failure": 1,
+        "Signal Stuck": 1,
+     },
+     "Vegetation": {
+        "Fallen Tree": 1,
+        "Restricted Visibility": 1,
+        "Restricted Visibility / Overgrown / Overhanging": 1,
+        "Weeds": 1,
+     },
+     "Verges": {
+        "Damaged by vehicles": 1,
+        "Other": 1,
+     },
+     "Winter": {
+        "Grit Bin - damaged/replacement": 1,
+        "Grit Bin - empty/refill": 1,
+     },
+  },
+
+  "request_to_resource_attribute_mapping": {
+    "description": "attributes_customerRequestFMSDescription_63862bed05cb250393c2096d",
+    "fixmystreet_id": "attributes_customerRequestFixMyStreetID_63862c38bafbd20397883f72",
+    "status": "attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb",
+    "title": "attributes_customerRequestFMSSummary_63862bd505cb250393c204d7",
+  },
+
+  "request_to_resource_attribute_manual_mapping": {
+    "category": "attributes_customerRequestRequestCategory_63862851fb3d97038c4e1cfc",
+    "group": "attributes_customerRequestRequestGroup_638627f005cb250393c1705a",
+  },
+
+  "inspection_attribute_mapping": {
+     "updates": "attributes_customerRequestFMSUpdates_6387cc9805cb250393e00e2f",
+     "status": "attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb",
+     "inspector_comments": "attributes_customerRequestInspectorsComments_638629fcfb3d97038c4e5d5a",
+  },
+
+  "inspection_status_mapping": {
+    "63fcb02aedbc9d0368ae3f10": "action_scheduled",
+    "63fcb002c9ec9c036ec31d69": "closed",
+    "63fcb041753aed036a5e46c7": "duplicate",
+    "63fcb00c753aed036a5e43a2": "fixed",
+    "63fcb01cedbc9d0368ae3a7f": "in_progress",
+    "63fcb06da9e9580368115ea8": "internal_referral",
+    "63fcb036edbc9d0368ae402e": "investigating",
+    "63fcb05eedbc9d0368ae4474": "no_further_action",
+    "63fcb04eedbc9d0368ae42ab": "not_councils_responsibility",
+    "63fcaff2392f45036b52a20b": "open",
+    "63fcb07a753aed036a5e4f1f": "reopen",
+  },
+
+  "defect_resource_name": [
+    "designInterfaces_highwaysDefaults_633d608998cee30390f63cd1",
+  ],
+
+  "defect_publish_flag": "attributes_highwaysDefaultsPublishToFMS_63fe221a392f45036b6c6bcc",
+
+  "defect_status_mapping": {
+    "5c8bdfb28ae862230019dc1e": "open",  # Reported
+    "5c8bdfb58ae862230019dc1f": "investigating",  # Waiting For Inspection
+    "5c8bdfb98ae862230019dc20": "investigating",  # Confirmed
+    "5c8bdfc18ae862230019dc21": "action_scheduled",  # Order Raised
+    "5c8bdfc88ae862230019dc22": "fixed",  # Remedied
+    "5c8bdfdb8ae862230019dc23": "internal_referral",  # Forwarded
+    "5c8bdfe08ae862230019dc24": "no_further_action",  # No Action Required
+    "5c8bdff68ae862230019dc25": "duplicate",  # Superseded
+  },
+
+  "defect_sourcetype_category_mapping": {
+    "default": {
+      "default": "Highway Condition",
+      "types": {
+        "62d170e827bec50156c0d57b": "Pothole",
+        "62d170f7b313fb01595ef1cf": "Highway Condition",
+        "6409ff353d93f70371b6dffd": "Slabs - Uneven / Damaged / Cracked",
+        "6414c03189c7bd0371ac7eb6": "Barrier problem",
+        "6414c04342a88a036aba1c2d": "Faulty pay machine",
+        "6414c05a89c7bd0371ac7f73": "Fly tipping/rubbish bin overflowing",
+        "6414c06c42a88a036aba1cd3": "Other car park issue",
+        "6414c07942a88a036aba1da2": "Road surface/pothole",
+        "6414c08a42a88a036aba1dee": "Signs/lines issue",
+        "6414bcf356bf7e036b6bbfe6": "Crash Barriers - Damaged/Unsafe",
+        "6414c0ad9cc1a003686d7c0a": "Blocked Ditch",
+        "6414c0bb9cc1a003686d7c92": "Blocked Ditch Causing Flooding",
+        "6414c0cd9cc1a003686d7ccb": "Blocked - flooding private property",
+        "6414c0da42a88a036aba1f4c": "Blocked - flooding road/path",
+        "6414c0e789c7bd0371ac8215": "Broken / Missing",
+        "6414c0f69cc1a003686d7db5": "Damaged",
+        "6414c10742a88a036aba2040": "Loose / Raised / Sunken",
+        "6414ca0156bf7e036b6bff8c": "Failed Reinstatement",
+        "6414ca283d93f703715c23f8": "Obstruction (Not Vegetation)",
+        "6414cb1989c7bd0371acaa1b": "Pothole",
+        "6414cc4089c7bd0371acae05": "Slabs - Missing",
+        "6409ff353d93f70371b6dffd": "Slabs - Uneven / Damaged / Cracked",
+        "6414cc549cc1a003686dab2b": "Kerbs - Damaged/Loose",
+        "6414cc643d93f703715c2c50": "Kerbs - Missing",
+        "6414cc9442a88a036aba4cda": "Pedestrian Barriers - Damaged / Missing",
+        "6414cca99cc1a003686dacaa": "Road Markings - Worn/Faded",
+        "6414ccc03d93f703715c2d7e": "Damaged Speed Humps",
+        "62d1712d072e050154b9a106": "Highway Condition",
+        "62d1714fb313fb01595efa00": "Highway Condition",
+        "62d17162e5a3d20155cb813d": "Highway Condition",
+        "62d17179072e050154b9a6b1": "Highway Condition",
+        "62d171de27bec50156c0ec03": "Highway Condition",
+        "6414ccde9cc1a003686daceb": "Mud on Road",
+        "62d170e827bec50156c0d57b": "Potholes",
+        "6414ccf756bf7e036b6c09f7": "Spill - Oil/Diesel",
+        "6414cd1f56bf7e036b6c0a79": "Safety Bollard - Damaged/Missing",
+        "6414d66e42a88a036aba73e0": "Damaged by vehicles",
+       },
+    },
+  },
+
+  "defect_attribute_mapping": {
+    "description": "attributes_defectsDescription",
+    "status": "attributes_tasksStatus",
+    "requested_datetime": "attributes_defectsReportedDate",
+  },
+
+  "contact": {
+    "code": "designs_contacts",
+    "attribute_id": "attributes_customerRequestReporter_63f4c227dabda80390d2f0ab",
+    "search_attribute_code_email": "attributes_contactsEmail",
+    "search_attribute_code_phone": "attributes_contactsPhone",
+    "attribute_defaults": {
+      "attributes_protectedDataConsentRecordedBy" : [ '63de0e8ac70221038edf119e' ],  # FMS user.
+      "attributes_addressableAddressLine1" : "No address"  # Required field on contact design.
+    },
+    "attribute_mapping": {
+      "first_name": "attributes_contactsFirstName",
+      "last_name": "attributes_contactsLastName",
+      "email": "attributes_contactsEmail",
+      "phone": "attributes_contactsPhone",
+      "created": "attributes_protectedDataDateRecorded",
+    },
+  },
+
+}

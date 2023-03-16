@@ -1,0 +1,58 @@
+{
+    "item": {
+        "itemId": "6420576dac3acd036a974043",
+        "designCode": "designs_contacts",
+        "collection": "Live",
+        "icon": "icon-user",
+        "colour": "#25aae1",
+        "locked": false,
+        "context": "Customer",
+        "attributes": [
+            {
+                "attributeCode": "attributes_contactsEmail",
+                "value": "test@example.com"
+            },
+            {
+                "attributeCode": "attributes_protectedDataDateRecorded",
+                "value": "2023-02-21T13:37:00.000Z"
+            },
+            {
+                "attributeCode": "attributes_addressableAddressLine1",
+                "value": "No address"
+            },
+            {
+                "attributeCode": "attributes_contactsLastName",
+                "value": "Anthony"
+            },
+            {
+                "attributeCode": "attributes_contactsFirstName",
+                "value": "David"
+            },
+            {
+                "attributeCode": "attributes_protectedDataConsentRecordedBy",
+                "value": [
+                    "63de0e8ac70221038edf119e"
+                ]
+            },
+            {
+                "attributeCode": "attributes_contactsContactType_5d9d7ccaca31500858bda1ba",
+                "value": [
+                    "5d9d7c71ca3150039c4454f5"
+                ]
+            },
+            {
+                "attributeCode": "attributes_contactsNotes_5d9d8a8fca31500858bda30b",
+                "value": "?"
+            },
+            {
+                "attributeCode": "attributes_itemsTitle",
+                "value": "David Anthony"
+            },
+            {
+                "attributeCode": "attributes_itemsSubtitle",
+                "value": "Contact"
+            }
+        ],
+        "signature": "6420576dac3acd036a974048"
+    }
+}
