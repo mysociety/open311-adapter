@@ -45,62 +45,122 @@ has ua => (
     },
 );
 
-# If the Confirm endpoint requires a particular EnquiryMethodCode for NewEnquiry
-# requests, override this in the subclass. Valid values can be found by calling
-# the GetCustomerLookup method on the endpoint.
+
+=head2 enquiry_method_code
+
+If the Confirm endpoint requires a particular EnquiryMethodCode for NewEnquiry
+requests, override this in the subclass. Valid values can be found by calling
+the GetCustomerLookup method on the endpoint.
+
+=cut
+
 has 'enquiry_method_code' => (
     is => 'lazy',
     default => sub { $_[0]->config->{enquiry_method_code} }
 );
 
-# Similar to enquiry_method_code, if the Confirm endpoint requires a particular
-# PointOfContactCode for NewEnquiry requests, override this in the subclass.
-# Valid values can be found by calling the GetCustomerLookup method on the endpoint.
+
+=head2 point_of_contact_code
+
+Similar to enquiry_method_code, if the Confirm endpoint requires a particular
+PointOfContactCode for NewEnquiry requests, override this in the subclass.
+Valid values can be found by calling the GetCustomerLookup method on the endpoint.
+
+=cut
+
 has 'point_of_contact_code' => (
     is => 'lazy',
     default => sub { $_[0]->config->{point_of_contact_code} }
 );
 
-# Similar to enquiry_method_code/point_of_contact_code, if the Confirm endpoint requires a particular
-# CustomerTypeCode for NewEnquiry requests, override this in the subclass.
-# Valid values can be found by calling the GetCustomerLookup method on the endpoint.
+
+=head2 customer_type_code
+
+Similar to enquiry_method_code/point_of_contact_code, if the Confirm endpoint requires a particular
+CustomerTypeCode for NewEnquiry requests, override this in the subclass.
+Valid values can be found by calling the GetCustomerLookup method on the endpoint.
+
+=cut
+
 has 'customer_type_code' => (
     is => 'lazy',
     default => sub { $_[0]->config->{customer_type_code} }
 );
 
-# Set this config value to true to send the FixMyStreet report ID into the
-# CustomerReference field when raising enquiries, as required by some Confirm
-# clients.
+
+=head2 send_customer_ref_field
+
+Set this config value to true to send the FixMyStreet report ID into the
+CustomerReference field when raising enquiries, as required by some Confirm
+clients.
+
+=cut
+
 has 'send_customer_ref_field' => (
     is => 'lazy',
     default => sub { $_[0]->config->{send_customer_ref_field} }
 );
 
-# Set this config value to true to not send the FixMyStreet report ID into the
-# EnquiryReference field when raising enquiries, as required by some Confirm
-# clients.
+
+=head2 skip_enquiry_ref_field
+
+Set this config value to true to not send the FixMyStreet report ID into the
+EnquiryReference field when raising enquiries, as required by some Confirm
+clients.
+
+=cut
+
 has 'skip_enquiry_ref_field' => (
     is => 'lazy',
     default => sub { $_[0]->config->{skip_enquiry_ref_field} }
 );
 
-# If a particular service requires an enquiry class code, we can look this up here
+
+=head2 service_enquiry_class_code
+
+If a particular service requires an enquiry class code, we can look this up here
+
+=cut
+
 sub service_enquiry_class_code {
     my ($self, $service_code) = @_;
     my $lookup = $self->config->{service_enquiry_class_code} || {};
     return $lookup->{$service_code};
 }
 
+
+=head2 server_timezone
+
+The timezone that the Confirm server is operating in. 'Europe/London' is almost
+certainly what you want.
+
+=cut
+
 has 'server_timezone' => (
     is => 'lazy',
     default => sub { $_[0]->config->{server_timezone} }
 );
 
+
+=head2 completion_statuses
+
+A list of enquiry status codes that determine whether job completion photos
+should be looked up when fetching updates.
+
+=cut
+
 has completion_statuses => (
     is => 'lazy',
     default => sub { $_[0]->config->{completion_statuses} || [] }
 );
+
+
+=head2 base_url
+
+The base URL that's used for job completion photo URLs. For mySociety
+deployments this should be set to http://<vhost name>/
+
+=cut
 
 has base_url => (
     is => 'lazy',
