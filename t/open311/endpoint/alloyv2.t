@@ -714,7 +714,8 @@ subtest "create comment with photo" => sub {
             value => "Customer update at 2019-04-17 14:39:00
 This is an update"
             },
-            { attributeCode => 'attributes_filesAttachableAttachments', value => [ 'fileid' ] }
+            # '02037eefc0de101a008fb7ef' is the hash of a previously uploaded photo.
+            { attributeCode => 'attributes_filesAttachableAttachments', value => [ '02037eefc0de101a008fb7ef', 'fileid' ] }
         ],
         signature => '5d32469bb4e1b9015001430b'
     },
