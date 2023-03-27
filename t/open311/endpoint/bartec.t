@@ -587,7 +587,7 @@ subtest "check send report with extended info & ampersands " => sub {
         'attribute[RubbishType]' => 'Food - L02',
         'attribute[RubbishDepth]' => 'Lots - W01',
         'attribute[ITEM_01]' => 'Speakers',
-        'attribute[HAS SPACE]' => 'Yes it does',
+        'attribute[HAS SPACE]' => 'Yes it does & also',
     );
 
     is $sent{ServiceRequest_Document_Create}, undef, "skip document create if no photo";
@@ -634,7 +634,7 @@ subtest "check send report with extended info & ampersands " => sub {
                 },
                 {
                     FieldName => 'HAS SPACE',
-                    FieldValue => 'Yes it does'
+                    FieldValue => 'Yes it does & also'
                 }
             ]
         },

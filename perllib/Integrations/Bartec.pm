@@ -446,7 +446,7 @@ sub ServiceRequest_Create {
             for my $v ( @$data ) {
                 push @data, {
                     FieldName => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd' }, value => $v->{code} },
-                    FieldValue => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd' }, value => $values->{attributes}->{$v->{code}} },
+                    FieldValue => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd' }, value => SOAP::Utils::encode_data($values->{attributes}->{$v->{code}}) },
                 } if $values->{attributes}->{$v->{code}};
             }
             $req{extendedData} = { ServiceRequest_CreateServiceRequest_CreateFields => \@data } if @data;
