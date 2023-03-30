@@ -131,10 +131,9 @@ $soap_lite->mock(call => sub {
         my $event_type = $params[3]->value;
         my $service_id = $params[4]->value;
 
-        like $event_type, qr/^(935|943|2891)$/;
         if ($event_type =~ /^(935|943)/) {
             is $service_id, 277;
-        } else {
+        } elsif ($event_type == 2891) {
             is $service_id, 262, 'Service id updated to missed refuse collection';
             my @data = ${$params[0]->value}->value->value;
             is @data, 2, 'Extra data is refuse BIN and refuse BAG';
@@ -144,7 +143,20 @@ $soap_lite->mock(call => sub {
             is $bin[1]->value, 1, 'Refuse BIN has been ticked';
             is $bag[0]->value, 1002;
             is $bag[1]->value, 1, 'Refuse BAG has been ticked';
+        } elsif ($event_type == 1159) {
+            is $service_id, 317;
+            my @data = ${$params[0]->value}->value->value;
+            is @data, 2, 'Extra data right size';
+            my @name = ${$data[0]->value}->value;
+            my @ref = ${$data[1]->value}->value;
+            is $name[0]->value, 1001;
+            is $name[1]->value, 'Bob', 'Name';
+            is $ref[0]->value, 1009;
+            is $ref[1]->value, 'PAY12345', 'Correct reference';
+        } else {
+            die "Bad event type provided";
         }
+
         # Check the USRN has been included
         if ($event_type =~ /^(935|943)/) {
             my @event_object = ${${$params[2]->value}->value->value}->value;
@@ -199,6 +211,14 @@ $soap_lite->mock(call => sub {
                     { Id => 1008, Name => "Notes" },
                 ] },
             });
+        } elsif ($event_type == 1159) {
+            return SOAP::Result->new(result => {
+                Datatypes => { ExtensibleDatatype => [
+                    { Id => 1001, Name => "First Name" },
+                    { Id => 1002, Name => "Surname" },
+                    { Id => 1009, Name => "Payment Code" },
+                ] },
+            });
         } elsif ( $event_type == 2891) {
             return SOAP::Result->new(result => {
                 Datatypes => { ExtensibleDatatype => [
@@ -223,6 +243,14 @@ subtest "GET Service List" => sub {
         or diag $res->content;
     is_deeply decode_json($res->content),
         [ {
+          "service_code" => "Echo-1159",
+          "service_name" => "Garden subscription",
+          "description" => "Garden subscription",
+          "metadata" => "true",
+          "group" => "Waste",
+          "keywords" => "waste_only",
+          "type" => "realtime"
+        }, {
             'type' => 'realtime',
             'service_code' => 'Echo-2891',
             'service_name' => 'Report missed collection',
@@ -230,8 +258,7 @@ subtest "GET Service List" => sub {
             'description' => 'Report missed collection',
             'keywords' => 'waste_only',
             'metadata' => 'true'
-        },
-        {
+        }, {
           "service_code" => "Echo-935",
           "service_name" => "Non-offensive graffiti",
           "description" => "Non-offensive graffiti",
@@ -353,6 +380,33 @@ subtest "POST missed collection Echo service request OK" => sub {
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => "Echo-1234"
+        } ], 'correct json returned';
+};
+
+subtest "POST waste Echo service request OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'Echo-1159',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "Garden subscription details",
+        lat => 51,
+        long => -1,
+        'attribute[usrn]' => NSGREF,
+        'attribute[fixmystreet_id]' => 234,
+        'attribute[title]' => 'Garden subscription - New',
+        'attribute[description]' => 'Garden subscription details',
+        'attribute[service_id]' => 317,
+        'attribute[PaymentCode]' => 'PAY12345',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
     is_deeply decode_json($res->content),
         [ {
             "service_request_id" => "Echo-1234"

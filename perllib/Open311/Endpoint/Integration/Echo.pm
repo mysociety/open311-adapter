@@ -98,8 +98,9 @@ has service_id_override => ( is => 'ro' );
 
 =head2 data_key_open311_map
 
-A mapping from event type data field name to Open311 request field name,
-for fields that are not attributes (e.g. first_name, email).
+A mapping from event type data field name to Open311 request field name, for
+fields that are not attributes (e.g. first_name, email). Can be restricted to a
+particular event type ID by having it as a submapping under the event type ID.
 
 =cut
 
@@ -108,8 +109,10 @@ has data_key_open311_map => ( is => 'ro', default => sub { {} } );
 =head2 data_key_attribute_map
 
 A mapping from event type data field name to Open311 attribute field name.
-Ideally, things are passed through from FMS with the same name, but this
-is for if they are not. This only applies to non-waste services.
+Ideally, things are passed through from FMS with the same name, but this is for
+if they are not. As above, can be restricted to a particular event type ID with
+a submapping. The general mapping only applies to non-waste services, but an
+event type ID submapping can apply to anything.
 
 =cut
 
@@ -278,10 +281,15 @@ sub _get_data_value {
     # skip emails if it's an anonymous user
     return undef if $self->data_key_open311_map->{$name} && $self->data_key_open311_map->{$name} eq 'email' && $args->{attributes}->{contributed_as} && $args->{attributes}->{contributed_as} eq 'anonymous_user';
     return $args->{attributes}{$name_with_underscores} if length $args->{attributes}{$name_with_underscores};
+
     return $args->{$self->data_key_open311_map->{$event_type}{$name}} if $self->data_key_open311_map->{$event_type}{$name};
     return $args->{$self->data_key_open311_map->{$name}} if $self->data_key_open311_map->{$name};
+
+    return $args->{attributes}{$self->data_key_attribute_map->{$event_type}{$name}}
+        if $self->data_key_attribute_map->{$event_type}{$name};
     return $args->{attributes}{$self->data_key_attribute_map->{$name}}
         if $self->data_key_attribute_map->{$name} && !$waste_services{$event_type};
+
     return $self->default_data_all->{$name} if $self->default_data_all->{$name};
     return $self->default_data_event_type->{$event_type}{$name}
         if $self->default_data_event_type->{$event_type}{$name};

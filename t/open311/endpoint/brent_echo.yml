@@ -6,11 +6,13 @@ service_whitelist:
   935: 'Non-offensive graffiti'
   943: Fly-posting
   2891: 'Report missed collection'
+  1159: Garden subscription
 
 service_to_event_type: {}
 
 waste_services:
  - 2891
+ - 1159
 
 service_id_override:
   935: 277
@@ -24,6 +26,8 @@ data_key_open311_map:
 data_key_attribute_map:
   Exact Location: title
   Notes: description
+  1159:
+    Payment Code: PaymentCode
 
 default_data_all:
   Source: 2
