@@ -12,9 +12,6 @@ has jurisdiction_id => (
     default => 'camden_symology',
 );
 
-# Updates from FMS should always have a GN11 code, meaning "Customer called"
-sub event_action_event_type { 'NOTE' }
-
 =head2 process_service_request_args
 
 Camden's Symology has got three fields for photo URLs. We send the first

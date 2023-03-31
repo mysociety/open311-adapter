@@ -111,7 +111,7 @@ $soap_lite->mock(call => sub {
         my @request = map { $_->value } ${$args[4]->value}->value;
         my $photo_desc = "\n\n[ This update contains a photo, see: http://example.org/photo/1.jpeg ]";
         my $report_id = $request[2];
-        my $code = '';
+        my $code = 'CHRR';
         is_deeply \@request, [ 'ServiceCode', 1001, $report_id, $code, '', 'FMS', "This is the update$photo_desc", undef ];
         return {
             StatusCode => 0,

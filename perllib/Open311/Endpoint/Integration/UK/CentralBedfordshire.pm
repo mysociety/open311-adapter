@@ -17,9 +17,6 @@ has service_class  => (
     default => 'Open311::Endpoint::Service::UKCouncil::Symology::CentralBedfordshire'
 );
 
-# Updates from FMS should always have a GN11 code, meaning "Customer called"
-sub event_action_event_type { 'GN11'}
-
 sub process_service_request_args {
     my $self = shift;
 

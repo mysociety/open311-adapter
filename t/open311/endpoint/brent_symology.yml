@@ -7,6 +7,7 @@ request_defaults:
     ServiceCode: 'ServiceCode'
 customer_defaults:
     CustomerType: "PB"
+event_action_event_type: CHRR
 event_status_mapping:
   19: 'investigating'
   21:

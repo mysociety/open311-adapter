@@ -2,6 +2,7 @@ username: FMS
 customer_defaults:
   CustomerType: ""
   ContactType: ""
+event_action_event_type: NOTE
 category_mapping:
   Potholes:
     group: Roads And Pavements

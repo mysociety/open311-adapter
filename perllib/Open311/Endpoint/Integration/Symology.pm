@@ -465,4 +465,8 @@ sub _update_status {
     return ( $map->{$event->{$field}}, $external_status );
 }
 
+sub event_action_event_type {
+    return $_[0]->endpoint_config->{event_action_event_type};
+}
+
 1;

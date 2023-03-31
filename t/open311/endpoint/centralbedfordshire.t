@@ -142,6 +142,7 @@ $centralbeds_end->mock(endpoint_config => sub {
             AreaB => "USER0002",
             AreaC => "USER0003",
         },
+        event_action_event_type => 'GN11',
         category_mapping => {
             Bridges => {
                 name => 'Bridges',

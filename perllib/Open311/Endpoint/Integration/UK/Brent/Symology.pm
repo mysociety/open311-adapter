@@ -15,11 +15,6 @@ has service_class  => (
     default => 'Open311::Endpoint::Service::UKCouncil::Symology::Brent'
 );
 
-sub event_action_event_type {
-    my ($self, $args) = @_;
-    return '';
-}
-
 sub process_service_request_args {
     my $self = shift;
 
