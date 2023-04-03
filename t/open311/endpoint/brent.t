@@ -126,7 +126,7 @@ $soap_lite->mock(call => sub {
         my @params = ${$args[3]->value}->value;
 
         my $client_ref = $params[1]->value;
-        is $client_ref, 'FMS-234';
+        like $client_ref, qr/^FMS-234b?$/;
 
         my $event_type = $params[3]->value;
         my $service_id = $params[4]->value;
@@ -145,14 +145,34 @@ $soap_lite->mock(call => sub {
             is $bag[1]->value, 1, 'Refuse BAG has been ticked';
         } elsif ($event_type == 1159) {
             is $service_id, 317;
+            my $c = 0;
             my @data = ${$params[0]->value}->value->value;
-            is @data, 2, 'Extra data right size';
-            my @name = ${$data[0]->value}->value;
-            my @ref = ${$data[1]->value}->value;
+            my @name = ${$data[$c++]->value}->value;
+            my @ref = ${$data[$c++]->value}->value;
             is $name[0]->value, 1001;
             is $name[1]->value, 'Bob', 'Name';
             is $ref[0]->value, 1009;
             is $ref[1]->value, 'PAY12345', 'Correct reference';
+            if ($client_ref eq 'FMS-234b') {
+                is @data, 5, 'Extra data right size';
+                my @sack = ${$data[$c++]->value}->value;
+                is $sack[0]->value, 21131;
+                is $sack[1]->value, 1, 'Correct sack boolean';
+            } else {
+                is @data, 4, 'Extra data right size';
+            }
+            my @type = ${$data[$c++]->value}->value;
+            my @quan = ${$data[$c++]->value}->value;
+            is $type[0]->value, 34811;
+            if ($client_ref eq 'FMS-234b') {
+                is $type[1]->value, 2, 'Correct type';
+                is $quan[0]->value, 34812;
+                is $quan[1]->value, 9, 'Correct quantity ("Bags")';
+            } else {
+                is $type[1]->value, 1, 'Correct type';
+                is $quan[0]->value, 34812;
+                is $quan[1]->value, 1, 'Correct quantity';
+            }
         } else {
             die "Bad event type provided";
         }
@@ -217,6 +237,11 @@ $soap_lite->mock(call => sub {
                     { Id => 1001, Name => "First Name" },
                     { Id => 1002, Name => "Surname" },
                     { Id => 1009, Name => "Payment Code" },
+                    { Id => 21131, Name => "Bio Sacks" },
+                    { Id => 34811, Name => "Paid Collection Container Type" },
+                    { Id => 34812, Name => "Paid Collection Container Quantity" },
+                    { Id => 34813, Name => "Container Type" },
+                    { Id => 34814, Name => "Container Quantity" },
                 ] },
             });
         } elsif ( $event_type == 2891) {
@@ -403,6 +428,36 @@ subtest "POST waste Echo service request OK" => sub {
         'attribute[description]' => 'Garden subscription details',
         'attribute[service_id]' => 317,
         'attribute[PaymentCode]' => 'PAY12345',
+        'attribute[Paid_Collection_Container_Quantity]' => 1,
+        'attribute[Paid_Collection_Container_Type]' => 1,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => "Echo-1234"
+        } ], 'correct json returned';
+};
+
+subtest "POST sack waste Echo service request OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'Echo-1159',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "Garden subscription details",
+        lat => 51,
+        long => -1,
+        'attribute[usrn]' => NSGREF,
+        'attribute[fixmystreet_id]' => '234b',
+        'attribute[title]' => 'Garden subscription - New',
+        'attribute[description]' => 'Garden subscription details',
+        'attribute[service_id]' => 317,
+        'attribute[PaymentCode]' => 'PAY12345',
+        'attribute[Paid_Collection_Container_Quantity]' => 1,
+        'attribute[Paid_Collection_Container_Type]' => 2,
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;

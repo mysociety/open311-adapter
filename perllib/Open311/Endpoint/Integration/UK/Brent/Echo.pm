@@ -29,6 +29,11 @@ around process_service_request_args => sub {
             $args->{attributes}{"Garden_BIN"} = 1;
             $args->{attributes}{"Garden_BAG"} = 1;
         }
+    } elsif ($request->{event_type} == 1159) {
+        if ($args->{attributes}{Paid_Collection_Container_Type} == 2) {
+            $args->{attributes}{"Bio_Sacks"} = 1;
+            $args->{attributes}{Paid_Collection_Container_Quantity} = 9; # Bags
+        }
     }
 
     return $request;
