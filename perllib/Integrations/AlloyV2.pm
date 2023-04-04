@@ -11,6 +11,7 @@ use Try::Tiny;
 use Encode qw(encode_utf8);
 use JSON::MaybeXS qw(encode_json decode_json);
 use List::Util qw[min];
+use POSIX qw(ceil);
 
 with 'Role::Config';
 with 'Role::Logger';
