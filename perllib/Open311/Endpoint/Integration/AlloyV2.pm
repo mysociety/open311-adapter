@@ -111,7 +111,8 @@ has service_class  => (
 =head2 service_whitelist
 
 This is a mapping of Alloy services, from group to categories, each category
-being a key with value 1 or {}. (Not sure why.)
+being a key with value 1 or a map. (Not sure why.)
+Both groups and categories can have an 'alias' field set in their maps. This lets you expose the group or category under a different name than used by Alloy.
 
 =cut
 
@@ -153,16 +154,32 @@ sub services {
 
     my @services = ();
     for my $group (sort keys %{ $self->service_whitelist }) {
-        my $whitelist = $self->service_whitelist->{$group};
-        for my $subcategory (sort keys %{ $whitelist }) {
+
+        my $group_config = $self->service_whitelist->{$group};
+        my $group_alias;
+        if (ref($group_config) eq 'HASH' && exists($group_config->{alias})) {
+            $group_alias = $group_config->{alias};
+        }
+        my $group_name = $group_alias || $group;
+
+        for my $subcategory (sort keys %{ $group_config }) {
             next if $subcategory eq 'resourceId';
-            my $name = $subcategory;
-            my $code = $group . '_' . $name; # XXX What should it be...
+            next if $subcategory eq 'alias';
+
+            my $subcategory_config = $self->service_whitelist->{$group}->{$subcategory};
+            my $subcategory_alias;
+            if (ref($subcategory_config) eq 'HASH' && exists($subcategory_config->{alias})) {
+                $subcategory_alias = $subcategory_config->{alias};
+            }
+            my $subcategory_name = $subcategory_alias || $subcategory;
+
+            my $code = $group . '_' . $subcategory; # XXX What should it be...
+
             my %service = (
-                service_name => $name,
-                description => $name,
+                service_name => $subcategory_name,
+                description => $subcategory_name,
                 service_code => $code,
-                group => $group,
+                group => $group_name,
             );
             my $o311_service = $self->service_class->new(%service);
             push @services, $o311_service;
