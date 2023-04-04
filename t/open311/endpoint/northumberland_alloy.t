@@ -211,5 +211,27 @@ subtest "fetch problems" => sub {
     ], 'correct json returned';
 };
 
+subtest "check service group and category aliases" => sub {
+    my $res = $endpoint->run_test_request(
+      GET => '/services.json?jurisdiction_id=dummy',
+    );
+    my $services = (decode_json($res->content))[0];
+
+    my $bin_service;
+    my $row_service;
+
+    foreach(@$services) {
+        if ($_->{service_code} eq 'Winter_Grit Bin - empty/refill') {
+            $bin_service = $_;
+        } elsif ($_->{service_code} eq 'Rights of Way_Deterrent (animal)') {
+            $row_service = $_;
+        }
+    }
+
+    ok defined($bin_service), "bin service found";
+    is $bin_service->{group}, "Winter (Snow/Ice)", "group alias applied to bin service";
+    ok defined($row_service), "rights of way service found";
+    is $row_service->{service_name}, "nuisance/dangerous animal", "category alias applied to row service";
+};
 
 done_testing;
