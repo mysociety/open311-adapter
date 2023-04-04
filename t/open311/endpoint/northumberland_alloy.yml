@@ -48,7 +48,10 @@
         "Slabs - Uneven / Damaged / Cracked": 1,
      },
      "Highway Bridges": {
-        "Highway Bridges - Damaged/Unsafe": 1,
+        "alias": "Highway Bridges/Structures",
+        "Highway Bridges - Damaged/Unsafe": {
+          "alias": "Highway Bridges/Structures - Damaged/Unsafe",
+        }
      },
      "Kerbs": {
         "Kerbs - Damaged/Loose": 1,
@@ -59,7 +62,9 @@
      },
      "Rights of Way": {
         "Bridge out of repair": 1,
-        "Deterrent (animal)": 1,
+        "Deterrent (animal)": {
+          "alias": "nuisance/dangerous animal",
+        },
         "Deterrent (notice)": 1,
         "Erosion": 1,
         "Gate out of repair": 1,
@@ -119,6 +124,7 @@
         "Other": 1,
      },
      "Winter": {
+        "alias": "Winter (Snow/Ice)",
         "Grit Bin - damaged/replacement": 1,
         "Grit Bin - empty/refill": 1,
      },
