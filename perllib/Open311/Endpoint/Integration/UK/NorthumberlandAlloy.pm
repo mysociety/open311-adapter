@@ -44,11 +44,13 @@ sub process_attributes {
 
     my ($group, $category) = split('_', $args->{service_code});
     my $category_code = $self->_find_category_code($category);
-    my $group_code = $self->_find_group_code($group);
-    push @$attributes, {
-       attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{group},
-       value => [ $group_code ],
-    };
+    if ($group ne '') {
+        my $group_code = $self->_find_group_code($group);
+        push @$attributes, {
+           attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{group},
+           value => [ $group_code ],
+        };
+    }
     push @$attributes, {
         attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{category},
         value => [ $category_code ],

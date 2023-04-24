@@ -16,6 +16,9 @@
   "parent_attribute_name": "Tasks",
 
   "service_whitelist": {
+     "": {
+       "Damaged / Missing / Facing Wrong Way": 1,
+     },
      "Bus Stops": {
         "Shelter Damaged": 1,
         "Sign/Pole Damaged": 1,
