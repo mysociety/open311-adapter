@@ -234,4 +234,56 @@ subtest "check service group and category aliases" => sub {
     is $row_service->{service_name}, "nuisance/dangerous animal", "category alias applied to row service";
 };
 
+subtest "create problem on groupless category" => sub {
+    set_fixed_time('2023-02-21T13:37:00Z');
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        service_code => 'Street Lighting_Damaged / Missing / Facing Wrong Way',
+        first_name => 'David',
+        last_name => 'Anthony',
+        email => 'test@example.com',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        'attribute[description]' => 'description',
+        'attribute[title]' => 'title',
+        'attribute[report_url]' => 'http://localhost/123',
+        'attribute[asset_resource_id]' => 'asset',
+        'attribute[category]' => 'Street Lighting_Damaged / Missing / Facing Wrong Way',
+        'attribute[fixmystreet_id]' => 123,
+        'attribute[easting]' => 1,
+        'attribute[northing]' => 2,
+    );
+    restore_time();
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    # order these so comparison works
+    $sent->{attributes} = [ sort { $a->{attributeCode} cmp $b->{attributeCode} } @{ $sent->{attributes} } ];
+    is_deeply $sent, {
+        attributes => [
+            { attributeCode => 'attributes_customerRequestFMSDescription_63862bed05cb250393c2096d', value => 'description' },
+            { attributeCode => 'attributes_customerRequestFMSSummary_63862bd505cb250393c204d7', value => "title" },
+            { attributeCode => 'attributes_customerRequestFixMyStreetID_63862c38bafbd20397883f72', value => 123 },
+            { attributeCode => 'attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb', value => undef },
+            { attributeCode => 'attributes_customerRequestReporter_63f4c227dabda80390d2f0ab', value => [ '6420576dac3acd036a974043' ]},
+            { attributeCode => 'attributes_customerRequestRequestCategory_63862851fb3d97038c4e1cfc', value => [ '61fb016c4c5c56015448093f' ]},
+            { attributeCode => 'attributes_customerRequestRequestGroup_638627f005cb250393c1705a', value => [ '61fafee3e3b879015205f7cb' ]},
+            { attributeCode => 'attributes_itemsGeometry', value => { coordinates => [ 0.1, 50 ], type => "Point" } },
+            { attributeCode => 'attributes_tasksRaisedTime', value => '2023-02-21T13:37:00Z' },
+        ],
+        designCode => 'designs_customerRequest_6386279ffb3d97038c4e03a9',
+        parents => { "attributes_tasksAssignableTasks" => [ 'asset' ] },
+    }, 'correct json sent';
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => "642062376be3a0036bbbb64b"
+        } ], 'correct json returned';
+};
+
 done_testing;
