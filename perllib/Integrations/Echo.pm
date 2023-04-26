@@ -176,9 +176,9 @@ sub PerformEventAction {
         Value => [ { 'msArray:anyType' => $args->{service_request_id} }, ],
     );
     my $action = ixhash(
-        ActionTypeId => 3,
+        ActionTypeId => $args->{actiontype_id} || 3,
         Data => { ExtensibleDatum => ixhash(
-            DatatypeId => 1,
+            DatatypeId => $args->{datatype_id} || 1,
             Value => $args->{description},
         ) },
         EventRef => $ref,

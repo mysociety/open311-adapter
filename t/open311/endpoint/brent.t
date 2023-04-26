@@ -252,6 +252,20 @@ $soap_lite->mock(call => sub {
                 ] },
             });
         }
+    } elsif ($args[0]->name eq 'PerformEventAction') {
+        my @params = ${$args[3]->value}->value;
+        my $actiontype_id = $params[0]->value;
+        my @data = ${${$params[1]->value}->value->value}->value;
+        my $datatype_id = $data[0]->value;
+        my $description = $data[1]->value;
+        if ($description =~ /Update on no further action/) {
+            is $actiontype_id, 3;
+            is $datatype_id, 1;
+        } else {
+            is $actiontype_id, 334;
+            is $datatype_id, 112;
+        }
+        return SOAP::Result->new(result => { EventActionGuid => 'ABC' });
     } else {
         is $args[0], '';
     }
@@ -465,6 +479,46 @@ subtest "POST sack waste Echo service request OK" => sub {
     is_deeply decode_json($res->content),
         [ {
             "service_request_id" => "Echo-1234"
+        } ], 'correct json returned';
+};
+
+subtest "POST Echo update OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        updated_datetime => '2019-03-01T12:00:00Z',
+        service_code => 'Echo-935',
+        service_request_id => "Echo-1234",
+        status => 'OPEN',
+        description => "This is the update",
+        update_id => 456,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            'update_id' => "Echo-ABC",
+        } ], 'correct json returned';
+};
+
+subtest "POST Echo update on closed report OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        updated_datetime => '2019-03-01T12:00:00Z',
+        service_code => 'Echo-935',
+        service_request_id => "Echo-1234",
+        status => 'NO_FURTHER_ACTION',
+        description => "Update on no further action",
+        update_id => 456,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            'update_id' => "Echo-ABC",
         } ], 'correct json returned';
 };
 

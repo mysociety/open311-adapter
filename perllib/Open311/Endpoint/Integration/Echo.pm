@@ -440,6 +440,10 @@ sub post_service_request_update {
 
     my $update_id;
     if ($args->{description}) {
+        if ($self->jurisdiction_id eq 'brent_echo' && $args->{status} ne 'NO_FURTHER_ACTION') {
+            $args->{actiontype_id} = 334;
+            $args->{datatype_id} = 112;
+        }
         my $response = $self->get_integration->PerformEventAction($args);
         $update_id = $response->{EventActionGuid};
     } else {
