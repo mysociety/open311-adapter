@@ -56,8 +56,8 @@ has '+identifier_types' => (
     default => sub {
         my $self = shift;
         return {
-            # some service codes have spaces, ampersands, commas
-            service_code => { type => '/open311/regex', pattern => qr/^ [&,\w_\- \/\(\)]+ $/ax },
+            # some service codes have spaces, ampersands, commas, etc
+            service_code => { type => '/open311/regex', pattern => qr/^ [&,\.\w_\- \/\(\)]+ $/ax },
         };
     },
 );
