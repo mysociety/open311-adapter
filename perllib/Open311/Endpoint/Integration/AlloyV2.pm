@@ -568,10 +568,16 @@ sub _get_inspection_updates {
 
         my $last_description = '';
         foreach my $date (@version_ids) {
-            next unless $self->_valid_update_date($update, $date);
-            # we have to fetch all the updates as we need them to check if the
-            # comments have changed. once we've fetched them we can throw away the
-            # ones that don't match the date range.
+            my $description_to_send = '';
+            my $update_dt;
+
+            # If we don't need to compare the comments field, we can
+            # consider updates only within the desired date range
+            if (!$mapping->{inspector_comments}) {
+                $update_dt = $self->date_to_truncated_dt( $date );
+                next unless $update_dt >= $start_time && $update_dt <= $end_time;
+            }
+
             my $resource = try {
                 $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
             };
@@ -582,14 +588,19 @@ sub _get_inspection_updates {
 
             my ($status, $reason_for_closure) = $self->_get_inspection_status($attributes, $mapping);
 
-            # only want to put a description in the update if it's changed so compare
-            # it to the last one.
-            my $description = $attributes->{$mapping->{inspector_comments} || ''} || '';
-            my $description_to_send = $description ne $last_description ? $description : '';
-            $last_description = $description;
+            # If we are checking if the comments field has changed, we will
+            # have to fetch all the updates. Once we've fetched them we can
+            # throw away the ones that don't match the date range.
+            if ($mapping->{inspector_comments}) {
+                my $description = $attributes->{$mapping->{inspector_comments} || ''} || '';
+                # only want to put a description in the update if it's
+                # changed, so compare it to the last one.
+                $description_to_send = $description ne $last_description ? $description : '';
+                $last_description = $description;
 
-            my $update_dt = $self->date_to_truncated_dt( $date );
-            next unless $update_dt >= $start_time && $update_dt <= $end_time;
+                $update_dt = $self->date_to_truncated_dt( $date );
+                next unless $update_dt >= $start_time && $update_dt <= $end_time;
+            }
 
             (my $id_date = $date) =~ s/\D//g;
             my $id = $update->{itemId} . "_$id_date";
@@ -616,8 +627,6 @@ sub _accept_updated_resource {
     # we only want updates to RFS inspections
     return 1 if $update->{designCode} eq $self->config->{rfs_design};
 }
-
-sub _valid_update_date { return 1; }
 
 sub _get_inspection_status {
     my ($self, $attributes, $mapping) = @_;
@@ -720,8 +729,6 @@ sub _get_defect_updates_resource {
 
         my @version_ids = $self->get_versions_of_resource($update->{itemId});
         foreach my $date (@version_ids) {
-            next unless $self->_valid_update_date($update, $date);
-
             my $update_dt = $self->date_to_truncated_dt($date);
             next unless $update_dt >= $start_time && $update_dt <= $end_time;
 
