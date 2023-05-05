@@ -317,8 +317,16 @@ sub _get_update_files {
 
     # Otherwise, fetch from URLs
     my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
-    my @files = map { $ua->get($_) } @{$self->update_urls};
-    @files = map { $_->content_ref } @files;
+    my @files;
+    foreach my $url (@{$self->update_urls}) {
+        my $resp = $ua->get($url);
+        if (my $dir = $self->endpoint_config->{update_urls_store}) {
+            my $data = $resp->content;
+            my $base = path($url)->basename;
+            path($dir)->child(time() . "-$base")->spew_raw($data);
+        }
+        push @files, $resp->content_ref;
+    }
     return \@files;
 }
 
