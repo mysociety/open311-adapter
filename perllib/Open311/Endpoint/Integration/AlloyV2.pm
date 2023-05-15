@@ -489,10 +489,12 @@ sub post_service_request_update {
 
     $updates = $self->_generate_update($args, $updates);
 
-    my $updated_attributes = [{
+    my $updated_attributes = $self->update_additional_attributes($args);
+
+    push @$updated_attributes, {
         attributeCode => $attribute_code,
         value => $updates
-    }];
+    };
 
     if ( $self->config->{resource_attachment_attribute_id} && @{ $args->{media_url} }) {
         my $attachment_code = $self->config->{resource_attachment_attribute_id};
@@ -1215,6 +1217,16 @@ sub upload_attachments {
     } @{ $uploads };
 
     return \@resource_ids;
+}
+
+=head2 update_additional_attributes
+
+Extended by a particular intregration subclass to update additional alloy attributes when processing a service request update.
+
+=cut
+
+sub update_additional_attributes {
+    return [];
 }
 
 =head2 _search_for_code

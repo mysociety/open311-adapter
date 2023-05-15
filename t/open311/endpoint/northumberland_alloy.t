@@ -48,7 +48,12 @@ $integration->mock('api_call', sub {
 
     my $content = undef;
 
-    if ($call =~ 'item/defect_1/parents' || $call =~ 'item/defect_2/parents') {
+    if ($call =~ 'item/642062376be3a0036bbbb64b') {
+
+        # Looking up created report - returning the same response as for the newly created report.
+        $content = path(__FILE__)->sibling("json/alloyv2/northumberland_create_report_response.json")->slurp;
+
+    } elsif ($call =~ 'item/defect_1/parents' || $call =~ 'item/defect_2/parents') {
 
         # Looking up defect parents - returning no parents.
         $content = path(__FILE__)->sibling("json/alloyv2/northumberland_empty_response.json")->slurp;
@@ -284,6 +289,39 @@ subtest "create problem on groupless category" => sub {
         [ {
             "service_request_id" => "642062376be3a0036bbbb64b"
         } ], 'correct json returned';
+};
+
+subtest "update status on problem" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        service_code => 'Street Lighting_Damaged / Missing / Facing Wrong Way',
+        description => 'update',
+        status => 'FIXED',
+        service_request_id => '642062376be3a0036bbbb64b',
+        update_id => '1',
+        updated_datetime => '2023-05-15T14:55:55+00:00',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+
+    my $sent = pop @sent;
+    my $attributes = $sent->{attributes};
+
+    my $expected_status_attribute_code = 'attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb';
+    my $expected_status_attribute_value = '63fcb00c753aed036a5e43a2';
+
+    my $status_match_found = 0;
+    foreach (@{ $attributes }) {
+        if ($_->{attributeCode} eq $expected_status_attribute_code) {
+            ok ref($_->{value}) eq 'ARRAY' && $_->{value}[0] eq $expected_status_attribute_value, "value sent in status attribute update is correct";
+            $status_match_found = 1;
+            last;
+        }
+    }
+    ok $status_match_found, "status attribute update was sent";
 };
 
 done_testing;

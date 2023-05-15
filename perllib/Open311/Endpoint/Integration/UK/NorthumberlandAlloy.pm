@@ -59,6 +59,21 @@ sub process_attributes {
     return $attributes;
 }
 
+=head2 update_additional_attributes
+
+Adds an update for the status attribute given by C<update_status_attribute_id>, using the mapping C<update_status_mapping>.
+
+=cut
+
+sub update_additional_attributes {
+    my ($self, $args) = @_;
+
+    return [{
+        attributeCode => $self->config->{update_status_attribute_id},
+        value => [ $self->config->{update_status_mapping}->{lc ($args->{status})} ]
+    }];
+}
+
 =head2 skip_fetch_defect
 
 Adds additional '_should_publish_defect' check.

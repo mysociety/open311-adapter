@@ -15,6 +15,22 @@
 
   "parent_attribute_name": "Tasks",
 
+  "update_status_attribute_id": "attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb",
+
+  "update_status_mapping": {
+    "action_scheduled": "63fcb02aedbc9d0368ae3f10",
+    "closed": "63fcb002c9ec9c036ec31d69",
+    "duplicate": "63fcb041753aed036a5e46c7",
+    "fixed": "63fcb00c753aed036a5e43a2",
+    "in_progress": "63fcb01cedbc9d0368ae3a7f",
+    "internal_referral": "63fcb06da9e9580368115ea8",
+    "investigating": "63fcb036edbc9d0368ae402e",
+    "no_further_action": "63fcb05eedbc9d0368ae4474",
+    "not_councils_responsibility": "63fcb04eedbc9d0368ae42ab",
+    "open": "63fcaff2392f45036b52a20b",
+    "reopen": "63fcb07a753aed036a5e4f1f",
+  },
+
   "service_whitelist": {
      "": {
        "Damaged / Missing / Facing Wrong Way": 1,
