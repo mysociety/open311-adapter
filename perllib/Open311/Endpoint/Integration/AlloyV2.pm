@@ -600,7 +600,9 @@ sub _get_inspection_updates {
             }
 
             my $resource = try {
-                $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
+                my $r = $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
+                sleep 1 unless $ENV{TEST_MODE};
+                return $r;
             };
             next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
 
@@ -754,7 +756,9 @@ sub _get_defect_updates_resource {
             next unless $update_dt >= $start_time && $update_dt <= $end_time;
 
             my $resource = try {
-                $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
+                my $r = $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
+                sleep 1 unless $ENV{TEST_MODE};
+                return $r;
             };
             next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
 
