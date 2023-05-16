@@ -80,7 +80,7 @@ sub _update_status {
             'investigating'
         } elsif ($action_due =~ /^PT[CS]|TPHR|REIN$/) {
             'action_scheduled'
-        } elsif ($row->{Stage} == 9) {
+        } elsif ($row->{Stage} == 9 || $row->{Stage} == 8) {
             undef
         } else {
             'open' # XXX Might want to maintain existing status?
