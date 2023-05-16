@@ -26,6 +26,10 @@
                     "value": "Defect 1"
                 },
                 {
+                    "attributeCode": "attributes_tasksStatus",
+                    "value": [ "5c8bdfb28ae862230019dc1e" ]
+                },
+                {
                     "attributeCode": "attributes_itemsGeometry",
                     "value": {
                         "type": "Point",

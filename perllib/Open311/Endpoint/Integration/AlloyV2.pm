@@ -658,7 +658,7 @@ sub _get_inspection_status {
         $status = $self->inspection_status($status_code);
     }
 
-    my $reason_for_closure = $attributes->{$mapping->{reason_for_closure}} ?
+    my $reason_for_closure = $mapping->{reason_for_closure} && $attributes->{$mapping->{reason_for_closure}} ?
         $attributes->{$mapping->{reason_for_closure}}->[0] :
         '';
 
