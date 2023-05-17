@@ -8,6 +8,11 @@ use Path::Tiny;
 use YAML::XS qw(LoadFile);
 use Moo::Role;
 
+has config_filename => (
+    is => 'lazy',
+    default => sub { $_[0]->jurisdiction_id },
+);
+
 has config_file => (
     is => 'lazy',
     coerce => sub { path($_[0]) },
@@ -16,7 +21,7 @@ has config_file => (
 sub _build_config_file {
     my $self = shift;
     my $path = path(__FILE__)->parent(3)->realpath->child('conf');
-    $path->child('council-' . $self->jurisdiction_id . '.yml');
+    $path->child('council-' . $self->config_filename . '.yml');
 }
 
 has endpoint_config => (

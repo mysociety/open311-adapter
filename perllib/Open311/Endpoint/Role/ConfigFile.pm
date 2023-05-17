@@ -21,7 +21,13 @@ around BUILDARGS => sub {
     my %args = @_;
 
     die unless $args{jurisdiction_id}; # Must have one by here
-    my $file = $args{config_filename} || "council-$args{jurisdiction_id}.yml";
+    my $file;
+    if ($args{config_filename}) {
+        $file = $args{config_filename};
+    } else {
+        $args{config_filename} = $args{jurisdiction_id};
+        $file = "council-$args{config_filename}.yml";
+    }
     $args{config_file} //= path(__FILE__)->parent(5)->realpath->child("conf/$file")->stringify;
 
     if (my $config_data = $args{config_data}) {

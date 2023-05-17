@@ -244,6 +244,7 @@ sub get_integration {
     my $integ = $self->integration_class->new(
         config_filename => $self->jurisdiction_id,
     );
+    $self->log_identifier($self->jurisdiction_id);
     return $integ;
 }
 

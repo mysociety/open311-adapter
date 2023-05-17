@@ -171,6 +171,7 @@ sub get_integration {
     my $integ = $self->integration_class;
     $integ = $integ->on_fault(sub { my($soap, $res) = @_; die ref $res ? $res->faultstring : $soap->transport->status, "\n"; })->want_som(1);
     $integ->config_filename($self->jurisdiction_id);
+    $self->log_identifier($self->jurisdiction_id);
     return $integ;
 }
 

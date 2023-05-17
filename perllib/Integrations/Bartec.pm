@@ -1,6 +1,5 @@
 package Integrations::Bartec;
 
-use SOAP::Lite;
 use Exporter;
 use DateTime::Format::W3CDTF;
 use Carp ();
@@ -20,7 +19,7 @@ with 'Role::Memcached';
 # that I don't understand, so declare the attribute ourselves.
 has logger => (
     is => 'lazy',
-    default => sub { Open311::Endpoint::Logger->new },
+    default => sub { Open311::Endpoint::Logger->new(config_filename => $_[0]->config_filename) },
 );
 
 has ua => (

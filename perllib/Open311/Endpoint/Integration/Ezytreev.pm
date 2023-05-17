@@ -24,6 +24,7 @@ has ezytreev => (
 );
 
 sub get_integration {
+    $_[0]->log_identifier($_[0]->jurisdiction_id);
     return $_[0]->ezytreev;
 }
 

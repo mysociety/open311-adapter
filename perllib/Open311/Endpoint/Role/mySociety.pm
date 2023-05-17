@@ -78,12 +78,18 @@ around dispatch_request => sub {
     );
 };
 
+my $log_identifier;
+sub log_identifier {
+    my $self = shift;
+    $log_identifier = shift;
+}
+
 sub log_soap_message {
     # uncoverable subroutine
     # uncoverable statement
     my ($msg) = @_;
 
-    my $l = Open311::Endpoint::Logger->new;
+    my $l = Open311::Endpoint::Logger->new( config_filename => $log_identifier );
     if ( ref($msg) eq 'HTTP::Request' || ref($msg) eq 'HTTP::Response' ) {
         $l->debug($msg->content);
     }

@@ -33,6 +33,7 @@ sub integration_class { 'Integrations::WDM' }
 
 sub get_integration {
     my $self = shift;
+    $self->log_identifier($self->jurisdiction_id);
     return $self->integration_class->new(config_filename => $self->jurisdiction_id);
 }
 
