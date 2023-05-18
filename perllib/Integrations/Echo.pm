@@ -89,6 +89,16 @@ sub call {
 # Tie::IxHashes are used below because Echo complains if
 # the XML fields are not received in the correct order.
 
+sub GetEvent {
+    my ($self, $guid, $type) = @_;
+    $type ||= 'Guid';
+    $self->call('GetEvent', ref => ixhash(
+        Key => $type,
+        Type => 'Event',
+        Value => { 'msArray:anyType' => $guid },
+    ));
+}
+
 sub GetEventType {
     my ($self, $id) = @_;
     my $obj = ixhash(

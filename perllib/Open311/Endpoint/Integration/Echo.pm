@@ -436,14 +436,42 @@ Action on the relevant event.
 
 =cut
 
+sub force_arrayref {
+    my ($res, $key) = @_;
+    return [] unless $res;
+    my $data = $res->{$key};
+    return [] unless $data;
+    $data = [ $data ] unless ref $data eq 'ARRAY';
+    return $data;
+}
+
 sub post_service_request_update {
     my ($self, $args) = @_;
 
     my $update_id;
     if ($args->{description}) {
-        if ($self->jurisdiction_id eq 'brent_echo' && $args->{status} ne 'NO_FURTHER_ACTION') {
-            $args->{actiontype_id} = 334;
-            $args->{datatype_id} = 112;
+        if ($self->jurisdiction_id eq 'brent_echo') {
+            my $integ = $self->get_integration;
+            my $event = $integ->GetEvent($args->{service_request_id});
+            my $event_type = $integ->GetEventType($event->{EventTypeId});
+            my $state_id = $event->{EventStateId};
+
+            my $states = force_arrayref($event_type->{Workflow}->{States}, 'State');
+            my $data;
+            foreach (@$states) {
+                my $core = $_->{CoreState};
+                my $name = $_->{Name};
+                $name =~ s/ +$//;
+                $data->{states}{$_->{Id}} = {
+                    core => $core,
+                    name => $name,
+                };
+            }
+            my $state = $data->{states}{$state_id};
+            if ($state->{core} ne 'Closed' || $state->{name} ne 'Not Completed') {
+                $args->{actiontype_id} = 334;
+                $args->{datatype_id} = 112;
+            }
         }
         my $response = $self->get_integration->PerformEventAction($args);
         $update_id = $response->{EventActionGuid};

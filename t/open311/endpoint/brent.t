@@ -218,11 +218,25 @@ $soap_lite->mock(call => sub {
         return SOAP::Result->new(result => {
             EventGuid => '1234',
         });
+    } elsif ($args[0]->name eq 'GetEvent') {
+        my $id = ${(${$args[3]->value}->value)[2]->value}->value->value;
+        my $state_id = $id eq '1234-notcompleted' ? 4004 : 4002;
+        return SOAP::Result->new(result => {
+            EventTypeId => 935, # graffiti
+            EventStateId => $state_id,
+        });
     } elsif ($args[0]->name eq 'GetEventType') {
         my @params = ${$args[3]->value}->value;
         my $event_type = ${$params[2]->value}->value->value->value;
         if ( $event_type == 935 || $event_type == 943) {
             return SOAP::Result->new(result => {
+                Workflow => { States => { State => [
+                    { Id => 4001, Name => 'New', CoreState => 'New' },
+                    { Id => 4002, Name => "Allocated to Crew", CoreState => 'Pending' },
+                    { Id => 4003, Name => 'Completed', CoreState => 'Closed' },
+                    { Id => 4004, Name => 'Not Completed', CoreState => 'Closed' },
+                    { Id => 4005, Name => 'Rejected', CoreState => 'Cancelled' },
+                ] } },
                 Datatypes => { ExtensibleDatatype => [
                     { Id => 1001, Name => "First Name" },
                     { Id => 1002, Name => "Surname" },
@@ -488,7 +502,7 @@ subtest "POST Echo update OK" => sub {
         api_key => 'test',
         updated_datetime => '2019-03-01T12:00:00Z',
         service_code => 'Echo-935',
-        service_request_id => "Echo-1234",
+        service_request_id => "Echo-1234-allocated",
         status => 'OPEN',
         description => "This is the update",
         update_id => 456,
@@ -508,7 +522,7 @@ subtest "POST Echo update on closed report OK" => sub {
         api_key => 'test',
         updated_datetime => '2019-03-01T12:00:00Z',
         service_code => 'Echo-935',
-        service_request_id => "Echo-1234",
+        service_request_id => "Echo-1234-notcompleted",
         status => 'NO_FURTHER_ACTION',
         description => "Update on no further action",
         update_id => 456,
