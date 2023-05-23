@@ -1167,11 +1167,16 @@ sub _get_defect_inspection_parents {
 sub _get_attachments {
     my ($self, $urls) = @_;
 
+    my @photos = ();
     my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
-    my @photos = map {
-        $ua->get($_);
-    } @$urls;
-
+    for (@$urls) {
+        my $response = $ua->get($_);
+        if ($response->is_success) {
+            push @photos, $response;
+        } else {
+            $self->logger->warn("Unable to download attachment " . $_);
+        }
+    }
     return @photos;
 }
 

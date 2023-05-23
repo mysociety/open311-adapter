@@ -57,11 +57,16 @@ around BUILDARGS => sub {
 has integration_class => (is => 'ro', default => 'Integrations::AlloyV2::Dummy');
 sub service_request_content { '/open311/service_request_extended' }
 
-sub _get_attachments {
-    my $h = HTTP::Headers->new;
-    $h->header('Content-Disposition' => 'filename: "file.jpg"');
-    return HTTP::Response->new(200, 'OK', $h, "\x{ff}\x{d8}this is data");
-}
+my $lwp = Test::MockModule->new('LWP::UserAgent');
+$lwp->mock(get => sub {
+    my ($self, $path) = @_;
+    if ($path =~ m/example/) {
+        my $h = HTTP::Headers->new;
+        $h->header('Content-Disposition' => 'filename: "file.jpg"');
+        return HTTP::Response->new(200, 'OK', $h, "\x{ff}\x{d8}this is data");
+    }
+    return HTTP::Response->new(404);
+});
 
 package Open311::Endpoint::Integration::UK::Dummy::Oxfordshire;
 use Path::Tiny;
@@ -716,6 +721,49 @@ This is an update"
             },
             # '02037eefc0de101a008fb7ef' is the hash of a previously uploaded photo.
             { attributeCode => 'attributes_filesAttachableAttachments', value => [ '02037eefc0de101a008fb7ef', 'fileid' ] }
+        ],
+        signature => '5d32469bb4e1b9015001430b'
+    },
+    , 'correct json sent';
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => "5d32469bb4e1b90150014310"
+        } ], 'correct json returned';
+};
+
+subtest "create comment succeeds even when photo can't be downloaded from url" => sub {
+    local $ENV{TEST_LOGGER} = 'warn';
+
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'This is an update',
+        service_request_id => 12345,
+        update_id => 999,
+        status => 'OPEN',
+        updated_datetime => '2019-04-17T14:39:00Z',
+        media_url => 'broken_url',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply $sent,
+    {
+        attributes => [
+            {
+            attributeCode => "attributes_enquiryInspectionRFS1001181UpdatesFromFixMyStreet1014437_5d3245dffe2ad806f8dfbb42",
+            value => "Customer update at 2019-04-17 14:39:00
+This is an update"
+            },
+            # '02037eefc0de101a008fb7ef' is the hash of a previously uploaded photo.
+            { attributeCode => 'attributes_filesAttachableAttachments', value => [ '02037eefc0de101a008fb7ef' ] }
         ],
         signature => '5d32469bb4e1b9015001430b'
     },
