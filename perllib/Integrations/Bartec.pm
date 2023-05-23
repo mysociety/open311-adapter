@@ -420,7 +420,7 @@ sub ServiceRequest_Create {
         ServiceStatusID => $status_id,
         DateRequested => $time,
         ServiceTypeID => $values->{service_code},
-        serviceLocationDescription => $values->{attributes}->{closest_address},
+        serviceLocationDescription => SOAP::Utils::encode_data($values->{attributes}->{closest_address}),
         ServiceRequest_Location => {
             Metric => {
                 attr => { xmlns => 'http://www.bartec-systems.com' },
