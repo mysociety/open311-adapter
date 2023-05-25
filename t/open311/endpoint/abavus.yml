@@ -1,0 +1,46 @@
+api_key: "api-key"
+api_url: "http://localhost/api/"
+
+service_list:
+  Abandoned vehicles:
+    ABANDONED_17821_C: 'Abandoned vehicles'
+  Bus stop/shelter issue:
+    DISPLAY_ISSUE_17821_C: 'Electric info display broken/incorrect'
+    DAMAGED_STOP_17821_C: 'Damage to a bus stop'
+    SHELTER_DAM_17821_C: 'Damage to a shelter'
+    BUS_TABLE_WRONG_17821_C: 'Timetable information out of date/wrong'
+    OBSTRUCT_BUS_17821_C: 'Parking at a bus stop'
+
+service_extra_data:
+  DISPLAY_ISSUE_17821_C:
+    - code: DISPLAY_ISSUE_TYPE_646538_I
+      description: "Incorrect or broken"
+      required: 1
+      datatype: 'singlevaluelist'
+      values:
+        DISPLAY_916276_A: Incorrect
+        DISPLAY_916277_A: Broken
+    - code: DISPLAY_CONTACT_646539_I
+      description: "May we contact you?"
+      datatype: 'text'
+      required: 0
+  ABANDONED_17821_C:
+    - code: ABANDONED_ISSUE_TYPE_646538_I
+      description: "Taxed or not taxed"
+      required: 1
+      datatype: 'singlevaluelist'
+      values:
+        ABANDONED_916276_A: Taxed
+        ABANDONED_916277_A: Not Taxed
+    - code: ABANDONED_REG_646539_I
+      description: "Registration number"
+      datatype: 'text'
+      required: 0
+
+service_code_fields:
+  ABANDONED_17821_C:
+    fixmystreet_id: ABANDONED_SITE_FMS_REPORT_ID_648132_I
+    title: ABANDONED_SITE_SUMMERISE_646538_I
+    description: EXPLAIN_ABANDONED_SITE_646941_I
+    full_name: ABANDONED_SITE_FULL_NAME_646942_I
+    email: ABANDONED_SITE_EMAIL_646943_I

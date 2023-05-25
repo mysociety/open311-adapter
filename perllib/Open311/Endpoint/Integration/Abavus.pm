@@ -77,9 +77,6 @@ This is a mapping of Abavus services to use for categories populating FMS
 
 has service_list => (
     is => 'ro',
-    default => sub {
-        return {} if $ENV{TEST_MODE};
-    }
 );
 
 =head2 service_code_fields
@@ -91,9 +88,6 @@ Abavus ones, which are different for every category
 
 has service_code_fields => (
     is => 'ro',
-    default => sub {
-        return {} if $ENV{TEST_MODE};
-    }
 );
 
 =head2 service_class
@@ -118,9 +112,6 @@ request in abavus
 
 has service_extra_data => (
     is => 'ro',
-    default => sub {
-        return {} if $ENV{TEST_MODE};
-    }
 );
 
 =head2 services
@@ -146,25 +137,8 @@ sub services {
             my $o311_service = $self->service_class->new(%service);
 
             my $data = $self->service_extra_data->{$code};
-            foreach (sort keys %$data) {
-                my %params;
-                if (ref $data->{$_} eq 'HASH' && $data->{$_}{type} eq 'dropdown') {
-                    %params = (
-                        code => $_,
-                        description => $data->{$_}{description},
-                        required => $data->{$_}{required},
-                        datatype => 'singlevaluelist',
-                        values => $data->{$_}{choices}
-                    );
-                } else {
-                    %params = (
-                        code => $_,
-                        description => $data->{$_}{description},
-                        required => $data->{$_}{required},
-                        datatype => 'text',
-                    );
-                }
-                push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(%params);
+            foreach (@$data) {
+                push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(%$_);
             }
             push @services, $o311_service;
         }
@@ -227,18 +201,19 @@ sub add_question_responses {
             call => 'serviceRequest/questions/' . $report_id
                 . '?questionCode=' . $fields->{$field}
                 . '&answer=' . $args->{$field},
-            method => 'PUT',
+            method => 'POST',
         );
     };
 
     my $extra_fields = $self->service_extra_data->{$args->{service_code}};
-    for my $extra_field (keys %$extra_fields) {
-        if ($args->{attributes}{$extra_field}) {
+
+    for (@$extra_fields) {
+        if ($args->{attributes}->{$_->{code}}) {
             my $response = $self->abavus->api_call(
                 call => 'serviceRequest/questions/' . $report_id
-                    . '?questionCode=' . $extra_field
-                    . '&answer=' . $args->{attributes}{$extra_field},
-                method => 'PUT',
+                    . '?questionCode=' . $_->{code}
+                    . '&answer=' . $args->{attributes}{$_->{code}},
+                method => 'POST',
             );
         }
     }
