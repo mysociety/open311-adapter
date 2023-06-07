@@ -1,12 +1,12 @@
 =head1 NAME
 
-Open311::Endpoint::Integration::UK::BuckinghamshireAlloy - Buckinghamshire-specific parts of its Alloy integration
+Open311::Endpoint::Integration::UK::Buckinghamshire::Alloy - Buckinghamshire-specific parts of its Alloy integration
 
 =head1 DESCRIPTION
 
 =cut
 
-package Open311::Endpoint::Integration::UK::BuckinghamshireAlloy;
+package Open311::Endpoint::Integration::UK::Buckinghamshire::Alloy;
 
 use Moo;
 extends 'Open311::Endpoint::Integration::AlloyV2';
