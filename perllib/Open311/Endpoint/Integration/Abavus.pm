@@ -109,6 +109,16 @@ has service_extra_data => (
     is => 'ro',
 );
 
+=head2 get_integration
+
+Set the integration as Abavus
+
+=cut
+
+sub get_integration {
+    return $_[0]->abavus;
+};
+
 =head2 services
 
 This returns a list of Abavus categories as defined in the configuration file.

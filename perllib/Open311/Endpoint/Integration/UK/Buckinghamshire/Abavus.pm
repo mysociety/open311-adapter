@@ -1,12 +1,12 @@
 =head1 NAME
 
-Open311::Endpoint::Integration::UK::BuckinghamshireAbavus - Buckinghamshire-specific parts of its Abavus integration
+Open311::Endpoint::Integration::UK::Buckinghamshire::Abavus - Buckinghamshire-specific parts of its Abavus integration
 
 =head1 DESCRIPTION
 
 =cut
 
-package Open311::Endpoint::Integration::UK::BuckinghamshireAbavus;
+package Open311::Endpoint::Integration::UK::Buckinghamshire::Abavus;
 
 use Moo;
 extends 'Open311::Endpoint::Integration::Abavus';

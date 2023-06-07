@@ -7,7 +7,7 @@ sub _build_config_file { path(__FILE__)->sibling("buckinghamshire_alloy.yml")->s
 package Open311::Endpoint::Integration::UK::Dummy;
 use Path::Tiny;
 use Moo;
-extends 'Open311::Endpoint::Integration::UK::BuckinghamshireAlloy';
+extends 'Open311::Endpoint::Integration::UK::Buckinghamshire::Alloy';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
     $args{jurisdiction_id} = 'dummy';
