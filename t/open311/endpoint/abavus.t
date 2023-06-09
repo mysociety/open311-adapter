@@ -11,6 +11,8 @@ use URI;
 extends 'Integrations::Abavus';
 
 my $lwp = Test::MockModule->new('LWP::UserAgent');
+my $lwp_counter = 0;
+
 $lwp->mock(request => sub {
     my ($ua, $req) = @_;
 
@@ -21,6 +23,7 @@ $lwp->mock(request => sub {
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_SUMMERISE_646538_I&answer=Abandoned%20Cortina' => 1,
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_EMAIL_646943_I&answer=test@example.com' => 1,
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_ISSUE_TYPE_646538_I&answer=ABANDONED_916276_A' => 1,
+        'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_PHOTOS_646943_I&answer=one.jpg,two.jpg' => 1,
     );
 
     if ($req->uri =~ /serviceRequest$/) {
@@ -35,6 +38,7 @@ $lwp->mock(request => sub {
     } else {
         is $req->method, 'POST', "Correct method used";
         is $put_requests{$req->uri}, 1, "Call formed correctly";
+        ++$lwp_counter;
         return HTTP::Response->new(200, 'OK', [], encode_json({"result" => 1, "id" => 1}));
     }
 });
@@ -127,6 +131,7 @@ subtest "POST report" => sub {
         last_name => 'Mould',
         email => 'test@example.com',
         description => 'Car abandoned for a week',
+        media_url => ['one.jpg','two.jpg'],
         lat => '50',
         long => '0.1',
         'attribute[description]' => 'description',
@@ -139,6 +144,7 @@ subtest "POST report" => sub {
         'attribute[fixmystreet_id]' => 1,
         'attribute[ABANDONED_ISSUE_TYPE_646538_I]' => 'ABANDONED_916276_A',
         );
+    is $lwp_counter, 7, "Seven fields added";
     is $res->code, 200;
 };
 
