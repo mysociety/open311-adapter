@@ -193,6 +193,7 @@ sub post_service_request {
         $args->{full_name} = $args->{first_name} . ' ' . $args->{last_name};
         $args->{fixmystreet_id} = $args->{attributes}{fixmystreet_id};
         $args->{title} = $args->{attributes}{title};
+        $args->{photos} = scalar $args->{media_url} ? join( ",", @{ $args->{media_url} } ) : '';
         $self->add_question_responses($response->{id}, $args);
     }
 

@@ -44,3 +44,4 @@ service_code_fields:
     description: EXPLAIN_ABANDONED_SITE_646941_I
     full_name: ABANDONED_SITE_FULL_NAME_646942_I
     email: ABANDONED_SITE_EMAIL_646943_I
+    photos: ABANDONED_SITE_PHOTOS_646943_I
