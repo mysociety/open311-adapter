@@ -189,7 +189,7 @@ sub post_service_request {
         body => $serviceRequest
     );
 
-    if ($response->{id} != '-1') {
+    if ($response->{result}) {
         $args->{full_name} = $args->{first_name} . ' ' . $args->{last_name};
         $args->{fixmystreet_id} = $args->{attributes}{fixmystreet_id};
         $args->{title} = $args->{attributes}{title};
@@ -197,7 +197,7 @@ sub post_service_request {
         $self->add_question_responses($response->{id}, $args);
     }
 
-    if ($response->{id} != '-1') {
+    if ($response->{result}) {
         return $self->new_request(
         service_request_id => $response->{id}
     )};

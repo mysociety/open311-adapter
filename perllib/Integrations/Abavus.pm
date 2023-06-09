@@ -49,10 +49,9 @@ sub api_call {
         $self->logger->error($response->content);
         try {
             my $json_response = decode_json($response->content);
-            my $code = $json_response->{errorCode} || "";
-            my $codeString = $json_response->{errorCodeString} || "";
-            my $msg = $json_response->{debugErrorMessage} || "";
-            die "Abavus API call failed: [$code $codeString] $msg";
+            my $code = $json_response->{code} || "";
+            my $msg = $json_response->{message} || "";
+            die "Abavus API call failed: [$code] $msg";
         } catch {
             die $response->content;
         };
