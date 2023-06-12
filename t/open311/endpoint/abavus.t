@@ -35,6 +35,10 @@ $lwp->mock(request => sub {
         is $content->{serviceRequest}->{location}->{latitude}, '50';
         is $content->{serviceRequest}->{location}->{longitude}, '0.1';
         return HTTP::Response->new(200, 'OK', [], encode_json({"result" => 1, "id" => 1}));
+    } elsif ($req->uri =~ /serviceRequest\/integrationReference/) {
+        is $req->method, 'PUT', "Correct method used";
+        is $req->uri, 'http://localhost/api/serviceRequest/integrationReference/1?reference=1&systemCode=FMS';
+        return HTTP::Response->new(200, 'OK', [], encode_json({"result" => 1, "id" => 1}));
     } else {
         is $req->method, 'POST', "Correct method used";
         is $put_requests{$req->uri}, 1, "Call formed correctly";

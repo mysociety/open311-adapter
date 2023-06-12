@@ -190,6 +190,12 @@ sub post_service_request {
     );
 
     if ($response->{result}) {
+        $self->abavus->api_call(
+            call => 'serviceRequest/integrationReference/' . $response->{id}
+            . '?reference=' . $args->{attributes}{fixmystreet_id}
+            . '&systemCode=FMS',
+            method => 'PUT'
+        );
         $args->{full_name} = $args->{first_name} . ' ' . $args->{last_name};
         $args->{fixmystreet_id} = $args->{attributes}{fixmystreet_id};
         $args->{title} = $args->{attributes}{title};
