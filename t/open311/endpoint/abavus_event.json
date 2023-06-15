@@ -1,0 +1,16 @@
+{
+    "serviceEvents": [
+        {
+            "ServiceEvent": {
+            "number": 231132,
+            "guid": "FE15D2B687191B17E053A000A8C0F439",
+            "otherSystemID": "FMS636363",
+            "process": "ABANDONED_17821_C",
+            "sub_process": "FMS_-_INVESTIGATING_8398_S",
+            "otherSystemCode": "FMS"
+            }
+        }
+    ],
+    "message": "Get Service Request Events retrieved Sucessfully.",
+    "webServiceId": 14891548
+}

@@ -4,6 +4,20 @@ api_url: "http://localhost/api/"
 anonymous_user: 139029
 catalogue_code: FIX_MY_STREET_2403_F
 
+update_store: 't/open311/endpoint/files/bucks'
+
+reverse_status_mapping:
+  FMS_-_OPEN_8402_S: open
+  FMS_-_CLOSED_8403_S: closed
+  FMS_-_FIXED_8394_S: fixed
+  FMS_-_INVESTIGATING_8398_S: investigating
+  FMS_-_ACTION_SCHEDULED_8399_S: action_scheduled
+  FMS_-_IN_PROGRESS_8400_S: in_progress
+  FMS_-_NO_FURTHER_ACTION_8397_S: no_further_action
+  FMS_-_NOT_COUNCILS_RESPON_8395_S: not_councils_responsibility
+  FMS_-_DUPLICATE_8396_S: duplicate
+  FMS_-_INTERNAL_TRIAGE_8401_S: for_triage
+
 service_list:
   Abandoned vehicles:
     ABANDONED_17821_C: 'Abandoned vehicles'
