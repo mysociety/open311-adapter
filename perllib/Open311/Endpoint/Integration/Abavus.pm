@@ -16,6 +16,7 @@ Abavus has its api detailed on SwaggerHub https://app.swaggerhub.com/apis/iTouch
 package Open311::Endpoint::Integration::Abavus;
 
 use Moo;
+use Path::Tiny;
 use DateTime::Format::W3CDTF;
 use JSON::MaybeXS;
 use Types::Standard ':all';
@@ -91,6 +92,26 @@ The Abavus catalogue code
 =cut
 
 has catalogue_code => (
+    is => 'ro',
+);
+
+=head2 reverse_status_mapping
+
+Map of Abavus status codes as keys to FMS codes as values
+
+=cut
+
+has reverse_status_mapping => (
+    is => 'ro',
+);
+
+=head2 update_store
+
+Directory for storing updates retrieved from Abavus as a record because /event/status is cleared once called
+
+=cut
+
+has update_store => (
     is => 'ro',
 );
 
@@ -248,6 +269,49 @@ sub add_question_responses {
                 method => 'POST',
             );
         }
+    }
+}
+
+sub get_service_request_updates {
+    my ($self, $args) = @_;
+
+    my $fetched_updates = $self->abavus->api_call(call => 'serviceRequest/event/status');
+    if ($fetched_updates->{message} eq 'No Events Found') {
+        return ();
+    }
+    $self->_save_updates($fetched_updates);
+    my @updates;
+    for my $update (@{$fetched_updates->{serviceEvents}}) {
+        my $ext_status = $update->{ServiceEvent}->{objectCode};
+        my $fixmystreet_id;
+        ($fixmystreet_id = $update->{ServiceEvent}->{otherSystemID}) =~ s/FMS//;
+        if ($self->reverse_status_mapping->{$ext_status}) {
+            my %update_args = (
+                status => $self->reverse_status_mapping->{$ext_status},
+                fixmystreet_id => $fixmystreet_id,
+                external_status_code => $ext_status,
+                description => '',
+                update_id => $update->{ServiceEvent}->{guid},
+                service_request_id => $update->{ServiceEvent}->{number},
+            );
+            push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %update_args );
+        } else {
+            $self->logger->warn("external_status_code $ext_status has unmapped status: $ext_status");
+        };
+    };
+
+    return @updates;
+}
+
+sub _save_updates {
+    my ($self, $updates) = @_;
+
+    my $dir = $self->update_store;
+    path($dir)->mkpath;
+
+    for my $update (@{$updates->{serviceEvents}}) {
+        my $base = $update->{ServiceEvent}->{guid};
+        path($dir)->child(time() . "-$base" . '.json')->spew_raw(encode_json($update));
     }
 }
 

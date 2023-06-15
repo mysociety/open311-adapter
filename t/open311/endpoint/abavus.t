@@ -41,6 +41,10 @@ $lwp->mock(request => sub {
         is $req->method, 'PUT', "Correct method used";
         is $req->uri, 'http://localhost/api/serviceRequest/integrationReference/1?reference=1&systemCode=FMS';
         return HTTP::Response->new(200, 'OK', [], encode_json({"result" => 1, "id" => 1}));
+    } elsif ($req->uri =~ /serviceRequest\/event\/status/) {
+        is $req->method, 'GET', "Correct method used";
+        my $content = path(__FILE__)->sibling("abavus_event.json")->slurp;
+        return HTTP::Response->new(200, 'OK', [], $content);
     } else {
         is $req->method, 'POST', "Correct method used";
         is $put_requests{$req->uri}, 1, "Call formed correctly";
@@ -79,6 +83,7 @@ use Open311::Endpoint::Integration::Abavus;
 use Integrations::Abavus;
 use Open311::Endpoint::Service::UKCouncil;
 use LWP::UserAgent;
+use JSON::MaybeXS qw(encode_json decode_json);
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
@@ -152,6 +157,35 @@ subtest "POST report" => sub {
         );
     is $lwp_counter, 7, "Seven fields added";
     is $res->code, 200;
+    restore_time();
+};
+
+subtest 'check fetch updates' => sub {
+    set_fixed_time('2023-05-01T12:00:00Z');
+
+    my $res = $bucks_endpoint->run_test_request(
+      GET => '/servicerequestupdates.json',
+    );
+
+    is_deeply decode_json($res->content), [
+            {
+            'external_status_code' => 'FMS_-_INVESTIGATING_8398_S',
+            'fixmystreet_id' => '636363',
+            'service_request_id' => '231132',
+            'update_id' => 'FE15D2B687191B17E053A000A8C0F439',
+            'status' => 'investigating',
+            'description' => '',
+            'media_url' => '',
+            'updated_datetime' => '2023-05-01T12:00:00Z',
+            }
+        ];
+
+    my $saved_update = decode_json(path(__FILE__)->sibling("files/bucks/1682942400-FE15D2B687191B17E053A000A8C0F439.json")->slurp);
+    my $sent_updates = decode_json(path(__FILE__)->sibling("abavus_event.json")->slurp);
+    is_deeply $saved_update, $sent_updates->{serviceEvents}->[0];
+
+    restore_time();
+    path(__FILE__)->sibling("files/bucks/1682942400-FE15D2B687191B17E053A000A8C0F439.json")->remove;
 };
 
 done_testing;
