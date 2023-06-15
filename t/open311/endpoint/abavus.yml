@@ -1,6 +1,9 @@
 api_key: "api-key"
 api_url: "http://localhost/api/"
 
+anonymous_user: 139029
+catalogue_code: FIX_MY_STREET_2403_F
+
 service_list:
   Abandoned vehicles:
     ABANDONED_17821_C: 'Abandoned vehicles'

@@ -79,6 +79,26 @@ has service_list => (
     is => 'ro',
 );
 
+=head2 anonymous_user
+
+The user id to make reports against
+
+=cut
+
+has anonymous_user => (
+    is => 'ro',
+);
+
+=head2 catalogue_code
+
+The Abavus catalogue code
+
+=cut
+
+has catalogue_code => (
+    is => 'ro',
+);
+
 =head2 service_code_fields
 
 This is a mapping of the fields required for a new service request from the FMS to the
@@ -164,11 +184,11 @@ sub post_service_request {
 
     my $serviceRequest = {
         'serviceRequest' => {
-            'personNumber' => '1540991', # Default person given by Abavus. May need to check with Bucks
+            'personNumber' => $self->anonymous_user,
             'languageCode' => 'EN',
             'submissionDate' => sprintf( '%02d', $now->day) . '-' . uc($now->month_abbr) . '-' . $now->year . ' ' . $now->hms, # example date: 21-APR-2023 13:06:00
             'catalogue' => {
-                'code' => 'FIX_MY_STREET_2323_F'
+                'code' => $self->catalogue_code,
             },
             'xReferences' => {
                 'xReference' => {}
