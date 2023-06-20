@@ -10,7 +10,6 @@ test_multi(0, 'Open311::Endpoint::Integration::UK',
     'Open311::Endpoint::Integration::UK::Buckinghamshire' => 'buckinghamshire_confirm',
     'Open311::Endpoint::Integration::UK::BuckinghamshireAlloy' => 'buckinghamshire_alloy',
     'Open311::Endpoint::Integration::UK::Camden' => 'camden_symology',
-    'Open311::Endpoint::Integration::UK::CentralBedfordshire' => 'centralbedfordshire_symology',
     'Open311::Endpoint::Integration::UK::CheshireEast' => 'cheshireeast_confirm',
     'Open311::Endpoint::Integration::UK::EastSussex' => 'eastsussex_salesforce',
     'Open311::Endpoint::Integration::UK::Hounslow' => 'hounslow_confirm',
@@ -56,6 +55,10 @@ test_multi(1, 'Open311::Endpoint::Integration::UK::Oxfordshire',
 test_multi(1, 'Open311::Endpoint::Integration::UK::Hackney',
     'Open311::Endpoint::Integration::UK::Hackney::Highways' => 'hackney_highways_alloy_v2',
     'Open311::Endpoint::Integration::UK::Hackney::Environment' => 'hackney_environment_alloy_v2',
+);
+
+test_multi(1, 'Open311::Endpoint::Integration::UK::CentralBedfordshire',
+    'Open311::Endpoint::Integration::UK::CentralBedfordshire::Symology' => 'centralbedfordshire_symology',
 );
 
 done_testing;
