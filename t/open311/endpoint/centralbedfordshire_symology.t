@@ -121,15 +121,15 @@ $soap_lite->mock(call => sub {
     }
 });
 
-my $centralbeds_integ = Test::MockModule->new('Integrations::Symology');
-$centralbeds_integ->mock(config => sub {
+my $centralbeds_symology_integ = Test::MockModule->new('Integrations::Symology');
+$centralbeds_symology_integ->mock(config => sub {
     {
         endpoint_url => 'http://www.example.org/',
     }
 });
 
-my $centralbeds_end = Test::MockModule->new('Open311::Endpoint::Integration::UK::CentralBedfordshire');
-$centralbeds_end->mock(endpoint_config => sub {
+my $centralbeds_symology_end = Test::MockModule->new('Open311::Endpoint::Integration::UK::CentralBedfordshire::Symology');
+$centralbeds_symology_end->mock(endpoint_config => sub {
     {
         username => 'FMS',
         nsgref_to_action => {},
@@ -182,7 +182,7 @@ $centralbeds_end->mock(endpoint_config => sub {
         external_id_prefix => "FMS",
     }
 });
-$centralbeds_end->mock(config_file => sub { path('t')->absolute });
+$centralbeds_symology_end->mock(config_file => sub { path('t')->absolute });
 
 use Open311::Endpoint::Integration::UK::CentralBedfordshire;
 
