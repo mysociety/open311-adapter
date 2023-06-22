@@ -13,6 +13,7 @@ requires 'Crypt::JWT';
 requires 'Data::Dumper';
 requires 'Data::Rx';
 requires 'DateTime', '1.38';
+requires 'DateTime::Format::ISO8601';
 requires 'DateTime::Format::Oracle';
 requires 'DateTime::Format::W3CDTF', '>= 0.07';
 # requires 'DBD::Oracle';

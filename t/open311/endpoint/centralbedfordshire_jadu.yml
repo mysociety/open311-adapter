@@ -1,0 +1,5 @@
+jadu_sys_channel: 'test_sys_channel'
+jadu_case_status_to_fms_status:
+    'Closed': 'closed'
+town_to_officer:
+    'Chicksands': 'area_1'

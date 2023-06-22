@@ -1,0 +1,11 @@
+jadu_api_base_url: ''
+jadu_username: ''
+jadu_password: ''
+jadu_api_key: ''
+jadu_case_type: ''
+jadu_sys_channel: ''
+jadu_most_recently_updated_cases_filter: ''
+jadu_case_status_to_fms_status:
+    closed: closed
+town_to_officer:
+    town: officer
