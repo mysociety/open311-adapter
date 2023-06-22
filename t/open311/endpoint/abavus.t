@@ -46,6 +46,11 @@ $lwp->mock(request => sub {
         is $req->method, 'GET', "Correct method used";
         my $content = path(__FILE__)->sibling("abavus_event.json")->slurp;
         return HTTP::Response->new(200, 'OK', [], $content);
+    } elsif ($req->uri =~ /serviceRequest\/notes\/(.*)/) {
+        my $id = $1;
+        is $req->method, 'POST', "Correct method used";
+        is $id, '123456';
+        return HTTP::Response->new(200, 'OK', [], encode_json({"result" => 1, "id" => 1}));
     } else {
         is $req->method, 'POST', "Correct method used";
         is $put_requests{$req->uri}, 1, "Call formed correctly";
@@ -159,6 +164,22 @@ subtest "POST report" => sub {
     is $lwp_counter, 7, "Seven fields added";
     is $res->code, 200;
     restore_time();
+};
+
+subtest "POST update" => sub {
+    my $res = $bucks_endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'bucks_abavus',
+        api_key => 'api-key',
+        updated_datetime => '2023-05-02T12:00:00Z',
+        service_request_id => '123456',
+        status => 'OPEN',
+        description => 'This is an update',
+        last_name => "Smith",
+        first_name => "John",
+        update_id => '10000000',
+    );
+    is $res->code, 200;
 };
 
 subtest 'check fetch updates' => sub {

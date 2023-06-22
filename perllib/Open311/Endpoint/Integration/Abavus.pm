@@ -85,6 +85,16 @@ has anonymous_user => (
     is => 'ro',
 );
 
+=head2 anonymous_user_updates
+
+The user id to make updates against
+
+=cut
+
+has anonymous_user_updates => (
+    is => 'ro',
+);
+
 =head2 catalogue_code
 
 The Abavus catalogue code
@@ -277,6 +287,40 @@ sub add_question_responses {
                 method => 'POST',
             );
         }
+    }
+}
+
+sub post_service_request_update {
+    my ($self, $args) = @_;
+
+    if ($args->{media_url}->[0]) {
+        $args->{description} .= "\n\n[ This update contains a photo, see: " . $args->{media_url}->[0] . " ]";
+    }
+
+    my $w3c = DateTime::Format::W3CDTF->new;
+    my $time = $w3c->parse_datetime($args->{updated_datetime});
+
+    my $response = $self->abavus->api_call(
+        call => "serviceRequest/notes/" . $args->{service_request_id},
+        body => {
+            userNumber => $self->anonymous_user_updates,
+            otherSystemCode => "FMS",
+            otherSytemUserID => "FMS",
+            type => "FIX_MY_STREET_UPDATE",
+            title => 'Update from FixMyStreet',
+            content => $args->{description},
+            notify => "N",
+            creationDate => $time->strftime('%d-%m-%Y'),
+            allowDuplicate => "Y",
+        },
+    );
+
+    if ($response->{result}) {
+        return Open311::Endpoint::Service::Request::Update::mySociety->new(
+            service_request_id => $args->{service_request_id},
+            status => lc $args->{status},
+            update_id => $response->{id},
+        );
     }
 }
 
