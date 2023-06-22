@@ -1,0 +1,22 @@
+api_base_url: ''
+api_key: ''
+username: ''
+password: ''
+
+case_type: ''
+sys_channel: ''
+
+most_recently_updated_cases_filter: ''
+case_status_to_fms_status:
+    'case status': 'fms_status'
+case_status_to_fms_status_timed:
+    'case status 2':
+        fms_status: 'fms_status'
+        days_to_wait: 1
+case_status_tracking_file: ''
+case_status_tracking_max_age_days: 365
+update_storage_file: ''
+update_storage_max_age_days: 365
+
+town_to_officer:
+    'Town': 'officer'
