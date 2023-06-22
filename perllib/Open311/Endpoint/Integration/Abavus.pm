@@ -198,6 +198,14 @@ sub post_service_request {
 
     my $now = DateTime->now(time_zone => 'Europe/London');
 
+    my $status;
+    foreach (keys %{$self->reverse_status_mapping}) {
+        if ('open' eq $self->reverse_status_mapping->{$_}) {
+            $status = $_;
+            last;
+        }
+    }
+
     my $serviceRequest = {
         'serviceRequest' => {
             'personNumber' => $self->anonymous_user,
@@ -209,7 +217,7 @@ sub post_service_request {
             'xReferences' => {
                 'xReference' => {}
             },
-            'status' => 'FMS_-_OPEN_8402_S', # OPEN_8189_S in example but now using tech spec code
+            'status' => $status,
             'location' => {
                 'latitude' => $args->{lat},
                 'longitude' => $args->{long},

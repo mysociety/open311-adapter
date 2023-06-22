@@ -36,6 +36,7 @@ $lwp->mock(request => sub {
         is $content->{serviceRequest}->{location}->{longitude}, '0.1';
         is $content->{serviceRequest}->{personNumber}, '139029';
         is $content->{serviceRequest}->{catalogue}->{code}, 'FIX_MY_STREET_2403_F';
+        is $content->{serviceRequest}->{status}, 'FMS_-_OPEN_8402_S';
         return HTTP::Response->new(200, 'OK', [], encode_json({"result" => 1, "id" => 1}));
     } elsif ($req->uri =~ /serviceRequest\/integrationReference/) {
         is $req->method, 'PUT', "Correct method used";
