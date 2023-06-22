@@ -197,6 +197,8 @@ subtest "GET services" => sub {
 
     my $content = decode_json($res->content);
     my $services = [ sort { $a->{service_code} cmp $b->{service_code} } @$content ];
+    # Filter out services belonging to the Jadu integration.
+    @$services = grep { $_->{service_code} !~ m/Jadu/ } @$services;
     is_deeply $services,
         [
             {

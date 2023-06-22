@@ -1,0 +1,16 @@
+#!/usr/bin/env perl
+
+# Gathers status updates from Jadu for Central Bedfordshire and stores
+# these in a file ready for use in future 'GET service request updates' calls.
+# See 'gather_updates' in the centralbedfordshire/Jadu endpoint for more information.
+
+BEGIN {
+    use File::Basename qw(dirname);
+    use File::Spec;
+    my $d = dirname(File::Spec->rel2abs($0));
+    require "$d/../../../setenv.pl";
+}
+
+use Open311::Endpoint::Integration::UK::CentralBedfordshire::Jadu;
+my $endpoint = Open311::Endpoint::Integration::UK::CentralBedfordshire::Jadu->new();
+$endpoint->gather_updates;
