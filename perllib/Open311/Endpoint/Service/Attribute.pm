@@ -95,7 +95,8 @@ sub schema_definition {
         datetime => '//str', # TODO
         text => '//str',
         singlevaluelist => { type => '//any', of => [@values] },
-        multivaluelist  => { type => '//arr', of => [@values] },
+        # Either a single value or a non-empty list of values.
+        multivaluelist => { type => '//any', of => [{ type => '//any', of => [@values]}, { type => '//arr', contents => { type => '//any', of => [@values] }, length => { min => 1 } }] },
     );
 
     return $schema_types{ $self->datatype };

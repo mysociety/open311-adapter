@@ -302,8 +302,23 @@ sub dispatch_request {
         $self->call_api( GET_Service_Definition => $service_id, $args );
     },
 
-    sub (POST + /requests + %:@media_url~&* + **) {
+    sub (POST + /requests + %:@media_url~&@* + **) {
         my ($self, $args, $uploads) = @_;
+
+        # We use '@*' to capture parameters as multiple in the hashref to handle attributes with multiple values.
+        # This puts every value in array, regardless of whether it's singleton or empty, which we don't want.
+        # The following block 'un-arrays' the value in these cases.
+
+        while (my ($key, $value) = each %$args) {
+            next if $key eq 'media_url';
+            my $length = scalar @$value;
+            if ($length == 1) {
+                $args->{$key} = $value->[0];
+            } elsif ($length == 0) {
+                $args->{$key} = "";
+            }
+        }
+
         my @files = grep {
             $_->is_upload
         } values %$uploads;
