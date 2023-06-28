@@ -418,7 +418,7 @@ sub NewEnquiry {
     if (my $enquiry_method = $self->enquiry_method_code) {
         push @customer, SOAP::Data->name('EnquiryMethodCode' => SOAP::Utils::encode_data($enquiry_method))->type("");
     }
-    if (my $point_of_contact = $self->point_of_contact_code) {
+    if (my $point_of_contact = ($args->{point_of_contact_code} || $self->point_of_contact_code)) {
         push @customer, SOAP::Data->name('PointOfContactCode' => SOAP::Utils::encode_data($point_of_contact))->type("");
     }
     if (my $customer_type = $self->customer_type_code) {

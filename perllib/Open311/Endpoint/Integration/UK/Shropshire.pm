@@ -9,4 +9,16 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
+around process_service_request_args => sub {
+    my ($orig, $self, $args) = (@_);
+
+    my $ret = $self->$orig($args);
+
+    if (my $poc = delete $args->{attributes}{contributed_by}) {
+        $ret->{point_of_contact_code} = 'CSC';
+    }
+
+    return $ret;
+};
+
 1;
