@@ -105,7 +105,6 @@ subtest "create basic problem" => sub {
         'attribute[description]' => 'description',
         'attribute[title]' => 'title',
         'attribute[report_url]' => 'http://localhost/123',
-        'attribute[asset_resource_id]' => undef,
         'attribute[category]' => 'Graffiti',
         'attribute[fixmystreet_id]' => 123,
         'attribute[closest_address]' => "27 Hillman Street, Hackney E8 1AB",
@@ -115,6 +114,7 @@ subtest "create basic problem" => sub {
         'attribute[graffiti_landtype]' => 'public land',
         'attribute[graffiti_offensive]' => 'yes',
         'attribute[graffiti_size]' => 5,
+        # 'attribute[asset_resource_id]' not given
     );
 
     my $sent = pop @sent;
