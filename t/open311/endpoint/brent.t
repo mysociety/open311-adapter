@@ -13,6 +13,7 @@ use Path::Tiny;
 use Test::More;
 use Test::MockModule;
 use Test::LongString;
+use Test::MockTime ':all';
 
 # Set up
 
@@ -47,6 +48,16 @@ $brent_integ->mock(config => sub {
         endpoint_username => 'ep',
         endpoint_password => 'password',
     }
+});
+
+my $atak = Test::MockModule->new('Open311::Endpoint::Integration::UK::Brent::ATAK');
+$atak->mock('_build_config_file', sub {
+    path(__FILE__)->sibling('brent_atak.yml');
+});
+
+my $atak_int = Test::MockModule->new('Integrations::ATAK');
+$atak_int->mock('_build_config_file', sub {
+    path(__FILE__)->sibling('brent_atak.yml');
 });
 
 use constant {
@@ -296,6 +307,30 @@ subtest "GET Service List" => sub {
         or diag $res->content;
     is_deeply decode_json($res->content),
         [ {
+          "service_code" => "ATAK-PARK_FLY_TIPPING",
+          "service_name" => "Parks fly-tipping",
+          "description" => "Parks fly-tipping",
+          "metadata" => "true",
+          "group" => "Parks and open spaces",
+          "keywords" => "",
+          "type" => "realtime"
+        }, {
+          "service_code" => "ATAK-PARK_LITTERING",
+          "service_name" => "Parks littering",
+          "description" => "Parks littering",
+          "metadata" => "true",
+          "group" => "Parks and open spaces",
+          "keywords" => "",
+          "type" => "realtime"
+        }, {
+          "service_code" => "ATAK-PARK_LITTER_BIN_NEEDS_EMPTYING",
+          "service_name" => "Park litter bin needs emptying",
+          "description" => "Park litter bin needs emptying",
+          "metadata" => "true",
+          "group" => "Parks and open spaces",
+          "keywords" => "",
+          "type" => "realtime"
+        }, {
           "service_code" => "Echo-1159",
           "service_name" => "Garden subscription",
           "description" => "Garden subscription",
@@ -496,6 +531,76 @@ subtest "POST sack waste Echo service request OK" => sub {
         } ], 'correct json returned';
 };
 
+subtest "POST Parks littering ATAK service request OK" => sub {
+    set_fixed_time('2023-07-27T12:00:00Z');
+    my $mock_ua = Test::MockModule->new('LWP::UserAgent');
+    $mock_ua->mock('get', sub {
+        my ($self, $url) = @_;
+        if ($url eq 'http://example.org/photo/1.jpeg') {
+            my $image_data = path(__FILE__)->sibling('files')->child('test_image.jpg')->slurp;
+            my $response = HTTP::Response->new(200, 'OK', []);
+            $response->header('Content-Disposition' => 'attachment; filename="1.jpeg"');
+            $response->header('Content-Type' => 'image/jpeg');
+            $response->content($image_data);
+            return $response;
+        } else {
+            return HTTP::Response->new(404, 'Not Found', [], '');
+        }
+    });
+
+    $mock_ua->mock('post', sub {
+        my ($self, $url, %headers) = @_;
+        if ($url eq 'https://example.com/ords/hws/atak/v1/enq') {
+            is $headers{Authorization}, 'AUTH-123';
+
+            my $data = decode_json($headers{Content})->{tasks}->[0];
+            is $data->{issue}, "Category: Parks littering\nLocation: Location name\n\nLots of litter in the park\n";
+            is $data->{client_ref}, '42';
+            is $data->{project_name}, 'LB BRENT';
+            is $data->{project_code}, 'C123';
+            is $data->{taken_on}, '2023-07-27T12:00:00Z';
+            is $data->{location_name}, '';
+            is $data->{caller}, '';
+            is $data->{resolve_by}, '';
+            is $data->{location}->{type}, 'Point';
+            is_deeply $data->{location}->{coordinates}, [ -1, 51 ];
+            my $photo = $data->{attachments}->[0];
+            is $photo->{filename}, '1.jpeg';
+            is $photo->{description}, 'Image 1';
+            like $photo->{data}, qr{^data:image/jpeg;base64,/9j/4};
+
+            return HTTP::Response->new(200, 'OK', [], '{"Processed task 1": "123ABC"}');
+        } elsif ($url eq 'https://example.com/ords/hws/atak/v1/login') {
+            return HTTP::Response->new(200, 'OK', [], '{"token": "AUTH-123"}');
+        } else {
+            return HTTP::Response->new(404, 'Not Found', [], '');
+        }
+    });
+
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'ATAK-PARK_LITTERING',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "Lots of litter in the park",
+        lat => 51,
+        long => -1,
+        media_url => 'http://example.org/photo/1.jpeg',
+        'attribute[location_name]' => 'Location name',
+        'attribute[easting]' => EASTING,
+        'attribute[northing]' => NORTHING,
+        'attribute[fixmystreet_id]' => 42,
+    );
+    ok $res->is_success, 'valid request';
+
+    is_deeply decode_json($res->content), [
+        {
+            "service_request_id" => "ATAK-123ABC"
+        }
+    ], 'correct json returned' or diag $res->content;
+};
+
 subtest "POST Echo update OK" => sub {
     my $res = $endpoint->run_test_request(
         POST => '/servicerequestupdates.json',
@@ -562,9 +667,6 @@ subtest "POST update OK" => sub {
 };
 
 subtest "GET updates OK" => sub {
-#my $sftp = $endpoint->endpoint_config->{updates_sftp};
-#    $sftp->{out} = path(__FILE__)->sibling('files')->child('brent');
-
     my $res = $endpoint->run_test_request(
         GET => '/servicerequestupdates.json?start_date=2018-11-27T00:00:00Z&end_date=2018-11-29T00:00:00Z',
     );
