@@ -1,0 +1,17 @@
+username:
+password:
+api_url: https://testatak.krinkels.com/ords/hws/atak/v1
+# api_url: https://atak.krinkels.com/ords/hws/atak/v1
+project_code: C23005
+project_name: LB BRENT GM SERVICES
+
+services:
+  LITTER_BIN_NEEDS_EMPTYING:
+    name: Park litter bin needs emptying
+    group: Parks and open spaces
+  LITTERING:
+    name: Parks littering
+    group: Parks and open spaces
+  FLY_TIPPING:
+    name: Parks fly-tipping
+    group: Parks and open spaces
