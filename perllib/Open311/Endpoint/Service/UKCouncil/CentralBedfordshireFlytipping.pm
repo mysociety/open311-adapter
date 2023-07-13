@@ -1,6 +1,6 @@
 package Open311::Endpoint::Service::UKCouncil::CentralBedfordshireFlytipping;
 use Moo;
-extends 'Open311::Endpoint::Service';
+extends 'Open311::Endpoint::Service::UKCouncil';
 
 use Open311::Endpoint::Service::Attribute;
 
@@ -29,27 +29,6 @@ sub _build_attributes {
             required => 1,
             datatype => "string",
             description => "Report URL",
-            automated => 'server_set'
-        ),
-        Open311::Endpoint::Service::Attribute->new(
-            code => "usrn",
-            description => "USRN",
-            datatype => "string",
-            required => 1,
-            automated => 'server_set'
-        ),
-        Open311::Endpoint::Service::Attribute->new(
-            code => "street",
-            description => "Street",
-            datatype => "string",
-            required => 1,
-            automated => 'server_set'
-        ),
-        Open311::Endpoint::Service::Attribute->new(
-            code => "town",
-            description => "Town",
-            datatype => "string",
-            required => 1,
             automated => 'server_set'
         ),
         Open311::Endpoint::Service::Attribute->new(
