@@ -1,7 +1,11 @@
-api_base_url: ''
-api_key: ''
-username: ''
-password: ''
+jadu_api_base_url: ''
+jadu_api_key: ''
+jadu_username: ''
+jadu_password: ''
+
+singlepoint_api_base_url: ''
+singlepoint_api_key: ''
+reverse_geocode_radius_meters: 100
 
 case_type: ''
 sys_channel: ''

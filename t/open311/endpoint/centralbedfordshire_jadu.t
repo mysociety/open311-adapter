@@ -33,11 +33,12 @@ my $config_string = '
     update_storage_file: "%s"
     update_storage_max_age_days: 365
     town_to_officer:
-        "Chicksands": "area_1"';
+        "chicksands": "area_1"';
 
 my $config = Test::MockFile->file( "/config.yml", sprintf($config_string, $status_tracking_file, $update_storage_file));
 
 my $integration = Test::MockModule->new('Integrations::Jadu');
+my $geocode = Test::MockModule->new('Geocode::SinglePoint');
 
 my $centralbedfordshire_jadu = Test::MockModule->new('Open311::Endpoint::Integration::UK::CentralBedfordshire::Jadu');
 $centralbedfordshire_jadu->mock('_build_config_file', sub { '/config.yml' });
@@ -50,6 +51,16 @@ subtest "POST service request" => sub {
         my ($self, undef, $payload) = @_;
         push @sent_payloads, $payload;
         return "test_case_reference";
+    });
+
+    $geocode->mock('get_nearest_addresses', sub {
+        return [
+            {
+                USRN => 25202550,
+                STREET => "Monk's Walk",
+                TOWN => "Chicksands",
+            }
+        ]
     });
 
     my $res = $endpoint->run_test_request(
@@ -75,9 +86,6 @@ subtest "POST service request" => sub {
         'attribute[fly_tip_witnessed]' => 'Yes',
         'attribute[fly_tip_date_and_time]' => '2023-07-03T14:30:36Z',
         'attribute[description_of_alleged_offender]' => 'Stealthy.',
-        'attribute[usrn]' => '25202550',
-        'attribute[street]' => "Monk's Walk",
-        'attribute[town]' => "Chicksands",
     );
 
     ok $res->is_success, 'valid request'
