@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SearchResultData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.aligned-assets.co.uk/SinglePoint/Search/WebServices/V2/SearchService">
+  <Results>
+    <Items>
+      <SearchResultItem>
+        <FieldItems>
+          <FieldInfo>
+            <Tag>USRN</Tag>
+            <Value>25202550</Value>
+          </FieldInfo>
+          <FieldInfo>
+            <Tag>STREET</Tag>
+            <Value>Monks Walk</Value>
+          </FieldInfo>
+          <FieldInfo>
+            <Tag>TOWN</Tag>
+            <Value>Chicksands</Value>
+          </FieldInfo>
+        </FieldItems>
+      </SearchResultItem>
+      <SearchResultItem>
+        <FieldItems>
+          <FieldInfo>
+            <Tag>USRN</Tag>
+            <Value>25201736</Value>
+          </FieldInfo>
+          <FieldInfo>
+            <Tag>STREET</Tag>
+            <Value>Northwood End Road</Value>
+          </FieldInfo>
+          <FieldInfo>
+            <Tag>TOWN</Tag>
+            <Value>Haynes</Value>
+          </FieldInfo>
+        </FieldItems>
+      </SearchResultItem>
+    </Items>
+  </Results>
+</SearchResultData>

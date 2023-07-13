@@ -16,22 +16,22 @@ with 'Role::Memcached';
 
 has base_url => (
     is => 'lazy',
-    default => sub { $_[0]->config->{api_base_url}  }
+    default => sub { $_[0]->config->{jadu_api_base_url}  }
 );
 
 has api_key => (
     is => 'lazy',
-    default => sub { $_[0]->config->{api_key}  }
+    default => sub { $_[0]->config->{jadu_api_key}  }
 );
 
 has username => (
     is => 'lazy',
-    default => sub { $_[0]->config->{username}  }
+    default => sub { $_[0]->config->{jadu_username}  }
 );
 
 has password => (
     is => 'lazy',
-    default => sub { $_[0]->config->{password}  }
+    default => sub { $_[0]->config->{jadu_password}  }
 );
 
 has ua => (

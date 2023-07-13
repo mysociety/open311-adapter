@@ -28,6 +28,7 @@ use DateTime::Format::ISO8601;
 use DateTime::Format::W3CDTF;
 use Fcntl qw(:flock);
 use File::Temp qw(tempfile);
+use Geocode::SinglePoint;
 use Integrations::Jadu;
 use JSON::MaybeXS qw(decode_json encode_json);
 use LWP::Simple;
@@ -44,6 +45,11 @@ use Try::Tiny;
 has jurisdiction_id => (
     is => 'ro',
     default => 'centralbedfordshire_jadu',
+);
+
+has singlepoint => (
+    is => 'lazy',
+    default => sub { Geocode::SinglePoint->new(config_filename => $_[0]->jurisdiction_id) }
 );
 
 has jadu => (
@@ -67,6 +73,17 @@ has flytipping_service => (
 sub get_integration {
     return $_[0]->jadu;
 }
+
+=head2 reverse_geocode_radius_meters
+
+This is the radius in meters of the area around the report location to search for addresses.
+
+=cut
+
+has reverse_geocode_radius_meters => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{reverse_geocode_radius_meters} }
+);
 
 =head2 sys_channel
 
@@ -94,6 +111,7 @@ has case_type => (
 
 This is a mapping from any town associated with an address in Central Bedfordshire to
 the value that should be set in the 'eso-officer' field when creating a new Fly Tipping case.
+Towns must be specified in lowercase.
 
 =cut
 
@@ -204,9 +222,45 @@ sub post_service_request {
     my ($self, $service, $args) = @_;
     my $attributes = $args->{attributes};
 
-    my $officer = $self->town_to_officer->{$attributes->{town}};
-    if (!$officer) {
-        die "No officer found for town " . $attributes->{town};
+    my $addresses = $self->singlepoint->get_nearest_addresses(
+        $attributes->{easting},
+        $attributes->{northing},
+        $self->reverse_geocode_radius_meters,
+        ['STREET', 'TOWN', 'USRN'],
+    );
+
+    if ($addresses == 0) {
+        die sprintf(
+            "No addresses found within %dm of easting: %d northing: %d",
+            $self->reverse_geocode_radius_meters,
+            $attributes->{easting},
+            $attributes->{northing},
+        );
+    }
+
+    my $officer;
+    my $nearest_valid_address;
+    foreach my $address (@$addresses) {
+        my $usrn = $address->{USRN};
+        my $street = $address->{STREET};
+        my $town = $address->{TOWN};
+
+        unless ($usrn && $street && $town) {
+            $self->logger->warn("Skipping address missing one or more of USRN, STREET and TOWN");
+            next;
+        }
+
+        $officer = $self->town_to_officer->{lc $town};
+        if (!$officer) {
+            $self->logger->warn("Skipping address with unmapped town: " . $town);
+            next;
+        }
+        $nearest_valid_address = $address;
+        last;
+    }
+
+    if (!$nearest_valid_address) {
+        die "None of the addresses found were valid.";
     }
 
     my $google_street_view_url = sprintf(
@@ -226,9 +280,9 @@ sub post_service_request {
         'ens-latitude' => $args->{lat},
         'ens-longitude' => $args->{long},
         'ens-google-street-view-url' => $google_street_view_url,
-        'usrn' => $attributes->{usrn},
-        'ens-street' => $attributes->{street},
-        'sys-town' => $attributes->{town},
+        'usrn' => $nearest_valid_address->{USRN},
+        'ens-street' => $nearest_valid_address->{STREET},
+        'sys-town' => $nearest_valid_address->{TOWN},
         'eso-officer' => $officer,
         'ens-location_description' => $attributes->{title},
         'ens-land-type' => $attributes->{land_type},
