@@ -125,6 +125,7 @@ $bexley_end->mock(_get_update_files => sub {
 17/04/2019 13:29,04/04/2019,560063,RECORDED,,SI6,S5,NCR,RLQ,1
 17/04/2019 13:34,02/04/2019,560056,RECORDED,,SI6,SI6MOB,SI6MOB,,1
 17/04/2019 13:49,17/04/2019,560067,RECORDED,,SI4,S4,CLEARREQ,,1
+17/04/2019 13:49,04/04/2019,560058,RECORDED,,SI6,SI6MOB,RPL,,1
 17/04/2019 13:50,04/04/2019,560058,RECORDED,,SI6,SI6MOB,IR,,1
 17/04/2019 13:53,04/04/2019,560058,RECORDED,,SI6,SI6MOB,IR,RES,1
 17/04/2019 14:08,04/04/2019,560062,RECORDED,,SI5,NCR,CR,,1
@@ -545,6 +546,14 @@ subtest "GET updates OK" => sub {
               "updated_datetime" => "2019-04-17T13:49:00+01:00",
               "service_request_id" => "560067",
               "status" => "no_further_action",
+              "description" => "",
+              "media_url" => "",
+           },
+           {
+              "update_id" => "560058_b1eb6ac8",
+              "updated_datetime" => "2019-04-17T13:49:00+01:00",
+              "service_request_id" => "560058",
+              "status" => "internal_referral",
               "description" => "",
               "media_url" => "",
            },

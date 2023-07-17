@@ -72,7 +72,7 @@ sub _update_status {
             'fixed'
         } elsif ($action_due =~ /^[NS][1-6]$/) {
             'in_progress'
-        } elsif ($action_due =~ /^IR|REH|RES|RET|RP|RPOS|RT|RWT$/) {
+        } elsif ($action_due =~ /^(IR|RBC|REH|RES|RET|RP|RPL|RPOS|RSW|RT|RWT)$/) {
             'internal_referral'
         } elsif ($action_due eq 'NCR') {
             'not_councils_responsibility'
