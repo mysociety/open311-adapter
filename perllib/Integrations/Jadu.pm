@@ -43,10 +43,10 @@ has api_token => (
     is => 'lazy',
     default => sub {
         my $self = shift;
-        my $token = $self->memcache->get('api_token');
+        my $token = $self->memcache->get('jadu_api_token');
         unless ($token) {
             $token = $self->sign_in_and_get_token;
-            $self->memcache->set('api_token', $token, time() + $self->api_token_expiry_seconds);
+            $self->memcache->set('jadu_api_token', $token, time() + $self->api_token_expiry_seconds);
         }
         return $token;
     },
