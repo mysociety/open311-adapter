@@ -140,6 +140,14 @@ has reverse_whitelist => (
     }
 );
 
+=head2 update_store
+
+Directory for storing reconstructions of Alloy items to save on API calls
+
+=cut
+
+has update_store => ( is => 'ro' );
+
 =head1 DESCRIPTION
 
 =head2 services
@@ -535,6 +543,10 @@ Fetching updates fetches both 'inspections' and 'defects'.
 sub get_service_request_updates {
     my ($self, $args) = @_;
 
+    if (my $dir = $self->update_store) {
+        path($dir)->mkpath;
+    }
+
     my @updates;
     push @updates, $self->_get_inspection_updates($args);
     push @updates, $self->_get_defect_updates($args);
@@ -601,12 +613,7 @@ sub _get_inspection_updates {
                 next unless $update_dt >= $start_time && $update_dt <= $end_time;
             }
 
-            my $resource = try {
-                $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
-            };
-            next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
-
-            $resource = $resource->{item};
+            my $resource = $self->call_reconstruct($update->{itemId}, $date) or next;
             my $attributes = $self->alloy->attributes_to_hash($resource);
 
             my ($status, $reason_for_closure) = $self->_get_inspection_status($attributes, $mapping);
@@ -755,12 +762,7 @@ sub _get_defect_updates_resource {
             my $update_dt = $self->date_to_truncated_dt($date);
             next unless $update_dt >= $start_time && $update_dt <= $end_time;
 
-            my $resource = try {
-                $self->alloy->api_call(call => "item-log/item/$update->{itemId}/reconstruct", body => { date => $date });
-            };
-            next unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
-
-            $resource = $resource->{item};
+            my $resource = $self->call_reconstruct($update->{itemId}, $date) or next;
             my $attributes = $self->alloy->attributes_to_hash($resource);
             my $status = $self->defect_status($attributes);
 
@@ -1288,6 +1290,29 @@ sub _find_group_code {
             return $grp->{itemId};
         }
     }
+}
+
+sub call_reconstruct {
+    my ($self, $id, $date) = @_;
+
+    my ($dir, $file);
+    if ($dir = $self->update_store) {
+        $file = path($dir)->child("$id-$date.json");
+        if ($file->exists) {
+            return decode_json($file->slurp_raw)->{item};
+        }
+    }
+
+    my $resource = try {
+        $self->alloy->api_call(call => "item-log/item/$id/reconstruct", body => { date => $date });
+    };
+    return unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
+
+    if ($file) {
+        $file->spew_raw(encode_json($resource));
+    }
+
+    return $resource->{item};
 }
 
 1;

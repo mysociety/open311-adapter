@@ -41,6 +41,7 @@ sub _build_config_file { path(__FILE__)->sibling("alloyv2.yml")->stringify }
 
 package Open311::Endpoint::Integration::UK::Dummy;
 use Path::Tiny;
+use File::Temp qw(tempdir);
 use Moo;
 extends 'Open311::Endpoint::Integration::AlloyV2';
 use Open311::Endpoint::Service::UKCouncil::Alloy::HackneyEnvironment;
@@ -56,6 +57,9 @@ around BUILDARGS => sub {
 };
 has integration_class => (is => 'ro', default => 'Integrations::AlloyV2::Dummy');
 sub service_request_content { '/open311/service_request_extended' }
+
+my $UPLOAD_DIR = tempdir( CLEANUP => 1 );
+has update_store => ( is => 'ro', default => $UPLOAD_DIR );
 
 my $lwp = Test::MockModule->new('LWP::UserAgent');
 $lwp->mock(get => sub {
@@ -494,6 +498,8 @@ subtest "create problem with no resource_id" => sub {
 };
 
 subtest "check fetch updates" => sub {
+  # Do it twice to check cache
+  for (1..2) {
     my $res = $endpoint->run_test_request(
       GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z&end_date=2019-03-01T02:00:00Z',
     );
@@ -561,6 +567,7 @@ subtest "check fetch updates" => sub {
         media_url => '',
     }
     ], 'correct json returned';
+  }
 };
 
 subtest "check fetch updates with cobrand skipping update where job has unchanged parent defect" => sub {
