@@ -61,8 +61,7 @@ has flytipping_service => (
     is => 'lazy',
     default => sub {
         Open311::Endpoint::Service::UKCouncil::CentralBedfordshireFlytipping->new(
-            # TODO: Will be renamed to just "Fly Tipping" when ready to replace existing category.
-            service_name => "Fly Tipping (Jadu)",
+            service_name => "Fly Tipping",
             group => "Flytipping, Bins and Graffiti",
             service_code => "fly-tipping",
             description => "Fly Tipping",
