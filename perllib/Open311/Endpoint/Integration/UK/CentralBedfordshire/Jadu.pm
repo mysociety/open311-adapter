@@ -283,7 +283,7 @@ sub post_service_request {
         'ens-street' => $nearest_valid_address->{STREET},
         'sys-town' => $nearest_valid_address->{TOWN},
         'eso-officer' => $officer,
-        'ens-location_description' => $attributes->{title},
+        'ens-location-description' => $attributes->{title},
         'ens-land-type' => $attributes->{land_type},
         'ens-type-of-waste-fly-tipped' => $type_of_waste,
         'ens-description-of-fly-tipped-waste' => $attributes->{description},

@@ -107,7 +107,7 @@ subtest "POST service request" => sub {
         'sys-email-address' => 'john.smith@example.com',
         'sys-telephone-number' => '07700900077',
         'ens-google-street-view-url' => 'https://google.com/maps/@?api=1&map_action=pano&viewpoint=52.035536,-0.360673',
-        'ens-location_description' => 'Near the junction.',
+        'ens-location-description' => 'Near the junction.',
         'ens-land-type' => 'Footpath',
         'ens-type-of-waste-fly-tipped' => 'Asbestos,Black bags',
         'ens-description-of-fly-tipped-waste' => 'Black bags of asbestos.',
