@@ -35,8 +35,8 @@ service_extra_data:
       required: 1
       datatype: 'singlevaluelist'
       values:
-        DISPLAY_916276_A: Incorrect
-        DISPLAY_916277_A: Broken
+        - Incorrect
+        - Broken
     - code: DISPLAY_CONTACT_646539_I
       description: "May we contact you?"
       datatype: 'text'
@@ -47,8 +47,8 @@ service_extra_data:
       required: 1
       datatype: 'singlevaluelist'
       values:
-        ABANDONED_916276_A: Taxed
-        ABANDONED_916277_A: Not Taxed
+        - Taxed
+        - Not Taxed
     - code: ABANDONED_REG_646539_I
       description: "Registration number"
       datatype: 'text'

@@ -22,7 +22,7 @@ $lwp->mock(request => sub {
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_FULL_NAME_646942_I&answer=Bob%20Mould' => 1,
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_SUMMERISE_646538_I&answer=Abandoned%20Cortina' => 1,
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_EMAIL_646943_I&answer=test@example.com' => 1,
-        'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_ISSUE_TYPE_646538_I&answer=ABANDONED_916276_A' => 1,
+        'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_ISSUE_TYPE_646538_I&answer=Taxed' => 1,
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_PHOTOS_646943_I&answer=one.jpg,two.jpg' => 1,
     );
 
@@ -121,8 +121,8 @@ subtest "Check services structure" => sub {
     is $extra[0]->{required} == 1, 1, "Required set";
 
     my $dropdown_values = $extra[0]->{values};
-    is $dropdown_values->{DISPLAY_916276_A} eq 'Incorrect', 1, "Dropdown 1 correct";
-    is $dropdown_values->{DISPLAY_916277_A} eq 'Broken', 1, "Dropdown 2 correct";
+    is $dropdown_values->{Incorrect} eq 'Incorrect', 1, "Dropdown 1 correct";
+    is $dropdown_values->{Broken} eq 'Broken', 1, "Dropdown 2 correct";
 
     @extra = grep {$_->{code} eq 'DISPLAY_CONTACT_646539_I' } @{$service[0]->{attributes}};
     die "Unexpected duplication of extra data codes" if @extra != 1;
@@ -159,7 +159,7 @@ subtest "POST report" => sub {
         'attribute[northing]' => 2,
         'attribute[category]' => 'Abandoned vehicle',
         'attribute[fixmystreet_id]' => 1,
-        'attribute[ABANDONED_ISSUE_TYPE_646538_I]' => 'ABANDONED_916276_A',
+        'attribute[ABANDONED_ISSUE_TYPE_646538_I]' => 'Taxed',
         );
     is $lwp_counter, 7, "Seven fields added";
     is $res->code, 200;

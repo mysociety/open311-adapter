@@ -194,7 +194,11 @@ sub services {
 
             my $data = $self->service_extra_data->{$code};
             foreach (@$data) {
-                push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(%$_);
+                my $attr = { %$_ };
+                if ($_->{values}) {
+                    $attr->{values} = { map { $_ => $_ } @{$_->{values}} };
+                }
+                push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(%$attr);
             }
             push @services, $o311_service;
         }
