@@ -251,8 +251,9 @@ sub post_service_request {
             method => 'PUT'
         );
         $args->{full_name} = $args->{first_name} . ' ' . $args->{last_name};
-        $args->{fixmystreet_id} = $args->{attributes}{fixmystreet_id};
-        $args->{title} = $args->{attributes}{title};
+        foreach (qw/fixmystreet_id title description/) {
+            $args->{$_} = $args->{attributes}->{$_};
+        }
         $args->{photos} = scalar $args->{media_url} ? join( ",", @{ $args->{media_url} } ) : '';
         $self->add_question_responses($response->{id}, $args);
     }
