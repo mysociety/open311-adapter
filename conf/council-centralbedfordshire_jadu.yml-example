@@ -8,7 +8,8 @@ singlepoint_api_key: ''
 reverse_geocode_radius_meters: 100
 
 case_type: ''
-sys_channel: ''
+sys_channel_self_reported: ''
+sys_channel_reported_by_staff: ''
 
 most_recently_updated_cases_filter: ''
 case_status_to_fms_status:

@@ -19,7 +19,8 @@ my (undef, $status_tracking_file) = tempfile(EXLOCK => 0);
 my (undef, $update_storage_file) = tempfile(EXLOCK => 0);
 
 my $config_string = '
-    sys_channel: "test_sys_channel"
+    sys_channel_reported_by_staff: "sys_channel_reported_by_staff"
+    sys_channel_self_reported: "sys_channel_self_reported"
     case_status_to_fms_status:
         "Action Scheduled 1": "action_scheduled"
         "Action Scheduled 2": "action_scheduled"
@@ -80,6 +81,7 @@ subtest "POST service request" => sub {
         'attribute[northing]' => 238727,
         'attribute[fixmystreet_id]' => 1,
         'attribute[report_url]' => 'http://fixmystreet.com/reports/1',
+        'attribute[reported_by_staff]' => 'Yes',
         'attribute[land_type]' => 'Footpath',
         'attribute[type_of_waste]' => 'Asbestos',
         'attribute[type_of_waste]' => 'Black bags',
@@ -94,7 +96,7 @@ subtest "POST service request" => sub {
     my $sent_payload = pop @sent_payloads;
 
     my $expected_payload = {
-        'sys-channel' => 'test_sys_channel',
+        'sys-channel' => 'sys_channel_reported_by_staff',
         'ens-latitude' => '52.035536',
         'ens-longitude' => '-0.360673',
         'coordinates' => '52.035536,-0.360673',
