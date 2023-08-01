@@ -84,15 +84,26 @@ has reverse_geocode_radius_meters => (
     default => sub { $_[0]->endpoint_config->{reverse_geocode_radius_meters} }
 );
 
-=head2 sys_channel
+=head2 sys_channel_self_reported
 
-This is the value to set for the 'sys-channel' field when creating a new Fly Tipping case.
+This is the value to set for the 'sys-channel' field when creating a new self-reported Fly Tipping case.
 
 =cut
 
-has sys_channel => (
+has sys_channel_self_reported => (
     is => 'lazy',
-    default => sub { $_[0]->endpoint_config->{sys_channel} }
+    default => sub { $_[0]->endpoint_config->{sys_channel_self_reported} }
+);
+
+=head2 sys_channel_reported_by_staff
+
+This is the value to set for the 'sys-channel' field when creating a new Fly Tipping case reported by staff.
+
+=cut
+
+has sys_channel_reported_by_staff => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{sys_channel_reported_by_staff} }
 );
 
 =head2 case_type
@@ -274,6 +285,8 @@ sub post_service_request {
 
     my $fly_tip_datetime = DateTime::Format::ISO8601->parse_datetime($attributes->{fly_tip_date_and_time}) if $attributes->{fly_tip_date_and_time};
 
+    my $sys_channel = $attributes->{reported_by_staff} eq 'Yes' ? $self->sys_channel_reported_by_staff : $self->sys_channel_self_reported;
+
     my %payload = (
         'coordinates' => $args->{lat} . ',' . $args->{long},
         'ens-latitude' => $args->{lat},
@@ -294,7 +307,7 @@ sub post_service_request {
         'sys-email-address' => $args->{email},
         'sys-telephone-number' => $args->{phone},
         'fms-reference' => $attributes->{report_url},
-        'sys-channel' => $self->sys_channel
+        'sys-channel' => $sys_channel,
     );
     $payload{'ens-fly-tip-date'} = $fly_tip_datetime->ymd if $fly_tip_datetime;
     $payload{'ens-fly-tip-time'} = $fly_tip_datetime->strftime('%H:%M') if $fly_tip_datetime;

@@ -32,6 +32,17 @@ sub _build_attributes {
             automated => 'server_set'
         ),
         Open311::Endpoint::Service::Attribute->new(
+            code => "reported_by_staff",
+            required => 1,
+            datatype => "singlevaluelist",
+            description => "Reported by staff",
+            automated => 'server_set',
+            "values" => {
+                "Yes" => "Yes",
+                "No" => "No",
+            }
+        ),
+        Open311::Endpoint::Service::Attribute->new(
             code => "land_type",
             variable => 1,
             required => 1,
