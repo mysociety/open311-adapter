@@ -36,14 +36,16 @@ sub _call {
 }
 
 sub _all {
-    my ($self, $fn, $args) = @_;
+    my ($self, $fn, $args, %opts) = @_;
     my @all;
     foreach (@{$self->integrations}) {
         my $name = $_->{name};
         my @results = try {
             $_->{class}->$fn($args);
         } catch {
-            warn "The call to $fn in $name failed with error: $_\n";
+            my $err = "The call to $fn in $name failed with error: $_\n";
+            die $err if $opts{die};
+            warn $err;
             ();
         };
         @results = map { [ $name, $_ ] } @results;
@@ -100,7 +102,7 @@ to include which child the service has come from (in case any codes overlap).
 
 sub services {
     my ($self, $args) = @_;
-    my @services = $self->_all(services => $args);
+    my @services = $self->_all(services => $args, die => 1);
     @services = $self->_map_with_new_id(service_code => @services);
     return @services;
 }
