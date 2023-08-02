@@ -76,7 +76,7 @@ sub _build_attributes {
                 "Trolleys" => "Trolleys",
                 "Tyres" => "Tyres",
                 "Vehicle parts" => "Vehicle parts",
-                "White goods - fridge, freezer, washing matchine etc" => "White goods - fridge, freezer, washing matchine etc",
+                "White goods - fridge, freezer, washing machine etc" => "White goods - fridge, freezer, washing machine etc",
                 "Other" => "Other",
             }
         ),
