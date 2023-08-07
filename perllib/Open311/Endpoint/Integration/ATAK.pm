@@ -11,6 +11,9 @@ use MIME::Base64 qw(encode_base64);
 use Open311::Endpoint::Service::UKCouncil::ATAK;
 use Integrations::ATAK;
 use JSON::MaybeXS;
+use DateTime::Format::W3CDTF;
+use Path::Tiny;
+use Data::Dumper;
 
 has jurisdiction_id => (
     is => 'ro',
@@ -105,8 +108,6 @@ sub post_service_request {
     )
 }
 
-sub get_service_request_updates { }
-
 sub _get_attachments {
     my ($self, $urls) = @_;
 
@@ -123,6 +124,236 @@ sub _get_attachments {
         }
     }
     return @photos;
+}
+
+sub get_service_request_updates {
+    my ($self, $args) = @_;
+    my $w3c = DateTime::Format::W3CDTF->new;
+    my $start_time = $w3c->parse_datetime($args->{start_date})->epoch;
+    my $end_time = $w3c->parse_datetime($args->{end_date})->epoch;
+
+    my $update_storage_raw = path($self->endpoint_config->{update_storage_file})->slurp_raw;
+    my $updates = decode_json($update_storage_raw);
+    my @updates_to_send;
+
+    foreach my $update (@$updates) {
+        next if $update->{time} > $end_time;
+        last if $update->{time} < $start_time;
+
+        my %args = (
+            status => $update->{fms_status},
+            external_status_code => $update->{atak_status},
+            update_id => $update->{issue_reference} . '_' . $update->{time},
+            service_request_id => $update->{issue_reference},
+            description => $update->{description},
+            updated_datetime => DateTime->from_epoch(epoch => $update->{time}),
+        );
+        push @updates_to_send, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
+    }
+    return @updates_to_send;
+
+}
+
+sub init_update_gathering_files {
+    my ($self, $start_from) = @_;
+
+    my $issue_status_tracking_file = $self->endpoint_config->{issue_status_tracking_file};
+    my $update_storage_file = $self->endpoint_config->{update_storage_file};
+
+    if (-e $issue_status_tracking_file && ! -z $issue_status_tracking_file) {
+        die $issue_status_tracking_file . " already exists and is not empty. Aborting.";
+    }
+    if (-e $update_storage_file && ! -z $update_storage_file) {
+        die $update_storage_file . " already exists and is not empty. Aborting.";
+    }
+
+    path($issue_status_tracking_file)->spew_raw(encode_json({
+        latest_update_seen_time => $start_from->epoch,
+        issues => {}
+    }));
+
+    path($update_storage_file)->spew_raw('[]');
+}
+
+sub gather_updates {
+    my $self = shift;
+    my $status_tracking_fh = path($self->endpoint_config->{issue_status_tracking_file})->openrw_raw({ locked => 1 });
+    read $status_tracking_fh, my $tracked_statuses_raw, -s $status_tracking_fh;
+    my $tracked_statuses = decode_json($tracked_statuses_raw);
+
+    my $update_storage_raw = path($self->endpoint_config->{update_storage_file})->slurp_raw;
+    my $updates = decode_json($update_storage_raw);
+
+    my $issue_created_cutoff = DateTime->now->subtract(days => $self->endpoint_config->{issue_status_tracking_max_age_days});
+    $self->_delete_old_tracked_issues($tracked_statuses, $issue_created_cutoff);
+
+    my $update_cutoff = DateTime->now->subtract(days => $self->endpoint_config->{update_storage_max_age_days});
+    $self->_delete_old_updates($updates, $update_cutoff);
+
+    push @$updates, @{$self->_fetch_and_apply_updated_issues_info($tracked_statuses, $issue_created_cutoff)};
+
+    # Descending time.
+    @$updates = sort { $b->{time} <=> $a->{time} } @$updates;
+
+    my $new_tracked_statuses_raw = encode_json($tracked_statuses);
+    my $new_updates_storage_raw = encode_json($updates);
+
+    path($self->endpoint_config->{update_storage_file})->spew_raw($new_updates_storage_raw);
+
+    seek $status_tracking_fh, 0, 0;
+    truncate $status_tracking_fh, 0;
+    print $status_tracking_fh $new_tracked_statuses_raw;
+    close $status_tracking_fh;
+}
+
+sub _delete_old_tracked_issues {
+    my ($self, $tracked_statuses, $cutoff) = @_;
+    while (my ($reference, $state) = each %{$tracked_statuses->{issues}}) {
+        if ($state->{created_time} < $cutoff->epoch) {
+            delete $tracked_statuses->{issues}{$reference};
+        }
+    }
+}
+
+sub _delete_old_updates {
+    my ($self, $updates, $cutoff) = @_;
+    @$updates = grep { $_->{time} >= $cutoff->epoch } @$updates;
+}
+
+sub _fetch_and_apply_updated_issues_info {
+    my ($self, $tracked_statuses, $created_cutoff) = @_;
+
+    my $latest_update_seen = DateTime->from_epoch(epoch => $tracked_statuses->{latest_update_seen_time});
+    my $now = DateTime->now;
+
+    $self->logger->debug(sprintf(
+            "[ATAK] Querying for issues updated between %s and %s.",
+            $latest_update_seen,
+            $now,
+        ));
+
+    my $response = $self->get_integration->list_updated_issues($latest_update_seen, $now);
+
+    if (!$response) {
+        # Equivalent to no updates.
+        $tracked_statuses->{latest_update_seen_time} = $now->epoch;
+        return [];
+    }
+
+    if (!$response->{tasks}) {
+        $self->logger->warn("[ATAK] No 'tasks' field found in the list updated issues response.");
+        return [];
+    }
+
+    my @updates;
+    my $w3c = DateTime::Format::W3CDTF->new;
+    foreach my $issue (@{ $response->{tasks} }) {
+        # Assumes list is already ordered in ascending update time.
+
+        my $time_created = $w3c->parse_datetime($issue->{task_d_created}) if $issue->{task_d_created};
+        my $time_approved = $w3c->parse_datetime($issue->{task_d_approved}) if $issue->{task_d_approved};
+        my $time_planned = $w3c->parse_datetime($issue->{task_d_planned}) if $issue->{task_d_planned};
+        my $time_completed = $w3c->parse_datetime($issue->{task_d_completed}) if $issue->{task_d_completed};
+        my @ordered_times = sort grep { defined } ($time_created, $time_approved, $time_planned, $time_completed);
+        my $most_recent_time = pop @ordered_times;
+
+        if ($most_recent_time && $most_recent_time > $latest_update_seen) {
+            $latest_update_seen = $most_recent_time;
+        }
+
+        my $issue_reference = $issue->{client_ref};
+        if (!$issue_reference) {
+            $self->logger->warn("[ATAK] No  client reference field found on updated issue. Skipping.");
+            next;
+        }
+
+        if (!$time_created) {
+            $self->logger->warn(sprintf(
+                    "[ATAK] No created time field found on updated issue %s. Skipping.",
+                    $issue_reference
+                ));
+            next;
+        }
+
+        if ($time_created < $created_cutoff) {
+            $self->logger->debug(sprintf(
+                    "[ATAK] Updated issue %s was created on %s which is older than the cutoff %s. Skipping.",
+                    $issue_reference,
+                    $time_created,
+                    $created_cutoff,
+                ));
+            next;
+        }
+
+        my $task_comments = $issue->{task_comments};
+        if (!$task_comments) {
+            $self->logger->warn(sprintf(
+                    "[ATAK] No task comments field found on updated issue %s. Skipping.",
+                    $issue_reference
+                ));
+            next;
+        }
+
+        # Assumes no prefix is a substring of another prefix.
+        my $atak_status;
+        my $mapped_fms_status;
+        my $description;
+        foreach my $candidate_atak_status (keys %{$self->endpoint_config->{atak_status_to_fms_status}}) {
+            if ($candidate_atak_status eq substr $task_comments, 0, length($candidate_atak_status)) {
+                $atak_status = $candidate_atak_status;
+                $mapped_fms_status = $self->endpoint_config->{atak_status_to_fms_status}->{$atak_status};
+                $description = substr $task_comments, length($atak_status);
+                # Left trim the description.
+                $description =~ s/^\s+// if $description;
+                last;
+            }
+        }
+
+        if (!$mapped_fms_status) {
+            $self->logger->debug(sprintf(
+                    "[ATAK] Updated issue %s has unmapped ATAK status '%s'. Skipping.",
+                    $issue_reference,
+                    $task_comments
+                ));
+            next;
+        }
+
+        my $existing_tracking = $tracked_statuses->{issues}->{$issue_reference};
+
+        unless ($existing_tracking && $existing_tracking->{atak_status} eq $atak_status) {
+            $tracked_statuses->{issues}->{$issue_reference} = {
+                fms_status => $mapped_fms_status,
+                atak_status => $atak_status,
+                issue_reference => $issue_reference,
+                updated_time => $most_recent_time->epoch,
+                created_time => $time_created->epoch,
+                description => $description || '',
+            };
+            my $update = {
+                fms_status => $mapped_fms_status,
+                atak_status => $atak_status,
+                issue_reference => $issue_reference,
+                time => $most_recent_time->epoch,
+                description => $description || '',
+            };
+            $self->logger->debug(sprintf(
+                    "[ATAK] Adding new update:\n%s",
+                    Dumper($update)
+                ));
+
+            push @updates, $update;
+        } else {
+            $self->logger->debug(sprintf(
+                    "[ATAK] Updated issue %s has not changed from tracked ATAK status '%s'. Skipping.",
+                    $issue_reference,
+                    $atak_status
+                ));
+        }
+    }
+
+    $tracked_statuses->{latest_update_seen_time} = $latest_update_seen->epoch;
+
+    return \@updates;
 }
 
 1;

@@ -1,0 +1,37 @@
+#!/usr/bin/env perl
+
+# Initialises the files needed for the 'gather_updates' script.
+# Requires a number of lookback-days to be specied which is the number of days
+# in the past to start update collection from.
+
+BEGIN {
+    use File::Basename qw(dirname);
+    use File::Spec;
+    my $d = dirname(File::Spec->rel2abs($0));
+    require "$d/../../setenv.pl";
+}
+
+use DateTime;
+use Getopt::Long;
+use Open311::Endpoint::Integration::ATAK;
+
+my $jurisdiction_id;
+my $lookback_days;
+GetOptions(
+    "jurisdiction-id=s" => \$jurisdiction_id,
+    "lookback-days-id=i" => \$lookback_days,
+);
+
+if (!$jurisdiction_id) {
+    print "Please specify a jurisdiction_id via --jurisdiction-id";
+    exit 1;
+}
+
+if (!defined($lookback_days)) {
+    print "Please specify a number of days to look back for updates via --lookback-days";
+    exit 1;
+}
+
+my $start_from = DateTime->now->subtract(days => $lookback_days);
+my $endpoint = Open311::Endpoint::Integration::ATAK->new(jurisdiction_id => $jurisdiction_id);
+$endpoint->init_update_gathering_files($start_from);

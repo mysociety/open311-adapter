@@ -87,6 +87,24 @@ sub create_issue {
     return $issue_id;
 }
 
+=head2 list_updated_issues
+
+Retrieve a list of issues in the Continental Landscapes ATAK system.
+
+=cut
+
+sub list_updated_issues {
+    my ($self, $from, $to) = @_;
+    # The API appears to require that timestamps have the 'Z' UTC specifier.
+    # Using a '+00:00' style specifier results in a 500.
+    $from->set_time_zone('UTC');
+    $to->set_time_zone('UTC');
+    return $self->get('/enq', {
+        from => $from->strftime('%Y-%m-%dT%H:%M:%SZ'),
+        to => $to->strftime('%Y-%m-%dT%H:%M:%SZ'),
+    });
+}
+
 =head2 post
 
 Make a POST request to the ATAK API with the given path and data.
@@ -115,6 +133,59 @@ sub post {
 
     if (!$response->is_success) {
         $self->error("ATAK POST request failed: " . $response->status_line);
+    }
+
+    try {
+        my $content = $response->decoded_content;
+        return decode_json($content);
+    } catch {
+        $self->error("Error parsing JSON: $_");
+    };
+}
+
+=head2 GET
+
+Make a GET request to the ATAK API with the given path and query parameters.
+
+Uses the token for authentication.
+
+Returns the JSON response.
+
+=cut
+
+sub get {
+    my ($self, $path, $query_parameters) = @_;
+
+    my $url = $self->config->{api_url} . $path;
+
+    if ($query_parameters) {
+        my $query_string = '?';
+        while (my ($key, $value) = each (%$query_parameters)) {
+            $query_string .=  $key . '=' . $value . '&';
+        }
+        # Remove trailing '&'.
+        chop($query_string);
+        $url .= $query_string;
+    }
+
+    $self->logger->debug("[ATAK] Request URL: $url");
+
+    my $response = $self->ua->get(
+        $url,
+        'Authorization' => $self->token,
+        'Content-Type'  => 'application/json',
+    );
+
+    $self->logger->debug("[ATAK] Response status: " . $response->status_line);
+    $self->logger->debug("[ATAK] Response content: " . $response->decoded_content);
+
+    if (!$response->is_success) {
+        $self->error("ATAK GET request failed: " . $response->status_line);
+    }
+
+    if (!$response->content) {
+        # The API returns literally no content for no results.
+        return;
     }
 
     try {

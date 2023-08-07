@@ -15,3 +15,14 @@ services:
   FLY_TIPPING:
     name: Parks fly-tipping
     group: Parks and open spaces
+
+issue_status_tracking_file: status_tracking.json
+update_storage_file: updates.json
+issue_status_tracking_max_age_days: 365
+update_storage_max_age_days: 365
+atak_status_to_fms_status:
+    "Closed - Completed": "fixed"
+    "Closed - Out of scope": "no_further_action"
+    "Closed - Not found": "closed"
+    "Closed - Passed to Brent": "internal_referral"
+

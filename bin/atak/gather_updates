@@ -1,0 +1,27 @@
+#!/usr/bin/env perl
+
+# Gathers status updates from ATAK and stores these in a file ready for use in future
+# 'GET service request updates' calls.
+
+BEGIN {
+    use File::Basename qw(dirname);
+    use File::Spec;
+    my $d = dirname(File::Spec->rel2abs($0));
+    require "$d/../../setenv.pl";
+}
+
+use Getopt::Long;
+use Open311::Endpoint::Integration::ATAK;
+
+my $jurisdiction_id;
+GetOptions(
+    "jurisdiction-id=s" => \$jurisdiction_id,
+);
+
+if (!$jurisdiction_id) {
+    print "Please specify a jurisdiction_id via --jurisdiction-id";
+    exit 1;
+}
+
+my $endpoint = Open311::Endpoint::Integration::ATAK->new(jurisdiction_id => $jurisdiction_id);
+$endpoint->gather_updates;
