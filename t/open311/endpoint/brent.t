@@ -10,6 +10,7 @@ BEGIN { $ENV{TEST_MODE} = 1; }
 use JSON::MaybeXS;
 use YAML::XS qw(LoadFile);
 use Path::Tiny;
+use File::Temp qw(tempfile);
 use Test::More;
 use Test::MockModule;
 use Test::LongString;
@@ -50,15 +51,50 @@ $brent_integ->mock(config => sub {
     }
 });
 
+my (undef, $atak_status_tracking_file) = tempfile(EXLOCK => 0);
+my (undef, $atak_update_storage_file) = tempfile(EXLOCK => 0);
+
+sub atak_config {
+    {
+        username => "user",
+        password => "pass",
+        api_url => "https://example.com/ords/hws/atak/v1",
+        project_code => "C123",
+        project_name => "LB BRENT",
+        services => {
+            PARK_LITTER_BIN_NEEDS_EMPTYING => {
+                name => "Park litter bin needs emptying",
+                group => "Parks and open spaces",
+            },
+            PARK_LITTERING => {
+                name => "Parks littering",
+                group => "Parks and open spaces",
+            },
+            PARK_FLY_TIPPING => {
+                name => "Parks fly-tipping",
+                group => "Parks and open spaces",
+            },
+        },
+        issue_status_tracking_file => $atak_status_tracking_file,
+        update_storage_file => $atak_update_storage_file,
+        issue_status_tracking_max_age_days => 365,
+        update_storage_max_age_days => 365,
+        atak_status_to_fms_status => {
+            "Closed - Completed" => "fixed",
+            "Closed - Out of scope" => "no_further_action",
+            "Closed - Not found" => "closed",
+            "Closed - Passed to Brent" => "internal_referral",
+        },
+    }
+}
+
 my $atak = Test::MockModule->new('Open311::Endpoint::Integration::UK::Brent::ATAK');
-$atak->mock('_build_config_file', sub {
-    path(__FILE__)->sibling('brent_atak.yml');
-});
+$atak->mock(endpoint_config => sub { return atak_config() });
 
 my $atak_int = Test::MockModule->new('Integrations::ATAK');
-$atak_int->mock('_build_config_file', sub {
-    path(__FILE__)->sibling('brent_atak.yml');
-});
+$atak_int->mock(config => sub { return atak_config() });
+
+my $atak_endpoint = Open311::Endpoint::Integration::UK::Brent::ATAK->new(jurisdiction_id => 'test');
 
 use constant {
     REPORT_NSGREF => 0,
@@ -666,15 +702,26 @@ subtest "POST update OK" => sub {
         } ], 'correct json returned';
 };
 
-subtest "GET updates OK" => sub {
+sub _get_and_check_service_request_updates {
+    my ($start_date, $end_date, $expected) = @_;
     my $res = $endpoint->run_test_request(
-        GET => '/servicerequestupdates.json?start_date=2018-11-27T00:00:00Z&end_date=2018-11-29T00:00:00Z',
+        GET => sprintf(
+            '/servicerequestupdates.json?start_date=%s&end_date=%s',
+            $start_date,
+            $end_date
+        )
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
     my $response = decode_json($res->content);
-    is_deeply $response,
+    is_deeply $response, $expected, 'correct json returned';
+}
+
+subtest "GET updates OK" => sub {
+    _get_and_check_service_request_updates(
+        '2018-11-27T00:00:00Z',
+        '2018-11-29T00:00:00Z',
         [
             {
                 description => "",
@@ -694,7 +741,191 @@ subtest "GET updates OK" => sub {
                 updated_datetime => '2018-11-28T15:05:00+00:00',
                 external_status_code => '21_NFA',
             }
-        ], 'correct json returned';
+        ]
+    );
+};
+
+subtest "GET ATAK service request updates OK" => sub {
+    my $mock_ua = Test::MockModule->new('LWP::UserAgent');
+
+    # Handle logins.
+    $mock_ua->mock('post', sub {
+        my ($self, $url) = @_;
+        if ($url eq 'https://example.com/ords/hws/atak/v1/login') {
+            return HTTP::Response->new(200, 'OK', [], '{"token": "AUTH-123"}');
+        }
+        return HTTP::Response->new(404, 'Not Found', [], '');
+    });
+
+    set_fixed_time('2023-08-02T00:00:00Z');
+    $atak_endpoint->init_update_gathering_files(DateTime->now->subtract(days => 1));
+
+    $mock_ua->mock('get', sub {
+        my ($self, $url) = @_;
+        like $url, qr/from=2023-08-01T00:00:00Z/, "correct from time";
+        like $url, qr/to=2023-08-02T00:00:00Z/, "correct to time";
+        return HTTP::Response->new(200, 'OK', [], '{
+            "tasks": [
+                {
+                    "testing_comment": "missing client_ref",
+                    "task_comments": "Closed - Completed",
+                    "task_d_created": "2023-08-01T00:00:00Z",
+                    "task_d_planned": "2023-08-01T00:00:00Z",
+                    "task_d_completed": "2023-08-01T00:00:00Z",
+                    "task_d_approved": "2023-08-01T00:00:00Z"
+                },
+                {
+                    "client_ref": "missing created time",
+                    "task_comments": "Closed - Completed",
+                    "task_d_planned": "2023-08-01T00:00:00Z",
+                    "task_d_completed": "2023-08-01T00:00:00Z",
+                    "task_d_approved": "2023-08-01T00:00:00Z"
+                },
+                {
+                    "client_ref": "unknown state",
+                    "task_comments": "Closed - Unknown",
+                    "task_d_created": "2023-08-01T00:00:00Z",
+                    "task_d_planned": "2023-08-01T00:00:00Z",
+                    "task_d_completed": "2023-08-01T00:00:00Z",
+                    "task_d_approved": "2023-08-01T00:00:00Z"
+                },
+                {
+                    "client_ref": "issue too old",
+                    "task_comments": "Closed - Completed",
+                    "task_d_created": "2022-08-01T00:00:00Z",
+                    "task_d_planned": "2023-08-01T00:00:00Z",
+                    "task_d_completed": "2023-08-01T00:00:00Z",
+                    "task_d_approved": "2023-08-01T00:00:00Z"
+                },
+                {
+                    "client_ref": "test",
+                    "task_comments": "Closed - Passed to Brent",
+                    "task_d_created": "2023-08-01T00:00:00Z",
+                    "task_d_planned": "2023-08-01T01:00:00Z",
+                    "task_d_completed": "2023-08-01T02:00:00Z",
+                    "task_d_approved": "2023-08-01T03:00:00Z"
+                }
+            ]
+        }');
+    });
+
+    $atak_endpoint->gather_updates();
+
+    _get_and_check_service_request_updates(
+        '2023-08-01T00:00:00Z',
+        '2023-08-02T00:00:00Z',
+        [
+            {
+                description => '',
+                media_url => '',
+                service_request_id => 'ATAK-test',
+                status => 'internal_referral',
+                update_id => 'ATAK-test_1690858800',
+                updated_datetime => '2023-08-01T03:00:00Z',
+                external_status_code => 'Closed - Passed to Brent',
+            },
+        ]
+    );
+
+    # Next day.
+    set_fixed_time('2023-08-03T00:00:00Z');
+
+    $mock_ua->mock('get', sub {
+        my ($self, $url) = @_;
+        like $url, qr/from=2023-08-01T03:00:00Z/, "correct from time";
+        like $url, qr/to=2023-08-03T00:00:00Z/, "correct to time";
+        return HTTP::Response->new(200, 'OK', [], '{
+            "tasks": [
+                {
+                    "testing_comment": "new update but same ATAK status - should ignore",
+                    "client_ref": "test",
+                    "task_comments": "Closed - Passed to Brent",
+                    "task_d_created": "2023-08-01T00:00:00Z",
+                    "task_d_planned": "2023-08-02T01:00:00Z",
+                    "task_d_completed": "2023-08-02T02:00:00Z",
+                    "task_d_approved": "2023-08-02T03:00:00Z"
+                }
+            ]
+        }');
+    });
+
+    $atak_endpoint->gather_updates();
+
+    # We get the old update and nothing new.
+    _get_and_check_service_request_updates(
+        '2023-08-01T00:00:00Z',
+        '2023-08-03T00:00:00Z',
+        [
+            {
+                description => "",
+                media_url => '',
+                service_request_id => 'ATAK-test',
+                status => 'internal_referral',
+                update_id => 'ATAK-test_1690858800',
+                updated_datetime => '2023-08-01T03:00:00Z',
+                external_status_code => 'Closed - Passed to Brent',
+            },
+        ]
+    );
+
+    # Next day.
+    set_fixed_time('2023-08-04T00:00:00Z');
+
+    $mock_ua->mock('get', sub {
+        my ($self, $url) = @_;
+        like $url, qr/from=2023-08-02T03:00:00Z/, "correct from time";
+        like $url, qr/to=2023-08-04T00:00:00Z/, "correct to time";
+        return HTTP::Response->new(200, 'OK', [], '{
+            "tasks": [
+                {
+                    "testing_comment": "new ATAK status - should get an update",
+                    "client_ref": "test",
+                    "task_comments": "Closed - Completed description",
+                    "task_d_created": "2023-08-01T00:00:00Z",
+                    "task_d_planned": "2023-08-03T01:00:00Z",
+                    "task_d_completed": "2023-08-03T02:00:00Z",
+                    "task_d_approved": "2023-08-03T03:00:00Z"
+                }
+            ]
+        }');
+    });
+
+    $atak_endpoint->gather_updates();
+
+    _get_and_check_service_request_updates(
+        '2023-08-02T00:00:00Z',
+        '2023-08-04T00:00:00Z',
+        [
+            {
+                description => "description",
+                media_url => '',
+                service_request_id => 'ATAK-test',
+                status => 'fixed',
+                update_id => 'ATAK-test_1691031600',
+                updated_datetime => '2023-08-03T03:00:00Z',
+                external_status_code => 'Closed - Completed',
+            },
+        ]
+    );
+
+    # A year later.
+    set_fixed_time('2024-08-05T00:00:00Z');
+
+    $mock_ua->mock('get', sub {
+        my ($self, $url) = @_;
+        like $url, qr/from=2023-08-03T03:00:00Z/, "correct from time";
+        like $url, qr/to=2024-08-05T00:00:00Z/, "correct to time";
+        return HTTP::Response->new(200, 'OK', [], '{}');
+    });
+
+    $atak_endpoint->gather_updates();
+
+    # Old updates should be gone.
+    _get_and_check_service_request_updates(
+        '2023-08-01T00:00:00Z',
+        '2024-08-05T00:00:00Z',
+        []
+    );
 };
 
 done_testing;
