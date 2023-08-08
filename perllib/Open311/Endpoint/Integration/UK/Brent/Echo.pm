@@ -28,6 +28,9 @@ around process_service_request_args => sub {
         } elsif ($service_id == 317) {
             $args->{attributes}{"Garden_BIN"} = 1;
             $args->{attributes}{"Garden_BAG"} = 1;
+        } elsif ($service_id == 274) {
+            $args->{attributes}{"Clinical_BIN"} = 1;
+            $args->{attributes}{"Clinical_BOX"} = 1;
         }
     } elsif ($request->{event_type} == 1159) {
         if ($args->{attributes}{Paid_Collection_Container_Type} == 2) {
