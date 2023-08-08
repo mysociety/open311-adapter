@@ -21,9 +21,9 @@ $lwp->mock(request => sub {
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_FMS_REPORT_ID_648132_I&answer=1' => 1,
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_FULL_NAME_646942_I&answer=Bob%20Mould' => 1,
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_SUMMERISE_646538_I&answer=Abandoned%20Cortina' => 1,
-        'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_EMAIL_646943_I&answer=test@example.com' => 1,
+        'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_EMAIL_646943_I&answer=test%40example.com' => 1,
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_ISSUE_TYPE_646538_I&answer=Taxed' => 1,
-        'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_PHOTOS_646943_I&answer=one.jpg,two.jpg' => 1,
+        'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_PHOTOS_646943_I&answer=one.jpg%20two.jpg' => 1,
     );
 
     if ($req->uri =~ /serviceRequest$/) {

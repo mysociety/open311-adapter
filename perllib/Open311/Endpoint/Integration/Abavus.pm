@@ -20,6 +20,7 @@ use Path::Tiny;
 use DateTime::Format::W3CDTF;
 use JSON::MaybeXS;
 use Types::Standard ':all';
+use URI::Escape;
 use DateTime;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
@@ -258,7 +259,7 @@ sub post_service_request {
         foreach (qw/fixmystreet_id title description/) {
             $args->{$_} = $args->{attributes}->{$_};
         }
-        $args->{photos} = scalar $args->{media_url} ? join( ",", @{ $args->{media_url} } ) : '';
+        $args->{photos} = scalar $args->{media_url} ? join( " ", @{ $args->{media_url} } ) : '';
         $self->add_question_responses($response->{id}, $args);
     }
 
@@ -275,8 +276,8 @@ sub add_question_responses {
     for my $field (keys %$fields) {
         my $response = $self->abavus->api_call(
             call => 'serviceRequest/questions/' . $report_id
-                . '?questionCode=' . $fields->{$field}
-                . '&answer=' . $args->{$field},
+                . '?questionCode=' . uri_escape($fields->{$field})
+                . '&answer=' . uri_escape($args->{$field}),
             method => 'POST',
         );
     };
@@ -287,8 +288,8 @@ sub add_question_responses {
         if ($args->{attributes}->{$_->{code}}) {
             my $response = $self->abavus->api_call(
                 call => 'serviceRequest/questions/' . $report_id
-                    . '?questionCode=' . $_->{code}
-                    . '&answer=' . $args->{attributes}{$_->{code}},
+                    . '?questionCode=' . uri_escape($_->{code})
+                    . '&answer=' . uri_escape($args->{attributes}{$_->{code}}),
                 method => 'POST',
             );
         }
