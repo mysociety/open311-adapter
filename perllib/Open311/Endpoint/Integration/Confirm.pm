@@ -392,12 +392,21 @@ sub process_service_request_args {
         $args->{site_code} = $self->default_site_code;
     }
 
-    # Open311 doesn't support a 'title' field for service requests, so FMS
-    # concatenates the report title and description together in the description
-    # field. We want to put the title/description in different fields in
-    # Confirm, so they're sent as individual Open311 attributes which we
-    # put directly in $args so NewEnquiry can do the right thing.
-    $args->{location} = $args->{attributes}->{title};
+    if ( my $loc = delete $args->{attributes}{location} ) {
+        # Some cobrands such as Gloucestershire will have set a custom
+        # 'location' in the 'attributes' field, so use this.
+        $args->{location} = $loc;
+    } else {
+        # Otherwise use 'title' from 'attributes'.
+        # Because Open311 doesn't support a 'title' field for service
+        # requests, FMS concatenates the report title and description together
+        # in the description field. We want to put the title/description in
+        # different fields in Confirm, so they're sent as individual Open311
+        # attributes which we put directly in $args so NewEnquiry can do the
+        # right thing.
+        $args->{location} = $args->{attributes}->{title};
+    }
+    # Delete title in either case
     delete $args->{attributes}->{title};
 
     # Any asset information is appended to the Confirm location field, if
