@@ -21,6 +21,7 @@ use DateTime::Format::W3CDTF;
 use JSON::MaybeXS;
 use Types::Standard ':all';
 use URI::Escape;
+use URI::Split qw(uri_split);
 use DateTime;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
@@ -259,8 +260,10 @@ sub post_service_request {
         foreach (qw/fixmystreet_id title description/) {
             $args->{$_} = $args->{attributes}->{$_};
         }
-        $args->{photos} = scalar $args->{media_url} ? join( " ", @{ $args->{media_url} } ) : '';
         $self->add_question_responses($response->{id}, $args);
+        foreach (@{$args->{media_url}}) {
+            $self->add_attachment($response->{id}, $_);
+        }
     }
 
     if ($response->{result}) {
@@ -269,11 +272,29 @@ sub post_service_request {
     )};
 }
 
+sub add_attachment {
+    my ($self, $report_id, $url) = @_;
+
+    my (undef, undef, $path) = uri_split($url);
+    my $filename = path($path)->basename;
+    my ($ext) = $filename =~ /\.([^.]*)$/;
+    my $body = {
+        serviceRequestNumber => $report_id,
+        url => $url,
+        fileName => $filename,
+        mimeType => "image/$ext",
+        documentTypeName => 'FixMyStreet',
+        documentTypeCode => 'FIX_MY_STREET',
+    };
+    $self->abavus->api_call(call => 'serviceRequest/attachment', body => $body);
+}
+
 sub add_question_responses {
     my ($self, $report_id, $args) = @_;
 
     my $fields = $self->service_code_fields->{$args->{service_code}};
     for my $field (keys %$fields) {
+        next unless $args->{$field};
         my $response = $self->abavus->api_call(
             call => 'serviceRequest/questions/' . $report_id
                 . '?questionCode=' . uri_escape($fields->{$field})

@@ -23,7 +23,7 @@ $lwp->mock(request => sub {
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_SUMMERISE_646538_I&answer=Abandoned%20Cortina' => 1,
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_EMAIL_646943_I&answer=test%40example.com' => 1,
         'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_ISSUE_TYPE_646538_I&answer=Taxed' => 1,
-        'http://localhost/api/serviceRequest/questions/1?questionCode=ABANDONED_SITE_PHOTOS_646943_I&answer=one.jpg%20two.jpg' => 1,
+        'http://localhost/api/serviceRequest/attachment' => 1,
     );
 
     if ($req->uri =~ /serviceRequest$/) {
@@ -46,6 +46,19 @@ $lwp->mock(request => sub {
         is $req->method, 'GET', "Correct method used";
         my $content = path(__FILE__)->sibling("abavus_event.json")->slurp;
         return HTTP::Response->new(200, 'OK', [], $content);
+    } elsif ($req->uri =~ /serviceRequest\/attachment/) {
+        is $req->method, 'POST', "Correct method used";
+        my $content = decode_json($req->content);
+        my $name = $content->{fileName};
+        is_deeply $content, {
+            serviceRequestNumber => 1,
+            url => "https://localhost/$name?123",
+            fileName => $name,
+            mimeType => "image/jpeg",
+            documentTypeName => 'FixMyStreet',
+            documentTypeCode => 'FIX_MY_STREET',
+        };
+        return HTTP::Response->new(200, 'OK', [], encode_json({"result" => 1, "id" => 1}));
     } elsif ($req->uri =~ /serviceRequest\/notes\/(.*)/) {
         my $id = $1;
         is $req->method, 'POST', "Correct method used";
@@ -148,7 +161,7 @@ subtest "POST report" => sub {
         last_name => 'Mould',
         email => 'test@example.com',
         description => 'title: Abandoned Cortina detail: Car abandoned for a week',
-        media_url => ['one.jpg','two.jpg'],
+        media_url => ['https://localhost/one.jpeg?123', 'https://localhost/two.jpeg?123'],
         lat => '50',
         long => '0.1',
         'attribute[description]' => 'Car abandoned for a week',
@@ -161,7 +174,7 @@ subtest "POST report" => sub {
         'attribute[fixmystreet_id]' => 1,
         'attribute[ABANDONED_ISSUE_TYPE_646538_I]' => 'Taxed',
         );
-    is $lwp_counter, 7, "Seven fields added";
+    is $lwp_counter, 6, "Seven fields added";
     is $res->code, 200;
     restore_time();
 };
