@@ -48,7 +48,7 @@ sub post_service_request {
     die "Args must be a hashref" unless ref $args eq 'HASH';
 
     $self->logger->info("[ATAK] Creating issue for service " . $service->service_name);
-    $self->logger->debug("[ATAK] Args: " . encode_json($args));
+    $self->logger->debug("[ATAK] POST service request args: " . encode_json($args));
 
     my @attachments;
 
@@ -84,8 +84,8 @@ sub post_service_request {
         location => {
             type => 'Point',
             coordinates => [
-                $args->{long},
-                $args->{lat},
+                +$args->{long},
+                +$args->{lat},
             ],
         }
     };
