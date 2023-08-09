@@ -6,7 +6,11 @@ BEGIN { $ENV{TEST_MODE} = 1 };
 use Open311::Endpoint::Integration::UK::Gloucestershire;
 use Test::More;
 
-my $class = Open311::Endpoint::Integration::UK::Gloucestershire->new;
+my $class = Open311::Endpoint::Integration::UK::Gloucestershire->new(
+    config_data => <<HERE,
+default_site_code: 123456
+HERE
+);
 
 subtest process_service_request_args => sub {
     my $args = {
@@ -38,7 +42,7 @@ Submitted via FixMyStreet
 
 Report details',
         report_url => 'http://gloucestershire.localhost:3000/report/2157',
-        site_code => '99999999',
+        site_code => '123456',
     };
 };
 
