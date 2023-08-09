@@ -222,6 +222,8 @@ sub post_service_request {
         }
     }
 
+    my @address = split /\r?\n/, ($args->{attributes}{closest_address} || '');
+
     my $serviceRequest = {
         'serviceRequest' => {
             'personNumber' => $self->anonymous_user,
@@ -237,6 +239,11 @@ sub post_service_request {
             'location' => {
                 'latitude' => $args->{lat},
                 'longitude' => $args->{long},
+                address1 => $address[0] || '',
+                address2 => $address[1] || '',
+                address3 => $address[2] || '',
+                city => $address[3] || '',
+                postcode => $address[4] || '',
             },
             'form' => {
                 'code' => $args->{service_code}
