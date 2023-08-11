@@ -84,8 +84,9 @@ sub post_service_request {
         location => {
             type => 'Point',
             coordinates => [
-                +$args->{long},
-                +$args->{lat},
+                # Add zero to force numeric context
+                $args->{long} + 0,
+                $args->{lat} + 0,
             ],
         }
     };
