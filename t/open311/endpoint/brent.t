@@ -540,6 +540,7 @@ subtest "POST Parks littering ATAK service request OK" => sub {
             my $image_data = path(__FILE__)->sibling('files')->child('test_image.jpg')->slurp;
             my $response = HTTP::Response->new(200, 'OK', []);
             $response->header('Content-Disposition' => 'attachment; filename="1.jpeg"');
+            $response->header('Content-Type' => 'image/jpeg');
             $response->content($image_data);
             return $response;
         } else {

@@ -55,10 +55,11 @@ sub post_service_request {
     if ($args->{media_url}) {
         my $i = 1;
         @attachments = map {
+            my $content_type = $_->content_type ? $_->content_type : 'image/jpeg';
             {
                 filename => $_->filename,
                 description => "Image " . $i++,
-                data => "data:image/jpeg;base64," . encode_base64($_->content)
+                data => "data:" . $content_type . ";base64," . encode_base64($_->content)
             }
         } $self->_get_attachments($args->{media_url});
     }
