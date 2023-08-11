@@ -838,7 +838,7 @@ sub _wrap_services {
     my @services = ();
     for my $code (sort keys %{$self->wrapped_services}) {
         if ($self->wrapped_services->{$code}->{passthrough}) {
-            my $original_service = $original_services{$code};
+            my $original_service = delete $original_services{$code};
             my $wrapped_group = $self->wrapped_services->{$code}->{group};
             $wrapped_group = [$wrapped_group] if ( $wrapped_group && ref $wrapped_group ne 'ARRAY' );
             $original_service->groups($wrapped_group || $original_service->groups);
@@ -863,7 +863,7 @@ sub _wrap_services {
         # The wrapped services may have their own attributes, so merge
         # them all together (stripping duplicates) and include them in
         # the wrapping service.
-        for my $wrapped_service ( map { $original_services{$_} } @{ $self->wrapped_services->{$code}->{wraps} }) {
+        for my $wrapped_service ( map { delete $original_services{$_} } @{ $self->wrapped_services->{$code}->{wraps} }) {
             foreach (@{ $wrapped_service->attributes }) {
                 next if $seen_attributes{$_->{code}};
                 push @attributes, $_;
@@ -884,7 +884,8 @@ sub _wrap_services {
         push @services, $o311_service;
     }
 
-    return @services;
+    return ( sort { $a->service_code cmp $b->service_code }
+            values %original_services ), @services;
 }
 
 sub get_completion_photo {

@@ -9,10 +9,14 @@ around BUILDARGS => sub {
     $args{jurisdiction_id} = 'confirm_wrapped';
     $args{config_data} = '
 service_whitelist:
-   Everything:
-     HM_PHS: Small pothole
-     HM_PHL: Large pothole
-     ST_STP4: Broken bridge
+  Everything:
+    HM_PHS: Small pothole
+    HM_PHL: Large pothole
+    ST_STP4: Broken bridge
+    MISC_DEF: Misc DEF is not wrapped
+  Not wrapped:
+    MISC_ABC_1: Misc ABC 1
+    MISC_ABC_2: Misc ABC 2
 wrapped_services:
   POTHOLES:
     group: "Road defects"
@@ -45,6 +49,7 @@ $open311->mock(perform_request => sub {
                 { ServiceCode => 'HM', ServiceName => 'Highways', EnquirySubject => [ { SubjectCode => "PHS" } ] },
                 { ServiceCode => 'HM', ServiceName => 'Highways', EnquirySubject => [ { SubjectCode => "PHL" } ] },
                 { ServiceCode => 'ST', ServiceName => 'Streets', EnquirySubject => [ { SubjectCode => "STP4" } ] },
+                { ServiceCode => 'MISC', ServiceName => 'Misc', EnquirySubject => [ { SubjectCode => "ABC" }, { SubjectCode => "DEF" } ] },
             ] } }
         };
     }
@@ -60,6 +65,39 @@ subtest "GET Service List" => sub {
     my $expected = <<XML;
 <?xml version="1.0" encoding="utf-8"?>
 <services>
+  <service>
+    <description>Misc ABC 1</description>
+    <groups>
+      <group>Not wrapped</group>
+    </groups>
+    <keywords></keywords>
+    <metadata>true</metadata>
+    <service_code>MISC_ABC_1</service_code>
+    <service_name>Misc ABC 1</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
+    <description>Misc ABC 2</description>
+    <groups>
+      <group>Not wrapped</group>
+    </groups>
+    <keywords></keywords>
+    <metadata>true</metadata>
+    <service_code>MISC_ABC_2</service_code>
+    <service_name>Misc ABC 2</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
+    <description>Misc DEF is not wrapped</description>
+    <groups>
+      <group>Everything</group>
+    </groups>
+    <keywords></keywords>
+    <metadata>true</metadata>
+    <service_code>MISC_DEF</service_code>
+    <service_name>Misc DEF is not wrapped</service_name>
+    <type>realtime</type>
+  </service>
   <service>
     <description>Pothole</description>
     <groups>
