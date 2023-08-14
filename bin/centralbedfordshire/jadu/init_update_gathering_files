@@ -18,7 +18,7 @@ use Open311::Endpoint::Integration::UK::CentralBedfordshire::Jadu;
 
 my $lookback_days;
 GetOptions("lookback-days=i" => \$lookback_days);
-if (!$lookback_days) {
+if (!defined($lookback_days)) {
     print "Please specify a number of days to look back for updates via --lookback-days";
     exit 1;
 }
