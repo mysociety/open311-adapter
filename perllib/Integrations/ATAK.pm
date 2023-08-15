@@ -102,7 +102,6 @@ sub post {
 
     my $url = $self->config->{api_url} . $path;
     $self->logger->debug("[ATAK] Request URL: $url");
-    $self->logger->debug("[ATAK] Request data: " . encode_json($data));
 
     my $response = $self->ua->post(
         $url,

@@ -92,6 +92,8 @@ sub post_service_request {
         }
     };
 
+    $self->logger->debug("[ATAK] Issue: " . encode_json($issue));
+
     if (@attachments) {
         $issue->{attachments} = \@attachments;
     }
