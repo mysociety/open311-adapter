@@ -82,6 +82,7 @@ subtest "POST service request" => sub {
         'attribute[fixmystreet_id]' => 1,
         'attribute[report_url]' => 'http://fixmystreet.com/reports/1',
         'attribute[reported_by_staff]' => 'Yes',
+        'attribute[staff_reporter]' => 'Mr Staff',
         'attribute[land_type]' => 'Footpath',
         'attribute[type_of_waste]' => 'Asbestos',
         'attribute[type_of_waste]' => 'Black bags',
@@ -118,6 +119,7 @@ subtest "POST service request" => sub {
         'ens-description-of-alleged-offender' => 'Stealthy.',
         'fms-reference' => 'http://fixmystreet.com/reports/1',
         'ens-fly-tip-witnessed' => 'Yes',
+        'created-by' => 'Mr Staff',
     };
     is_deeply $sent_payload, $expected_payload;
 

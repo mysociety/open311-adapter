@@ -43,6 +43,13 @@ sub _build_attributes {
             }
         ),
         Open311::Endpoint::Service::Attribute->new(
+            code => "staff_reporter",
+            required => 0,
+            datatype => "text",
+            description => "name of the staff reporter",
+            automated => 'server_set',
+        ),
+        Open311::Endpoint::Service::Attribute->new(
             code => "land_type",
             variable => 1,
             required => 1,

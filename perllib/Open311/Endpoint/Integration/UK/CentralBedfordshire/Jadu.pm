@@ -308,6 +308,7 @@ sub post_service_request {
         'sys-telephone-number' => $args->{phone},
         'fms-reference' => $attributes->{report_url},
         'sys-channel' => $sys_channel,
+        'created-by' => $attributes->{staff_reporter},
     );
     $payload{'ens-fly-tip-date'} = $fly_tip_datetime->ymd if $fly_tip_datetime;
     $payload{'ens-fly-tip-time'} = $fly_tip_datetime->strftime('%H:%M') if $fly_tip_datetime;
