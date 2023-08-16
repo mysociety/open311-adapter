@@ -548,6 +548,8 @@ sub get_service_request_updates {
     my $start_time = $w3c->parse_datetime($args->{start_date})->epoch;
     my $end_time = $w3c->parse_datetime($args->{end_date})->epoch;
 
+    return unless $self->update_storage_file;
+
     my $update_storage_raw = path($self->update_storage_file)->slurp_raw;
     my $updates = decode_json($update_storage_raw);
     my @updates_to_send;

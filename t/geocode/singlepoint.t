@@ -18,7 +18,7 @@ subtest "get_nearest_addresses" => sub {
         $resp->content(path(__FILE__)->sibling("files/singlepoint/spatial_radial_search_by_easting_and_northing_response.xml")->slurp);
         return $resp;
     });
-    my $singlepoint = Geocode::SinglePoint->new();
+    my $singlepoint = Geocode::SinglePoint->new( base_url => '', api_key => '' );
     # Call with arbitrary easting, northing and radius.
     my $addresses = $singlepoint->get_nearest_addresses(0, 0, 0, ["STREET", "USRN", "TOWN"]);
 
