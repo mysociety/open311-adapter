@@ -23,6 +23,7 @@ around check_for_data_value => sub {
 
     my $method = $args->{attributes}{LastPayMethod} || '';
     return 2 if $name eq 'Payment Type' && $method eq 3; # DD
+    return 3 if $name eq 'Payment Type' && $method eq 4; # 'cheque' (or phone)
 
     return $class->$orig($name, $args, $request, $parent_name);
 };

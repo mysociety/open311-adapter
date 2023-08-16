@@ -70,6 +70,13 @@ $soap_lite->mock(call => sub {
             my @type = ${$data[1]->value}->value;
             is $type[0]->value, 1009;
             is $type[1]->value, 1;
+        } elsif ($client_ref eq 'LBS-2000123') {
+            is $event_type, EVENT_TYPE_SUBSCRIBE;
+            is $service_id, 409;
+            my @data = ${$params[0]->value}->value->value;
+            my @paper = ${$data[0]->value}->value;
+            is $paper[0]->value, 1009;
+            is $paper[1]->value, 3;
         }
         return SOAP::Result->new(result => {
             EventGuid => '1234',
@@ -116,6 +123,7 @@ subtest "POST subscription request OK" => sub {
         'attribute[Subscription_Details_Containers]' => 26, # Garden Bin
         'attribute[Subscription_Details_Quantity]' => 1,
         'attribute[Request_Type]' => 1,
+        'attribute[LastPayMethod]' => 4,
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
