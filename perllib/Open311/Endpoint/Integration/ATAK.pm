@@ -82,7 +82,7 @@ sub post_service_request {
         project_code => $self->endpoint_config->{project_code},
         project_name => $self->endpoint_config->{project_name},
         issue => $issue_text,
-        location_name => "",
+        location_name => $args->{attributes}->{location_name} || '',
         caller => "",
         resolve_by => "",
         location => {
