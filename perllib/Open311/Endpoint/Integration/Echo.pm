@@ -426,6 +426,12 @@ sub process_service_request_args {
         data => [],
     };
 
+    # We may want to raise the event with a specific GUID which has been
+    # passed in as an extended attribute.
+    if (my $guid = $args->{attributes}{GUID}) {
+       $request->{guid} = $guid;
+    }
+
     return $request;
 }
 

@@ -46,14 +46,20 @@ $soap_lite->mock(call => sub {
     my $method = $args[0]->name;
     if ($method eq 'PostEvent') {
         my @params = ${$args[3]->value}->value;
-        my $client_ref = $params[1]->value;
-        my $event_type = $params[3]->value;
-        my $service_id = $params[4]->value;
+        my $offset = 0;
+        my $guid;
+        if ($params[0]->name eq 'Guid') {
+            $offset = 1;
+            $guid = $params[0]->value;
+        }
+        my $client_ref = $params[1+$offset]->value;
+        my $event_type = $params[3+$offset]->value;
+        my $service_id = $params[4+$offset]->value;
         like $client_ref, qr/LBS-200012[345]/;
         if ($client_ref eq 'LBS-2000124') {
             is $event_type, 1566;
             is $service_id, 405;
-            my @data = ${$params[0]->value}->value->value;
+            my @data = ${$params[$offset]->value}->value->value;
             my @bin = ${$data[0]->value}->value;
             is $bin[0]->value, 2000;
             is $bin[1]->value, 1;
@@ -63,7 +69,8 @@ $soap_lite->mock(call => sub {
         } elsif ($client_ref eq 'LBS-2000125') {
             is $event_type, 1568;
             is $service_id, 408;
-            my @data = ${$params[0]->value}->value->value;
+            is $guid, 'd5f79551-3dc4-11ee-ab68-f0c87781f93b';
+            my @data = ${$params[$offset]->value}->value->value;
             my @paper = ${$data[0]->value}->value;
             is $paper[0]->value, 2002;
             is $paper[1]->value, 1;
@@ -73,7 +80,7 @@ $soap_lite->mock(call => sub {
         } elsif ($client_ref eq 'LBS-2000123') {
             is $event_type, EVENT_TYPE_SUBSCRIBE;
             is $service_id, 409;
-            my @data = ${$params[0]->value}->value->value;
+            my @data = ${$params[$offset]->value}->value->value;
             my @paper = ${$data[0]->value}->value;
             is $paper[0]->value, 1009;
             is $paper[1]->value, 3;
@@ -156,6 +163,7 @@ subtest "POST missed mixed+paper OK" => sub {
         'attribute[fixmystreet_id]' => 2000125,
         'attribute[service_id]' => 2240,
         'attribute[LastPayMethod]' => 2,
+        'attribute[GUID]' => 'd5f79551-3dc4-11ee-ab68-f0c87781f93b',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
