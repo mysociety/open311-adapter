@@ -595,7 +595,7 @@ subtest "POST Parks littering ATAK service request OK" => sub {
             is $data->{project_name}, 'LB BRENT';
             is $data->{project_code}, 'C123';
             is $data->{taken_on}, '2023-07-27T12:00:00Z';
-            is $data->{location_name}, '';
+            is $data->{location_name}, 'Location name';
             is $data->{caller}, '';
             is $data->{resolve_by}, '';
             is $data->{location}->{type}, 'Point';
@@ -772,14 +772,16 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_d_created": "2023-08-01T00:00:00Z",
                     "task_d_planned": "2023-08-01T00:00:00Z",
                     "task_d_completed": "2023-08-01T00:00:00Z",
-                    "task_d_approved": "2023-08-01T00:00:00Z"
+                    "task_d_approved": "2023-08-01T00:00:00Z",
+                    "task_p_id": "123"
                 },
                 {
                     "client_ref": "missing created time",
                     "task_comments": "Closed - Completed",
                     "task_d_planned": "2023-08-01T00:00:00Z",
                     "task_d_completed": "2023-08-01T00:00:00Z",
-                    "task_d_approved": "2023-08-01T00:00:00Z"
+                    "task_d_approved": "2023-08-01T00:00:00Z",
+                    "task_p_id": "124"
                 },
                 {
                     "client_ref": "unknown state",
@@ -787,7 +789,8 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_d_created": "2023-08-01T00:00:00Z",
                     "task_d_planned": "2023-08-01T00:00:00Z",
                     "task_d_completed": "2023-08-01T00:00:00Z",
-                    "task_d_approved": "2023-08-01T00:00:00Z"
+                    "task_d_approved": "2023-08-01T00:00:00Z",
+                    "task_p_id": "125"
                 },
                 {
                     "client_ref": "issue too old",
@@ -795,7 +798,8 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_d_created": "2022-08-01T00:00:00Z",
                     "task_d_planned": "2023-08-01T00:00:00Z",
                     "task_d_completed": "2023-08-01T00:00:00Z",
-                    "task_d_approved": "2023-08-01T00:00:00Z"
+                    "task_d_approved": "2023-08-01T00:00:00Z",
+                    "task_p_id": "126"
                 },
                 {
                     "client_ref": "test",
@@ -803,7 +807,8 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_d_created": "2023-08-01T00:00:00Z",
                     "task_d_planned": "2023-08-01T01:00:00Z",
                     "task_d_completed": "2023-08-01T02:00:00Z",
-                    "task_d_approved": "2023-08-01T03:00:00Z"
+                    "task_d_approved": "2023-08-01T03:00:00Z",
+                    "task_p_id": "127"
                 }
             ]
         }');
@@ -818,7 +823,7 @@ subtest "GET ATAK service request updates OK" => sub {
             {
                 description => '',
                 media_url => '',
-                service_request_id => 'ATAK-test',
+                service_request_id => 'ATAK-127',
                 status => 'internal_referral',
                 update_id => 'ATAK-test_1690858800',
                 updated_datetime => '2023-08-01T03:00:00Z',
@@ -843,7 +848,8 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_d_created": "2023-08-01T00:00:00Z",
                     "task_d_planned": "2023-08-02T01:00:00Z",
                     "task_d_completed": "2023-08-02T02:00:00Z",
-                    "task_d_approved": "2023-08-02T03:00:00Z"
+                    "task_d_approved": "2023-08-02T03:00:00Z",
+                    "task_p_id": "128"
                 }
             ]
         }');
@@ -859,7 +865,7 @@ subtest "GET ATAK service request updates OK" => sub {
             {
                 description => "",
                 media_url => '',
-                service_request_id => 'ATAK-test',
+                service_request_id => 'ATAK-127',
                 status => 'internal_referral',
                 update_id => 'ATAK-test_1690858800',
                 updated_datetime => '2023-08-01T03:00:00Z',
@@ -884,7 +890,8 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_d_created": "2023-08-01T00:00:00Z",
                     "task_d_planned": "2023-08-03T01:00:00Z",
                     "task_d_completed": "2023-08-03T02:00:00Z",
-                    "task_d_approved": "2023-08-03T03:00:00Z"
+                    "task_d_approved": "2023-08-03T03:00:00Z",
+                    "task_p_id": "129"
                 }
             ]
         }');
@@ -899,7 +906,7 @@ subtest "GET ATAK service request updates OK" => sub {
             {
                 description => "description",
                 media_url => '',
-                service_request_id => 'ATAK-test',
+                service_request_id => 'ATAK-129',
                 status => 'fixed',
                 update_id => 'ATAK-test_1691031600',
                 updated_datetime => '2023-08-03T03:00:00Z',
