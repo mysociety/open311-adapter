@@ -13,7 +13,7 @@ use Integrations::ATAK;
 use JSON::MaybeXS;
 use DateTime::Format::W3CDTF;
 use Path::Tiny;
-use Data::Dumper;
+use Try::Tiny;
 
 has jurisdiction_id => (
     is => 'ro',
@@ -133,7 +133,14 @@ sub get_service_request_updates {
     my $end_time = $w3c->parse_datetime($args->{end_date})->epoch;
 
     my $update_storage_raw = path($self->endpoint_config->{update_storage_file})->slurp_raw;
-    my $updates = decode_json($update_storage_raw);
+    my $updates;
+    try {
+        $updates = decode_json($update_storage_raw);
+    } catch {
+        $self->logger->error("[ATAK] Error parsing update storage file: $_");
+        $updates = [];
+    };
+
     my @updates_to_send;
 
     foreach my $update (@$updates) {
@@ -144,7 +151,7 @@ sub get_service_request_updates {
             status => $update->{fms_status},
             external_status_code => $update->{atak_status},
             update_id => $update->{issue_reference} . '_' . $update->{time},
-            service_request_id => $update->{issue_reference},
+            service_request_id => $update->{task_id},
             description => $update->{description},
             updated_datetime => DateTime->from_epoch(epoch => $update->{time}),
         );
@@ -322,6 +329,7 @@ sub _fetch_and_apply_updated_issues_info {
 
         unless ($existing_tracking && $existing_tracking->{atak_status} eq $atak_status) {
             $tracked_statuses->{issues}->{$issue_reference} = {
+                task_id => $issue->{task_p_id},
                 fms_status => $mapped_fms_status,
                 atak_status => $atak_status,
                 issue_reference => $issue_reference,
@@ -330,6 +338,7 @@ sub _fetch_and_apply_updated_issues_info {
                 description => $description || '',
             };
             my $update = {
+                task_id => $issue->{task_p_id},
                 fms_status => $mapped_fms_status,
                 atak_status => $atak_status,
                 issue_reference => $issue_reference,
@@ -338,7 +347,7 @@ sub _fetch_and_apply_updated_issues_info {
             };
             $self->logger->debug(sprintf(
                     "[ATAK] Adding new update:\n%s",
-                    Dumper($update)
+                    encode_json($update)
                 ));
 
             push @updates, $update;
