@@ -361,6 +361,16 @@ sub post_service_request_update {
 sub get_service_request_updates {
     my ($self, $args) = @_;
 
+    # given we don't have an update time set a default of 20 seconds in the
+    # past of the end date. The -20 seconds is because FMS checks that comments
+    # aren't in the future WRT when it made the request so the -20 gets round
+    # that.
+    my $update_time = DateTime->now->add( seconds => -20 );
+    if ($args->{end_date}) {
+        my $w3c = DateTime::Format::W3CDTF->new;
+        my $update_time = $w3c->parse_datetime($args->{end_date});
+    }
+
     my $fetched_updates = $self->abavus->api_call(call => 'serviceRequest/event/status');
     if ($fetched_updates->{message} eq 'No Events Found') {
         return ();
@@ -379,6 +389,7 @@ sub get_service_request_updates {
                 description => '',
                 update_id => $update->{ServiceEvent}->{guid},
                 service_request_id => $update->{ServiceEvent}->{number},
+                updated_datetime => $update_time,
             );
             push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %update_args );
         } else {

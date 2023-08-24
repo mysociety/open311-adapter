@@ -211,7 +211,7 @@ subtest 'check fetch updates' => sub {
             'status' => 'investigating',
             'description' => '',
             'media_url' => '',
-            'updated_datetime' => '2023-05-01T12:00:00Z',
+            'updated_datetime' => '2023-05-01T11:59:40Z',
             }
         ];
 
