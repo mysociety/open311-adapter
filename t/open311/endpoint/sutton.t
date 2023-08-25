@@ -70,6 +70,8 @@ $soap_lite->mock(call => sub {
             is $event_type, 1568;
             is $service_id, 408;
             is $guid, 'd5f79551-3dc4-11ee-ab68-f0c87781f93b';
+            my $reservation = ${$params[5+$offset]->value}->value->value;
+            is $reservation, 'reservation==';
             my @data = ${$params[$offset]->value}->value->value;
             my @paper = ${$data[0]->value}->value;
             is $paper[0]->value, 2002;
@@ -164,6 +166,7 @@ subtest "POST missed mixed+paper OK" => sub {
         'attribute[service_id]' => 2240,
         'attribute[LastPayMethod]' => 2,
         'attribute[GUID]' => 'd5f79551-3dc4-11ee-ab68-f0c87781f93b',
+        'attribute[reservation]' => 'reservation==',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;

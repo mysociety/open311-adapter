@@ -426,10 +426,13 @@ sub process_service_request_args {
         data => [],
     };
 
-    # We may want to raise the event with a specific GUID which has been
-    # passed in as an extended attribute.
+    # We may want to raise the event with a specific GUID or reservation
+    # which has been passed in as an extended attribute.
     if (my $guid = $args->{attributes}{GUID}) {
        $request->{guid} = $guid;
+    }
+    if (my $reservation = $args->{attributes}{reservation}) {
+       $request->{reservation} = $reservation;
     }
 
     return $request;

@@ -175,6 +175,7 @@ sub PostEvent {
         EventObjects => { EventObject => $source },
         EventTypeId => $args->{event_type},
         ServiceId => $args->{service},
+        $args->{reservation} ? (TaskReservations => { TaskReservation => $args->{reservation} }) : (),
     );
     $self->call('PostEvent', event => $data);
 }
