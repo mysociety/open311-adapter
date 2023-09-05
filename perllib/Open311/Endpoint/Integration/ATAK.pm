@@ -67,13 +67,13 @@ sub post_service_request {
         } $self->_get_attachments($args->{media_url});
     }
 
-    my $issue_template = "Category: %s\nLocation: %s\n\n%s\n";
-
-    my $issue_text = sprintf(
-        $issue_template,
+    my $issue_text = $self->_format_issue_text(
+        $self->endpoint_config->{max_issue_text_characters},
         $service->service_name,
         $args->{attributes}->{location_name} || '',
-        $args->{description},
+        $args->{attributes}->{report_url},
+        $args->{attributes}->{title},
+        $args->{attributes}->{detail},
     );
 
     my $issue = {
@@ -106,6 +106,33 @@ sub post_service_request {
     return $self->new_request(
         service_request_id => $service_request_id,
     )
+}
+
+sub _format_issue_text {
+    my ($self, $char_limit, $category, $location_name, $url, $title, $detail) = @_;
+
+    # Populate everything except the detail field which we may need to truncate.
+    my $issue_text = sprintf(
+        "Category: %s\nLocation: %s\n\nlocation of problem: %s\n\ndetail: %%s\n\nurl: %s\n\nSubmitted via FixMyStreet\n",
+        $category, $location_name, $title, $url
+    );
+
+    # +2 for the not yet used format directive for detail (%s).
+    my $max_detail_chars = $char_limit - length($issue_text) + 2;
+
+    # We need at least 3 characters of leeway so we can use an ellipsis to indicate
+    # the detail was truncated.
+    # Note using horizontal ellipsis (U+2026) results in an internal server error.
+    if ($max_detail_chars < 3 && length($detail) > $max_detail_chars) {
+        die "Issue text is too large, even if we were to truncate the detail before inserting: " . $issue_text;
+    }
+
+    if (length($detail) > $max_detail_chars) {
+        $detail = substr($detail, 0, $max_detail_chars - 3) . "...";
+    }
+
+    return sprintf($issue_text, $detail);
+
 }
 
 sub _get_attachments {

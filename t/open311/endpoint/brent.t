@@ -15,6 +15,7 @@ use Test::More;
 use Test::MockModule;
 use Test::LongString;
 use Test::MockTime ':all';
+use Test::Exception;
 
 # Set up
 
@@ -75,6 +76,7 @@ sub atak_config {
                 group => "Parks and open spaces",
             },
         },
+        max_issue_text_characters => 900,
         issue_status_tracking_file => $atak_status_tracking_file,
         update_storage_file => $atak_update_storage_file,
         issue_status_tracking_max_age_days => 365,
@@ -590,7 +592,9 @@ subtest "POST Parks littering ATAK service request OK" => sub {
             is $headers{Authorization}, 'AUTH-123';
 
             my $data = decode_json($headers{Content})->{tasks}->[0];
-            is $data->{issue}, "Category: Parks littering\nLocation: Location name\n\nLots of litter in the park\n";
+            is $data->{issue}, "Category: Parks littering\nLocation: Location name\n\n" .
+                "location of problem: title\n\ndetail: detail\n\nurl: url\n\n" .
+                "Submitted via FixMyStreet\n";
             is $data->{client_ref}, '42';
             is $data->{project_name}, 'LB BRENT';
             is $data->{project_code}, 'C123';
@@ -627,6 +631,9 @@ subtest "POST Parks littering ATAK service request OK" => sub {
         'attribute[easting]' => EASTING,
         'attribute[northing]' => NORTHING,
         'attribute[fixmystreet_id]' => 42,
+        'attribute[report_url]' => 'url',
+        'attribute[detail]' => 'detail',
+        'attribute[title]' => 'title',
     );
     ok $res->is_success, 'valid request';
 
@@ -933,6 +940,31 @@ subtest "GET ATAK service request updates OK" => sub {
         '2024-08-05T00:00:00Z',
         []
     );
+};
+
+subtest "ATAK issue text formatting" => sub {
+
+    dies_ok { $atak_endpoint->_format_issue_text(
+        120, 'category', 'location name', 'url', 'title', 'detail'
+    ) }, "formatting issue text fails when inputs are too big";
+
+    my $issue_text =  $atak_endpoint->_format_issue_text(
+        121, 'category', 'location name', 'url', 'title', 'detail'
+    );
+    is $issue_text, "Category: category\nLocation: location name\n\nlocation of problem: title\n\n" .
+        "detail: ...\n\nurl: url\n\nSubmitted via FixMyStreet\n";
+
+    $issue_text =  $atak_endpoint->_format_issue_text(
+        122, 'category', 'location name', 'url', 'title', 'detail'
+    );
+    is $issue_text, "Category: category\nLocation: location name\n\nlocation of problem: title\n\n" .
+        "detail: d...\n\nurl: url\n\nSubmitted via FixMyStreet\n";
+
+    $issue_text =  $atak_endpoint->_format_issue_text(
+        126, 'category', 'location name', 'url', 'title', 'detail'
+    );
+    is $issue_text, "Category: category\nLocation: location name\n\nlocation of problem: title\n\n" .
+        "detail: detail\n\nurl: url\n\nSubmitted via FixMyStreet\n";
 };
 
 done_testing;
