@@ -291,15 +291,28 @@ sub _fetch_and_apply_updated_issues_info {
         my @ordered_times = sort grep { defined } ($time_created, $time_approved, $time_planned, $time_completed);
         my $most_recent_time = pop @ordered_times;
 
-        if ($most_recent_time && $most_recent_time > $latest_update_seen) {
-            $latest_update_seen = $most_recent_time;
-        }
-
         my $issue_reference = $issue->{client_ref};
         if (!$issue_reference) {
             $self->logger->warn("[ATAK] No  client reference field found on updated issue. Skipping.");
             next;
         }
+
+        if ($most_recent_time && $most_recent_time > $latest_update_seen) {
+            if ($most_recent_time > $now) {
+                # For some reason, we've been given an update beyond our query range.
+                # In this case, we limit the latest_update_seen to end of the query range
+                # just in case this 'future' time would cause us to miss other updates.
+                $self->logger->warn(sprintf(
+                        "[ATAK] The update time for issue %s is %s which is beyond the maximum time queried for %s.",
+                        $issue_reference, $most_recent_time, $now
+                    )
+                );
+                $latest_update_seen = $now;
+            } else {
+                $latest_update_seen = $most_recent_time;
+            }
+        }
+
 
         if (!$time_created) {
             $self->logger->warn(sprintf(

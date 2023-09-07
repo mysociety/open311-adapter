@@ -846,6 +846,8 @@ subtest "GET ATAK service request updates OK" => sub {
         my ($self, $url) = @_;
         like $url, qr/from=2023-08-01T03:00:00Z/, "correct from time";
         like $url, qr/to=2023-08-03T00:00:00Z/, "correct to time";
+        # One of the times is outside of query window, next query should start from range end
+        # rather than the 'future' time.
         return HTTP::Response->new(200, 'OK', [], '{
             "tasks": [
                 {
@@ -855,7 +857,7 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_d_created": "2023-08-01T00:00:00Z",
                     "task_d_planned": "2023-08-02T01:00:00Z",
                     "task_d_completed": "2023-08-02T02:00:00Z",
-                    "task_d_approved": "2023-08-02T03:00:00Z",
+                    "task_d_approved": "2023-08-04T03:00:00Z",
                     "task_p_id": "128"
                 }
             ]
@@ -886,7 +888,7 @@ subtest "GET ATAK service request updates OK" => sub {
 
     $mock_ua->mock('get', sub {
         my ($self, $url) = @_;
-        like $url, qr/from=2023-08-02T03:00:00Z/, "correct from time";
+        like $url, qr/from=2023-08-03T00:00:00Z/, "correct from time";
         like $url, qr/to=2023-08-04T00:00:00Z/, "correct to time";
         return HTTP::Response->new(200, 'OK', [], '{
             "tasks": [
