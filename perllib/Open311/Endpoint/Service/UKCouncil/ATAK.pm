@@ -42,6 +42,13 @@ sub _build_attributes {
             required => 1,
             automated => 'server_set',
         ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => "group",
+            description => "Group",
+            datatype => "string",
+            required => 1,
+            automated => 'server_set',
+        ),
     );
 
     return \@attributes;
