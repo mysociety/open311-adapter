@@ -142,6 +142,7 @@ sub process_service_request_args {
             $request->{$_} = delete $args->{attributes}->{$_};
         }
     }
+    delete $args->{attributes}->{NSGName};
     $request->{xtra} = $args->{attributes};
 
     if ($args->{media_url}->[0]) {

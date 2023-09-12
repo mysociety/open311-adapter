@@ -44,6 +44,7 @@ $soap_lite->mock(call => sub {
         }
         my $photo_desc = "\n\n[ This report contains a photo, see: http://example.org/photo/1.jpeg ]";
         is $request[3]->value, "This is the details$photo_desc";
+        is $request[7], undef, 'No extra data';
         return SOAP::Result->new(method => {
             ServiceRequestIdentification => {
                 ReferenceValue => 1001,
@@ -110,6 +111,7 @@ subtest "POST Dog fouling OK" => sub {
         'attribute[easting]' => 100,
         'attribute[northing]' => 100,
         'attribute[fixmystreet_id]' => 123,
+        'attribute[NSGName]' => 'High street',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
