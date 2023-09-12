@@ -948,7 +948,7 @@ subtest "ATAK issue text formatting" => sub {
 
     dies_ok { $atak_endpoint->_format_issue_text(
         120, 'category', 'location name', 'url', 'title', 'detail'
-    ) }, "formatting issue text fails when inputs are too big";
+    ) } "formatting issue text fails when inputs are too big";
 
     my $issue_text =  $atak_endpoint->_format_issue_text(
         121, 'category', 'location name', 'url', 'title', 'detail'
