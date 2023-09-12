@@ -160,4 +160,25 @@ subtest "POST a successful payment" => sub {
         } ], 'correct json returned';
 };
 
+subtest "POST a cancellation" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        updated_datetime => '2023-09-01T19:00:00+01:00',
+        service_request_id => '123cancel',
+        update_id => 456,
+        status => 'OPEN',
+        description => 'Booking cancelled by customer',
+        first_name => 'Bob',
+        last_name => 'Mould',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => 'ABC',
+        } ], 'correct json returned';
+};
+
 done_testing;

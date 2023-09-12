@@ -41,6 +41,11 @@ around post_service_request_update => sub {
         $args->{description} = ''; # Blank out so nothing sent to Echo now
     }
 
+    if ($args->{description} eq 'Booking cancelled by customer') {
+        $args->{actiontype_id} = 8;
+        $args->{datatype_id} = 0;
+    }
+
     my $result = $class->$orig($args);
 
     return $result;
