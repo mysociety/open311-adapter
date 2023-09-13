@@ -42,4 +42,42 @@ around process_service_request_args => sub {
     return $request;
 };
 
+around post_service_request_update => sub {
+    my ($orig, $class, $args) = @_;
+    return $class->$orig($args) unless $args->{description};
+
+    my $integ = $class->get_integration;
+    my $event = $integ->GetEvent($args->{service_request_id});
+    my $event_type = $integ->GetEventType($event->{EventTypeId});
+    my $state_id = $event->{EventStateId};
+
+    my $states = force_arrayref($event_type->{Workflow}->{States}, 'State');
+    my $data;
+    foreach (@$states) {
+        my $core = $_->{CoreState};
+        my $name = $_->{Name};
+        $name =~ s/ +$//;
+        $data->{states}{$_->{Id}} = {
+            core => $core,
+            name => $name,
+        };
+    }
+    my $state = $data->{states}{$state_id};
+    if ($state->{core} ne 'Closed' || $state->{name} ne 'Not Completed') {
+        $args->{actiontype_id} = 334;
+        $args->{datatype_id} = 112;
+    }
+
+    return $class->$orig($args);
+};
+
+sub force_arrayref {
+    my ($res, $key) = @_;
+    return [] unless $res;
+    my $data = $res->{$key};
+    return [] unless $data;
+    $data = [ $data ] unless ref $data eq 'ARRAY';
+    return $data;
+}
+
 1;
