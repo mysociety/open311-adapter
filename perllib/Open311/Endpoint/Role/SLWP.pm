@@ -21,4 +21,29 @@ around check_for_data_value => sub {
     return $class->$orig($name, $args, $request, $parent_name);
 };
 
+around post_service_request_update => sub {
+    my ($orig, $class, $args) = @_;
+    return $class->$orig($args) unless $args->{description};
+
+    if ($args->{description} =~ /Payment confirmed, reference (.*), amount (.*)/) {
+        my ($ref, $amount) = ($1, $2);
+        my $integ = $class->get_integration;
+        my $event = $integ->GetEvent($args->{service_request_id});
+        # Could GetEventType and loop through it all to find these IDs out but for just this seemed okay
+        my $data = {
+            id => 27409,
+            childdata => [
+                { id => 27410, value => $ref },
+                { id => 27411, value => $amount },
+            ],
+        };
+        $integ->UpdateEvent({ id => $event->{Id}, data => [ $data ] });
+        $args->{description} = ''; # Blank out so nothing sent to Echo now
+    }
+
+    my $result = $class->$orig($args);
+
+    return $result;
+};
+
 1;

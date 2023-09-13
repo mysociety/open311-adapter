@@ -180,6 +180,16 @@ sub PostEvent {
     $self->call('PostEvent', event => $data);
 }
 
+sub UpdateEvent {
+    my ($self, $args) = @_;
+
+    my $data = ixhash(
+        Id => $args->{id},
+        Data => extensible_data($args->{data}),
+    );
+    $self->call('PostEvent', event => $data);
+}
+
 sub PerformEventAction {
     my ($self, $args) = @_;
     my $ref = ixhash(
@@ -187,16 +197,17 @@ sub PerformEventAction {
         Type => 'Event',
         Value => [ { 'msArray:anyType' => $args->{service_request_id} }, ],
     );
-    my $action = ixhash(
-        ActionTypeId => $args->{actiontype_id} || 3,
-        Data => { ExtensibleDatum => ixhash(
+    my @params;
+    push @params, ActionTypeId => $args->{actiontype_id} || 3;
+    if (!defined($args->{datatype_id}) || $args->{datatype_id}) {
+        push @params, Data => { ExtensibleDatum => ixhash(
             DatatypeId => $args->{datatype_id} || 1,
             Value => $args->{description},
-        ) },
-        EventRef => $ref,
-    );
+        ) };
+    }
+    push @params, EventRef => $ref;
+    my $action = ixhash(@params);
     $self->call('PerformEventAction', action => $action);
-
 }
 
 sub ixhash {

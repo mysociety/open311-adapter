@@ -45,10 +45,32 @@ $soap_lite->mock(call => sub {
     my $method = $args[0]->name;
     if ($method eq 'PostEvent') {
         my @params = ${$args[3]->value}->value;
-        my $client_ref = $params[1]->value;
-        like $client_ref, qr/RBK-2000123|REF-123/;
+        if (@params == 5) {
+            my $client_ref = $params[1]->value;
+            like $client_ref, qr/RBK-2000123|REF-123/;
+        } elsif (@params == 2) {
+            is $params[0]->value, '123pay';
+            my @data = ${$params[1]->value}->value->value;
+            my @payment = ${$data[0]->value}->value;
+            is $payment[1]->value, 27409;
+            my @child = ${$payment[0]->value}->value->value;
+            my @ref = ${$child[0]->value}->value;
+            is $ref[0]->value, 27410;
+            is $ref[1]->value, 'ABC';
+            @ref = ${$child[1]->value}->value;
+            is $ref[0]->value, 27411;
+            is $ref[1]->value, '£34.56';
+        } else {
+            is @params, 'UNKNOWN';
+        }
         return SOAP::Result->new(result => {
             EventGuid => '1234',
+        });
+    } elsif ($args[0]->name eq 'GetEvent') {
+        return SOAP::Result->new(result => {
+            Id => '123pay',
+            EventTypeId => 1636,
+            EventStateId => 4002,
         });
     } elsif ($method eq 'GetEventType') {
         return SOAP::Result->new(result => {
@@ -62,6 +84,13 @@ $soap_lite->mock(call => sub {
                 { Id => 1008, Name => "Notes" },
             ] },
         });
+    } elsif ($method eq 'PerformEventAction') {
+        my @params = ${$args[3]->value}->value;
+        is @params, 2, 'No notes';
+        my $ref = ${(${$params[1]->value}->value)[2]->value}->value->value->value;
+        my $actiontype_id = $params[0]->value;
+        is $actiontype_id, 8;
+        return SOAP::Result->new(result => { EventActionGuid => 'ABC' });
     } else {
         is $method, 'UNKNOWN';
     }
@@ -107,6 +136,27 @@ subtest "POST subscription request with client ref provided OK" => sub {
     is_deeply decode_json($res->content),
         [ {
             "service_request_id" => '1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST a successful payment" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        updated_datetime => '2023-09-01T19:00:00+01:00',
+        service_request_id => '123pay',
+        update_id => 456,
+        status => 'OPEN',
+        description => 'Payment confirmed, reference ABC, amount £34.56',
+        first_name => 'Bob',
+        last_name => 'Mould',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => 'BLANK',
         } ], 'correct json returned';
 };
 
