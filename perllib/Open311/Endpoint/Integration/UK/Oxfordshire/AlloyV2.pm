@@ -50,19 +50,18 @@ sub process_attributes {
 
     my $attributes = $self->SUPER::process_attributes($args);
 
-    # For category we use the category and not the group
-    my ( $group, $category ) = split('_', $args->{service_code});
+    my $category = $args->{service_code_alloy};
 
     # Config contains a mapping from ID to category name
     my $design = $self->config->{defect_resource_name};
     $design = $design->[0] if ref $design eq 'ARRAY';
     my $mapping = $self->config->{defect_sourcetype_category_mapping}{$design}{types};
     my %category_to_id = reverse %$mapping;
-    my $group_code = $category_to_id{$category} || $self->config->{default_category_attribute_value};
+    my $category_code = $category_to_id{$category} || $self->config->{default_category_attribute_value};
 
     push @$attributes, {
         attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{category},
-        value => [ $group_code ],
+        value => [ $category_code ],
     };
 
     # We also might have a source to associate

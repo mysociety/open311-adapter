@@ -135,27 +135,32 @@ $integration->mock('api_call', sub {
     return decode_json(encode_utf8($content));
 });
 
+my %shared_params = (
+    jurisdiction_id => 'dummy',
+    api_key => 'test',
+    first_name => 'David',
+    last_name => 'Anthony',
+    email => 'test@example.com',
+    description => 'description',
+    lat => '50',
+    long => '0.1',
+    'attribute[description]' => 'description',
+    'attribute[title]' => 'title',
+    'attribute[report_url]' => 'http://localhost/123',
+    'attribute[asset_resource_id]' => 'asset',
+    'attribute[fixmystreet_id]' => 123,
+    'attribute[easting]' => 1,
+    'attribute[northing]' => 2,
+);
+
 subtest "create basic problem" => sub {
     set_fixed_time('2023-02-21T13:37:00Z');
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
-        jurisdiction_id => 'dummy',
-        api_key => 'test',
-        service_code => 'Street Lighting_Damaged / Missing / Facing Wrong Way',
-        first_name => 'David',
-        last_name => 'Anthony',
-        email => 'test@example.com',
-        description => 'description',
-        lat => '50',
-        long => '0.1',
-        'attribute[description]' => 'description',
-        'attribute[title]' => 'title',
-        'attribute[report_url]' => 'http://localhost/123',
-        'attribute[asset_resource_id]' => 'asset',
-        'attribute[category]' => 'Street Lighting_Damaged / Missing / Facing Wrong Way',
-        'attribute[fixmystreet_id]' => 123,
-        'attribute[easting]' => 1,
-        'attribute[northing]' => 2,
+        %shared_params,
+        service_code => 'Damaged_/_Missing_/_Facing_Wrong_Way',
+        'attribute[category]' => 'Damaged / Missing / Facing Wrong Way',
+        'attribute[group]' => 'Street Lighting',
     );
     restore_time();
 
@@ -206,8 +211,8 @@ subtest "fetch problems" => sub {
             long => -1.59105589317734,
             media_url => "",
             requested_datetime => "2023-03-23T00:00:00Z",
-            service_code => "Roads_Highway Condition",
-            service_name => "Roads_Highway Condition",
+            service_code => "Highway_Condition",
+            service_name => "Highway Condition",
             service_request_id => "defect_1",
             status => "open",
             updated_datetime => "2023-03-23T00:00:00Z",
@@ -226,40 +231,55 @@ subtest "check service group and category aliases" => sub {
     my $row_service;
 
     foreach(@$services) {
-        if ($_->{service_code} eq 'Winter_Grit Bin - empty/refill') {
+        if ($_->{service_code} eq 'Grit_Bin_-_empty/refill') {
             $bin_service = $_;
-        } elsif ($_->{service_code} eq 'Rights of Way_Deterrent (animal)') {
+        } elsif ($_->{service_code} eq 'Deterrent_(animal)_1') {
             $row_service = $_;
+        } elsif ($_->{service_code} eq 'Potholes') {
+            is_deeply $_->{groups}, ["Footway/Footpath", "Roads"];
+        } elsif ($_->{service_code} eq 'Loose_/_Raised_/_Sunken') {
+            is_deeply $_->{groups}, ["Drains"];
+            is $_->{service_name}, "Loose / Raised / Sunken";
+        } elsif ($_->{service_code} eq 'Loose_/_Raised_/_Sunken_1') {
+            is_deeply $_->{groups}, ["Roads"];
+            is $_->{service_name}, "Sunken drain";
         }
     }
 
     ok defined($bin_service), "bin service found";
-    is $bin_service->{group}, "Winter (Snow/Ice)", "group alias applied to bin service";
+    is_deeply $bin_service->{groups}, ["Winter (Snow/Ice)"], "group alias applied to bin service";
     ok defined($row_service), "rights of way service found";
     is $row_service->{service_name}, "nuisance/dangerous animal", "category alias applied to row service";
+};
+
+subtest "create problem on aliased group" => sub {
+    set_fixed_time('2023-02-21T13:37:00Z');
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        %shared_params,
+        service_code => 'Grit_Bin_-_empty/refill',
+        'attribute[category]' => 'Grit_Bin_-_empty/refill',
+        'attribute[group]' => 'Winter (Snow/Ice)',
+    );
+    restore_time();
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    # order these so comparison works
+    $sent->{attributes} = [ sort { $a->{attributeCode} cmp $b->{attributeCode} } @{ $sent->{attributes} } ];
+    is $sent->{attributes}[6]{value}[0], '61fafee3e3b879015205f7cc', 'correct group found';
 };
 
 subtest "create problem on groupless category" => sub {
     set_fixed_time('2023-02-21T13:37:00Z');
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
-        jurisdiction_id => 'dummy',
-        api_key => 'test',
-        service_code => 'Street Lighting_Damaged / Missing / Facing Wrong Way',
-        first_name => 'David',
-        last_name => 'Anthony',
-        email => 'test@example.com',
-        description => 'description',
-        lat => '50',
-        long => '0.1',
-        'attribute[description]' => 'description',
-        'attribute[title]' => 'title',
-        'attribute[report_url]' => 'http://localhost/123',
-        'attribute[asset_resource_id]' => 'asset',
-        'attribute[category]' => 'Street Lighting_Damaged / Missing / Facing Wrong Way',
-        'attribute[fixmystreet_id]' => 123,
-        'attribute[easting]' => 1,
-        'attribute[northing]' => 2,
+        %shared_params,
+        service_code => 'Damaged_/_Missing_/_Facing_Wrong_Way',
+        'attribute[category]' => 'Damaged / Missing / Facing Wrong Way',
+        'attribute[group]' => 'Street Lighting',
     );
     restore_time();
 
@@ -296,7 +316,7 @@ subtest "update status on problem" => sub {
         POST => '/servicerequestupdates.json',
         jurisdiction_id => 'dummy',
         api_key => 'test',
-        service_code => 'Street Lighting_Damaged / Missing / Facing Wrong Way',
+        service_code => 'Damaged_/_Missing_/_Facing_Wrong_Way',
         description => 'update',
         status => 'FIXED',
         service_request_id => '642062376be3a0036bbbb64b',

@@ -43,8 +43,7 @@ sub process_attributes {
         value => [ $contact_resource_id ],
     };
 
-    my ($group, $category) = split('_', $args->{service_code});
-    my ($cat_code, $group_code) = $self->_find_category_and_group_codes($category);
+    my ($cat_code, $group_code) = $self->_find_category_and_group_codes($args->{service_code_alloy});
     $group_code = $group_code->[0] if ref $group_code eq 'ARRAY';
     push @$attributes, {
        attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{group},

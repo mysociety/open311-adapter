@@ -12,26 +12,21 @@
   # List of categories/subcategories and parent attribute id
   "service_whitelist": {
     "Bus Stops": {
-      "resourceId": 6183638,
       "Shelter Damaged": 1,
       "Sign/Pole Damaged": 1
     },
     "Highway Bridges": {
-      "resourceId": 6183643,
       "Highway Bridges - Damaged/Unsafe": 1,
     },
     "Drain Covers": {
-      "resourceId": 6183640,
       "Loose / Raised/Sunken": 1,
       "Broken / Missing": 1,
     },
     "Kerbs": {
-      "resourceId": 6183644,
       "Damaged/Loose": 1,
       "Missing": 1,
     },
     "Winter": {
-      "resourceId": 6183645,
       "Grit Bin - empty/refill": 1,
       "Grit Bin - damaged/replacement": 1,
     },

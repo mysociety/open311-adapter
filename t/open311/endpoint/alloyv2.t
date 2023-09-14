@@ -231,7 +231,7 @@ subtest "create basic problem" => sub {
         POST => '/requests.json', 
         jurisdiction_id => 'dummy',
         api_key => 'test',
-        service_code => 'Kerbs_Missing',
+        service_code => 'Missing',
         address_string => '22 Acacia Avenue',
         first_name => 'Bob',
         last_name => 'Mould',
@@ -291,7 +291,7 @@ subtest "create problem with file" => sub {
         POST => '/requests.json', 
         jurisdiction_id => 'dummy',
         api_key => 'test',
-        service_code => 'Kerbs_Missing',
+        service_code => 'Missing',
         address_string => '22 Acacia Avenue',
         first_name => 'Bob',
         last_name => 'Mould',
@@ -371,7 +371,7 @@ subtest "check send report with a photo as an upload" => sub {
         Content => [
             jurisdiction_id => 'dummy',
             api_key => 'test',
-            service_code => 'Kerbs_Missing',
+            service_code => 'Missing',
             address_string => '23 Acacia Avenue',
             first_name => 'Bob',
             last_name => 'Mould',
@@ -443,7 +443,7 @@ subtest "create problem with no resource_id" => sub {
         POST => '/requests.json', 
         jurisdiction_id => 'dummy',
         api_key => 'test',
-        service_code => 'Kerbs_Missing',
+        service_code => 'Missing',
         address_string => '22 Acacia Avenue',
         first_name => 'Bob',
         last_name => 'Mould',
@@ -801,9 +801,9 @@ subtest "check fetch problem" => sub {
     [{
       long => 2,
       requested_datetime => "2019-01-02T11:29:16Z",
-      service_code => "Bus Stops_Shelter Damaged",
+      service_code => "Shelter_Damaged",
       updated_datetime => "2019-01-02T11:29:16Z",
-      service_name => "Bus Stops_Shelter Damaged",
+      service_name => "Shelter Damaged",
       address_id => "",
       lat => 1,
       description => "test",
@@ -818,7 +818,7 @@ subtest "check fetch problem" => sub {
       lat => 1,
       service_request_id => 4947597,
       description => "fill",
-      service_name => "Winter_Grit Bin - empty/refill",
+      service_name => "Grit Bin - empty/refill",
       status => "fixed",
       media_url => "",
       address => "",
@@ -826,7 +826,7 @@ subtest "check fetch problem" => sub {
       requested_datetime => "2019-01-02T14:44:53Z",
       long => 2,
       updated_datetime => "2019-01-02T14:44:53Z",
-      service_code => "Winter_Grit Bin - empty/refill"
+      service_code => "Grit_Bin_-_empty/refill"
    }], "correct json returned";
 };
 
@@ -841,83 +841,83 @@ subtest "check fetch service description" => sub {
 
     is_deeply decode_json($res->content),
     [ {
-        service_code => 'Bus Stops_Shelter Damaged',
+        service_code => 'Shelter_Damaged',
         service_name => "Shelter Damaged",
         description => "Shelter Damaged",
         metadata => 'true',
         type => "realtime",
         keywords => "",
-        group => "Bus Stops"
+        groups => ["Bus Stops"]
     },
     {
-        service_code => 'Bus Stops_Sign/Pole Damaged',
+        service_code => 'Sign/Pole_Damaged',
         metadata => 'true',
         type => "realtime",
         keywords => "",
-        group => "Bus Stops",
+        groups => ["Bus Stops"],
         service_name => "Sign/Pole Damaged",
         description => "Sign/Pole Damaged"
     },
     {
-        service_code => 'Drain Covers_Broken / Missing',
+        service_code => 'Broken_/_Missing',
         metadata => 'true',
         type => "realtime",
         keywords => "",
-        group => "Drain Covers",
+        groups => ["Drain Covers"],
         service_name => "Broken / Missing",
         description => "Broken / Missing"
     },
     {
-        service_code => 'Drain Covers_Loose / Raised/Sunken',
+        service_code => 'Loose_/_Raised/Sunken',
         metadata => 'true',
         type => "realtime",
         keywords => "",
-        group => "Drain Covers",
+        groups => ["Drain Covers"],
         service_name => "Loose / Raised/Sunken",
         description => "Loose / Raised/Sunken"
     },
     {
-        service_code => 'Highway Bridges_Highway Bridges - Damaged/Unsafe',
+        service_code => 'Highway_Bridges_-_Damaged/Unsafe',
         metadata => 'true',
         type => "realtime",
         keywords => "",
-        group => "Highway Bridges",
+        groups => ["Highway Bridges"],
         service_name => "Highway Bridges - Damaged/Unsafe",
         description => "Highway Bridges - Damaged/Unsafe"
     },
     {
-        service_code => 'Kerbs_Damaged/Loose',
+        service_code => 'Damaged/Loose',
         metadata => 'true',
         type => "realtime",
         keywords => "",
-        group => "Kerbs",
+        groups => ["Kerbs"],
         service_name => "Damaged/Loose",
         description => "Damaged/Loose"
     },
     {
-        service_code => 'Kerbs_Missing',
+        service_code => 'Missing',
         metadata => 'true',
         type => "realtime",
         keywords => "",
-        group => "Kerbs",
+        groups => ["Kerbs"],
         service_name => "Missing",
         description => "Missing"
     },
     {
-        service_code => 'Winter_Grit Bin - damaged/replacement',
+        service_code => 'Grit_Bin_-_damaged/replacement',
         metadata => 'true',
         type => "realtime",
         keywords => "",
-        group => "Winter",
+        groups => ["Winter"],
         service_name => "Grit Bin - damaged/replacement",
         description => "Grit Bin - damaged/replacement"
     },
     {
-        service_code => 'Winter_Grit Bin - empty/refill',
+        service_code => 'Grit_Bin_-_empty/refill',
         metadata => 'true',
         type => "realtime",
         keywords => "",
-        group => "Winter",
+        groups => ["Winter"],
         service_name => "Grit Bin - empty/refill",
         description => "Grit Bin - empty/refill"
     } ], 'correct json returned';
@@ -925,7 +925,7 @@ subtest "check fetch service description" => sub {
 
 subtest "check fetch service metadata" => sub {
     my $res = $endpoint->run_test_request(
-      GET => '/services/Highway%20Bridges_Highway%20Bridges%20-%20Damaged/Unsafe.json?jurisdiction_id=dummy',
+      GET => '/services/Highway_Bridges_-_Damaged/Unsafe.json?jurisdiction_id=dummy',
     );
 
     my $sent = pop @sent;
@@ -934,7 +934,7 @@ subtest "check fetch service metadata" => sub {
 
     is_deeply decode_json($res->content),
     {
-        service_code => "Highway Bridges_Highway Bridges - Damaged/Unsafe",
+        service_code => "Highway_Bridges_-_Damaged/Unsafe",
         attributes => [
           {
             variable => 'false',
@@ -998,11 +998,21 @@ subtest "check fetch service metadata" => sub {
           },
           {
             variable => 'true',
+            code => "group",
+            datatype => "string",
+            required => 'false',
+            datatype_description => '',
+            order => 7,
+            description => "Group",
+            automated => 'server_set',
+          },
+          {
+            variable => 'true',
             code => "category",
             datatype => "string",
             required => 'true',
             datatype_description => '',
-            order => 7,
+            order => 8,
             description => "Category",
             automated => 'server_set',
           },
@@ -1012,7 +1022,7 @@ subtest "check fetch service metadata" => sub {
             datatype => "string",
             required => 'false',
             datatype_description => '',
-            order => 8,
+            order => 9,
             description => "Asset resource ID",
             automated => 'hidden_field',
           },
@@ -1022,7 +1032,7 @@ subtest "check fetch service metadata" => sub {
             datatype => "string",
             required => 'false',
             datatype_description => '',
-            order => 9,
+            order => 10,
             description => "Closest address",
             automated => 'server_set',
           },

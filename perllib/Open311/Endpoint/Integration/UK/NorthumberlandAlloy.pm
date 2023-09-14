@@ -25,7 +25,7 @@ sub service_request_content {
 
 In addition to the default new request processing, this function:
 * Finds or creates a contact and adds them under the C<contact.attribute_id> attribute.
-* Gets category and group codes from the service code.
+* Gets category and group codes from the provided data.
 * Looks up the category via C<category_list_code> and C<category_title_attribute>, adding this item under the 'category' attribute specified in C<request_to_resource_attribute_manual_mapping>.
 * Looks up the category via C<group_list_code> and C<group_title_attribute>, adding this item the 'group' attribute specified in C<request_to_resource_attribute_manual_mapping>.
 
@@ -42,9 +42,15 @@ sub process_attributes {
         value => [ $contact_resource_id ],
     };
 
-    my ($group, $category) = split('_', $args->{service_code});
-    my $category_code = $self->_find_category_code($category);
-    if ($group ne '') {
+    my $category_code = $self->_find_category_code($args->{service_code_alloy});
+    if (my $group = $args->{attributes}->{group}) {
+        foreach (keys %{$self->service_whitelist}) {
+            if (my $alias = $self->service_whitelist->{$_}->{alias}) {
+                if ($alias eq $group) {
+                    $group = $_;
+                }
+            }
+        }
         my $group_code = $self->_find_group_code($group);
         push @$attributes, {
            attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{group},

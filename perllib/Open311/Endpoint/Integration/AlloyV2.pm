@@ -84,11 +84,6 @@ has config => (
     default => sub { $_[0]->alloy->config }
 );
 
-has group_in_service_code => (
-    is => 'ro',
-    default => 1
-);
-
 sub get_integration {
     return $_[0]->alloy;
 }
@@ -124,22 +119,6 @@ has service_whitelist => (
     }
 );
 
-has reverse_whitelist => (
-    is => 'lazy',
-    default => sub {
-        my $self = shift;
-        my %reverse_whitelist;
-        for my $group (sort keys %{ $self->service_whitelist }) {
-            my $whitelist = $self->service_whitelist->{$group};
-            for my $subcategory (sort keys %{ $whitelist }) {
-                next if $subcategory eq 'resourceId';
-                $reverse_whitelist{$subcategory} = $group;
-            }
-        }
-        return \%reverse_whitelist;
-    }
-);
-
 =head2 update_store
 
 Directory for storing reconstructions of Alloy items to save on API calls
@@ -161,6 +140,8 @@ sub services {
     my $self = shift;
 
     my @services = ();
+    my %services;
+    my %suffixes;
     for my $group (sort keys %{ $self->service_whitelist }) {
 
         my $group_config = $self->service_whitelist->{$group};
@@ -171,9 +152,7 @@ sub services {
         my $group_name = $group_alias || $group;
 
         for my $subcategory (sort keys %{ $group_config }) {
-            next if $subcategory eq 'resourceId';
             next if $subcategory eq 'alias';
-
             my $subcategory_config = $self->service_whitelist->{$group}->{$subcategory};
             my $subcategory_alias;
             if (ref($subcategory_config) eq 'HASH' && exists($subcategory_config->{alias})) {
@@ -181,16 +160,24 @@ sub services {
             }
             my $subcategory_name = $subcategory_alias || $subcategory;
 
-            my $code = $group . '_' . $subcategory; # XXX What should it be...
+            (my $code = $subcategory) =~ s/ /_/g;
+            if ($subcategory_alias) {
+                $code .= '_' . ++$suffixes{$code};
+            }
+            if ($services{$code}) {
+                push @{$services{$code}->groups}, $group_name;
+                next;
+            }
 
             my %service = (
                 service_name => $subcategory_name,
                 description => $subcategory_name,
                 service_code => $code,
-                group => $group_name,
+                groups => [ $group_name ],
             );
             my $o311_service = $self->service_class->new(%service);
             push @services, $o311_service;
+            $services{$code} = $o311_service;
         }
     }
 
@@ -217,8 +204,10 @@ sub post_service_request {
     # extract attribute values
     my $resource_id = $args->{attributes}->{asset_resource_id} || '';
 
-    my $parent_attribute_id;
-
+    my $category = $args->{service_code};
+    $category =~ s/_\d+$//;
+    $category =~ s/_/ /g;
+    $args->{service_code_alloy} = $category;
 
     my $resource = {
         # This appears to be shared amongst all asset types for now,
@@ -851,6 +840,7 @@ sub _get_service_requests_resource {
             $self->logger->warn("No category found for defect $request->{itemId}, source type $request->{designCode} in " . $self->jurisdiction_id);
             next;
         }
+        $category =~ s/ /_/g;
 
         my $cat_service = $self->service($category);
         unless ($cat_service) {
@@ -874,7 +864,7 @@ sub _get_service_requests_resource {
         next if grep { $_ =~ /_FIXMYSTREET_ID$/ && $attributes->{$_} } keys %{ $attributes };
 
         my $service = Open311::Endpoint::Service->new(
-            service_name => $category,
+            service_name => $cat_service->service_name,
             service_code => $category,
         );
         $args{title} = $attributes->{attributes_itemsTitle};
@@ -1082,12 +1072,7 @@ sub get_defect_category {
         $category = $category_map->{types}->{$type} if $type && $category_map->{types}->{$type};
     }
 
-    return '' unless $category;
-    return $category unless $self->group_in_service_code;
-
-    my $group = $self->reverse_whitelist->{$category} || '';
-
-    return "${group}_$category";
+    return $category || '';
 }
 
 =head2 process_attributes

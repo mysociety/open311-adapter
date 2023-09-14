@@ -62,7 +62,7 @@
      "Footway/Footpath": {
         "Failed Reinstatement": 1,
         "Obstruction (Not Vegetation)": 1,
-        "Pothole": 1,
+        "Potholes": 1,
         "Slabs - Missing": 1,
         "Slabs - Uneven / Damaged / Cracked": 1,
      },
@@ -106,6 +106,7 @@
         "Damaged Speed Humps": 1,
         "Flooding": 1,
         "Highway Condition": 1,
+        "Loose / Raised / Sunken": { "alias": "Sunken drain" },
         "Mud on Road": 1,
         "Potholes": 1,
         "Spill - Oil/Diesel": 1,
@@ -202,7 +203,7 @@
     "default": {
       "default": "Highway Condition",
       "types": {
-        "62d170e827bec50156c0d57b": "Pothole",
+        "62d170e827bec50156c0d57b": "Potholes",
         "62d170f7b313fb01595ef1cf": "Highway Condition",
         "6409ff353d93f70371b6dffd": "Slabs - Uneven / Damaged / Cracked",
         "6414c03189c7bd0371ac7eb6": "Barrier problem",
@@ -221,7 +222,7 @@
         "6414c10742a88a036aba2040": "Loose / Raised / Sunken",
         "6414ca0156bf7e036b6bff8c": "Failed Reinstatement",
         "6414ca283d93f703715c23f8": "Obstruction (Not Vegetation)",
-        "6414cb1989c7bd0371acaa1b": "Pothole",
+        "6414cb1989c7bd0371acaa1b": "Potholes",
         "6414cc4089c7bd0371acae05": "Slabs - Missing",
         "6409ff353d93f70371b6dffd": "Slabs - Uneven / Damaged / Cracked",
         "6414cc549cc1a003686dab2b": "Kerbs - Damaged/Loose",

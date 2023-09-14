@@ -29,6 +29,34 @@
                 }
             ],
             "signature": "61fb0065908ed5015b93083c"
+        },
+        {
+            "itemId": "61fafee3e3b879015205f7cc",
+            "designCode": "designs_cRMRequestTypes_5d89dffaca31500a94693bde",
+            "collection": "Live",
+            "icon": "icon-display-list",
+            "colour": "#8b8b8b",
+            "locked": false,
+            "context": "Customer",
+            "attributes": [
+                {
+                    "attributeCode": "attributes_cRMRequestsCode_5d89e2e9ca31500a94693ca4",
+                    "value": "Winter"
+                },
+                {
+                    "attributeCode": "attributes_cRMRequestsDescription_5d89e30aca31500a94693cab",
+                    "value": "Winter"
+                },
+                {
+                    "attributeCode": "attributes_itemsTitle",
+                    "value": "Winter"
+                },
+                {
+                    "attributeCode": "attributes_itemsSubtitle",
+                    "value": "Winter"
+                }
+            ],
+            "signature": "61fb0065908ed5015b93083c"
         }
     ]
 }
