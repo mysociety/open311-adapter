@@ -70,6 +70,7 @@ sub post_service_request {
     my $issue_text = $self->_format_issue_text(
         $self->endpoint_config->{max_issue_text_characters},
         $service->service_name,
+        $args->{attributes}->{group},
         $args->{attributes}->{location_name} || '',
         $args->{attributes}->{report_url},
         $args->{attributes}->{title},
@@ -109,12 +110,12 @@ sub post_service_request {
 }
 
 sub _format_issue_text {
-    my ($self, $char_limit, $category, $location_name, $url, $title, $detail) = @_;
+    my ($self, $char_limit, $category, $group, $location_name, $url, $title, $detail) = @_;
 
     # Populate everything except the detail field which we may need to truncate.
     my $issue_text = sprintf(
-        "Category: %s\nLocation: %s\n\nlocation of problem: %s\n\ndetail: %%s\n\nurl: %s\n\nSubmitted via FixMyStreet\n",
-        $category, $location_name, $title, $url
+        "Category: %s\nGroup: %s\nLocation: %s\n\nlocation of problem: %s\n\ndetail: %%s\n\nurl: %s\n\nSubmitted via FixMyStreet\n",
+        $category, $group, $location_name, $title, $url
     );
 
     # +2 for the not yet used format directive for detail (%s).

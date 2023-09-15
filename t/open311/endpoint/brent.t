@@ -592,7 +592,7 @@ subtest "POST Parks littering ATAK service request OK" => sub {
             is $headers{Authorization}, 'AUTH-123';
 
             my $data = decode_json($headers{Content})->{tasks}->[0];
-            is $data->{issue}, "Category: Parks littering\nLocation: Location name\n\n" .
+            is $data->{issue}, "Category: Parks littering\nGroup: Parks and open spaces\nLocation: Location name\n\n" .
                 "location of problem: title\n\ndetail: detail\n\nurl: url\n\n" .
                 "Submitted via FixMyStreet\n";
             is $data->{client_ref}, '42';
@@ -634,6 +634,7 @@ subtest "POST Parks littering ATAK service request OK" => sub {
         'attribute[report_url]' => 'url',
         'attribute[detail]' => 'detail',
         'attribute[title]' => 'title',
+        'attribute[group]' => 'Parks and open spaces',
     );
     ok $res->is_success, 'valid request';
 
@@ -947,25 +948,25 @@ subtest "GET ATAK service request updates OK" => sub {
 subtest "ATAK issue text formatting" => sub {
 
     dies_ok { $atak_endpoint->_format_issue_text(
-        120, 'category', 'location name', 'url', 'title', 'detail'
+        133, 'category', 'group', 'location name', 'url', 'title', 'detail'
     ) } "formatting issue text fails when inputs are too big";
 
     my $issue_text =  $atak_endpoint->_format_issue_text(
-        121, 'category', 'location name', 'url', 'title', 'detail'
+        134, 'category', 'group', 'location name', 'url', 'title', 'detail'
     );
-    is $issue_text, "Category: category\nLocation: location name\n\nlocation of problem: title\n\n" .
+    is $issue_text, "Category: category\nGroup: group\nLocation: location name\n\nlocation of problem: title\n\n" .
         "detail: ...\n\nurl: url\n\nSubmitted via FixMyStreet\n";
 
     $issue_text =  $atak_endpoint->_format_issue_text(
-        122, 'category', 'location name', 'url', 'title', 'detail'
+        135, 'category', 'group', 'location name', 'url', 'title', 'detail'
     );
-    is $issue_text, "Category: category\nLocation: location name\n\nlocation of problem: title\n\n" .
+    is $issue_text, "Category: category\nGroup: group\nLocation: location name\n\nlocation of problem: title\n\n" .
         "detail: d...\n\nurl: url\n\nSubmitted via FixMyStreet\n";
 
     $issue_text =  $atak_endpoint->_format_issue_text(
-        126, 'category', 'location name', 'url', 'title', 'detail'
+        139, 'category', 'group', 'location name', 'url', 'title', 'detail'
     );
-    is $issue_text, "Category: category\nLocation: location name\n\nlocation of problem: title\n\n" .
+    is $issue_text, "Category: category\nGroup: group\nLocation: location name\n\nlocation of problem: title\n\n" .
         "detail: detail\n\nurl: url\n\nSubmitted via FixMyStreet\n";
 };
 
