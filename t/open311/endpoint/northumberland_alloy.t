@@ -252,6 +252,14 @@ subtest "check service group and category aliases" => sub {
     is $row_service->{service_name}, "nuisance/dangerous animal", "category alias applied to row service";
 };
 
+subtest "check street light service has additional attribute" => sub {
+    my $res = $endpoint->run_test_request(
+      GET => '/services/Obscured_by_vegetation_or_Dirty.json?jurisdiction_id=dummy',
+    );
+    my $service = (decode_json($res->content))[0];
+    is $service->{attributes}[-1]{code}, 'feature_id';
+};
+
 subtest "create problem on aliased group" => sub {
     set_fixed_time('2023-02-21T13:37:00Z');
     my $res = $endpoint->run_test_request(

@@ -8,6 +8,7 @@ Open311::Endpoint::Integration::UK::NorthumberlandAlloy - Northumberland-specifi
 
 package Open311::Endpoint::Integration::UK::NorthumberlandAlloy;
 
+use List::Util qw(any);
 use Moo;
 extends 'Open311::Endpoint::Integration::AlloyV2';
 
@@ -19,6 +20,24 @@ around BUILDARGS => sub {
 
 sub service_request_content {
     '/open311/service_request_extended'
+}
+
+sub services {
+    my $self = shift;
+
+    my @services = $self->SUPER::services;
+    foreach (@services) {
+        if (any { $_ eq 'Street Lighting' } @{$_->groups}) {
+            push @{$_->attributes}, Open311::Endpoint::Service::Attribute->new(
+                code => 'feature_id',
+                description => 'Feature ID',
+                datatype => 'string',
+                required => 0,
+                automated => 'hidden_field',
+            );
+        }
+    }
+    return @services;
 }
 
 =head2 process_attributes
