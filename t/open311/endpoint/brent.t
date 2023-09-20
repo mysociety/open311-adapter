@@ -175,7 +175,7 @@ $soap_lite->mock(call => sub {
         my @params = ${$args[3]->value}->value;
 
         my $client_ref = $params[1]->value;
-        like $client_ref, qr/^FMS-234b?$/;
+        like $client_ref, qr/^FMS-23[45]b?$/;
 
         my $event_type = $params[3]->value;
         my $service_id = $params[4]->value;
@@ -183,15 +183,27 @@ $soap_lite->mock(call => sub {
         if ($event_type =~ /^(935|943)/) {
             is $service_id, 277;
         } elsif ($event_type == 2891) {
-            is $service_id, 262, 'Service id updated to missed refuse collection';
-            my @data = ${$params[0]->value}->value->value;
-            is @data, 2, 'Extra data is refuse BIN and refuse BAG';
-            my @bin = ${$data[0]->value}->value;
-            my @bag = ${$data[1]->value}->value;
-            is $bin[0]->value, 1001;
-            is $bin[1]->value, 1, 'Refuse BIN has been ticked';
-            is $bag[0]->value, 1002;
-            is $bag[1]->value, 1, 'Refuse BAG has been ticked';
+            if ($client_ref eq 'FMS-235') {
+                is $service_id, 265, 'Service id updated to missed recycling collection';
+                my @data = ${$params[0]->value}->value->value;
+                is @data, 2, 'Extra data present';
+                my @bin = ${$data[0]->value}->value;
+                my @bag = ${$data[1]->value}->value;
+                is $bin[0]->value, 1003;
+                is $bin[1]->value, 1, 'Recycling BIN has been ticked';
+                is $bag[0]->value, 1004;
+                is $bag[1]->value, 1, 'Recycling BOX has been ticked';
+            } else {
+                is $service_id, 262, 'Service id updated to missed refuse collection';
+                my @data = ${$params[0]->value}->value->value;
+                is @data, 2, 'Extra data is refuse BIN and refuse BAG';
+                my @bin = ${$data[0]->value}->value;
+                my @bag = ${$data[1]->value}->value;
+                is $bin[0]->value, 1001;
+                is $bin[1]->value, 1, 'Refuse BIN has been ticked';
+                is $bag[0]->value, 1002;
+                is $bag[1]->value, 1, 'Refuse BAG has been ticked';
+            }
         } elsif ($event_type == 1159) {
             is $service_id, 317;
             my $c = 0;
@@ -312,6 +324,8 @@ $soap_lite->mock(call => sub {
                 Datatypes => { ExtensibleDatatype => [
                     { Id => 1001, Name => "Refuse BIN" },
                     { Id => 1002, Name => "Refuse BAG" },
+                    { Id => 1003, Name => "Recycling BIN" },
+                    { Id => 1004, Name => "Recycling BOX" },
                 ] },
             });
         }
@@ -503,6 +517,28 @@ subtest "POST missed collection Echo service request OK" => sub {
         long => -1,
         'attribute[fixmystreet_id]' => 234,
         'attribute[service_id]' => 262,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => "Echo-1234"
+        } ], 'correct json returned';
+};
+
+subtest "POST missed recycling collection Echo service request OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'Echo-2891',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "Report missed collection",
+        lat => 51,
+        long => -1,
+        'attribute[fixmystreet_id]' => 235,
+        'attribute[service_id]' => 265,
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
