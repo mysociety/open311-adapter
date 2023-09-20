@@ -175,7 +175,7 @@ $soap_lite->mock(call => sub {
         my @params = ${$args[3]->value}->value;
 
         my $client_ref = $params[1]->value;
-        like $client_ref, qr/^FMS-23[45]b?$/;
+        like $client_ref, qr/^FMS-23[4-6]b?$/;
 
         my $event_type = $params[3]->value;
         my $service_id = $params[4]->value;
@@ -193,6 +193,16 @@ $soap_lite->mock(call => sub {
                 is $bin[1]->value, 1, 'Recycling BIN has been ticked';
                 is $bag[0]->value, 1004;
                 is $bag[1]->value, 1, 'Recycling BOX has been ticked';
+            } elsif ($client_ref eq 'FMS-236') {
+                is $service_id, 787, 'Service id updated to missed small items collection';
+                my @data = ${$params[0]->value}->value->value;
+                is @data, 2, 'Extra data present';
+                my @bin = ${$data[0]->value}->value;
+                my @bag = ${$data[1]->value}->value;
+                is $bin[0]->value, 1005;
+                is $bin[1]->value, 1, 'Batteries has been ticked';
+                is $bag[0]->value, 1006;
+                is $bag[1]->value, 1, 'Small WEEE has been ticked';
             } else {
                 is $service_id, 262, 'Service id updated to missed refuse collection';
                 my @data = ${$params[0]->value}->value->value;
@@ -326,6 +336,8 @@ $soap_lite->mock(call => sub {
                     { Id => 1002, Name => "Refuse BAG" },
                     { Id => 1003, Name => "Recycling BIN" },
                     { Id => 1004, Name => "Recycling BOX" },
+                    { Id => 1005, Name => "Batteries" },
+                    { Id => 1006, Name => "Small WEEE" },
                 ] },
             });
         }
@@ -505,49 +517,33 @@ subtest "POST other Echo service request OK" => sub {
         } ], 'correct json returned';
 };
 
-subtest "POST missed collection Echo service request OK" => sub {
-    my $res = $endpoint->run_test_request(
-        POST => '/requests.json',
-        api_key => 'test',
-        service_code => 'Echo-2891',
-        first_name => 'Bob',
-        last_name => 'Mould',
-        description => "Report missed collection",
-        lat => 51,
-        long => -1,
-        'attribute[fixmystreet_id]' => 234,
-        'attribute[service_id]' => 262,
-    );
-    ok $res->is_success, 'valid request'
-        or diag $res->content;
+foreach (
+    { title => 'missed collection', fixmystreet_id => 234, service_id => 262 },
+    { title => 'missed recycling collection', fixmystreet_id => 235, service_id => 265 },
+    { title => 'missed small items collection', fixmystreet_id => 236, service_id => 787 },
+) {
+    subtest "POST $_->{title} Echo service request OK" => sub {
+        my $res = $endpoint->run_test_request(
+            POST => '/requests.json',
+            api_key => 'test',
+            service_code => 'Echo-2891',
+            first_name => 'Bob',
+            last_name => 'Mould',
+            description => "Report missed collection",
+            lat => 51,
+            long => -1,
+            'attribute[fixmystreet_id]' => $_->{fixmystreet_id},
+            'attribute[service_id]' => $_->{service_id},
+        );
+        ok $res->is_success, 'valid request'
+            or diag $res->content;
 
-    is_deeply decode_json($res->content),
-        [ {
-            "service_request_id" => "Echo-1234"
-        } ], 'correct json returned';
-};
-
-subtest "POST missed recycling collection Echo service request OK" => sub {
-    my $res = $endpoint->run_test_request(
-        POST => '/requests.json',
-        api_key => 'test',
-        service_code => 'Echo-2891',
-        first_name => 'Bob',
-        last_name => 'Mould',
-        description => "Report missed collection",
-        lat => 51,
-        long => -1,
-        'attribute[fixmystreet_id]' => 235,
-        'attribute[service_id]' => 265,
-    );
-    ok $res->is_success, 'valid request'
-        or diag $res->content;
-
-    is_deeply decode_json($res->content),
-        [ {
-            "service_request_id" => "Echo-1234"
-        } ], 'correct json returned';
-};
+        is_deeply decode_json($res->content),
+            [ {
+                "service_request_id" => "Echo-1234"
+            } ], 'correct json returned';
+    };
+}
 
 subtest "POST waste Echo service request OK" => sub {
     my $res = $endpoint->run_test_request(

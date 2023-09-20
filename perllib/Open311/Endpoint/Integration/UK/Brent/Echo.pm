@@ -33,6 +33,11 @@ around process_service_request_args => sub {
         } elsif ($service_id == 274) {
             $args->{attributes}{"Clinical_BIN"} = 1;
             $args->{attributes}{"Clinical_BOX"} = 1;
+        } elsif ($service_id == 787) {
+            $args->{attributes}{"Small_WEEE"} = 1;
+            $args->{attributes}{"Batteries"} = 1;
+            $args->{attributes}{"Textiles"} = 1;
+            $args->{attributes}{"Paint"} = 1;
         }
     } elsif ($request->{event_type} == 1159) {
         if ($args->{attributes}{Paid_Collection_Container_Type} == 2) {
