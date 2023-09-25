@@ -31,7 +31,9 @@ use Test::More;
 use Test::MockModule;
 use SOAP::Lite;
 
+use HTTP::Request::Common;
 use JSON::MaybeXS;
+use Path::Tiny;
 
 use constant EVENT_TYPE_MISSED => 2096;
 use constant EVENT_TYPE_REQUEST => 2104;
@@ -40,7 +42,7 @@ use constant EVENT_TYPE_SUBSCRIBE => 2106;
 
 my $lwp = Test::MockModule->new('LWP::UserAgent');
 $lwp->mock(get => sub {
-    return HTTP::Response->new(200, 'OK', [], 'Hello');
+    return HTTP::Response->new(200, 'OK', [], 'Hello' . $_[1]);
 });
 
 my $soap_lite = Test::MockModule->new('SOAP::Lite');
@@ -54,8 +56,10 @@ $soap_lite->mock(call => sub {
         my @params = ${$args[3]->value}->value;
 
         my $client_ref = $params[1]->value;
-        like $client_ref, qr/^FMS-200012[34]$/;
+        like $client_ref, qr/^FMS-200012[3-6]$/;
         my $multi_request = $client_ref eq 'FMS-2000124';
+        my $multi_photos = $client_ref eq 'FMS-2000125';
+        my $multi_photos_upload = $client_ref eq 'FMS-2000126';
 
         my $event_type = $params[3]->value;
         my $service_id = $params[4]->value;
@@ -77,6 +81,10 @@ $soap_lite->mock(call => sub {
             is @data, 3, 'Name and source is only extra data';
         } elsif ($multi_request) {
             is @data, 5, 'Name, source and two container stuff';
+        } elsif ($multi_photos) {
+            is @data, 8, 'Name, source, two container stuff, three photos';
+        } elsif ($multi_photos_upload) {
+            is @data, 6, 'Name, source, two container stuff, photo';
         } elsif ($event_type == EVENT_TYPE_SUBSCRIBE) {
             if ( $uprn == 1000001 || $uprn == 1000003 ) {
                 is @data, 5, 'Name, source, type and subscription request';
@@ -126,6 +134,22 @@ $soap_lite->mock(call => sub {
                 @child = ${$children[2]->value}->value;
                 is $child[0]->value, 1007;
                 is $child[1]->value, 12;
+            } elsif ($multi_photos) {
+                # Three images
+                my @image = ${$data[5]->value}->value;
+                is $image[0]->value, 1009;
+                is $image[1]->value, "SGVsbG9odHRwOi8vZXhhbXBsZS5vcmcvcGhvdG8vMS5qcGVn";
+                @image = ${$data[6]->value}->value;
+                is $image[0]->value, 1009;
+                is $image[1]->value, "SGVsbG9odHRwOi8vZXhhbXBsZS5vcmcvcGhvdG8vMS5qcGVn";
+                @image = ${$data[7]->value}->value;
+                is $image[0]->value, 1009;
+                is $image[1]->value, "SGVsbG9odHRwOi8vZXhhbXBsZS5vcmcvcGhvdG8vMy5qcGVn";
+            } elsif ($multi_photos_upload) {
+                # One images
+                my @image = ${$data[5]->value}->value;
+                is $image[0]->value, 1009;
+                is $image[1]->value, "VGhpcyBpcyBhIGZha2UgaW1hZ2UK";
             }
         } elsif ($event_type == EVENT_TYPE_ENQUIRY) {
             my @notes = ${$data[3]->value}->value;
@@ -134,7 +158,7 @@ $soap_lite->mock(call => sub {
 
             my @image = ${$data[4]->value}->value;
             is $image[0]->value, 1009;
-            is $image[1]->value, "SGVsbG8=\n";
+            is $image[1]->value, "SGVsbG9odHRwOi8vZXhhbXBsZS5vcmcvcGhvdG8vMS5qcGVn";
 
             # Check serialisation as well
             my $envelope = $cls->serializer->envelope(method => $method, @notes);
@@ -440,6 +464,66 @@ subtest "POST new multi-request OK" => sub {
         'attribute[Quantity]' => 2,
         'attribute[Reason]' => '7::1',
     );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST multiple images OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => EVENT_TYPE_REQUEST,
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 1000001,
+        'attribute[fixmystreet_id]' => 2000125,
+        'attribute[Container_Type]' => 12, # Black Box (Paper)
+        'attribute[Quantity]' => 2,
+        'attribute[Reason]' => '7::1',
+        'media_url' => [ 'http://example.org/photo/1.jpeg', 'http://example.org/photo/1.jpeg', 'http://example.org/photo/3.jpeg' ],
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST multiple images as uploads OK" => sub {
+    my $file = Web::Dispatch::Upload->new(
+        headers => '',
+        tempname => path(__FILE__)->dirname . '/files/bartec/image.jpg',
+        filename => 'image.jpg',
+        size => 10,
+    );
+    my $req = POST '/requests.json',
+        Content_Type => 'form-data',
+        Content => [
+            api_key => 'test',
+            service_code => EVENT_TYPE_REQUEST,
+            first_name => 'Bob',
+            last_name => 'Mould',
+            description => "This is the details",
+            lat => 51,
+            long => -1,
+            'attribute[uprn]' => 1000001,
+            'attribute[fixmystreet_id]' => 2000126,
+            'attribute[Container_Type]' => 12, # Black Box (Paper)
+            'attribute[Quantity]' => 2,
+            'attribute[Reason]' => '7::1',
+            uploads => [ $file ],
+        ];
+    my $res = $endpoint->run_test_request($req);
     ok $res->is_success, 'valid request'
         or diag $res->content;
 

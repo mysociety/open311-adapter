@@ -294,9 +294,20 @@ sub _get_data_value {
     return $self->default_data_all->{$name} if $self->default_data_all->{$name};
     return $self->default_data_event_type->{$event_type}{$name}
         if $self->default_data_event_type->{$event_type}{$name};
-    if ($name eq 'Image' && $args->{media_url}->[0]) {
-        my $photo = $self->ua->get($args->{media_url}->[0]);
-        return encode_base64($photo->content);
+    if ($name eq 'Image') {
+        my @encoded;
+        if (@{$args->{media_url}}) {
+            foreach (@{$args->{media_url}}) {
+                my $photo = $self->ua->get($_);
+                push @encoded, encode_base64($photo->content, '');
+            }
+        } elsif (@{$args->{uploads}}) {
+            foreach (@{$args->{uploads}}) {
+                my $photo = path($_)->slurp;
+                push @encoded, encode_base64($photo, '');
+            }
+        }
+        return join('::', @encoded) if @encoded;
     }
     return undef;
 }
@@ -323,7 +334,7 @@ sub post_service_request {
     my $event_type = $integ->GetEventType($request->{event_type});
     foreach my $type (@{$event_type->{Datatypes}->{ExtensibleDatatype}}) {
         my $row = { id => $type->{Id} };
-        $row->{value} = $self->check_for_data_value($type->{Name}, $args, $request);
+        my $value = $self->check_for_data_value($type->{Name}, $args, $request);
 
         my %extra;
         my $extra_count = 0;
@@ -341,19 +352,32 @@ sub post_service_request {
                     }
                 }
             }
+        } elsif ($type->{Name} eq 'Image' && $value) {
+            my ($first, @rest) = split /::/, $value;
+            $row->{value} = $first;
+            if (@rest) {
+                $extra{$type->{Id}} = \@rest;
+                $extra_count = @rest;
+            }
+        } else {
+            $row->{value} = $value;
         }
 
-        push @{$request->{data}}, $row if defined $row->{value} || $row->{childdata};
+        push @{$request->{data}}, $row if defined $value || $row->{childdata};
         for (my $i=0; $i<$extra_count; $i++) {
-            my @childdata;
-            foreach (@{$row->{childdata}}) {
-                my $subrow = { %$_ };
-                if ($extra{$_->{id}}) {
-                    $subrow->{value} = $extra{$_->{id}}->[$i];
+            if ($row->{childdata}) {
+                my @childdata;
+                foreach (@{$row->{childdata}}) {
+                    my $subrow = { %$_ };
+                    if ($extra{$_->{id}}) {
+                        $subrow->{value} = $extra{$_->{id}}->[$i];
+                    }
+                    push @childdata, $subrow;
                 }
-                push @childdata, $subrow;
+                $row = { %$row, childdata => \@childdata };
+            } elsif ($extra{$row->{id}}) {
+                $row = { %$row, value => $extra{$row->{id}}->[$i] };
             }
-            $row = { %$row, childdata => \@childdata };
             push @{$request->{data}}, $row;
         }
     }
