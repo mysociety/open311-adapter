@@ -24,6 +24,8 @@ around process_service_request_args => sub {
             $args->{attributes}{"Mixed_Dry_Recycling_BOX"} = 1;
             $args->{attributes}{"Recycling_BIN"} = 1;
             $args->{attributes}{"Recycling_BOX"} = 1;
+        } elsif ($service_id == 807) {
+            $args->{attributes}{"Recycling_BAG"} = 1;
         } elsif ($service_id == 316 || $service_id == 271) {
             $args->{attributes}{"Food_CADDY"} = 1;
             $args->{attributes}{"Food_BIN"} = 1;

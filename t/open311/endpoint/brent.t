@@ -175,7 +175,7 @@ $soap_lite->mock(call => sub {
         my @params = ${$args[3]->value}->value;
 
         my $client_ref = $params[1]->value;
-        like $client_ref, qr/^FMS-23[4-6]b?$/;
+        like $client_ref, qr/^FMS-23[4-7]b?$/;
 
         my $event_type = $params[3]->value;
         my $service_id = $params[4]->value;
@@ -203,6 +203,13 @@ $soap_lite->mock(call => sub {
                 is $bin[1]->value, 1, 'Batteries has been ticked';
                 is $bag[0]->value, 1006;
                 is $bag[1]->value, 1, 'Small WEEE has been ticked';
+            } elsif ($client_ref eq 'FMS-237') {
+                is $service_id, 807, 'Service id updated to missed recycling collection';
+                my @data = ${$params[0]->value}->value->value;
+                is @data, 1, 'Extra data present';
+                my @bag = ${$data[0]->value}->value;
+                is $bag[0]->value, 1007;
+                is $bag[1]->value, 1, 'Recycling BAG has been ticked';
             } else {
                 is $service_id, 262, 'Service id updated to missed refuse collection';
                 my @data = ${$params[0]->value}->value->value;
@@ -338,6 +345,7 @@ $soap_lite->mock(call => sub {
                     { Id => 1004, Name => "Recycling BOX" },
                     { Id => 1005, Name => "Batteries" },
                     { Id => 1006, Name => "Small WEEE" },
+                    { Id => 1007, Name => "Recycling BAG" },
                 ] },
             });
         }
@@ -521,6 +529,7 @@ foreach (
     { title => 'missed collection', fixmystreet_id => 234, service_id => 262 },
     { title => 'missed recycling collection', fixmystreet_id => 235, service_id => 265 },
     { title => 'missed small items collection', fixmystreet_id => 236, service_id => 787 },
+    { title => 'missed paper/card collection', fixmystreet_id => 237, service_id => 807 },
 ) {
     subtest "POST $_->{title} Echo service request OK" => sub {
         my $res = $endpoint->run_test_request(
