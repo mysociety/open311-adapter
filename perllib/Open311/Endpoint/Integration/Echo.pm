@@ -332,14 +332,16 @@ sub post_service_request {
 
     # Look up extra data fields
     my $event_type = $integ->GetEventType($request->{event_type});
-    foreach my $type (@{$event_type->{Datatypes}->{ExtensibleDatatype}}) {
+    my $data = force_arrayref($event_type->{Datatypes}, 'ExtensibleDatatype');
+    foreach my $type (@$data) {
         my $row = { id => $type->{Id} };
         my $value = $self->check_for_data_value($type->{Name}, $args, $request);
 
         my %extra;
         my $extra_count = 0;
         if ($type->{ChildDatatypes}) {
-            foreach (@{$type->{ChildDatatypes}{ExtensibleDatatype}}) {
+            my $moredata = force_arrayref($type->{ChildDatatypes}, 'ExtensibleDatatype');
+            foreach (@$moredata) {
                 my $subrow = { id => $_->{Id} };
                 my $value = $self->check_for_data_value($_->{Name}, $args, $request, $type->{Name});
                 if (defined $value) {
@@ -494,5 +496,14 @@ used as part of a Multi integration.
 =cut
 
 sub get_service_request_updates { }
+
+sub force_arrayref {
+    my ($res, $key) = @_;
+    return [] unless $res;
+    my $data = $res->{$key};
+    return [] unless $data;
+    $data = [ $data ] unless ref $data eq 'ARRAY';
+    return $data;
+}
 
 1;

@@ -60,7 +60,7 @@ around post_service_request_update => sub {
     my $event_type = $integ->GetEventType($event->{EventTypeId});
     my $state_id = $event->{EventStateId};
 
-    my $states = force_arrayref($event_type->{Workflow}->{States}, 'State');
+    my $states = Open311::Endpoint::Integration::Echo::force_arrayref($event_type->{Workflow}->{States}, 'State');
     my $data;
     foreach (@$states) {
         my $core = $_->{CoreState};
@@ -79,14 +79,5 @@ around post_service_request_update => sub {
 
     return $class->$orig($args);
 };
-
-sub force_arrayref {
-    my ($res, $key) = @_;
-    return [] unless $res;
-    my $data = $res->{$key};
-    return [] unless $data;
-    $data = [ $data ] unless ref $data eq 'ARRAY';
-    return $data;
-}
 
 1;
