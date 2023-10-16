@@ -6,7 +6,26 @@ client_reference_prefix: RBK
 
 service_whitelist:
   1638: 'Garden subscription'
+  1636: 'Bulky collection'
+
+service_extra_data:
+  1636:
+    payment: 1
+    payment_method: 1
+    Payment_Type: 1
+    Collection_Date: 1
+    Bulky_Collection_Bulky_Items: 1
+    Bulky_Collection_Notes: 1
+    Exact_Location: 1
+    GUID: 1
+    reservation: 1
+    Customer_Selected_Date_Beyond_SLA?: 1
+    First_Date_Returned_to_Customer: 1
 
 service_id_override:
   1638: 409
 
+default_data_event_type:
+  1636:
+    Payment Type: 1
+    Payment Taken By: 1

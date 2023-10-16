@@ -1,3 +1,15 @@
+=head1 NAME
+
+Open311::Endpoint::Role::SLWP
+
+=head1 DESCRIPTION
+
+Special handling for both Kingston and Sutton. This makes sure the right
+container types are picked for requests, and that the right payment options are
+chosen for garden/bulky.
+
+=cut
+
 package Open311::Endpoint::Role::SLWP;
 
 use Moo::Role;
@@ -14,9 +26,23 @@ around check_for_data_value => sub {
     return 1 if $name eq 'Refuse Bag' && $service eq '2242';
     return 1 if $name eq 'Refuse Bin' && ($service eq '2238' || $service eq '2243' || $service eq '3576');
 
-    my $method = $args->{attributes}{LastPayMethod} || '';
-    return 2 if $name eq 'Payment Type' && $method eq 3; # DD
-    return 3 if $name eq 'Payment Type' && $method eq 4; # 'cheque' (or phone)
+    # Garden waste
+    if ($args->{service_code} eq '1638') {
+        my $method = $args->{attributes}{LastPayMethod} || '';
+        return 2 if $name eq 'Payment Type' && $method eq 3; # DD
+        return 3 if $name eq 'Payment Type' && $method eq 4; # 'cheque' (or phone)
+    }
+
+    # Bulky items
+    if ($args->{service_code} eq '1636') {
+        # Default in configuration is Payment Type 1 (Card), Payment Method 2 (Website)
+        my $method = $args->{attributes}{payment_method} || '';
+        return 2 if $name eq 'Payment Type' && $method eq 'cheque'; # Cheque
+        if ($name eq 'Payment Method') {
+            return 1 if $method eq 'csc' || $method eq 'cheque'; # Borough Phone Payment
+            return 2 if $method eq 'credit_card'; # Borough Website Payment
+        }
+    }
 
     return $class->$orig($name, $args, $request, $parent_name);
 };

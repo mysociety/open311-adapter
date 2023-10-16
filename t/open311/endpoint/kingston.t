@@ -35,6 +35,7 @@ use JSON::MaybeXS;
 use_ok 'Open311::Endpoint::Integration::UK::Kingston';
 
 use constant EVENT_TYPE_SUBSCRIBE => 1638;
+use constant EVENT_TYPE_BULKY => 1636;
 
 my $soap_lite = Test::MockModule->new('SOAP::Lite');
 $soap_lite->mock(call => sub {
@@ -47,7 +48,21 @@ $soap_lite->mock(call => sub {
         my @params = ${$args[3]->value}->value;
         if (@params == 5) {
             my $client_ref = $params[1]->value;
-            like $client_ref, qr/RBK-2000123|REF-123/;
+            like $client_ref, qr/RBK-2000123|REF-123|bulky-cc|bulky-phone/;
+            my $event_type_id = $params[3]->value;
+            if ($event_type_id == 1636) {
+                my @data = ${$params[0]->value}->value->value;
+                my @payment = ${$data[0]->value}->value;
+                is $payment[0]->value, 1011;
+                is $payment[1]->value, 1;
+                my $val = $client_ref eq 'bulky-cc' ? 2 : 1;
+                @payment = ${$data[1]->value}->value;
+                is $payment[0]->value, 1012;
+                is $payment[1]->value, 1; # Always 1
+                @payment = ${$data[2]->value}->value;
+                is $payment[0]->value, 1013;
+                is $payment[1]->value, $val;
+            }
         } elsif (@params == 2) {
             is $params[0]->value, '123pay';
             my @data = ${$params[1]->value}->value->value;
@@ -69,7 +84,7 @@ $soap_lite->mock(call => sub {
     } elsif ($args[0]->name eq 'GetEvent') {
         return SOAP::Result->new(result => {
             Id => '123pay',
-            EventTypeId => 1636,
+            EventTypeId => EVENT_TYPE_BULKY,
             EventStateId => 4002,
         });
     } elsif ($method eq 'GetEventType') {
@@ -82,6 +97,9 @@ $soap_lite->mock(call => sub {
                     ] },
                 },
                 { Id => 1008, Name => "Notes" },
+                { Id => 1011, Name => "Payment Type" },
+                { Id => 1012, Name => "Payment Taken By" },
+                { Id => 1013, Name => "Payment Method" },
             ] },
         });
     } elsif ($method eq 'PerformEventAction') {
@@ -102,7 +120,6 @@ my $endpoint = Open311::Endpoint::Integration::Echo::Dummy->new;
 my @params = (
     POST => '/requests.json',
     api_key => 'test',
-    service_code => EVENT_TYPE_SUBSCRIBE,
     first_name => 'Bob',
     last_name => 'Mould',
     description => "This is the details",
@@ -116,7 +133,9 @@ my @params = (
 );
 
 subtest "POST subscription request OK" => sub {
-    my $res = $endpoint->run_test_request(@params);
+    my $res = $endpoint->run_test_request(@params,
+        service_code => EVENT_TYPE_SUBSCRIBE,
+    );
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
@@ -128,7 +147,38 @@ subtest "POST subscription request OK" => sub {
 
 subtest "POST subscription request with client ref provided OK" => sub {
     my $res = $endpoint->run_test_request(@params,
+        service_code => EVENT_TYPE_SUBSCRIBE,
         'attribute[client_reference]' => 'REF-123',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST bulky request card payment OK" => sub {
+    my $res = $endpoint->run_test_request(@params,
+        service_code => EVENT_TYPE_BULKY,
+        'attribute[payment_method]' => 'credit_card',
+        'attribute[client_reference]' => 'bulky-cc',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST bulky request phone payment OK" => sub {
+    my $res = $endpoint->run_test_request(@params,
+        service_code => EVENT_TYPE_BULKY,
+        'attribute[payment_method]' => 'csc',
+        'attribute[client_reference]' => 'bulky-phone',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;

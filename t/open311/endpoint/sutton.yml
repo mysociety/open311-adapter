@@ -8,6 +8,7 @@ service_whitelist:
   missed: 'Report missed collection'
   1635: 'Request new container'
   1638: 'Garden Subscription'
+  1636: 'Bulky collection'
   1569: 'General Enquiry'
 
 service_mapping:
@@ -21,6 +22,7 @@ service_mapping:
 service_id_override:
   1638: 409
   1635: 412
+  1636: 413
 
 service_to_event_type:
   missed:
@@ -41,8 +43,9 @@ default_data_event_type:
   # 1566:
   #   Refuse Bin: 1
   #   Refuse Bag: 1
-  1568:
+  1636:
     Payment Type: 1
+    Payment Method: 2
   #   Container Mix: 1
   #   Paper: 1
   #   Food: 1
