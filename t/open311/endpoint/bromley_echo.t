@@ -109,6 +109,15 @@ $soap_lite->mock(call => sub {
                 { Id => 1007, Name => "Container Type" },
             ] },
         });
+    } elsif ($method eq 'PerformEventAction') {
+        my @params = ${$args[3]->value}->value;
+        my $actiontype_id = $params[0]->value;
+        is $actiontype_id, 8;
+        my $datatype_id = ${${$params[1]->value}->value->value}->value->value;
+        is $datatype_id, 5;
+        return SOAP::Result->new(result => {
+            EventActionGuid => 'cancel_update_id',
+        });
     } else {
         is $method, 'UNKNOWN';
     }
@@ -163,6 +172,27 @@ subtest "POST remove assisted collection OK" => sub {
     is_deeply decode_json($res->content),
         [ {
             "service_request_id" => '1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST a cancellation" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        updated_datetime => '2023-09-01T19:00:00+01:00',
+        service_request_id => 'canceltest',
+        update_id => 123,
+        status => 'OPEN',
+        description => 'Booking cancelled by customer',
+        first_name => 'Bob',
+        last_name => 'Mould',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => 'cancel_update_id',
         } ], 'correct json returned';
 };
 

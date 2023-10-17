@@ -50,5 +50,20 @@ around process_service_request_args => sub {
     return $request;
 };
 
+=head2 post_service_request_update
+
+set the action and data types for bulky cancellations.
+
+=cut
+
+around post_service_request_update => sub {
+    my ($orig, $class, $args) = @_;
+    if ($args->{description} =~ m/^Booking cancelled/) {
+        $args->{actiontype_id} = 8;
+        $args->{datatype_id} = 5;
+    }
+    return $class->$orig($args);
+};
+
 1;
 
