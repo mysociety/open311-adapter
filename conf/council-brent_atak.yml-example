@@ -26,4 +26,4 @@ atak_status_to_fms_status:
     "Closed - Out of scope": "no_further_action"
     "Closed - Not found": "closed"
     "Closed - Passed to Brent": "internal_referral"
-
+fixed_status: "Closed - Completed"

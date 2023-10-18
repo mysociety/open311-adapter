@@ -87,6 +87,7 @@ sub atak_config {
             "Closed - Not found" => "closed",
             "Closed - Passed to Brent" => "internal_referral",
         },
+        fixed_status => "Closed - Completed",
     }
 }
 
@@ -816,7 +817,7 @@ subtest "GET ATAK service request updates OK" => sub {
         return HTTP::Response->new(200, 'OK', [], '{
             "tasks": [
                 {
-                    "testing_comment": "missing client_ref",
+                    "testing_comment": "missing_client_ref",
                     "task_comments": "Closed - Completed",
                     "task_d_created": "2023-08-01T00:00:00Z",
                     "task_d_planned": "2023-08-01T00:00:00Z",
@@ -825,7 +826,7 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_p_id": "123"
                 },
                 {
-                    "client_ref": "missing created time",
+                    "client_ref": "missing_created_time",
                     "task_comments": "Closed - Completed",
                     "task_d_planned": "2023-08-01T00:00:00Z",
                     "task_d_completed": "2023-08-01T00:00:00Z",
@@ -833,7 +834,7 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_p_id": "124"
                 },
                 {
-                    "client_ref": "unknown state",
+                    "client_ref": "unknown_state",
                     "task_comments": "Closed - Unknown",
                     "task_d_created": "2023-08-01T00:00:00Z",
                     "task_d_planned": "2023-08-01T00:00:00Z",
@@ -842,7 +843,7 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_p_id": "125"
                 },
                 {
-                    "client_ref": "issue too old",
+                    "client_ref": "issue_too_old",
                     "task_comments": "Closed - Completed",
                     "task_d_created": "2022-08-01T00:00:00Z",
                     "task_d_planned": "2023-08-01T00:00:00Z",
@@ -858,6 +859,15 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_d_completed": "2023-08-01T02:00:00Z",
                     "task_d_approved": "2023-08-01T03:00:00Z",
                     "task_p_id": "127"
+                },
+                {
+                    "client_ref": "no_comments",
+                    "task_comments": "",
+                    "task_d_created": "2023-08-01T00:00:00Z",
+                    "task_d_planned": "2023-08-01T01:00:00Z",
+                    "task_d_completed": "2023-08-01T02:00:00Z",
+                    "task_d_approved": "2023-08-01T03:00:00Z",
+                    "task_p_id": "128"
                 }
             ]
         }');
@@ -878,6 +888,23 @@ subtest "GET ATAK service request updates OK" => sub {
                 updated_datetime => '2023-08-01T03:00:00Z',
                 external_status_code => 'Closed - Passed to Brent',
             },
+            {
+                description => '',
+                media_url => '',
+                service_request_id => 'ATAK-128',
+                status => 'fixed',
+                update_id => 'ATAK-no_comments_1690858800',
+                updated_datetime => '2023-08-01T03:00:00Z',
+                external_status_code => 'Closed - Completed',
+            },
+            {
+                description => '',
+                media_url => '',
+                service_request_id => 'ATAK-125',
+                status => 'closed',
+                update_id => 'ATAK-unknown_state_1690848000',
+                updated_datetime => '2023-08-01T00:00:00Z',
+            }
         ]
     );
 
@@ -908,7 +935,7 @@ subtest "GET ATAK service request updates OK" => sub {
 
     $atak_endpoint->gather_updates();
 
-    # We get the old update and nothing new.
+    # We get the old updates and nothing new.
     _get_and_check_service_request_updates(
         '2023-08-01T00:00:00Z',
         '2023-08-03T00:00:00Z',
@@ -922,6 +949,23 @@ subtest "GET ATAK service request updates OK" => sub {
                 updated_datetime => '2023-08-01T03:00:00Z',
                 external_status_code => 'Closed - Passed to Brent',
             },
+            {
+                description => '',
+                media_url => '',
+                service_request_id => 'ATAK-128',
+                status => 'fixed',
+                update_id => 'ATAK-no_comments_1690858800',
+                updated_datetime => '2023-08-01T03:00:00Z',
+                external_status_code => 'Closed - Completed',
+            },
+            {
+                description => '',
+                media_url => '',
+                service_request_id => 'ATAK-125',
+                status => 'closed',
+                update_id => 'ATAK-unknown_state_1690848000',
+                updated_datetime => '2023-08-01T00:00:00Z',
+            }
         ]
     );
 

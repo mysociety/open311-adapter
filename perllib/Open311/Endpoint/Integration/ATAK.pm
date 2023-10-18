@@ -333,13 +333,24 @@ sub _fetch_and_apply_updated_issues_info {
             next;
         }
 
-        my $task_comments = $issue->{task_comments};
-        if (!$task_comments) {
+        # Does the $issue hashref have a task_comments field?
+        # This field only appears on an issue once it has been updated.
+        if (!exists $issue->{task_comments}) {
             $self->logger->warn(sprintf(
                     "[ATAK] No task comments field found on updated issue %s. Skipping.",
                     $issue_reference
                 ));
             next;
+        }
+
+        # Does the task_comments field have a value?
+        my $task_comments = $issue->{task_comments};
+        if (!$task_comments) {
+            $self->logger->warn(sprintf(
+                    "[ATAK] Task comments field on updated issue %s is blank. Defaulting to fixed status.",
+                    $issue_reference
+                ));
+            $task_comments = $self->endpoint_config->{fixed_status};
         }
 
         # Assumes no prefix is a substring of another prefix.
@@ -357,13 +368,14 @@ sub _fetch_and_apply_updated_issues_info {
             }
         }
 
+        # Task comments field is present, not blank, but doesn't start with a known ATAK status.
         if (!$mapped_fms_status) {
             $self->logger->debug(sprintf(
                     "[ATAK] Updated issue %s has unmapped ATAK status '%s'. Skipping.",
                     $issue_reference,
                     $task_comments
                 ));
-            next;
+            $mapped_fms_status = 'closed';
         }
 
         my $existing_tracking = $tracked_statuses->{issues}->{$issue_reference};
