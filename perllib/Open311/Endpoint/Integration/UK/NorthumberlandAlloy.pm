@@ -27,7 +27,7 @@ sub services {
 
     my @services = $self->SUPER::services;
     foreach (@services) {
-        if (any { $_ eq 'Street Lighting' } @{$_->groups}) {
+        if (any { $_ eq 'Street Lighting' || $_ eq 'Winter (Snow/Ice)' } @{$_->groups}) {
             push @{$_->attributes}, Open311::Endpoint::Service::Attribute->new(
                 code => 'feature_id',
                 description => 'Feature ID',
