@@ -70,7 +70,7 @@ $soap_lite->mock(call => sub {
             is $event_type, 1568;
             is $service_id, 408;
             is $guid, 'd5f79551-3dc4-11ee-ab68-f0c87781f93b';
-            my $reservation = ${$params[5+$offset]->value}->value;
+            my $reservation = ${$params[5+$offset]->value}->value->value;
             is $reservation->name, 'string';
             is $reservation->value, 'reservation==';
             my @data = ${$params[$offset]->value}->value->value;
