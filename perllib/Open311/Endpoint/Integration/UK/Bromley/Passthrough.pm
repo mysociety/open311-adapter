@@ -22,13 +22,4 @@ around BUILDARGS => sub {
 
 has '+updates_url' => ( default => 'update.xml' );
 
-around post_service_request_update => sub {
-    my ($orig, $self, $args) = @_;
-
-    # Does not handle CLOSED state
-    $args->{status} = 'OPEN' if $args->{status} eq 'CLOSED';
-
-    return $self->$orig($args);
-};
-
 1;
