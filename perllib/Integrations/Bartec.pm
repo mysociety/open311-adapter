@@ -433,7 +433,7 @@ sub ServiceRequest_Create {
         reporterContact => {
             Forename => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd' }, value => SOAP::Utils::encode_data($values->{first_name}) },
             Surname => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd' }, value => SOAP::Utils::encode_data($values->{last_name}) },
-            Email => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd'} , value => $values->{email} },
+            Email => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd'} , value => SOAP::Utils::encode_data($values->{email}) },
             $values->{phone} ? ( Telephone => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd'} , value => $values->{phone} } ) : (),
             ReporterType => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd'}, value => $values->{ReporterType} },
         },

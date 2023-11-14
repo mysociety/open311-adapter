@@ -569,7 +569,7 @@ subtest "check send report with extended info & ampersands " => sub {
         service_code => '4',
         first_name => 'Bob',
         last_name => 'Mould & Test',
-        email => 'test@example.com',
+        email => 'te&st@example.com',
         description => 'description',
         lat => '52.540930',
         long => '-0.289832',
@@ -643,7 +643,7 @@ subtest "check send report with extended info & ampersands " => sub {
         reporterContact => {
             Forename => 'Bob',
             Surname => 'Mould & Test',
-            Email => 'test@example.com',
+            Email => 'te&st@example.com',
             ReporterType => 'Public',
         }
     }, 'correct request sent';
