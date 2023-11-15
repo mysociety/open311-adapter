@@ -1,0 +1,44 @@
+{
+  "item": {
+    "collection": "Live",
+    "designCode": "designs_customerRequest_6386279ffb3d97038c4e03a9",
+    "itemId": "234567",
+    "signature": "200002",
+    "attributes": [
+      {
+        "attributeCode": "attributes_customerRequestFMSSummary_63862bd505cb250393c204d7",
+        "value": "Something is bothering me"
+      },
+      {
+        "attributeCode": "attributes_customerRequestFMSDescription_63862bed05cb250393c2096d",
+        "value": "Please help me"
+      },
+      {
+        "attributeCode": "attributes_customerRequestFixMyStreetID_63862c38bafbd20397883f72",
+        "value": "5000063"
+      },
+      {
+        "attributeCode": "attributes_customerRequestRequestCategory_63862851fb3d97038c4e1cfc",
+        "value": [
+          "61fb016c4c5c56015448093f"
+        ]
+      },
+      {
+        "attributeCode": "attributes_customerRequestFMSStatus_6391f99705cb2503934eb858",
+        "value": [
+          "6391f9639e005f039665d65a"
+        ]
+      },
+      {
+        "attributeCode": "attributes_customerRequestEmail_63868f209e005f0396e519ca",
+        "value": "person@email.com"
+      },
+      {
+        "attributeCode": "attributes_customerRequestAssignedTo_653664b0557119eef53a97e1",
+        "value": [
+          "234"
+        ]
+      }
+    ]
+  }
+}

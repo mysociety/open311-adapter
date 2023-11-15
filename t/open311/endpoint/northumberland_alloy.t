@@ -36,6 +36,10 @@ my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
 
 my (@sent);
 
+my $alloy_endpoint
+    = Test::MockModule->new('Open311::Endpoint::Integration::AlloyV2');
+$alloy_endpoint->mock('_get_defect_updates', sub {} );
+
 my $integration = Test::MockModule->new('Integrations::AlloyV2');
 $integration->mock('api_call', sub {
     my ($self, %args) = @_;
@@ -68,6 +72,18 @@ $integration->mock('api_call', sub {
         # Looking up asset.
         $content = path(__FILE__)->sibling("json/alloyv2/northumberland_asset_lookup_response.json")->slurp;
 
+    } elsif ($body && $call =~ 'item-log/item/([^/]*)/reconstruct') {
+        my $id   = $1;
+        my $date = $body->{date};
+        $date =~ s/\D//g;
+        $content
+            = path(__FILE__)
+            ->sibling("json/alloyv2/northumberland/reconstruct_${id}_$date.json")->slurp;
+    } elsif ($call =~ 'item-log/item/([^/]*)') {
+        my $id = $1;
+        $content
+            = path(__FILE__)
+            ->sibling("json/alloyv2/northumberland/item_log_${id}.json")->slurp;
     } elsif ($body && $call =~ 'item') {
         my $designCode = $body->{designCode};
 
@@ -104,6 +120,10 @@ $integration->mock('api_call', sub {
 
             # Counting how many defects there are.
             $content = path(__FILE__)->sibling("json/alloyv2/northumberland_defects_count_response.json")->slurp;
+        } elsif ($designCode eq 'designs_customerRequest_6386279ffb3d97038c4e03a9') {
+            $content = '{ "results": [ { "value": { "value": 1 } } ] }';
+        } elsif ($designCode eq 'designs_fixMyStreetUsers_65324ff6b10aac2a03fa76c7') {
+            $content = '{ "results": [ { "value": { "value": 1 } } ] }';
         }
 
     } elsif ($body && $call =~ 'aqs/query') {
@@ -124,6 +144,28 @@ $integration->mock('api_call', sub {
             # Querying defects.
             $content = path(__FILE__)->sibling("json/alloyv2/northumberland_defects_query_response.json")->slurp;
 
+        } elsif ($designCode eq 'designs_customerRequest_6386279ffb3d97038c4e03a9') {
+            $content = path(__FILE__)->sibling("json/alloyv2/northumberland/customer_requests_query_response.json")->slurp;
+        } elsif ($designCode eq 'designs_fixMyStreetUsers_65324ff6b10aac2a03fa76c7') {
+            $content = path(__FILE__)->sibling("json/alloyv2/northumberland/fixmystreet_users_query_response.json")->slurp;
+
+            # Only get the IDs that are provided in the body
+            my @body_ids
+                = @{
+                    $body->{aqs}{children}[0]{children}[1]{properties}{value}
+                };
+
+            my @matching_items;
+            for my $item ( @{ decode_json($content)->{results} } ) {
+                for (@body_ids) {
+                    push @matching_items, $item if $item->{itemId} == $_;
+                }
+            }
+
+            $content = encode_json( { results => \@matching_items } );
+
+        } elsif ($designCode eq 'designs_contacts') {
+            $content = '{}';
         }
     }
 
@@ -317,6 +359,53 @@ subtest "create problem on groupless category" => sub {
         [ {
             "service_request_id" => "642062376be3a0036bbbb64b"
         } ], 'correct json returned';
+};
+
+subtest "check fetch updates" => sub {
+    my $res
+        = $endpoint->run_test_request( GET =>
+            '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2023-11-13T11:00:00Z&end_date=2023-11-13T11:59:59Z',
+        );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json( $res->content ), [
+        {   description        => '',
+            media_url          => '',
+            service_request_id => '123456',
+            status             => 'open',
+            update_id          => '100001',
+            updated_datetime   => '2023-11-13T11:05:00Z',
+            extras             => {
+                assigned_user_name  => 'FMS User 123',
+                assigned_user_email => '123@email.com',
+            },
+        },
+        {   description        => '',
+            media_url          => '',
+            service_request_id => '234567',
+            status             => 'open',
+            update_id          => '200002',
+            updated_datetime   => '2023-11-13T11:05:00Z',
+            extras             => {
+                assigned_user_name  => 'FMS User 234',
+                assigned_user_email => '234@email.com',
+            },
+        },
+        {   description        => '',
+            media_url          => '',
+            service_request_id => '234567',
+            status             => 'open',
+            update_id          => '200002',
+            updated_datetime   => '2023-11-13T11:10:00Z',
+            extras             => {
+                assigned_user_name  => 'FMS User 345',
+                assigned_user_email => '345@email.com',
+            },
+        },
+    ], 'correct json returned';
 };
 
 subtest "update status on problem" => sub {

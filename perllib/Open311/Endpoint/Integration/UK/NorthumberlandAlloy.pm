@@ -99,6 +99,74 @@ sub update_additional_attributes {
     }];
 }
 
+=head2 get_assigned_to_users
+
+Looks up FMS users on Alloy, given updates, and returns usernames
+('firstname surname') and emails.
+
+=cut
+
+sub get_assigned_to_users {
+    my ( $self, @updates ) = @_;
+
+    return {} unless @updates;
+
+    # Get unique customerRequestAssignedTo IDs
+    my %user_ids;
+    for my $u (@updates) {
+        my $attr = $self->alloy->attributes_to_hash($u);
+        map { $user_ids{$_} = 1 } @{
+            $attr->{
+                $self->config->{inspection_attribute_mapping}
+                    {assigned_to_user}
+            } // []
+        };
+    }
+
+    return {} unless %user_ids;
+
+    my $mapping = $self->config->{assigned_to_user_mapping};
+
+    my $res = $self->alloy->search(
+        {   properties => {
+                dodiCode => $mapping->{design},
+                collectionCode => 'Live',
+                attributes     => [
+                    $mapping->{username_attribute},
+                    $mapping->{email_attribute},
+                    # TODO Do we also want phone?
+                ],
+            },
+            children => [
+                {   type     => "Equals",
+                    children => [
+                        {   type       => 'ItemProperty',
+                            properties => { itemPropertyName => 'itemID', },
+                        },
+                        {   type       => 'AlloyId',
+                            properties => { value => [ keys %user_ids ] }
+                        }
+                    ],
+                },
+            ],
+        },
+    );
+
+    return {} unless @$res;
+
+    my %users;
+
+    for (@$res) {
+        my $attr = $self->alloy->attributes_to_hash($_);
+        $users{ $_->{itemId} } = {
+            assigned_user_name  => $attr->{ $mapping->{username_attribute} },
+            assigned_user_email => $attr->{ $mapping->{email_attribute} },
+        };
+    }
+
+    return \%users;
+}
+
 =head2 skip_fetch_defect
 
 Adds additional '_should_publish_defect' check.

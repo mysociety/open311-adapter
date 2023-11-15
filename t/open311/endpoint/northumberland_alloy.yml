@@ -163,9 +163,16 @@
   },
 
   "inspection_attribute_mapping": {
-     "updates": "attributes_customerRequestFMSUpdates_6387cc9805cb250393e00e2f",
-     "status": "attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb",
-     "inspector_comments": "attributes_customerRequestInspectorsComments_638629fcfb3d97038c4e5d5a",
+    "updates": "attributes_customerRequestFMSUpdates_6387cc9805cb250393e00e2f",
+    "status": "attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb",
+    "inspector_comments": "attributes_customerRequestInspectorsComments_638629fcfb3d97038c4e5d5a",
+    "assigned_to_user": "attributes_customerRequestAssignedTo_653664b0557119eef53a97e1",
+  },
+
+  "assigned_to_user_mapping": {
+    "design": "designs_fixMyStreetUsers_65324ff6b10aac2a03fa76c7",
+    "username_attribute": "attributes_fixMyStreetUsersUsername_6532517e557119eef5f95490",
+    "email_attribute": "attributes_fixMyStreetUsersEmail_6532518cac7139477485ec38",
   },
 
   "inspection_status_mapping": {

@@ -584,6 +584,9 @@ sub _get_inspection_updates {
     my $mapping = $self->config->{inspection_attribute_mapping};
     return () unless $mapping;
     my $updates = $self->fetch_updated_resources($self->config->{rfs_design}, $args->{start_date}, $args->{end_date});
+
+    my $assigned_to_users = $self->get_assigned_to_users(@$updates);
+
     for my $update (@$updates) {
         next unless $self->_accept_updated_resource($update);
 
@@ -633,11 +636,37 @@ sub _get_inspection_updates {
                 updated_datetime => $update_dt,
             );
 
+            my $assigned_to_user = {};
+            if ( my $assigned_to_user_id
+                = $attributes->{ $mapping->{assigned_to_user} // '' }[0] )
+            {
+                $assigned_to_user
+                    = $assigned_to_users->{$assigned_to_user_id};
+
+                # There is a possibility the assigned-to user is not already
+                # in the $assigned_to_users hash; do another lookup if so
+                if ( !$assigned_to_user ) {
+                    my $new_assigned_to
+                        = $self->get_assigned_to_users($resource);
+
+                    $assigned_to_users->{$assigned_to_user_id}
+                        = $assigned_to_user
+                        = $new_assigned_to->{$assigned_to_user_id};
+                }
+
+                $args{extras} = $assigned_to_user if $assigned_to_user;
+            }
+
             push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
         }
     }
 
     return @updates;
+}
+
+sub get_assigned_to_users {
+    # Currently for Northumberland only
+    return {};
 }
 
 sub _accept_updated_resource {
