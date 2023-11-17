@@ -89,6 +89,7 @@ XML
 my $lwp = Test::MockModule->new('LWP::UserAgent');
 $lwp->mock(request => sub {
     my ($ua, $req) = @_;
+    like $req->as_string, qr/status=OPEN/, 'Has OPEN status sent through';
     return HTTP::Response->new(200, 'OK', [], $expected_update_post);
 });
 
