@@ -116,6 +116,9 @@ use constant {
     REPORT_INWEB => 13,
     REPORT_SERVICECODE => 14,
     REPORT_NEXTACTION => 15,
+    FIELDS_FIELDLINE => 0,
+    FIELDS_VALUETYPE => 1,
+    FIELDS_VALUE => 2,
     UPDATE_REPORT_ID => 123,
 };
 
@@ -138,15 +141,23 @@ $soap_lite->mock(call => sub {
         is $args[1]->value, 'ep';
         is $args[2]->value, 'password';
         my @request = ${$args[4]->value}->value;
+        my @fields = ${$args[6]->value}->value;
+
         is $request[REPORT_NSGREF]->value, NSGREF;
         my $next_action = Open311::Endpoint::Integration::UK::Brent::Symology->new->endpoint_config->{nsgref_to_action}{+NSGREF};
         is $request[REPORT_NEXTACTION]->value, $next_action; # Worked out automatically from 0
         is $request[REPORT_NORTHING]->value, NORTHING;
         my $photo_desc = "\n\n[ This report contains a photo, see: http://example.org/photo/1.jpeg ]";
         my $burnt = 'No';
-        is $request[REPORT_DESC]->value, "This is the details$photo_desc\n\nBurnt out?: $burnt\n\nCar details: Details";
+        is $request[REPORT_DESC]->value, "This is the details$photo_desc\n\nBurnt out?: $burnt\n\nCar details: Details\n\nreport_url: http://example.org/report/123";
         is $request[REPORT_PRIORITY]->value, "P";
         is $request[REPORT_LOCATION]->value, 'Report title';
+        is $fields[0][FIELDS_FIELDLINE]->value, 3;
+        is $fields[0][FIELDS_VALUETYPE]->value, 8;
+        is $fields[0][FIELDS_VALUE]->value, "http://example.org/report/123";
+        is $fields[1][FIELDS_FIELDLINE]->value, 4;
+        is $fields[1][FIELDS_VALUETYPE]->value, 7;
+        is $fields[1][FIELDS_VALUE]->value, "http://example.org/photo/1.jpeg";
         return {
             StatusCode => 0,
             StatusMessage => 'Success',
@@ -457,13 +468,14 @@ subtest "POST service request OK" => sub {
         lat => 51,
         long => -1,
         media_url => 'http://example.org/photo/1.jpeg',
+        'attribute[report_url]' => 'http://example.org/report/123',
         'attribute[NSGRef]' => NSGREF,
         'attribute[burnt]' => 'No',
         'attribute[car_details]' => 'Details',
         'attribute[easting]' => EASTING,
         'attribute[northing]' => NORTHING,
         'attribute[fixmystreet_id]' => 123,
-        'attribute[title]' => 'Report title'
+        'attribute[title]' => 'Report title',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
