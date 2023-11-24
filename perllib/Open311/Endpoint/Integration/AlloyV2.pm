@@ -636,23 +636,17 @@ sub _get_inspection_updates {
                 updated_datetime => $update_dt,
             );
 
-            my $assigned_to_user = {};
             if ( my $assigned_to_user_id
                 = $attributes->{ $mapping->{assigned_to_user} // '' }[0] )
             {
-                $assigned_to_user
-                    = $assigned_to_users->{$assigned_to_user_id};
-
-                # There is a possibility the assigned-to user is not already
-                # in the $assigned_to_users hash; do another lookup if so
-                if ( !$assigned_to_user ) {
-                    my $new_assigned_to
-                        = $self->get_assigned_to_users($resource);
-
-                    $assigned_to_users->{$assigned_to_user_id}
-                        = $assigned_to_user
-                        = $new_assigned_to->{$assigned_to_user_id};
-                }
+                my $assigned_to_user
+                    = $assigned_to_users->{$assigned_to_user_id} ||= do {
+                    # There is a possibility the assigned-to user is not
+                    # already in the $assigned_to_users hash; do another
+                    # lookup if so
+                    $self->get_assigned_to_users($resource)
+                        ->{$assigned_to_user_id}
+                };
 
                 $args{extras} = $assigned_to_user if $assigned_to_user;
             }
