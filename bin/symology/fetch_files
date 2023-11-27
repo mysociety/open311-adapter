@@ -4,7 +4,14 @@ set -eu
 
 source /data/mysociety/shlib/deployfns
 
+TMPDIR=$(mktemp -d) || exit 1
+trap 'rm -rf "$TMPDIR"' EXIT
+cd $TMPDIR
+
 for COBRAND in $@; do
+
+    mkdir $COBRAND || exit 1
+    cd $COBRAND
 
     read_conf "$(dirname "$0")/../../conf/council-"$COBRAND"_symology.yml"
 
@@ -12,14 +19,12 @@ for COBRAND in $@; do
     [ -e ~/.ssh/known_hosts ] || install -D -m 0644 /dev/null ~/.ssh/known_hosts
     grep $OPTION_updates_sftp__host ~/.ssh/known_hosts >/dev/null || ssh-keyscan $OPTION_updates_sftp__host >> ~/.ssh/known_hosts
 
-    TMPDIR=$(mktemp -d) || exit 1
-    trap 'rm -rf "$TMPDIR"' EXIT
-    cd $TMPDIR
-
     export SSHPASS=$OPTION_updates_sftp__password
     echo "get $OPTION_updates_sftp__dir data" | sshpass -e sftp -oBatchMode=no -r -b - $OPTION_updates_sftp__username@$OPTION_updates_sftp__host >/dev/null
     if ls -A1q "data" | grep -q .; then
         mv -n data/* $OPTION_updates_sftp__out
     fi
+
+    cd ..
 
 done
