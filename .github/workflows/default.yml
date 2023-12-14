@@ -14,10 +14,10 @@ jobs:
     - name: Perl version
       run: perl --version
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Setup carton cache
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: local
         key: ${{ runner.os }}-perl-${{ matrix.perl_version }}-carton-${{ hashFiles('**/cpanfile.snapshot') }}
@@ -26,7 +26,7 @@ jobs:
 
     - name: Setup carton cache (coverage)
       if: matrix.perl_version == 5.24
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: |
           /usr/local/lib/perl5/site_perl
