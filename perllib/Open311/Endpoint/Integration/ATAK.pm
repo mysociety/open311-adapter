@@ -371,11 +371,12 @@ sub _fetch_and_apply_updated_issues_info {
         # Task comments field is present, not blank, but doesn't start with a known ATAK status.
         if (!$mapped_fms_status) {
             $self->logger->debug(sprintf(
-                    "[ATAK] Updated issue %s has unmapped ATAK status '%s'. Skipping.",
+                    "[ATAK] Updated issue %s has unmapped ATAK status '%s'. Defaulting to closed status.",
                     $issue_reference,
                     $task_comments
                 ));
             $mapped_fms_status = 'closed';
+            $atak_status = $self->endpoint_config->{closed_status};
         }
 
         my $existing_tracking = $tracked_statuses->{issues}->{$issue_reference};

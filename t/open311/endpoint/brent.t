@@ -88,6 +88,7 @@ sub atak_config {
             "Closed - Passed to Brent" => "internal_referral",
         },
         fixed_status => "Closed - Completed",
+        closed_status => "Closed - Not found",
     }
 }
 
@@ -916,6 +917,7 @@ subtest "GET ATAK service request updates OK" => sub {
                 status => 'closed',
                 update_id => 'ATAK-unknown_state_1690848000',
                 updated_datetime => '2023-08-01T00:00:00Z',
+                external_status_code => 'Closed - Not found',
             }
         ]
     );
@@ -932,6 +934,16 @@ subtest "GET ATAK service request updates OK" => sub {
         return HTTP::Response->new(200, 'OK', [], '{
             "tasks": [
                 {
+                    "testing_comment": "same ATAK status - should ignore",
+                    "client_ref": "unknown_state",
+                    "task_comments": "Closed - Unknown",
+                    "task_d_created": "2023-08-01T00:00:00Z",
+                    "task_d_planned": "2023-08-01T00:00:00Z",
+                    "task_d_completed": "2023-08-01T00:00:00Z",
+                    "task_d_approved": "2023-08-01T00:00:00Z",
+                    "task_p_id": "125"
+                },
+                {
                     "testing_comment": "new update but same ATAK status - should ignore",
                     "client_ref": "test",
                     "task_comments": "Closed - Passed to Brent",
@@ -939,7 +951,7 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_d_planned": "2023-08-02T01:00:00Z",
                     "task_d_completed": "2023-08-02T02:00:00Z",
                     "task_d_approved": "2023-08-04T03:00:00Z",
-                    "task_p_id": "128"
+                    "task_p_id": "127"
                 }
             ]
         }');
@@ -977,6 +989,7 @@ subtest "GET ATAK service request updates OK" => sub {
                 status => 'closed',
                 update_id => 'ATAK-unknown_state_1690848000',
                 updated_datetime => '2023-08-01T00:00:00Z',
+                external_status_code => 'Closed - Not found',
             }
         ]
     );
