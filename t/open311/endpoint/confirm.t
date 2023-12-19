@@ -10,6 +10,12 @@ use Moo;
 extends 'Integrations::Confirm';
 sub _build_config_file { path(__FILE__)->sibling("confirm_customer_ref.yml")->stringify }
 
+package Integrations::Confirm::DummyJobs;
+use Path::Tiny;
+use Moo;
+extends 'Integrations::Confirm';
+sub _build_config_file { path(__FILE__)->sibling("confirm_jobs.yml")->stringify }
+
 package Open311::Endpoint::Integration::UK::Dummy;
 use Path::Tiny;
 use Moo;
@@ -70,6 +76,18 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 has integration_class => (is => 'ro', default => 'Integrations::Confirm::DummyCustomerRef');
+
+package Open311::Endpoint::Integration::UK::DummyJobs;
+use Path::Tiny;
+use Moo;
+extends 'Open311::Endpoint::Integration::Confirm';
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{jurisdiction_id} = 'confirm_dummy_jobs';
+    $args{config_file} = path(__FILE__)->sibling("confirm_jobs.yml")->stringify;
+    return $class->$orig(%args);
+};
+has integration_class => (is => 'ro', default => 'Integrations::Confirm::DummyJobs');
 
 package main;
 
@@ -162,6 +180,149 @@ $open311->mock(perform_request => sub {
           ] } } };
         }
     }
+    return {};
+});
+
+$open311->mock( perform_request_graphql => sub {
+    my ( $self, %args ) = @_;
+
+    if ( $args{type} eq 'job_types' ) {
+        return {
+            data => {
+                jobTypes => [
+                    { code => 'TYPE_1', name => 'Type 1' },
+                    { code => 'TYPE_2', name => 'Type 2' },
+                ],
+            },
+        };
+    } elsif ( $args{type} eq 'jobs' ) {
+        return {
+            data => {
+                jobs => [
+                    # Pass filters
+                    {
+                        description => 'An open job',
+                        entryDate => '2022-12-01T00:00:00',
+                        feature  => { site => { centralSite => { name => 'Abc St.' } } },
+                        geometry =>
+                            'POINT (-2.26317120000001 51.8458834999995)',
+                        jobNumber => 'open_standard',
+                        jobType   => {
+                            code => 'TYPE_1',
+                            name => 'Type 1',
+                        },
+                        priority => {
+                            code => 'ASAP',
+                            name => 'ASAP',
+                        },
+                        statusLogs => [
+                            {
+                                loggedDate => '2023-12-01T00:00:00',
+                                statusCode => 'OPEN',
+                            },
+                        ],
+                    },
+                    {
+                        description => 'A completed job',
+                        entryDate => '2022-12-01T00:00:00',
+                        feature  => { site => { centralSite => { name => 'Abc St.' } } },
+                        geometry =>
+                            'POINT (-2.26317120000001 51.8458834999995)',
+                        jobNumber => 'closed_standard',
+                        jobType   => {
+                            code => 'TYPE_2',
+                            name => 'Type 2',
+                        },
+                        priority => {
+                            code => 'ASAP',
+                            name => 'ASAP',
+                        },
+                        statusLogs => [
+                            {
+                                loggedDate => '2023-12-01T00:00:00',
+                                statusCode => 'OPEN',
+                            },
+                            {
+                                loggedDate => '2024-01-01T00:00:00',
+                                statusCode => 'FIXED',
+                            },
+                        ],
+                    },
+
+                    # Filtered out
+                    {
+                        description => 'A job with unhandled type',
+                        entryDate => '2022-12-01T00:00:00',
+                        feature  => { site => { centralSite => { name => 'Abc St.' } } },
+                        geometry =>
+                            'POINT (-2.26317120000001 51.8458834999995)',
+                        jobNumber => 'unhandled_type',
+                        jobType   => {
+                            code => 'UNHANDLED',
+                            name => 'Unhandled',
+                        },
+                        priority => {
+                            code => 'ASAP',
+                            name => 'ASAP',
+                        },
+                        statusLogs => [
+                            {
+                                loggedDate => '2023-12-01T00:00:00',
+                                statusCode => 'OPEN',
+                            },
+                            {
+                                loggedDate => '2023-12-01T01:00:00',
+                                statusCode => 'SHUT',
+                            },
+                        ],
+                    },
+                    {
+                        description => 'A job with EOFY priority',
+                        entryDate => '2022-12-01T00:00:00',
+                        feature  => { site => { centralSite => { name => 'Abc St.' } } },
+                        geometry =>
+                            'POINT (-2.26317120000001 51.8458834999995)',
+                        jobNumber => 'eofy_priority',
+                        jobType   => {
+                            code => 'TYPE_1',
+                            name => 'Type 1',
+                        },
+                        priority => {
+                            code => 'EOFY',
+                            name => 'End Of Financial Year',
+                        },
+                        statusLogs => [],
+                    },
+                ],
+            },
+        };
+    } elsif ( $args{type} eq 'job_status_logs' ) {
+        return {
+            data => {
+                jobStatusLogs => [
+                    {
+                        jobNumber  => 'open_standard',
+                        key        => 'open_standardx1',
+                        loggedDate => '2023-12-01T00:00:00',
+                        statusCode => 'OPEN',
+                    },
+                    {
+                        jobNumber  => 'open_standard',
+                        key        => 'open_standardx2',
+                        loggedDate => '2023-12-01T01:00:00',
+                        statusCode => 'SHUT',
+                    },
+                    {
+                        jobNumber  => 'open_standard',
+                        key        => 'open_standardx3',
+                        loggedDate => '2023-12-01T02:00:00',
+                        statusCode => 'NOT_IN_CONFIG',
+                    },
+                ],
+            },
+        };
+    }
+
     return {};
 });
 
@@ -720,6 +881,215 @@ subtest "StatusLogNotes shouldn't appear in updates" => sub {
     ok $res->is_success, 'valid request' or diag $res->content;
     contains_string $res->content, '<update_id>2020_5</update_id>';
     lacks_string $res->content, 'Secret status log notes';
+};
+
+$endpoint = Open311::Endpoint::Integration::UK::DummyJobs->new;
+
+subtest "GET Service List - include ones for jobs" => sub {
+    local $ENV{TEST_LOGGER} = 'warn';
+
+    my $res;
+    stderr_like {
+        $res = $endpoint->run_test_request(
+            GET => '/services.xml?jurisdiction_id=confirm_dummy_jobs' );
+    }
+    qr/Job type NOT doesn't exist in Confirm./,
+        'warning about nonexistent job type';
+
+    ok $res->is_success, 'xml success';
+
+    my $expected = {
+        services => {
+            service => [
+                {   description  => 'Flooding',
+                    groups       => { group => 'Flooding & Drainage' },
+                    keywords     => undef,
+                    metadata     => 'true',
+                    service_code => 'ABC_DEF',
+                    service_name => 'Flooding',
+                    type         => 'realtime'
+                },
+                {   description    => 'Type 1',
+                    group          => undef,
+                    keywords       => 'inactive',
+                    metadata       => 'true',
+                    service_code   => 'TYPE_1',
+                    service_name   => 'Type 1',
+                    type           => 'realtime',
+                },
+                {   description    => 'Type 2',
+                    group          => undef,
+                    keywords       => 'inactive',
+                    metadata       => 'true',
+                    service_code   => 'TYPE_2',
+                    service_name   => 'Type 2',
+                    type           => 'realtime',
+                },
+            ]
+        }
+    };
+
+    my $content = $endpoint->xml->parse_string($res->content);
+    is_deeply $content, $expected, 'correct data fetched';
+};
+
+subtest 'GET jobs alongside enquiries' => sub {
+    local $ENV{TEST_LOGGER} = 'warn';
+
+    my @expected_warnings = (
+        '.*Job type NOT doesn\'t exist in Confirm.',
+        '.*no easting/northing for Enquiry 2004',
+        '.*no easting/northing for Enquiry 2005',
+        '.*no service for job type code UNHANDLED for job unhandled_type',
+    );
+
+    my $regex = join '\n', @expected_warnings;
+    $regex = qr/$regex/;
+
+    my $res;
+    stderr_like {
+        $res = $endpoint->run_test_request(
+          GET => '/requests.xml?jurisdiction_id=confirm_dummy_jobs&start_date=2018-04-17T00:00:00Z&end_date=2023-12-01T23:59:59Z',
+        );
+    } $regex, 'Various warnings';
+
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+    my $expected = {
+        service_requests => {
+            request => [
+                # Enquiries
+                {   address            => undef,
+                    address_id         => undef,
+                    description        => 'this is a report from confirm',
+                    lat                => '100',
+                    long               => '100',
+                    media_url          => undef,
+                    requested_datetime => '2018-04-17T13:34:56+01:00',
+                    service_code       => 'ABC_DEF',
+                    service_name       => 'Flooding',
+                    service_request_id => '2003',
+                    status             => 'in_progress',
+                    updated_datetime   => '2018-04-17T13:34:56+01:00',
+                    zipcode            => undef,
+                },
+
+                # Jobs
+                {   address            => undef,
+                    address_id         => undef,
+                    description        => 'An open job',
+                    lat                => '51.8458834999995',
+                    long               => '-2.26317120000001',
+                    media_url          => undef,
+                    requested_datetime => '2022-12-01T00:00:00+00:00',
+                    service_code       => 'TYPE_1',
+                    service_name       => 'Type 1',
+                    service_request_id => 'JOB_open_standard',
+                    status             => 'open',
+                    updated_datetime   => '2023-12-01T00:00:00+00:00',
+                    zipcode            => undef
+                },
+                {   address            => undef,
+                    address_id         => undef,
+                    description        => 'A completed job',
+                    lat                => '51.8458834999995',
+                    long               => '-2.26317120000001',
+                    media_url          => undef,
+                    requested_datetime => '2022-12-01T00:00:00+00:00',
+                    service_code       => 'TYPE_2',
+                    service_name       => 'Type 2',
+                    service_request_id => 'JOB_closed_standard',
+                    status             => 'fixed',
+                    updated_datetime   => '2024-01-01T00:00:00+00:00',
+                    zipcode            => undef
+                }
+            ],
+        },
+    };
+
+    my $content = $endpoint->xml->parse_string($res->content);
+    is_deeply $content, $expected, 'correct data fetched';
+};
+
+subtest 'GET updates - including for jobs' => sub {
+    local $ENV{TEST_LOGGER} = 'warn';
+
+    my @expected_warnings = (
+        '.*Missing reverse job status mapping for statusCode NOT_IN_CONFIG \(jobNumber open_standard\)',
+    );
+
+    my $regex = join '\n', @expected_warnings;
+    $regex = qr/$regex/;
+
+    my $res;
+    stderr_like {
+        $res = $endpoint->run_test_request(
+          GET => '/servicerequestupdates.xml?jurisdiction_id=confirm_dummy_jobs&start_date=2018-04-17T00:00:00Z&end_date=2023-12-01T23:59:59Z',
+        );
+    } $regex, 'Expected warnings';
+
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+    my $expected = {
+        service_request_updates => {
+            request_update => [
+                # Enquiries
+                {   description          => undef,
+                    external_status_code => 'INP',
+                    media_url            => undef,
+                    service_request_id   => '2001',
+                    status               => 'in_progress',
+                    update_id            => '2001_3',
+                    updated_datetime     => '2018-03-01T12:00:00+00:00',
+                },
+                {   description          => undef,
+                    external_status_code => 'INP',
+                    media_url            => undef,
+                    service_request_id   => '2002',
+                    status               => 'in_progress',
+                    update_id            => '2002_1',
+                    updated_datetime     => '2018-03-01T13:00:00+00:00',
+                },
+                {   description          => undef,
+                    external_status_code => 'DUP',
+                    media_url            => undef,
+                    service_request_id   => '2002',
+                    status               => 'duplicate',
+                    update_id            => '2002_2',
+                    updated_datetime     => '2018-03-01T13:30:00+00:00',
+                },
+
+                # Jobs
+                {   description          => undef,
+                    external_status_code => 'OPEN',
+                    media_url            => undef,
+                    service_request_id   => 'JOB_open_standard',
+                    status               => 'open',
+                    update_id            => 'JOB_open_standardx1',
+                    updated_datetime     => '2023-12-01T00:00:00+00:00',
+                },
+                {   description          => undef,
+                    external_status_code => 'SHUT',
+                    media_url            => undef,
+                    service_request_id   => 'JOB_open_standard',
+                    status               => 'closed',
+                    update_id            => 'JOB_open_standardx2',
+                    updated_datetime     => '2023-12-01T01:00:00+00:00',
+                },
+                {   description          => undef,
+                    external_status_code => 'NOT_IN_CONFIG',
+                    media_url            => undef,
+                    service_request_id   => 'JOB_open_standard',
+                    status               => 'open',
+                    update_id            => 'JOB_open_standardx3',
+                    updated_datetime     => '2023-12-01T02:00:00+00:00',
+                },
+            ],
+        },
+    };
+
+    my $content = $endpoint->xml->parse_string($res->content);
+    is_deeply $content, $expected, 'correct data fetched';
 };
 
 done_testing;
