@@ -782,6 +782,64 @@ This is an update"
         } ], 'correct json returned';
 };
 
+subtest "check send comment with a photo as an upload" => sub {
+    local $ENV{TEST_LOGGER} = 'warn';
+
+    my $file = Web::Dispatch::Upload->new(
+        headers => '',
+        tempname => path(__FILE__)->dirname . '/files/bartec/image.jpg',
+        filename => 'image.jpg',
+        size => 10,
+    );
+
+    my $req = POST '/servicerequestupdates.json',
+        Content_Type => 'form-data',
+        Content => [
+            jurisdiction_id => 'dummy',
+            api_key => 'test',
+            first_name => 'Bob',
+            last_name => 'Mould',
+            email => 'test@example.com',
+            description => 'This is an update',
+            service_request_id => 12345,
+            update_id => 999,
+            status => 'OPEN',
+            updated_datetime => '2019-04-17T14:39:00Z',
+            uploads => [ $file ],
+        ];
+    my $res = $endpoint->run_test_request($req);
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    my $item_update = pop @sent;
+    my $file_send = pop @sent;
+
+    is $file_send, "This is a fake image\n", "file content ok";
+
+    is_deeply $item_update,
+    {
+        attributes => [
+            {
+            attributeCode => "attributes_enquiryInspectionRFS1001181UpdatesFromFixMyStreet1014437_5d3245dffe2ad806f8dfbb42",
+            value => "Customer update at 2019-04-17 14:39:00
+This is an update"
+            },
+            {
+                attributeCode => 'attributes_filesAttachableAttachments',
+                value => [ '02037eefc0de101a008fb7ef', 'fileid' ],
+            }
+        ],
+        signature => '5d32469bb4e1b9015001430b'
+    },
+    , 'correct json sent';
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => "5d32469bb4e1b90150014310"
+        } ], 'correct json returned';
+};
+
 subtest "check fetch problem" => sub {
     local $ENV{TEST_LOGGER} = 'warn';
     my $res;

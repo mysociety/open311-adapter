@@ -493,7 +493,7 @@ sub post_service_request_update {
         value => $updates
     };
 
-    if ( $self->config->{resource_attachment_attribute_id} && @{ $args->{media_url} }) {
+    if ( $self->config->{resource_attachment_attribute_id} && (@{$args->{media_url}} || @{$args->{uploads}})) {
         my $attachment_code = $self->config->{resource_attachment_attribute_id};
         my $attachments = $attributes->{$attachment_code} || [];
         my $new_attachments = $self->upload_media($args);

@@ -70,8 +70,12 @@ around dispatch_request => sub {
             $self->call_api( GET_Service_Request_Updates => $args );
         },
 
-        sub (POST + /servicerequestupdates + %:@media_url~&*) {
-            my ($self, $args) = @_;
+        sub (POST + /servicerequestupdates + %:@media_url~&* + **) {
+            my ($self, $args, $uploads) = @_;
+
+            my @files = grep { $_->is_upload } values %$uploads;
+            $args->{uploads} = \@files;
+
             $self->call_api( POST_Service_Request_Update => $args );
         },
 
@@ -175,6 +179,7 @@ sub POST_Service_Request_Update_input_schema {
             first_name => '//str',
             title => '//str',
             media_url => { type => '//arr', contents => '//str' },
+            uploads => { type => '//arr', contents => '//any' },
             account_id => '//str',
             service_request_id_ext => '//num',
             public_anonymity_required => Open311::Endpoint::Schema->enum('//str', 'TRUE', 'FALSE'),
