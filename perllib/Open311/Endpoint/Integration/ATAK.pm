@@ -333,11 +333,11 @@ sub _fetch_and_apply_updated_issues_info {
             next;
         }
 
-        # Does the $issue hashref have a task_comments field?
+        # Does the $issue hashref have a task_d_planned field?
         # This field only appears on an issue once it has been updated.
-        if (!exists $issue->{task_comments}) {
+        if (!exists $issue->{task_d_planned}) {
             $self->logger->warn(sprintf(
-                    "[ATAK] No task comments field found on updated issue %s. Skipping.",
+                    "[ATAK] No task_d_planned field found on updated issue %s. Skipping.",
                     $issue_reference
                 ));
             next;
@@ -346,11 +346,19 @@ sub _fetch_and_apply_updated_issues_info {
         # Does the task_comments field have a value?
         my $task_comments = $issue->{task_comments};
         if (!$task_comments) {
-            $self->logger->warn(sprintf(
-                    "[ATAK] Task comments field on updated issue %s is blank. Defaulting to fixed status.",
-                    $issue_reference
-                ));
-            $task_comments = $self->endpoint_config->{fixed_status};
+            if ($time_planned && !$time_completed) {
+                $self->logger->warn(sprintf(
+                        "[ATAK] Task comments field on updated issue %s is blank. Defaulting to planned status.",
+                        $issue_reference
+                    ));
+                $task_comments = $self->endpoint_config->{planned_status};
+            } else {
+                $self->logger->warn(sprintf(
+                        "[ATAK] Task comments field on updated issue %s is blank. Defaulting to fixed status.",
+                        $issue_reference
+                    ));
+                $task_comments = $self->endpoint_config->{fixed_status};
+            }
         }
 
         # Assumes no prefix is a substring of another prefix.

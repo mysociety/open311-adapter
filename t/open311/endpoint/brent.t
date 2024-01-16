@@ -86,9 +86,11 @@ sub atak_config {
             "Closed - Out of scope" => "no_further_action",
             "Closed - Not found" => "closed",
             "Closed - Passed to Brent" => "internal_referral",
+            "In progress" => "action_scheduled",
         },
         fixed_status => "Closed - Completed",
         closed_status => "Closed - Not found",
+        planned_status => "In progress"
     }
 }
 
@@ -904,6 +906,12 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_d_completed": "2023-08-01T02:00:00Z",
                     "task_d_approved": "2023-08-01T03:00:00Z",
                     "task_p_id": "128"
+                },
+                {
+                    "client_ref":"in_progress",
+                    "task_d_created":"2023-08-01T00:00:00Z",
+                    "task_d_planned":"2023-08-01T01:00:00Z",
+                    "task_p_id": "129"
                 }
             ]
         }');
@@ -932,6 +940,15 @@ subtest "GET ATAK service request updates OK" => sub {
                 update_id => 'ATAK-no_comments_1690858800',
                 updated_datetime => '2023-08-01T03:00:00Z',
                 external_status_code => 'Closed - Completed',
+            },
+            {
+                description => '',
+                media_url => '',
+                service_request_id => 'ATAK-129',
+                status => 'action_scheduled',
+                update_id => 'ATAK-in_progress_1690851600',
+                updated_datetime => '2023-08-01T01:00:00Z',
+                external_status_code => 'In progress',
             },
             {
                 description => '',
@@ -1008,6 +1025,15 @@ subtest "GET ATAK service request updates OK" => sub {
             {
                 description => '',
                 media_url => '',
+                service_request_id => 'ATAK-129',
+                status => 'action_scheduled',
+                update_id => 'ATAK-in_progress_1690851600',
+                updated_datetime => '2023-08-01T01:00:00Z',
+                external_status_code => 'In progress',
+            },
+            {
+                description => '',
+                media_url => '',
                 service_request_id => 'ATAK-125',
                 status => 'closed',
                 update_id => 'ATAK-unknown_state_1690848000',
@@ -1034,7 +1060,7 @@ subtest "GET ATAK service request updates OK" => sub {
                     "task_d_planned": "2023-08-03T01:00:00Z",
                     "task_d_completed": "2023-08-03T02:00:00Z",
                     "task_d_approved": "2023-08-03T03:00:00Z",
-                    "task_p_id": "129"
+                    "task_p_id": "130"
                 }
             ]
         }');
@@ -1049,7 +1075,7 @@ subtest "GET ATAK service request updates OK" => sub {
             {
                 description => "description",
                 media_url => '',
-                service_request_id => 'ATAK-129',
+                service_request_id => 'ATAK-130',
                 status => 'fixed',
                 update_id => 'ATAK-test_1691031600',
                 updated_datetime => '2023-08-03T03:00:00Z',
