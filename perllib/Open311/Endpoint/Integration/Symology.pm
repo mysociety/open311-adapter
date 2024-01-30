@@ -231,9 +231,15 @@ sub post_service_request {
 sub process_service_request_update_args {
     my ($self, $args) = @_;
 
+    my $services = $self->category_mapping;
+    my $any_request_service_code;
+    foreach (keys %$services) {
+        $any_request_service_code ||= $services->{$_}{parameters}{ServiceCode};
+    }
+
     my $service_code = $args->{service_code};
     my $codes = $self->category_mapping->{$service_code};
-    die "Could not find category mapping for $service_code\n" unless $codes;
+    die "Could not find category mapping for $service_code\n" if !$codes && $any_request_service_code;
 
     my $closed = $args->{status} =~ /FIXED|DUPLICATE|NOT_COUNCILS_RESPONSIBILITY|NO_FURTHER_ACTION|INTERNAL_REFERRAL|CLOSED/;
 

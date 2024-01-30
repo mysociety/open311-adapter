@@ -740,6 +740,29 @@ subtest "POST Echo update on closed report OK" => sub {
         } ], 'correct json returned';
 };
 
+subtest "POST update on gone category OK, as only default ServiceCode" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'brent',
+        api_key => 'test',
+        updated_datetime => '2019-03-01T12:00:00Z',
+        service_code => 'Symology-GONE',
+        service_request_id => "Symology-1001",
+        status => 'OPEN',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the update",
+        service_request_id_ext => 5678,
+        update_id => 456,
+        media_url => 'http://example.org/photo/1.jpeg',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+    is_deeply decode_json($res->content), [ {
+        'update_id' => 'Symology-456',
+    } ], 'correct json returned';
+};
+
 subtest "POST update OK" => sub {
     my $res = $endpoint->run_test_request(
         POST => '/servicerequestupdates.json',

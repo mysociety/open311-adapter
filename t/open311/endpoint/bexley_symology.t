@@ -432,6 +432,26 @@ subtest "POST with bad rules fails" => sub {
         or diag $res->content;
 };
 
+subtest "POST update on gone category" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'bexley',
+        api_key => 'test',
+        updated_datetime => '2019-03-01T12:00:00Z',
+        service_code => 'GONE',
+        service_request_id => 1001,
+        status => 'OPEN',
+        description => "This is the update",
+        update_id => 456,
+    );
+    ok !$res->is_success, 'invalid request'
+        or diag $res->content;
+    is_deeply decode_json($res->content), [ {
+        "description" => "Could not find category mapping for GONE\n",
+        "code" => 500,
+    } ], 'correct json returned';
+};
+
 subtest "POST update OK" => sub {
     my $res = $endpoint->run_test_request(
         POST => '/servicerequestupdates.json',
