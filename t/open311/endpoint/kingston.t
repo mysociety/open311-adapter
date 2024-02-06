@@ -74,7 +74,7 @@ $soap_lite->mock(call => sub {
             is $ref[1]->value, 'ABC';
             @ref = ${$child[1]->value}->value;
             is $ref[0]->value, 27411;
-            is $ref[1]->value, '£34.56';
+            is $ref[1]->value, '34.56';
         } else {
             is @params, 'UNKNOWN';
         }

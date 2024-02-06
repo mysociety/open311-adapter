@@ -12,6 +12,7 @@ chosen for garden/bulky.
 
 package Open311::Endpoint::Role::SLWP;
 
+use utf8;
 use Moo::Role;
 
 around check_for_data_value => sub {
@@ -53,6 +54,7 @@ around post_service_request_update => sub {
 
     if ($args->{description} =~ /Payment confirmed, reference (.*), amount (.*)/) {
         my ($ref, $amount) = ($1, $2);
+        $amount =~ s/£//;
         my $integ = $class->get_integration;
         my $event = $integ->GetEvent($args->{service_request_id});
         # Could GetEventType and loop through it all to find these IDs out but for just this seemed okay
