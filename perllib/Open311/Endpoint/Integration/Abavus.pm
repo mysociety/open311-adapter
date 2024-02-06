@@ -304,8 +304,8 @@ sub add_question_responses {
         next unless $args->{$field};
         my $response = $self->abavus->api_call(
             call => 'serviceRequest/questions/' . $report_id
-                . '?questionCode=' . uri_escape($fields->{$field})
-                . '&answer=' . uri_escape($args->{$field}),
+                . '?questionCode=' . uri_escape_utf8($fields->{$field})
+                . '&answer=' . uri_escape_utf8($args->{$field}),
             method => 'POST',
         );
     };
@@ -316,8 +316,8 @@ sub add_question_responses {
         if ($args->{attributes}->{$_->{code}}) {
             my $response = $self->abavus->api_call(
                 call => 'serviceRequest/questions/' . $report_id
-                    . '?questionCode=' . uri_escape($_->{code})
-                    . '&answer=' . uri_escape($args->{attributes}{$_->{code}}),
+                    . '?questionCode=' . uri_escape_utf8($_->{code})
+                    . '&answer=' . uri_escape_utf8($args->{attributes}{$_->{code}}),
                 method => 'POST',
             );
         }
