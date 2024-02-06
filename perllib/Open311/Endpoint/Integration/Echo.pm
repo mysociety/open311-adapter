@@ -345,7 +345,7 @@ sub post_service_request {
                 my $subrow = { id => $_->{Id} };
                 my $value = $self->check_for_data_value($_->{Name}, $args, $request, $type->{Name});
                 if (defined $value) {
-                    my ($first, @rest) = split /::/, $value;
+                    my ($first, @rest) = split /::/, $value, -1;
                     $subrow->{value} = $first;
                     push @{$row->{childdata}}, $subrow;
                     if (@rest) {
@@ -355,7 +355,7 @@ sub post_service_request {
                 }
             }
         } elsif ($type->{Name} eq 'Image' && $value) {
-            my ($first, @rest) = split /::/, $value;
+            my ($first, @rest) = split /::/, $value, -1;
             $row->{value} = $first;
             if (@rest) {
                 $extra{$type->{Id}} = \@rest;

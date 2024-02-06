@@ -62,6 +62,9 @@ $soap_lite->mock(call => sub {
                 @payment = ${$data[2]->value}->value;
                 is $payment[0]->value, 1013;
                 is $payment[1]->value, $val;
+                if ($client_ref eq 'bulky-cc') { # Also check items
+                    is @data, 9, 'Has all six items present in the data';
+                }
             }
         } elsif (@params == 2) {
             is $params[0]->value, '123pay';
@@ -100,6 +103,12 @@ $soap_lite->mock(call => sub {
                 { Id => 1011, Name => "Payment Type" },
                 { Id => 1012, Name => "Payment Taken By" },
                 { Id => 1013, Name => "Payment Method" },
+                { Id => 1020, Name => "Bulky Collection",
+                    ChildDatatypes => { ExtensibleDatatype => [
+                        { Id => 1021, Name => "Bulky Items" },
+                        { Id => 1022, Name => "Notes" },
+                    ] },
+                },
             ] },
         });
     } elsif ($method eq 'PerformEventAction') {
@@ -164,6 +173,8 @@ subtest "POST bulky request card payment OK" => sub {
         service_code => EVENT_TYPE_BULKY,
         'attribute[payment_method]' => 'credit_card',
         'attribute[client_reference]' => 'bulky-cc',
+        'attribute[Bulky_Collection_Bulky_Items]' => "11::77::34::34::34::23",
+        'attribute[Bulky_Collection_Notes]' => "Vanity dressing table::Looks heavy but not too bad for 2 to move::::::::",
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
