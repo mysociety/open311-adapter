@@ -14,3 +14,6 @@ find $OPTION_updates_sftp__out -iname '*.XML' -ctime 2 -delete
 
 read_conf "$(dirname "$0")/../../conf/council-brent_symology.yml"
 find $OPTION_updates_sftp__out -iname '*.XML' -ctime 2 -delete
+
+read_conf "$(dirname "$0")/../../conf/council-bexley_symology.yml"
+find $OPTION_update_urls_store -iname '*.csv' -ctime +90 -delete
