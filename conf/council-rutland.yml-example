@@ -1,2 +1,9 @@
 endpoint: ''
-credentials: ''
+
+client_id: ID
+client_secret: SECRET
+refresh_token: TOKEN
+credentials_file: FILE
+
+logfile: FILE
+min_log_level: 'debug'

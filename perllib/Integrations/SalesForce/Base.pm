@@ -25,6 +25,15 @@ has 'credentials' => (
     default => sub {
         my $self = shift;
 
+        if ($self->config->{credentials_file}) {
+            my $data = path($self->config->{credentials_file});
+            if ($data->exists) {
+                $data = $data->slurp;
+                $data =~ s/\s+//g;
+            }
+            return $data if $data;
+        }
+
         if ($self->config->{credentials}) {
             return $self->config->{credentials};
         }

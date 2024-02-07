@@ -1,0 +1,58 @@
+#!/usr/bin/env perl
+
+use v5.14;
+use warnings;
+
+BEGIN {
+    use File::Basename qw(dirname);
+    use File::Spec;
+    my $d = dirname(File::Spec->rel2abs($0));
+    require "$d/../../setenv.pl";
+}
+
+use JSON::MaybeXS;
+use LWP::UserAgent;
+use Path::Tiny;
+use YAML::XS qw(LoadFile);
+
+my $conf = load_config();
+my $token = fetch_token();
+write_token($token);
+
+# ---
+
+sub load_config {
+    my $conf_file = shift @ARGV;
+    die "Please provide a cobrand\n" unless $conf_file;
+    $conf_file = path(__FILE__)->parent(3)->child("conf", "council-$conf_file.yml");
+    my $conf = LoadFile($conf_file) or die "Failed to load $conf_file: $!\n";
+    return $conf;
+}
+
+sub fetch_token {
+    my $client_id = $conf->{client_id};
+    my $client_secret = $conf->{client_secret};
+    my $refresh_token = $conf->{refresh_token};
+    my $salesforce_url = 'https://login.salesforce.com';
+
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+    my $response = $ua->post(
+        "$salesforce_url/services/oauth2/token",
+        {
+            grant_type => 'refresh_token',
+            client_id => $client_id,
+            client_secret => $client_secret,
+            refresh_token => $refresh_token,
+        }
+    );
+    $response = decode_json($response->decoded_content);
+    my $token = $response->{access_token};
+    die "No token returned" unless $token;
+    return $token;
+}
+
+sub write_token {
+    my $token = shift;
+    umask 0137;
+    path($conf->{credentials_file})->spew($token);
+}
