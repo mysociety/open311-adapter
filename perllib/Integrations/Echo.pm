@@ -142,26 +142,28 @@ sub PostEvent {
             EventObjectType => 'Source',
             ObjectRef => $uprn,
         );
-    } elsif ($args->{usrn}) {
-        my $usrn = ixhash(
-            Key => 'Usrn',
-            Type => 'Street',
-            Value => [
-                # Must be a string, not a long
-                { 'msArray:anyType' => SOAP::Data->value($args->{usrn})->type('string') },
-            ],
-        );
-        $source = ixhash(
-            EventObjectType => 'Source',
-            ObjectRef => $usrn,
-            Location => ixhash(
-                Latitude => $args->{lat},
-                Longitude => $args->{long},
-            ),
-        );
     } else {
+        my $points = $self->FindPoints($args->{lat}, $args->{long});
+        my $object;
+        if ($points->[0]) {
+            $object = ixhash(
+                Key => 'Id',
+                Type => 'PointSegment',
+                Value => [ { 'msArray:anyType' => $points->[0]->{Id} } ],
+            );
+        } elsif ($args->{usrn}) {
+            $object = ixhash(
+                Key => 'Usrn',
+                Type => 'Street',
+                Value => [
+                    # Must be a string, not a long
+                    { 'msArray:anyType' => SOAP::Data->value($args->{usrn})->type('string') },
+                ],
+            );
+        }
         $source = ixhash(
             EventObjectType => 'Source',
+            $object ? (ObjectRef => $object) : (),
             Location => ixhash(
                 Latitude => $args->{lat},
                 Longitude => $args->{long},
@@ -210,6 +212,20 @@ sub PerformEventAction {
     $self->call('PerformEventAction', action => $action);
 }
 
+sub FindPoints {
+    my ($self, $lat, $lon) = @_;
+
+    my $obj = ixhash(
+        PointType => 'PointSegment',
+        Near => ixhash(
+            Latitude => $lat,
+            Longitude => $lon,
+        ),
+    );
+    my $res = $self->call('FindPoints', query => $obj);
+    return force_arrayref($res, 'PointInfo');
+}
+
 sub ixhash {
     tie (my %data, 'Tie::IxHash', @_);
     return \%data;
@@ -231,6 +247,15 @@ sub make_soap_structure {
         push @out, $d->value($val);
     }
     return @out;
+}
+
+sub force_arrayref {
+    my ($res, $key) = @_;
+    return [] unless $res;
+    my $data = $res->{$key};
+    return [] unless $data;
+    $data = [ $data ] unless ref $data eq 'ARRAY';
+    return $data;
 }
 
 1;

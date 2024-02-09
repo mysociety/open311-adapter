@@ -60,7 +60,7 @@ around post_service_request_update => sub {
     my $event_type = $integ->GetEventType($event->{EventTypeId});
     my $state_id = $event->{EventStateId};
 
-    my $states = Open311::Endpoint::Integration::Echo::force_arrayref($event_type->{Workflow}->{States}, 'State');
+    my $states = Integrations::Echo::force_arrayref($event_type->{Workflow}->{States}, 'State');
     my $data;
     foreach (@$states) {
         my $core = $_->{CoreState};

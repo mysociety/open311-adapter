@@ -275,17 +275,16 @@ $soap_lite->mock(call => sub {
             my @event_object = ${${$params[2]->value}->value->value}->value;
             is $event_object[0]->value, 'Source';
             my @object_ref = ${$event_object[1]->value}->value;
-            is $object_ref[0]->value, 'Usrn';
-            is $object_ref[1]->value, 'Street';
-            my $usrn = ${$object_ref[2]->value}->value->value->value->value;
+            is $object_ref[0]->value, 'Id';
+            is $object_ref[1]->value, 'PointSegment';
+            my $segment = ${$object_ref[2]->value}->value->value->value;
 
             my @data = ${$params[0]->value}->value->value;
 
+            is $segment, '11345';
             if ($event_type == 935) {
-                is $usrn, '123/4567';
                 is @data, 5, 'Name and source is only extra data';
             } elsif ($event_type == 943) {
-                is $usrn, '123/4567';
                 is @data, 4, 'Name (no surname) and source is only extra data';
             }
             my $c = 0;
@@ -378,6 +377,13 @@ $soap_lite->mock(call => sub {
             is $datatype_id, 112;
         }
         return SOAP::Result->new(result => { EventActionGuid => 'ABC' });
+    } elsif ($args[0]->name eq 'FindPoints') {
+        return SOAP::Result->new(result => { PointInfo => [
+            { Description => 'Example Street 1-10 Near Example Avenue', Id => '11345' },
+            { Description => 'Example Street, 11-40 Between Example Avenue and Example Road', Id => '12345' },
+            { Description => '', Id => '13345' },
+            { Description => 'Example Street, 41-60 Near Example Close', Id => '15345' },
+        ] });
     } else {
         is $args[0], '';
     }
