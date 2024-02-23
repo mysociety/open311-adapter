@@ -289,6 +289,231 @@ sub perform_request {
     return $response;
 }
 
+sub perform_request_graphql {
+    my ($self, %args) = @_;
+
+    my $uri = URI->new( $self->config->{graphql_url} );
+    my $request = HTTP::Request->new(
+        'POST',
+        $uri,
+    );
+    $request->header(
+        Authorization => 'Basic '
+            . $self->config->{graphql_key}
+    );
+    $request->content_type('application/json; charset=UTF-8');
+
+    my $query;
+    if ( $args{type} eq 'job_types' ) {
+        $query = $self->job_types_graphql_query();
+    } elsif ( $args{type} eq 'jobs' ) {
+        $query = $self->jobs_graphql_query(%args);
+    } elsif ( $args{type} eq 'job_status_logs' ) {
+        $query = $self->job_status_logs_graphql_query(%args);
+    }
+
+    my $body = {
+        query => $query,
+    };
+
+    $request->content(encode_json($body));
+
+    my $response = $self->ua->request($request);
+
+    my $content = decode_json($response->content);
+
+    return $content;
+}
+
+# GraphQL queries.
+# Confirm docs: https://help.dudesolutions.com/Content/PDF/Confirm/v21.10/confirm-v21-10-web-api-specification.pdf
+#
+# We use GraphQL to fetch 'job' objects from Confirm.
+# You can read about GraphQL at https://graphql.org/learn/
+# BUT
+# it appears that Confirm's implementation lacks some features, notably
+# variable support (hence the use of string interpolation below). It also
+# tends to ignore faulty filter definitions in favour of fetching everything.
+
+sub job_status_logs_graphql_query {
+    my ( $self, %args ) = @_;
+
+    my @job_type_codes
+        = keys %{ $self->config->{job_service_whitelist} // () };
+
+    my @status_codes
+        = keys %{ $self->config->{job_reverse_status_mapping} // () };
+
+    my (
+        $start_date,
+        $end_date,
+        $job_type_codes_str,
+        $status_codes_str,
+    ) = (
+        $args{start_date},
+        $args{end_date},
+        join( ',', @job_type_codes ),
+        join( ',', @status_codes ),
+    );
+
+    return <<GRAPHQL;
+{
+    jobStatusLogs(
+        filter: {
+            loggedDate: {
+                greaterThanEquals: "$start_date"
+                lessThanEquals: "$end_date"
+            }
+            statusCode: {
+                inList: [ $status_codes_str ]
+            }
+        }
+    ) {
+        jobNumber
+        key
+        loggedDate
+        statusCode
+
+        job {
+            jobType(
+                filter: {
+                    code: {
+                        inList: [ $job_type_codes_str ]
+                    }
+                }
+            ){
+                code
+            }
+        }
+    }
+}
+GRAPHQL
+}
+
+sub jobs_graphql_query {
+    my ( $self, %args ) = @_;
+
+    my @job_type_codes
+        = keys %{ $self->config->{job_service_whitelist} // () };
+
+    my @status_codes
+        = keys %{ $self->config->{job_reverse_status_mapping} // () };
+
+    my (
+        $start_date,
+        $end_date,
+        $job_type_codes_str,
+        $status_codes_str,
+    ) = (
+        $args{start_date},
+        $args{end_date},
+        join( ',', @job_type_codes ),
+        join( ',', @status_codes ),
+    );
+
+    return <<"GRAPHQL"
+{
+    jobs (
+        filter: {
+            entryDate: {
+                greaterThanEquals: "$start_date"
+                lessThanEquals: "$end_date"
+            }
+        }
+    ){
+        jobType(
+            filter: {
+                code: {
+                    inList: [ $job_type_codes_str ]
+                }
+            }
+        ){
+            code
+            name
+        }
+
+        statusLogs (
+            filter: {
+                statusCode: {
+                    inList: [ $status_codes_str ]
+                }
+            }
+        ) {
+            loggedDate
+            statusCode
+        }
+
+        entryDate
+        description
+        geometry
+        jobNumber
+
+        priority {
+            code
+            name
+        }
+    }
+}
+GRAPHQL
+}
+
+sub job_types_graphql_query {
+    return <<'GRAPHQL'
+{
+    jobTypes{
+        code
+        name
+    }
+}
+GRAPHQL
+}
+
+sub GetJobStatusLogs {
+    my ( $self, %args ) = @_;
+
+    my $content
+        = $self->perform_request_graphql( type => 'job_status_logs', %args );
+
+    return $content->{data}{jobStatusLogs} // [];
+}
+
+sub GetJobs {
+    my ($self, %args) = @_;
+
+    my $content = $self->perform_request_graphql( type => 'jobs', %args );
+
+    return [] unless $content->{data}{jobs};
+
+    my @jobs;
+
+    # Extra filtering.
+    # I don't know how to filter out jobs with certain priorities in the
+    # graphql (possibly a limitation of Confirm's implementation), so let's
+    # do it here.
+    for my $job ( @{$content->{data}{jobs}} ) {
+        next
+            if $self->config->{job_priority_blacklist}
+            && $self->config->{job_priority_blacklist}{ $job->{priority}{code} };
+
+        push @jobs, $job;
+    }
+
+    return \@jobs;
+}
+
+sub GetJobLookups {
+    my $self = shift;
+
+    my $lookups = $self->memcache->get('GetJobLookups');
+    unless ($lookups) {
+        $lookups = $self->perform_request_graphql(type => 'job_types');
+
+        $self->memcache->set('GetJobLookups', $lookups, 1800);
+    }
+
+    return $lookups->{data}{jobTypes} // [];
+}
+
 sub GetEnquiries {
     my $self = shift;
 
