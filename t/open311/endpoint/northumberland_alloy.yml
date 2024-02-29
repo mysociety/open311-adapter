@@ -107,6 +107,8 @@
         "Flooding": 1,
         "Highway Condition": 1,
         "Loose / Raised / Sunken": { "alias": "Sunken drain" },
+        "Loose / Raised / Sunken_1": { "alias": "Raised drain" },
+        "Loose / Raised / Sunken_2": { "alias": "Loose drain" },
         "Mud on Road": 1,
         "Potholes": 1,
         "Spill - Oil/Diesel": 1,

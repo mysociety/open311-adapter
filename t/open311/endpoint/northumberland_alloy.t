@@ -285,6 +285,12 @@ subtest "check service group and category aliases" => sub {
         } elsif ($_->{service_code} eq 'Loose_/_Raised_/_Sunken_1') {
             is_deeply $_->{groups}, ["Roads"];
             is $_->{service_name}, "Sunken drain";
+        } elsif ($_->{service_code} eq 'Loose_/_Raised_/_Sunken_1_1') {
+            is_deeply $_->{groups}, ["Roads"];
+            is $_->{service_name}, "Raised drain";
+        } elsif ($_->{service_code} eq 'Loose_/_Raised_/_Sunken_2_1') {
+            is_deeply $_->{groups}, ["Roads"];
+            is $_->{service_name}, "Loose drain";
         }
     }
 
@@ -320,6 +326,24 @@ subtest "create problem on aliased group" => sub {
     # order these so comparison works
     $sent->{attributes} = [ sort { $a->{attributeCode} cmp $b->{attributeCode} } @{ $sent->{attributes} } ];
     is $sent->{attributes}[6]{value}[0], '61fafee3e3b879015205f7cc', 'correct group found';
+};
+
+subtest "create problem on double-extension category" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        %shared_params,
+        service_code => 'Loose_/_Raised_/_Sunken_1_1',
+        'attribute[category]' => 'Loose_/_Raised_/_Sunken_1_1',
+        'attribute[group]' => 'Roads',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    # order these so comparison works
+    $sent->{attributes} = [ sort { $a->{attributeCode} cmp $b->{attributeCode} } @{ $sent->{attributes} } ];
+    is $sent->{attributes}[5]{value}[0], '61fb016c4c5c56015448093e', 'correct group found';
 };
 
 subtest "create problem on groupless category" => sub {
