@@ -1,0 +1,13 @@
+url: http://bexley-whitespace.example.org/
+username: username
+password: password
+
+category_mapping:
+  missed_collection:
+    name: Report missed collection
+    group: Waste
+
+service_mapping:
+  RES-180:
+    service_id: 289
+    service_item_id: 22

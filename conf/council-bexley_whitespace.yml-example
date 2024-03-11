@@ -1,0 +1,13 @@
+url: https://cbexapi-municipal-uat.whitespacews.com
+username: WSAPI_CBEX
+password:
+
+min_log_level: 'error'
+logfile: ''
+
+category_mapping:
+  missed_collection:
+    name: Report missed collection
+    group: Waste
+
+service_mapping: # Replace with output from `bin/whitespace/bexley-service-mapping`
