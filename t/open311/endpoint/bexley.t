@@ -46,6 +46,10 @@ my $uniform = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley:
 $uniform->mock(services => sub {
     return ( new_service('DFOUL'), new_service('RUBB') );
 });
+my $whitespace = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::Whitespace');
+$whitespace->mock(services => sub {
+    return ( new_service('WS1'), new_service('WS2') );
+});
 
 use_ok('Open311::Endpoint::Integration::UK::Bexley');
 
@@ -128,6 +132,24 @@ subtest "GET Service List" => sub {
     <metadata>false</metadata>
     <service_code>Uniform-RUBB</service_code>
     <service_name>RUBB</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
+    <description>WS1</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>false</metadata>
+    <service_code>Whitespace-WS1</service_code>
+    <service_name>WS1</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
+    <description>WS2</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>false</metadata>
+    <service_code>Whitespace-WS2</service_code>
+    <service_name>WS2</service_name>
     <type>realtime</type>
   </service>
 </services>
