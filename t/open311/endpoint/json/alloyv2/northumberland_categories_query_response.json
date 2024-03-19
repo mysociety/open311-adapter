@@ -29,6 +29,34 @@
                 }
             ],
             "signature": "61fb0065908ed5015b93083c"
+        },
+        {
+            "itemId": "61fb016c4c5c56015448093e",
+            "designCode": "designs_cRMRequests_5d89e289ca31500a94693c9c",
+            "collection": "Live",
+            "icon": "icon-display-list",
+            "colour": "#8b8b8b",
+            "locked": false,
+            "context": "Customer",
+            "attributes": [
+                {
+                    "attributeCode": "attributes_cRMRequestsCode_5d89e2e9ca31500a94693ca4",
+                    "value": "Loose / Raised / Sunken"
+                },
+                {
+                    "attributeCode": "attributes_cRMRequestsDescription_5d89e30aca31500a94693cab",
+                    "value": "Loose / Raised / Sunken"
+                },
+                {
+                    "attributeCode": "attributes_itemsTitle",
+                    "value": "Loose / Raised / Sunken"
+                },
+                {
+                    "attributeCode": "attributes_itemsSubtitle",
+                    "value": "CRM Requests Category"
+                }
+            ],
+            "signature": "61fb0065908ed5015b93083b"
         }
     ]
 }

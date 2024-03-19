@@ -21,6 +21,7 @@ has status => (
         'internal_referral',
         'reopen',
         'for_triage',
+        'referred_to_veolia_streets', # Bromley passthrough
     ],
 );
 

@@ -205,7 +205,7 @@ sub post_service_request {
     my $resource_id = $args->{attributes}->{asset_resource_id} || '';
 
     my $category = $args->{service_code};
-    $category =~ s/_\d+$//;
+    $category =~ s/(_\d+)+$//;
     $category =~ s/_/ /g;
     $args->{service_code_alloy} = $category;
 
