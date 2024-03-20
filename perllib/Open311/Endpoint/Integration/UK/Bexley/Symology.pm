@@ -66,9 +66,9 @@ sub _update_status {
             'action_scheduled'
         } elsif ($maint_stage =~ /COMPLETED|CLAIMED|APPROVED/) {
             'fixed'
-        } elsif ($action_due eq 'CLEARREQ') {
+        } elsif ($action_due =~ /^(CLEARREQ|NRSM|NF|NDMC|NTBR|NFA)$/) {
             'no_further_action'
-        } elsif ($action_due eq 'CR') {
+        } elsif ($action_due =~ /^(CR|NR)$/) {
             'fixed'
         } elsif ($action_due =~ /^([NS][1-6]|RPOS)$/) {
             'in_progress'
@@ -90,6 +90,7 @@ sub _update_status {
     my $esc = do {
         if ($status && ( $status eq 'not_councils_responsibility'
                         || $status eq 'action_scheduled'
+                        || $status eq 'no_further_action'
                         || $status eq 'internal_referral' )) {
             $row->{'Event Type'};
         } else {
