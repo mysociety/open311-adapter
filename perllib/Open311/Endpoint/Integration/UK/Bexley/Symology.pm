@@ -70,9 +70,9 @@ sub _update_status {
             'no_further_action'
         } elsif ($action_due eq 'CR') {
             'fixed'
-        } elsif ($action_due =~ /^[NS][1-6]$/) {
+        } elsif ($action_due =~ /^([NS][1-6]|RPOS)$/) {
             'in_progress'
-        } elsif ($action_due =~ /^(IR|RBC|REH|RES|RET|RP|RPL|RPOS|RSW|RT|RWT)$/) {
+        } elsif ($action_due =~ /^(IR|RBC|REH|RES|RET|RP|RPL|RSW|RT|RWT)$/) {
             'internal_referral'
         } elsif ($action_due eq 'NCR') {
             'not_councils_responsibility'
