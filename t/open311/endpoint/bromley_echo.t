@@ -62,8 +62,8 @@ $soap_lite->mock(call => sub {
 
         my @data = ${$params[0]->value}->value->value;
         is $uprn, 1000001;
-        if (@data == 6) {
-            is @data, 6, 'Various supplied data';
+        if (@data == 8) {
+            is @data, 8, 'Various supplied data';
             my @action = ${$data[0]->value}->value;
             is $action[0]->value, 1001;
             is $action[1]->value, 1;
@@ -79,17 +79,26 @@ $soap_lite->mock(call => sub {
             my @loc = ${$data[4]->value}->value;
             is $loc[0]->value, 1005;
             is $loc[1]->value, 'Behind the wall';
-            my @type = ${$data[5]->value}->value;
+            my @notes = ${$data[5]->value}->value;
+            is $notes[0]->value, 1006;
+            is $notes[1]->value, 'This is the details';
+            my @type = ${$data[6]->value}->value;
             is $type[0]->value, 1007;
             is $type[1]->value, 3;
+            my @title = ${$data[7]->value}->value;
+            is $title[0]->value, 1008;
+            is $title[1]->value, 2;
         } else {
-            is @data, 2, 'Various supplied data';
+            is @data, 3, 'Various supplied data';
             my @action = ${$data[0]->value}->value;
             is $action[0]->value, 1001;
             is $action[1]->value, 2;
             my @start = ${$data[1]->value}->value;
             is $start[0]->value, 1003;
             is $start[1]->value, $date->strftime("%d/%m/%Y");
+            my @notes = ${$data[2]->value}->value;
+            is $notes[0]->value, 1006;
+            is $notes[1]->value, 'This is the details';
         }
 
         return SOAP::Result->new(result => {
@@ -107,6 +116,7 @@ $soap_lite->mock(call => sub {
                 { Id => 1005, Name => "Exact Location" },
                 { Id => 1006, Name => "Notes" },
                 { Id => 1007, Name => "Container Type" },
+                { Id => 1008, Name => "Title" },
             ] },
         });
     } elsif ($method eq 'PerformEventAction') {
@@ -142,6 +152,7 @@ subtest "POST add assisted collection OK" => sub {
         'attribute[fixmystreet_id]' => 2000123,
         'attribute[Exact_Location]' => 'Behind the wall',
         'attribute[Container_Type]' => 3,
+        'attribute[fms_extra_title]' => 'MRS',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
