@@ -53,6 +53,10 @@ around process_service_request_args => sub {
         $args->{attributes}{Title} = echo_title_id($title);
     }
 
+    if ($request->{event_type} == 3045 && !$args->{attributes}{Event_ID}) {
+        $args->{attributes}{Event_ID} = 'LBB_REFERRAL';
+    }
+
     # Assisted collection
     if ($request->{event_type} == 2149) {
         my $date = DateTime->today(time_zone => "Europe/London");
