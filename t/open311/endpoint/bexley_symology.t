@@ -128,6 +128,8 @@ $bexley_end->mock(_get_update_files => sub {
 17/04/2019 13:49,04/04/2019,560058,RECORDED,,SI6,SI6MOB,RPL,,1
 17/04/2019 13:50,04/04/2019,560058,RECORDED,,SI6,SI6MOB,IR,,1
 17/04/2019 13:53,04/04/2019,560058,RECORDED,,SI6,SI6MOB,IR,RES,1
+17/04/2019 14:06,04/04/2019,560062,RECORDED,,SI5,NCR,N1,,1
+17/04/2019 14:07,04/04/2019,560062,RECORDED,,SI5,NCR,RPOS,,1
 17/04/2019 14:08,04/04/2019,560062,RECORDED,,SI5,NCR,CR,,1
 EOF
     \<<EOF,
@@ -593,6 +595,22 @@ subtest "GET updates OK" => sub {
               "description" => "",
               "media_url" => "",
               "external_status_code" => 'RES',
+           },
+           {
+              "update_id" => "560062_e8503c87",
+              "updated_datetime" => "2019-04-17T14:06:00+01:00",
+              "service_request_id" => "560062",
+              "status" => "in_progress",
+              "description" => "",
+              "media_url" => "",
+           },
+           {
+              "update_id" => "560062_dfa995de",
+              "updated_datetime" => "2019-04-17T14:07:00+01:00",
+              "service_request_id" => "560062",
+              "status" => "in_progress",
+              "description" => "",
+              "media_url" => "",
            },
            {
               "update_id" => "560062_94e427db",
