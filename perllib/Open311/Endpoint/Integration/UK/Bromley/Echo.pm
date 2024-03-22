@@ -47,7 +47,7 @@ around process_service_request_args => sub {
     if (!$args->{attributes}{Notes}) {
         $args->{attributes}{Notes} = join(" | ", $args->{attributes}{report_title} || (), $args->{description} || ());
     }
-    $args->{attributes}{Notes} =~ s/\n\n/ | /g;
+    $args->{attributes}{Notes} =~ s/(\r?\n)+/ | /g;
 
     if (my $title = $args->{attributes}{fms_extra_title}) {
         $args->{attributes}{Title} = echo_title_id($title);
