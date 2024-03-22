@@ -19,13 +19,8 @@ my $whitespace = Integrations::Whitespace->new(config_filename => 'bexley_whites
 
 my $services = $whitespace->GetServices;
 
-# The service IDs we are interested in
-# These are from the "IDs for Missed Collections.xlsx" spreadsheet Bexley shared with us.
-my @relevant_service_ids = (285, 286, 288, 289, 302, 304, 318, 319);
-my %relevant_service_ids = map { $_ => 1 } @relevant_service_ids;
-
-# Find all services where the ServiceID is in @relevant_service_ids
-my @missed_services = grep { $relevant_service_ids{$_->{ServiceID}} } @$services;
+# Find all services where the ServiceName starts with "Missed"
+my @missed_services = grep { $_->{ServiceName} =~ /^Missed/ } @$services;
 
 my %output;
 
