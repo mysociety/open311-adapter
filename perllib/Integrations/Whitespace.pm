@@ -88,6 +88,7 @@ sub CreateWorksheet {
     my ($self, $params) = @_;
 
     if (!$params->{service_item_name}) {
+        $self->logger->error("No service_item_name provided");
         die "No service_item_name provided";
     }
 
@@ -95,6 +96,7 @@ sub CreateWorksheet {
     my $service_params = $service_mapping->{$params->{service_item_name}};
 
     if (!$service_params) {
+        $self->logger->error("No service mapping found for $params->{service_item_name}");
         die "No service mapping found for $params->{service_item_name}";
     }
 
