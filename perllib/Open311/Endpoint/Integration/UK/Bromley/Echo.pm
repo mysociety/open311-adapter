@@ -49,7 +49,7 @@ around process_service_request_args => sub {
     }
     $args->{attributes}{Notes} =~ s/(\r?\n)+/ | /g;
 
-    if (my $title = $args->{attributes}{fms_extra_title}) {
+    if (my $title = $args->{attributes}{title}) {
         $args->{attributes}{Title} = echo_title_id($title);
     }
 

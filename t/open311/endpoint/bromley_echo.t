@@ -152,7 +152,7 @@ subtest "POST add assisted collection OK" => sub {
         'attribute[fixmystreet_id]' => 2000123,
         'attribute[Exact_Location]' => 'Behind the wall',
         'attribute[Container_Type]' => 3,
-        'attribute[fms_extra_title]' => 'MRS',
+        'attribute[title]' => 'MRS',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
