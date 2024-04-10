@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<services>
+  <service>
+    <service_code>GR</service_code>
+    <service_name>Graffiti</service_name>
+    <metadata>true</metadata>
+    <type>batch</type>
+    <group>Street Cleaning Problems or Weeds</group>
+  </service>
+</services>
