@@ -42,6 +42,11 @@ test_multi(0, 'Open311::Endpoint::Integration::UK::Bromley',
     #'Open311::Endpoint::Integration::UK::Bromley::Passthrough' => 'www.bromley.gov.uk',
 );
 
+test_multi(0, 'Open311::Endpoint::Integration::UK::Merton',
+    'Open311::Endpoint::Integration::UK::Merton::Echo' => 'merton_echo',
+    #'Open311::Endpoint::Integration::UK::Merton::Passthrough' => 'www.merton.gov.uk',
+);
+
 test_multi(1, 'Open311::Endpoint::Integration::UK::Peterborough',
     'Open311::Endpoint::Integration::UK::Peterborough::Confirm' => 'peterborough_confirm',
     'Open311::Endpoint::Integration::UK::Peterborough::Ezytreev' => 'peterborough_ezytreev',
