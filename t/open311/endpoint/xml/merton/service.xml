@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service_definition>
+  <service_code>DF</service_code>
+  <attributes>
+    <attribute>
+      <variable>true</variable>
+      <automated>hidden_field</automated>
+      <code>service</code>
+      <datatype>string</datatype>
+      <required>true</required>
+      <order>1</order>
+      <values />
+    </attribute>
+    <attribute>
+      <variable>true</variable>
+      <automated>hidden_field</automated>
+      <code>usrn</code>
+      <datatype>string</datatype>
+      <required>true</required>
+      <order>2</order>
+      <values />
+    </attribute>
+    <attribute>
+      <variable>false</variable>
+      <automated>server_set</automated>
+      <code>fixmystreet_id</code>
+      <datatype>string</datatype>
+      <required>true</required>
+      <order>0</order>
+      <description>FixMyStreet ID</description>
+    </attribute>
+    <attribute>
+      <variable>false</variable>
+      <automated>server_set</automated>
+      <code>easting</code>
+      <datatype>number</datatype>
+      <required>false</required>
+      <order>0</order>
+      <description>Easting</description>
+    </attribute>
+    <attribute>
+      <variable>false</variable>
+      <automated>server_set</automated>
+      <code>northing</code>
+      <datatype>number</datatype>
+      <required>false</required>
+      <order>0</order>
+      <description>Northing</description>
+    </attribute>
+    <attribute>
+      <variable>false</variable>
+      <automated>server_set</automated>
+      <code>closest_address</code>
+      <datatype>string</datatype>
+      <required>false</required>
+      <order>0</order>
+      <description>Closest address</description>
+    </attribute>
+  </attributes>
+</service_definition>
