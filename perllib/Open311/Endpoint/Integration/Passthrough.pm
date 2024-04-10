@@ -129,6 +129,8 @@ sub services {
     my %ignore = map { $_ => 1 } @{$self->ignore_services};
     foreach (@{$xml->{service}}) {
         next if $ignore{$_->{service_code}};
+        $_->{groups} = delete $_->{group} if $_->{group};
+        $_->{description} ||= '';
         my $service = Open311::Endpoint::Service->new(%$_);
         if ($_->{metadata} eq 'true') {
             # An empty one is enough to get the metadata true passed out
@@ -158,6 +160,7 @@ sub service {
         # Need to maintain the order
         $_->{values_sorted} = [ map { $_->{key} } @{$_->{values}} ];
         $_->{values} = { map { $_->{key} => $_->{name} } @{$_->{values}} };
+        $_->{description} ||= '';
         my $attribute = Open311::Endpoint::Service::Attribute->new(%$_);
         push @{ $service->attributes }, $attribute;
     }
