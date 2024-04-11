@@ -9,4 +9,11 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
+sub _worksheet_message {
+    my ($self, $args) = @_;
+
+    return "Assisted collection? $args->{attributes}->{assisted_yn}\n\n" .
+           "Location of containers: $args->{attributes}->{location_of_containers}\n";
+}
+
 __PACKAGE__->run_if_script;

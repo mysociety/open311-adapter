@@ -224,4 +224,35 @@ subtest "POST update OK" => sub {
         } ], 'correct json returned';
 };
 
+subtest "Whitespace worksheets use Bexley's custom message" => sub {
+    my $ws = Test::MockModule->new('Integrations::Whitespace');
+    $ws->mock(CreateWorksheet => sub {
+        my ($self, $args) = @_;
+        is $args->{worksheet_message}, "Assisted collection? Yes\n\nLocation of containers: location of containers\n";
+        return 1001;
+    });
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'Whitespace-WS1',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 1000001,
+        'attribute[service_item_name]' => 'service item name',
+        'attribute[fixmystreet_id]' => 'fixmystreet id',
+        'attribute[assisted_yn]' => 'Yes',
+        'attribute[location_of_containers]' => 'location of containers',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => "Whitespace-1001"
+        } ], 'correct json returned';
+};
+
 done_testing;
