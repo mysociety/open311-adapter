@@ -82,7 +82,7 @@ sub post_service_request {
         uprn => $args->{attributes}->{uprn},
         service_item_name => $args->{attributes}->{service_item_name},
         worksheet_reference => $args->{attributes}->{fixmystreet_id},
-        worksheet_message => $args->{description},
+        worksheet_message => $self->_worksheet_message($args),
         assisted_yn => $args->{attributes}->{assisted_yn},
         location_of_containers => $args->{attributes}->{location_of_containers},
     });
@@ -92,6 +92,12 @@ sub post_service_request {
     );
 
     return $request;
+}
+
+sub _worksheet_message {
+    my ($self, $args) = @_;
+
+    return $args->{description};
 }
 
 1;
