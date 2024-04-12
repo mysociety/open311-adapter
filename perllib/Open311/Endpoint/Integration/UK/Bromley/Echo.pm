@@ -49,6 +49,10 @@ around process_service_request_args => sub {
     }
     $args->{attributes}{Notes} =~ s/(\r?\n)+/ | /g;
 
+    if ($args->{attributes}{Notes} && $args->{attributes}{Notes} =~ m/^Closed report has a new comment:/ ) {
+        $args->{attributes}{Notes} = _truncate_text($args->{attributes}{Notes}, 2000, '...');
+    }
+
     if (my $title = $args->{attributes}{title}) {
         $args->{attributes}{Title} = echo_title_id($title);
     }
@@ -88,6 +92,19 @@ around post_service_request_update => sub {
     }
     return $class->$orig($args);
 };
+
+sub _truncate_text {
+    my ($text, $max_length, $postscript) = @_;
+
+    return $text if length($text) <= $max_length;
+
+    if ($postscript) {
+        $max_length = $max_length - length($postscript);
+    };
+
+    return substr( $text, 0, $max_length ) . $postscript;
+}
+
 
 1;
 
