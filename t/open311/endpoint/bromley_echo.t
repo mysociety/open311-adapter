@@ -81,7 +81,11 @@ $soap_lite->mock(call => sub {
             is $loc[1]->value, 'Behind the wall';
             my @notes = ${$data[5]->value}->value;
             is $notes[0]->value, 1006;
-            is $notes[1]->value, 'This is the details';
+            if ($notes[1]->value =~ /^Closed report has a/) {
+                is $notes[1]->value, 'Closed report has a new comment: comment that was left | Jay User user@user.com | This was the text!' . 'a' x 1897 . '...',
+            } else {
+                is $notes[1]->value, 'This is the details';
+            }
             my @type = ${$data[6]->value}->value;
             is $type[0]->value, 1007;
             is $type[1]->value, 3;
@@ -145,6 +149,32 @@ subtest "POST add assisted collection OK" => sub {
         first_name => 'Bob',
         last_name => 'Mould',
         description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[service_id]' => 531, # Domestic refuse
+        'attribute[uprn]' => 1000001,
+        'attribute[fixmystreet_id]' => 2000123,
+        'attribute[Exact_Location]' => 'Behind the wall',
+        'attribute[Container_Type]' => 3,
+        'attribute[title]' => 'MRS',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST add assisted collection OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => EVENT_TYPE_ASSISTED . "-add",
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "Closed report has a new comment: comment that was left\r\nJay User user\@user.com\r\nThis was the text!" . 'a' x 2000,
         lat => 51,
         long => -1,
         'attribute[service_id]' => 531, # Domestic refuse
