@@ -30,9 +30,37 @@ start/end/review dates; when removing, we set the action and end date.
 
 =cut
 
+sub echo_title_id {
+    my $title = shift;
+    return 1 if $title eq 'MR';
+    return 2 if $title eq 'MRS';
+    return 3 if $title eq 'MISS';
+    return 4 if $title eq 'MS';
+    return 5 if $title eq 'DR';
+    return 7;
+}
+
 around process_service_request_args => sub {
     my ($orig, $class, $args) = @_;
     my $request = $class->$orig($args);
+
+    if (!$args->{attributes}{Notes}) {
+        $args->{attributes}{Notes} = join(" | ", $args->{attributes}{report_title} || (), $args->{description} || ());
+    }
+    $args->{attributes}{Notes} =~ s/(\r?\n)+/ | /g;
+
+    if ($args->{attributes}{Notes} && $args->{attributes}{Notes} =~ m/^Closed report has a new comment:/ ) {
+        $args->{attributes}{Notes} = _truncate_text($args->{attributes}{Notes}, 2000, '...');
+    }
+
+    if (my $title = $args->{attributes}{title}) {
+        $args->{attributes}{Title} = echo_title_id($title);
+    }
+
+    if ($request->{event_type} == 3045 && !$args->{attributes}{Event_ID}) {
+        $args->{attributes}{Event_ID} = 'LBB_REFERRAL';
+    }
+
     # Assisted collection
     if ($request->{event_type} == 2149) {
         my $date = DateTime->today(time_zone => "Europe/London");
@@ -64,6 +92,19 @@ around post_service_request_update => sub {
     }
     return $class->$orig($args);
 };
+
+sub _truncate_text {
+    my ($text, $max_length, $postscript) = @_;
+
+    return $text if length($text) <= $max_length;
+
+    if ($postscript) {
+        $max_length = $max_length - length($postscript);
+    };
+
+    return substr( $text, 0, $max_length ) . $postscript;
+}
+
 
 1;
 

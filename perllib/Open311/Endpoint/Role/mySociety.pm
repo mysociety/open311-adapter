@@ -341,6 +341,7 @@ sub learn_additional_types {
             'internal_referral',
             'reopen',
             'for_triage',
+            'referred_to_veolia_streets', # Bromley passthrough
         )
     );
     $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/status_extended_upper',
