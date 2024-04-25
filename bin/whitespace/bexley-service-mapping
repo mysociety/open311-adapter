@@ -19,8 +19,8 @@ my $whitespace = Integrations::Whitespace->new(config_filename => 'bexley_whites
 
 my $services = $whitespace->GetServices;
 
-# Find all services where the ServiceName starts with "Missed"
-my @missed_services = grep { $_->{ServiceName} =~ /^Missed/ } @$services;
+# Find all services where the ServiceName starts with "Missed" or are called "Recycling Collection Service"
+my @missed_services = grep { $_->{ServiceName} =~ /^Missed/ || $_->{ServiceName} eq 'Recycling Collection Service' } @$services;
 
 my %output;
 
@@ -38,20 +38,11 @@ for my $service (@missed_services) {
 
 }
 
-print "service_mapping:\n";
-for my $service_item_name (keys %output) {
+print "Service item name,Service item description,Service item ID,Service,Service ID\n";
+for my $service_item_name (sort keys %output) {
     my $service_items = $output{$service_item_name};
-    my $service_item = $service_items->[0];
-    print "  $service_item_name:\n";
-    print "    service_item_id: " . $service_item->{service_item_id} . " # $service_item->{service_item_description}\n";
-    print "    service_id: " . $service_item->{service_id} . " # $service_item->{service_name}\n";
 
-    if (@{ $service_items } > 1) {
-        print "    # Also found " . (scalar @{ $service_items } - 1) . " other related service(s):\n";
-
-        for my $i (1 .. $#{ $service_items }) {
-            my $service_item = $service_items->[$i];
-            print "    # service_id: " . $service_item->{service_id} . " # $service_item->{service_name}\n";
-        }
+    for my $service_item (@$service_items) {
+        print "\"$service_item_name\",\"$service_item->{service_item_description}\",$service_item->{service_item_id},\"$service_item->{service_name}\",$service_item->{service_id}\n";
     }
 }
