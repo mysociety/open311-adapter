@@ -56,6 +56,8 @@ test_multi(1, 'Open311::Endpoint::Integration::UK::Oxfordshire',
 test_multi(1, 'Open311::Endpoint::Integration::UK::Hackney',
     'Open311::Endpoint::Integration::UK::Hackney::Highways' => 'hackney_highways_alloy_v2',
     'Open311::Endpoint::Integration::UK::Hackney::Environment' => 'hackney_environment_alloy_v2',
+    'Open311::Endpoint::Integration::UK::Hackney::Arcus' => 'hackney_arcus',
+
 );
 
 test_multi(1, 'Open311::Endpoint::Integration::UK::Buckinghamshire',
