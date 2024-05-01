@@ -6,6 +6,7 @@ client_reference_prefix: MRT
 
 service_whitelist:
   missed: 'Report missed collection'
+  '1565-add': 'Assisted collection add'
   1635: 'Request new container'
   1638: 'Garden Subscription'
   1636: 'Bulky collection'
@@ -24,6 +25,7 @@ waste_services:
   - 1635
   - 1636
   - 1638
+  - 1565-add
 
 service_mapping:
     2238: 405
@@ -43,6 +45,8 @@ service_to_event_type:
     405: 1566
     408: 1568
     409: 1568
+  1565-add:
+    2238: 1565
 
 data_key_open311_map:
   First Name: 'first_name'

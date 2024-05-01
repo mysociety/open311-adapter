@@ -23,6 +23,25 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
+=head2 process_service_request_args
+
+If we are sending an assisted collection event, we need to set some special
+parameters.
+
+=cut
+
+around process_service_request_args => sub {
+    my ($orig, $class, $args) = @_;
+    my $request = $class->$orig($args);
+    # Assisted collection
+    if ($args->{service_code} eq "1565-add") {
+        $args->{attributes}{"Add_to_Assist"} = 1;
+    } elsif ($args->{service_code} eq "1565-remove") {
+        $args->{attributes}{"Remove_from_Assist"} = 1;
+    }
+    return $request;
+};
+
 around check_for_data_value => sub {
     my ($orig, $class, $name, $args, $request, $parent_name) = @_;
 

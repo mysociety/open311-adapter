@@ -32,6 +32,7 @@ use Test::MockModule;
 use JSON::MaybeXS;
 
 use constant EVENT_TYPE_MISSED => 'missed';
+use constant EVENT_TYPE_ASSISTED => '1565-add';
 use constant EVENT_TYPE_MISSED_REFUSE => 1566;
 use constant EVENT_TYPE_MISSED_RECYCLING => 1568;
 use constant EVENT_TYPE_SUBSCRIBE => 1638;
@@ -50,7 +51,7 @@ $soap_lite->mock(call => sub {
             my $client_ref = $params[1]->value;
             my $event_type = $params[3]->value;
             my $service_id = $params[4]->value;
-            like $client_ref, qr/MRT-200012[4-7]|bulky-cc/;
+            like $client_ref, qr/MRT-200012[4-8]|bulky-cc/;
             if ($client_ref eq 'MRT-2000124') {
                 is $event_type, EVENT_TYPE_MISSED_REFUSE;
                 is $service_id, 405;
@@ -65,10 +66,8 @@ $soap_lite->mock(call => sub {
                 my @paper = ${$data[0]->value}->value;
                 is $paper[0]->value, 2002;
                 is $paper[1]->value, 1;
-            } elsif ($event_type == 1636) {
-                use Data::Dumper;
+            } elsif ($event_type eq EVENT_TYPE_BULKY) {
                 my @data = ${$params[0]->value}->value->value;
-                #print STDERR Dumper \@params;
                 my @payment = ${$data[0]->value}->value;
                 is $payment[0]->value, 1011;
                 is $payment[1]->value, 1;
@@ -79,6 +78,15 @@ $soap_lite->mock(call => sub {
                 if ($client_ref eq 'bulky-cc') { # Also check items
                     is @data, 3, 'Has item present in the data';
                 }
+            } elsif ($event_type eq EVENT_TYPE_ASSISTED) {
+                my @data = ${$params[0]->value}->value->value;
+                my @payment = ${$data[0]->value}->value;
+                is $payment[0]->value, 3001;
+                is $payment[1]->value, 'Notes';
+                my $val = $client_ref eq 'bulky-cc' ? 2 : 1;
+                @payment = ${$data[1]->value}->value;
+                is $payment[0]->value, 3002;
+                is $payment[1]->value, 1;
             }
         } elsif (@params == 2) {
             is $params[0]->value, '123pay';
@@ -107,7 +115,7 @@ $soap_lite->mock(call => sub {
     } elsif ($method eq 'GetEventType') {
         my @params = ${$args[3]->value}->value;
         my $id = ${$params[2]->value}->value->value->value;
-        if ($id == EVENT_TYPE_BULKY) {
+        if ($id eq EVENT_TYPE_BULKY) {
             return SOAP::Result->new(result => {
                 Datatypes => { ExtensibleDatatype => [
                     { Id => 1011, Name => "Payment Type" },
@@ -121,7 +129,7 @@ $soap_lite->mock(call => sub {
                     },
                 ] },
             });
-        } elsif ($id == EVENT_TYPE_SUBSCRIBE) {
+        } elsif ($id eq EVENT_TYPE_SUBSCRIBE) {
             return SOAP::Result->new(result => {
                 Datatypes => { ExtensibleDatatype => [
                     { Id => 1004, Name => "Subscription Details",
@@ -132,7 +140,7 @@ $soap_lite->mock(call => sub {
                     },
                 ] },
             });
-        } elsif ($id == EVENT_TYPE_MISSED_REFUSE) {
+        } elsif ($id eq EVENT_TYPE_MISSED_REFUSE) {
             return SOAP::Result->new(result => {
                 Datatypes => { ExtensibleDatatype => [
                     { Id => 1008, Name => "Notes" },
@@ -141,13 +149,21 @@ $soap_lite->mock(call => sub {
                     { Id => 2002, Name => "Paper" },
                 ] },
             });
-        } elsif ($id == EVENT_TYPE_MISSED_RECYCLING) {
+        } elsif ($id eq EVENT_TYPE_MISSED_RECYCLING) {
             return SOAP::Result->new(result => {
                 Datatypes => { ExtensibleDatatype => [
                     { Id => 1008, Name => "Notes" },
                     { Id => 2000, Name => "Refuse Bin" },
                     { Id => 2001, Name => "Container Mix" },
                     { Id => 2002, Name => "Paper" },
+                ] },
+            });
+        } elsif ($id eq EVENT_TYPE_ASSISTED) {
+            return SOAP::Result->new(result => {
+                Datatypes => { ExtensibleDatatype => [
+                    { Id => 3001, Name => "Crew Notes" },
+                    { Id => 3002, Name => "Add to Assist" },
+                    { Id => 3003, Name => "Remove from Assist" },
                 ] },
             });
         }
@@ -282,6 +298,21 @@ subtest "POST a cancellation" => sub {
     is_deeply decode_json($res->content),
         [ {
             "update_id" => 'ABC',
+        } ], 'correct json returned';
+};
+
+subtest "POST assisted collection OK" => sub {
+    my $res = $endpoint->run_test_request(@params,
+        service_code => EVENT_TYPE_ASSISTED,
+        'attribute[fixmystreet_id]' => 2000128,
+        'attribute[Crew_Notes]' => 'Notes',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '1234',
         } ], 'correct json returned';
 };
 
