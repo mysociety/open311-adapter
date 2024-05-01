@@ -13,7 +13,6 @@ package Open311::Endpoint::Integration::UK::Hackney::Arcus;
 
 use Moo;
 extends 'Open311::Endpoint::Integration::Passthrough';
-extends 'Open311::Endpoint::Integration::UK::Hackney::Base';
 
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
