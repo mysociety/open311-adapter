@@ -129,6 +129,7 @@ sub services {
     my %ignore = map { $_ => 1 } @{$self->ignore_services};
     foreach (@{$xml->{service}}) {
         next if $ignore{$_->{service_code}};
+        next unless $_->{service_name};
         $_->{groups} = delete $_->{group} if $_->{group};
         $_->{description} ||= '';
         my $service = Open311::Endpoint::Service->new(%$_);
