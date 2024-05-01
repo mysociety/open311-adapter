@@ -80,7 +80,7 @@ subtest "Get service definition with a group" => sub {
     my $res = $endpoint->run_test_request( GET => '/services.xml' );
     ok $res->is_success, 'valid request' or diag $res->content;
     my @codes = $res->content =~ /<service_code>(.*?)<\/service_code>/g;
-    is_deeply \@codes, [  '1635', '1636', '1638', 'missed', 'GR' ];
+    is_deeply \@codes, [  '1565-add', '1635', '1636', '1638', 'missed', 'GR' ];
 
     $res = $endpoint->run_test_request( GET => '/services/TEST.json' );
     ok $res->is_success, 'valid request' or diag $res->content;
