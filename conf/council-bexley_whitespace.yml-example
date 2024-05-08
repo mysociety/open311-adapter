@@ -10,4 +10,16 @@ category_mapping:
     name: Report missed collection
     group: Waste
 
-service_mapping: {} # Copy from staging/live config
+service_mapping: # Copy from staging/live config
+  FO-23:
+    service_item_id: 33 # Food 23 ltr Caddy
+    service_id: 285 # Missed Collection Food
+  FO-140:
+    service_item_id: 32 # Food 140 ltr Bin
+    service_id: 285 # Missed Collection Food
+  GA-140:
+    service_item_id: 50 # Garden 140 ltr Bin
+    service_id: 286 # Missed Collection Garden
+  GA-240:
+    service_item_id: 52 # Garden 240 ltr Bin
+    service_id: 286 # Missed Collection Garden
