@@ -10,4 +10,4 @@ category_mapping:
     name: Report missed collection
     group: Waste
 
-service_mapping: # Replace with output from `bin/whitespace/bexley-service-mapping`
+service_mapping: {} # Copy from staging/live config
