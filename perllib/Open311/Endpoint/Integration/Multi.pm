@@ -141,6 +141,19 @@ sub post_service_request {
     my $integration_service = (ref $service)->new(%$service, service_code => $service_code);
 
     my $result = $self->_call('post_service_request', $integration, $integration_service, $integration_args);
+    if ($result->token) {
+        ($result) = $self->_map_with_new_id(token => [$integration, $result]);
+    } else {
+        ($result) = $self->_map_with_new_id(service_request_id => [$integration, $result]);
+    }
+    return $result;
+}
+
+sub get_token {
+    my ($self, $token, $args) = @_;
+
+    my ($integration, $int_token) = $self->_map_from_new_id($token, 'token');
+    my $result = $self->_call('get_token', $integration, $int_token);
     ($result) = $self->_map_with_new_id(service_request_id => [$integration, $result]);
     return $result;
 }

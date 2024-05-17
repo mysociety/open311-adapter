@@ -32,7 +32,13 @@ $ua->mock(get => sub {
         $file = 'xml/merton/services.xml';
     } elsif ($_[1] eq 'services/TEST.xml') {
         $file = 'xml/merton/service.xml';
+    } elsif ($_[1] eq 'tokens/TOKEN.xml') {
+        $file = 'xml/merton/token.xml';
     }
+    return HTTP::Response->new(200, 'OK', [], path(__FILE__)->sibling($file)->slurp);
+});
+$ua->mock(post => sub {
+    my $file = 'xml/merton/requestpost.xml';
     return HTTP::Response->new(200, 'OK', [], path(__FILE__)->sibling($file)->slurp);
 });
 
@@ -114,6 +120,26 @@ subtest "Get service definition with a group" => sub {
             ),
           ]
         }, 'correct json returned';
+};
+
+subtest "Post a report, get a token" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'TEST',
+        address_string => 'address',
+        'attribute[service]' => 1234,
+        'attribute[usrn]' => 1234,
+        'attribute[fixmystreet_id]' => 1001,
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+    is_deeply decode_json($res->content), [ { "token" => 'TOKEN' } ];
+};
+
+subtest "Convert a token to an ID" => sub {
+    my $res = $endpoint->run_test_request( GET => "/tokens/TOKEN.json" );
+    ok $res->is_success, 'valid request' or diag $res->content;
+    is_deeply decode_json($res->content), [ { "service_request_id" => 'ServiceID' } ];
 };
 
 done_testing;

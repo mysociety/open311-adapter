@@ -64,6 +64,12 @@ sub post_service_request {
         $service, $args);
 }
 
+sub get_token {
+    my ($self, $token, $args) = @_;
+    return $self->_call('get_token', $args->{jurisdiction_id},
+        $token, $args);
+}
+
 sub service_request_content {
     my ($self, $args) = @_;
     return $self->_call('service_request_content', $args->{jurisdiction_id});
