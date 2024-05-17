@@ -186,8 +186,20 @@ sub post_service_request {
 
     _strip_args($args);
     my $xml = $self->_request(POST => "requests.xml", $args);
+    if (my $token = $xml->{request}[0]{token}) {
+        my $result = Open311::Endpoint::Service::Request->new(token => $token);
+        return $result;
+    }
     my $id = $xml->{request}[0]{service_request_id};
     my $result = Open311::Endpoint::Service::Request->new(service_request_id => $id);
+    return $result;
+}
+
+sub get_token {
+    my ($self, $token, $args) = @_;
+
+    my $xml = $self->_request(GET => "tokens/$token.xml");
+    my $result = Open311::Endpoint::Service::Request->new(%{$xml->{request}[0]});
     return $result;
 }
 
