@@ -1,0 +1,66 @@
+url: http://merton.example.org/
+username: username
+password: password
+
+client_reference_prefix: MRT
+
+service_whitelist:
+  missed: 'Report missed collection'
+  '1565-add': 'Assisted collection add'
+  1635: 'Request new container'
+  1638: 'Garden Subscription'
+  1636: 'Bulky collection'
+
+service_extra_data:
+  missed:
+    Exact_Location: 1
+  1635:
+    Action: 1
+    Reason: 1
+    Notes: 1
+    Container_Type: 1
+
+waste_services:
+  - missed
+  - 1635
+  - 1636
+  - 1638
+  - 1565-add
+
+service_mapping:
+    2238: 405
+    2242: 405
+    2239: 408
+    2240: 408
+    2241: 408
+    2247: 409
+
+service_id_override:
+  1635: 412
+  1636: 413
+  1638: 409
+
+service_to_event_type:
+  missed:
+    405: 1566
+    408: 1568
+    409: 1568
+  1565-add:
+    405: 1565
+
+data_key_open311_map:
+  First Name: 'first_name'
+  Surname: 'last_name'
+  Email: 'email'
+  Telephone: 'phone'
+
+default_data_all:
+  Resident Requires Feedback: 1
+
+default_data_event_type:
+  1636:
+    Payment Type: 1
+    Payment Method: 2
+  1635:
+    Action: 1 # Deliver
+    Reason: 3 # Change Capacity
