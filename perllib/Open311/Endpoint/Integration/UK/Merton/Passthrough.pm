@@ -17,6 +17,7 @@ extends 'Open311::Endpoint::Integration::Passthrough';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
     $args{jurisdiction_id} = 'www.merton.gov.uk';
+    $args{batch_service} = 1;
     return $class->$orig(%args);
 };
 
