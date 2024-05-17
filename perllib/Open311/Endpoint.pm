@@ -326,8 +326,9 @@ sub dispatch_request {
         $self->call_api( POST_Service_Request => $args, );
     },
 
-    sub (GET + /tokens/*) {
-        return Open311::Endpoint::Result->error( 400, 'not implemented' );
+    sub (GET + /tokens/* + ?*) {
+        my ($self, $token, $args) = @_;
+        $self->call_api( GET_Token => $token, $args );
     },
 
     sub (GET + /requests + ?*) {
@@ -583,6 +584,55 @@ sub POST_Service_Request {
                     ($service->type eq 'batch')    ? ( token => $_->token ) : (),
                     $service_notice ? ( service_notice => $service_notice ) : (),
                     $_->has_account_id ? ( account_id => $_->account_id ) : (),
+                }
+            } @service_requests,
+        ],
+    };
+}
+
+sub GET_Token_input_schema {
+    my $self = shift;
+    return {
+        type => '//seq',
+        contents => [
+            '//str',
+            $self->get_jurisdiction_id_validation,
+        ],
+    };
+}
+
+sub GET_Token_output_schema {
+    my ($self, $args) = @_;
+    return {
+        type => '//rec',
+        required => {
+            service_requests => {
+                type => '//arr',
+                contents => {
+                    type => '//rec',
+                    required => {
+                        service_request_id => $self->get_identifier_type('service_request_id'),
+                    },
+                    optional => {
+                        token => '//str',
+                    },
+                },
+            },
+        },
+    };
+}
+
+sub GET_Token {
+    my ($self, $token, $args) = @_;
+
+    my @service_requests = $self->get_token( $token, $args );
+
+    return {
+        service_requests => [
+            map {
+                +{
+                    $_->service_request_id ? (service_request_id => $_->service_request_id) : (),
+                    $_->token ? (token => $_->token) : (),
                 }
             } @service_requests,
         ],

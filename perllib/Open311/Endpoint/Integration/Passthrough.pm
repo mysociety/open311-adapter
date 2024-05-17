@@ -42,6 +42,8 @@ has jurisdiction_id => ( is => 'ro' );
 has endpoint => ( is => 'ro' );
 has api_key => ( is => 'ro' );
 
+has batch_service => ( is => 'ro' );
+
 =head2 ignore_services
 
 Provide a list of service codes that should be ignored and not passed back from
@@ -154,7 +156,10 @@ sub service {
     my $data = $self->memcache->get("service/$service_id");
     return $data if $data;
     my $xml = $self->_request(GET => "services/$service_id.xml");
-    my $service = Open311::Endpoint::Service->new( service_code => $service_id );
+    my $service = Open311::Endpoint::Service->new(
+        service_code => $service_id,
+        type => $self->batch_service ? 'batch' : 'realtime',
+    );
     foreach (@{$xml->{attributes}}) {
         $_->{required} = $_->{required} eq 'true' ? 1 : 0;
         $_->{variable} = $_->{variable} eq 'true' ? 1 : 0;
@@ -181,8 +186,20 @@ sub post_service_request {
 
     _strip_args($args);
     my $xml = $self->_request(POST => "requests.xml", $args);
+    if (my $token = $xml->{request}[0]{token}) {
+        my $result = Open311::Endpoint::Service::Request->new(token => $token);
+        return $result;
+    }
     my $id = $xml->{request}[0]{service_request_id};
     my $result = Open311::Endpoint::Service::Request->new(service_request_id => $id);
+    return $result;
+}
+
+sub get_token {
+    my ($self, $token, $args) = @_;
+
+    my $xml = $self->_request(GET => "tokens/$token.xml");
+    my $result = Open311::Endpoint::Service::Request->new(%{$xml->{request}[0]});
     return $result;
 }
 

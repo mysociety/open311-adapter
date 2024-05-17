@@ -60,6 +60,9 @@ sub _map_from_new_id {
         } else {
             $integration = 'Passthrough';
         }
+    } elsif ($type eq 'token') {
+        # Echo does not use tokens
+        $integration = 'Passthrough';
     }
     return ($integration, $code);
 }
