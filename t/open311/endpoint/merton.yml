@@ -46,7 +46,7 @@ service_to_event_type:
     408: 1568
     409: 1568
   1565-add:
-    2238: 1565
+    405: 1565
 
 data_key_open311_map:
   First Name: 'first_name'

@@ -32,7 +32,7 @@ use Test::MockModule;
 use JSON::MaybeXS;
 
 use constant EVENT_TYPE_MISSED => 'missed';
-use constant EVENT_TYPE_ASSISTED => '1565-add';
+use constant EVENT_TYPE_ASSISTED => 1565;
 use constant EVENT_TYPE_MISSED_REFUSE => 1566;
 use constant EVENT_TYPE_MISSED_RECYCLING => 1568;
 use constant EVENT_TYPE_SUBSCRIBE => 1638;
@@ -303,7 +303,8 @@ subtest "POST a cancellation" => sub {
 
 subtest "POST assisted collection OK" => sub {
     my $res = $endpoint->run_test_request(@params,
-        service_code => EVENT_TYPE_ASSISTED,
+        service_code => EVENT_TYPE_ASSISTED . '-add',
+        'attribute[service_id]' => 2238,
         'attribute[fixmystreet_id]' => 2000128,
         'attribute[Crew_Notes]' => 'Notes',
     );
