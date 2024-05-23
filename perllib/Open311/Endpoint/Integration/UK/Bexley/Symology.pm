@@ -80,6 +80,8 @@ sub _update_status {
             'investigating'
         } elsif ($action_due =~ /^PT[CS]|TPHR|REIN$/) {
             'action_scheduled'
+        } elsif ($action_due eq 'ROD') {
+            'closed'
         } elsif ($row->{Stage} == 9 || $row->{Stage} == 8) {
             undef
         } else {
@@ -90,6 +92,7 @@ sub _update_status {
     my $esc = do {
         if ($status && ( $status eq 'not_councils_responsibility'
                         || $status eq 'action_scheduled'
+                        || $status eq 'closed'
                         || $status eq 'internal_referral' )) {
             $row->{'Event Type'};
         } else {
