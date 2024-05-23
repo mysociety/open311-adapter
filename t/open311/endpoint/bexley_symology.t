@@ -130,7 +130,8 @@ $bexley_end->mock(_get_update_files => sub {
 17/04/2019 13:53,04/04/2019,560058,RECORDED,,SI6,SI6MOB,IR,RES,1
 17/04/2019 14:06,04/04/2019,560062,RECORDED,,SI5,NCR,N1,,1
 17/04/2019 14:07,04/04/2019,560062,RECORDED,,SI5,NCR,RPOS,,1
-17/04/2019 14:08,04/04/2019,560062,RECORDED,,SI5,NCR,CR,,1
+17/04/2019 14:08,04/04/2019,560062,RECORDED,,SI5,NCR,ROD,FOO,1
+17/04/2019 14:09,04/04/2019,560062,RECORDED,,SI5,NCR,CR,,1
 EOF
     \<<EOF,
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -613,8 +614,17 @@ subtest "GET updates OK" => sub {
               "media_url" => "",
            },
            {
-              "update_id" => "560062_94e427db",
+              "update_id" => "560062_6181418a",
               "updated_datetime" => "2019-04-17T14:08:00+01:00",
+              "service_request_id" => "560062",
+              "status" => "closed",
+              "description" => "",
+              "media_url" => "",
+              "external_status_code" => 'FOO',
+           },
+           {
+              "update_id" => "560062_2e55f431",
+              "updated_datetime" => "2019-04-17T14:09:00+01:00",
               "service_request_id" => "560062",
               "status" => "fixed",
               "description" => "",
