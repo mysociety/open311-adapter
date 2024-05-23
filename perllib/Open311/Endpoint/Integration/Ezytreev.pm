@@ -75,7 +75,7 @@ sub post_service_request {
         CRMXRef => $crm_xref,
         EnquiryDescription => $args->{description},
         Forename => $args->{first_name},
-        Surname => $args->{last_name},
+        Surname => substr($args->{last_name}, 0, 20),
         Category => "T",  # Always T, the actual category goes into EnquiryType below
         EnquiryType => $args->{service_code},
         TelHome => $args->{phone},
