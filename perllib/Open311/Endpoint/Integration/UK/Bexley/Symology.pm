@@ -92,6 +92,7 @@ sub _update_status {
     my $esc = do {
         if ($status && ( $status eq 'not_councils_responsibility'
                         || $status eq 'action_scheduled'
+                        || $status eq 'no_further_action'
                         || $status eq 'closed'
                         || $status eq 'internal_referral' )) {
             $row->{'Event Type'};
