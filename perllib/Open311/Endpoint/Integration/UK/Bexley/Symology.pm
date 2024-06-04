@@ -78,7 +78,7 @@ sub _update_status {
             'not_councils_responsibility'
         } elsif ($action_due =~ /^([NS]I[1-6]MOB|IPSGM|IGF|IABV)$/) {
             'investigating'
-        } elsif ($action_due =~ /^PT[CS]|TPHR|REIN$/) {
+        } elsif ($action_due =~ /^PT[CS]|TPHR|REIN|SNPR$/) {
             'action_scheduled'
         } elsif ($action_due eq 'ROD') {
             'closed'
