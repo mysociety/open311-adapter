@@ -917,6 +917,12 @@ sub get_service_requests {
             }
 
             my $last_status_log = $job->{statusLogs}[-1];
+            unless ($last_status_log) {
+                $self->logger->warn( "no status logs for job type code "
+                        . $job->{jobType}{code}
+                        . " for job $job_id" );
+                next;
+            }
 
             my $status = $self->job_reverse_status_mapping
                 ->{ $last_status_log->{statusCode} };
