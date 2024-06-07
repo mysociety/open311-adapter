@@ -102,14 +102,14 @@ $symology_integ->mock(config => sub {
     }
 });
 
-my $camden = Test::MockModule->new('Open311::Endpoint::Integration::UK::Camden');
+my $camden = Test::MockModule->new('Open311::Endpoint::Integration::UK::Camden::Symology');
 $camden->mock('_build_config_file', sub {
     path(__FILE__)->sibling('camden_symology.yml');
 });
 
-use_ok 'Open311::Endpoint::Integration::UK::Camden';
+use_ok 'Open311::Endpoint::Integration::UK::Camden::Symology';
 
-my $endpoint = Open311::Endpoint::Integration::UK::Camden->new;
+my $endpoint = Open311::Endpoint::Integration::UK::Camden::Symology->new;
 
 subtest "GET services" => sub {
     my $res = $endpoint->run_test_request(

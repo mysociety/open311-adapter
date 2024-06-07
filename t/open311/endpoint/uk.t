@@ -7,7 +7,6 @@ BEGIN { $ENV{TEST_MODE} = 1; }
 
 test_multi(0, 'Open311::Endpoint::Integration::UK',
     'Open311::Endpoint::Integration::UK::BANES' => 'banes_confirm',
-    'Open311::Endpoint::Integration::UK::Camden' => 'camden_symology',
     'Open311::Endpoint::Integration::UK::CheshireEast' => 'cheshireeast_confirm',
     'Open311::Endpoint::Integration::UK::EastSussex' => 'eastsussex_salesforce',
     'Open311::Endpoint::Integration::UK::Gloucestershire' => 'gloucestershire_confirm',
@@ -66,6 +65,10 @@ test_multi(1, 'Open311::Endpoint::Integration::UK::Buckinghamshire',
 test_multi(1, 'Open311::Endpoint::Integration::UK::CentralBedfordshire',
     'Open311::Endpoint::Integration::UK::CentralBedfordshire::Symology' => 'centralbedfordshire_symology',
     'Open311::Endpoint::Integration::UK::CentralBedfordshire::Jadu' => 'centralbedfordshire_jadu',
+);
+
+test_multi(1, 'Open311::Endpoint::Integration::UK::Camden',
+    'Open311::Endpoint::Integration::UK::Camden::Symology' => 'camden_symology',
 );
 
 done_testing;
