@@ -74,6 +74,7 @@ test_multi(1, 'Open311::Endpoint::Integration::UK::CentralBedfordshire',
 
 test_multi(1, 'Open311::Endpoint::Integration::UK::Camden',
     'Open311::Endpoint::Integration::UK::Camden::Symology' => 'camden_symology',
+    'Open311::Endpoint::Integration::UK::Camden::ConfirmTrees' => 'camden_confirm_trees',
 );
 
 done_testing;
