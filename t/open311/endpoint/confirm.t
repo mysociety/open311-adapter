@@ -277,6 +277,23 @@ $open311->mock( perform_request_graphql => sub {
                         ],
                     },
                     {
+                        description => 'A job with no status logs',
+                        entryDate => '2022-12-01T00:00:00',
+                        feature  => { site => { centralSite => { name => 'Abc St.' } } },
+                        geometry =>
+                            'POINT (-2.26317120000001 51.8458834999995)',
+                        jobNumber => 'no_status_log',
+                        jobType   => {
+                            code => 'TYPE_1',
+                            name => 'Type 1',
+                        },
+                        priority => {
+                            code => 'ASAP',
+                            name => 'ASAP',
+                        },
+                        statusLogs => [],
+                    },
+                    {
                         description => 'A job with EOFY priority',
                         entryDate => '2022-12-01T00:00:00',
                         feature  => { site => { centralSite => { name => 'Abc St.' } } },
@@ -941,6 +958,7 @@ subtest 'GET jobs alongside enquiries' => sub {
         '.*no easting/northing for Enquiry 2004',
         '.*no easting/northing for Enquiry 2005',
         '.*no service for job type code UNHANDLED for job unhandled_type',
+        '.*no status logs for job type code TYPE_1 for job no_status_log',
     );
 
     my $regex = join '\n', @expected_warnings;
