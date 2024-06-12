@@ -14,6 +14,7 @@ use JSON::MaybeXS;
 use DateTime::Format::W3CDTF;
 use Path::Tiny;
 use Try::Tiny;
+use Encode qw(encode);
 
 has jurisdiction_id => (
     is => 'ro',
@@ -68,7 +69,7 @@ sub post_service_request {
     }
 
     my $issue_text = $self->_format_issue_text(
-        $self->endpoint_config->{max_issue_text_characters},
+        $self->endpoint_config->{max_issue_text_bytes},
         $service->service_name,
         $args->{attributes}->{group},
         $args->{attributes}->{location_name} || '',
@@ -110,7 +111,7 @@ sub post_service_request {
 }
 
 sub _format_issue_text {
-    my ($self, $char_limit, $category, $group, $location_name, $url, $title, $detail) = @_;
+    my ($self, $byte_limit, $category, $group, $location_name, $url, $title, $detail) = @_;
 
     # Populate everything except the detail field which we may need to truncate.
     my $issue_text = sprintf(
@@ -119,17 +120,20 @@ sub _format_issue_text {
     );
 
     # +2 for the not yet used format directive for detail (%s).
-    my $max_detail_chars = $char_limit - length($issue_text) + 2;
+    my $max_detail_bytes = $byte_limit - length(encode('UTF-8', $issue_text)) + 2;
+    my $detail_bytes = length(encode('UTF-8', $detail));
 
-    # We need at least 3 characters of leeway so we can use an ellipsis to indicate
+    # We need at least 3 bytes of leeway so we can use an ellipsis to indicate
     # the detail was truncated.
     # Note using horizontal ellipsis (U+2026) results in an internal server error.
-    if ($max_detail_chars < 3 && length($detail) > $max_detail_chars) {
+    if ($max_detail_bytes < 3 && $detail_bytes > $max_detail_bytes) {
         die "Issue text is too large, even if we were to truncate the detail before inserting: " . $issue_text;
     }
 
-    if (length($detail) > $max_detail_chars) {
-        $detail = substr($detail, 0, $max_detail_chars - 3) . "...";
+    if ($detail_bytes > $max_detail_bytes) {
+        # In theory we could truncate less for the ellipsis if the trailing characters are multi-byte, but keeping it simple.
+        my $characters_to_strip = $detail_bytes - $max_detail_bytes + 3;
+        $detail = substr($detail, 0, -$characters_to_strip) . "...";
     }
 
     return sprintf($issue_text, $detail);

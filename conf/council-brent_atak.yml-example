@@ -4,7 +4,7 @@ api_url: https://testatak.krinkels.com/ords/hws/atak/v1
 # api_url: https://atak.krinkels.com/ords/hws/atak/v1
 project_code: C23005
 project_name: LB BRENT GM SERVICES
-max_issue_text_characters: 900
+max_issue_text_bytes: 900
 
 services:
   LITTER_BIN_NEEDS_EMPTYING:
