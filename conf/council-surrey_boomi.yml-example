@@ -1,0 +1,5 @@
+username:
+password:
+api_url: https://boomi.example.local/api/
+
+integrationId: example.01
