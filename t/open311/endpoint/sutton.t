@@ -143,7 +143,7 @@ subtest "POST subscription request OK" => sub {
         'attribute[Subscription_Details_Containers]' => 26, # Garden Bin
         'attribute[Subscription_Details_Quantity]' => 1,
         'attribute[Request_Type]' => 1,
-        'attribute[LastPayMethod]' => 4,
+        'attribute[payment_method]' => 'cheque',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;

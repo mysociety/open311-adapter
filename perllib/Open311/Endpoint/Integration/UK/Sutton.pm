@@ -35,6 +35,12 @@ around check_for_data_value => sub {
         }
     }
 
+    # Garden waste
+    if ($args->{service_code} eq '1638') {
+        my $method = $args->{attributes}{payment_method} || '';
+        return 3 if $name eq 'Payment Type' && $method eq 'cheque'; # Telephone
+    }
+
     return $class->$orig($name, $args, $request, $parent_name);
 };
 
