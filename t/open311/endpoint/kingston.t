@@ -65,6 +65,14 @@ $soap_lite->mock(call => sub {
                 if ($client_ref eq 'bulky-cc') { # Also check items
                     is @data, 9, 'Has all six items present in the data';
                 }
+            } elsif ($event_type_id == 1638 && $client_ref eq 'REF-123') {
+                my @data = ${$params[0]->value}->value->value;
+                my @type = ${$data[0]->value}->value;
+                is $type[0]->value, 1011;
+                is $type[1]->value, 3;
+                my @method = ${$data[1]->value}->value;
+                is $method[0]->value, 1013;
+                is $method[1]->value, 1;
             }
         } elsif (@params == 2) {
             is $params[0]->value, '123pay';
@@ -157,6 +165,7 @@ subtest "POST subscription request OK" => sub {
 subtest "POST subscription request with client ref provided OK" => sub {
     my $res = $endpoint->run_test_request(@params,
         service_code => EVENT_TYPE_SUBSCRIBE,
+        'attribute[payment_method]' => 'csc',
         'attribute[client_reference]' => 'REF-123',
     );
     ok $res->is_success, 'valid request'
