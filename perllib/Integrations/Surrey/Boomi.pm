@@ -54,6 +54,20 @@ sub upsertHighwaysTicket {
     my ($self, $ticket) = @_;
 
     my $resp = $self->post('upsertHighwaysTicket', $ticket);
+    if (my $errors = $resp->{errors}) {
+        $self->error("[Boomi] Error upserting ticket:");
+        $self->error($_->{error} . ": " . $_->{details}) for @$errors;
+        die;
+    }
+    if (my $warnings = $resp->{warnings}) {
+        $self->warn("[Boomi] Warnings when upserting ticket: " . join("\n", @$warnings));
+        $self->warn($_->{warning} . ": " . $_->{details}) for @$warnings;
+    }
+    if (my $ticket = $resp->{ticket}) {
+        return $ticket->{system} . "_" . $ticket->{id};
+    }
+    $self->error("Couldn't determine ID from response: " . encode_json($resp));
+    die;
 
 }
 

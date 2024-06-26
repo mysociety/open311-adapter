@@ -20,12 +20,17 @@ has jurisdiction_id => (
     required => 1,
 );
 
-sub get_integration {
-    my ($self) = @_;
+has boomi => (
+    is => 'lazy',
+    default => sub { $_[0]->integration_class->new(config_filename => $_[0]->jurisdiction_id) }
+);
 
-    $self->log_identifier($self->jurisdiction_id);
-    return Integrations::Surrey::Boomi->new(config_filename => $self->jurisdiction_id);
-}
+has integration_class => (
+    is => 'ro',
+    default => 'Integrations::Surrey::Boomi',
+);
+
+
 
 sub service {
     my ($self, $id, $args) = @_;
@@ -79,7 +84,7 @@ sub post_service_request {
         customFields => [
             {
                 id => 'category',
-                values => [ $args->{attributes}->{category} ],
+                values => [ $args->{attributes}->{group} ],
             },
             {
                 id => 'subCategory',
@@ -91,7 +96,7 @@ sub post_service_request {
             },
         ],
     };
-    my $service_request_id = $self->get_integration->upsertHighwaysTicket($ticket);
+    my $service_request_id = $self->boomi->upsertHighwaysTicket($ticket);
 
     return $self->new_request(
         service_request_id => $service_request_id,
