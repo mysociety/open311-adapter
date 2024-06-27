@@ -107,8 +107,9 @@ subtest "Check empty services structure" => sub {
 };
 
 subtest "GET Service List" => sub {
-    my $res = $surrey_endpoint->run_test_request( GET => '/services.xml' );
-    ok $res->is_success, 'xml success';
+    my $res = $surrey_endpoint->run_test_request( GET => '/services.json' );
+    ok $res->is_success, 'json success';
+    is_deeply decode_json($res->content), [];
 };
 
 subtest "POST report" => sub {
