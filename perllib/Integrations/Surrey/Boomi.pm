@@ -34,6 +34,7 @@ has ua => (
     default => sub {
         my $self = shift;
         my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+        $ua->ssl_opts(SSL_cipher_list => 'DEFAULT:!DH'); # Disable DH ciphers, server's key is too small apparently
         my $hash = encode_base64($self->config->{username} . ':' . $self->config->{password}, "");
         $ua->default_header('Authorization' => "Basic $hash");
         $ua->default_header('Content-Type' => "application/json");
