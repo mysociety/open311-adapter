@@ -11,7 +11,6 @@ use URI;
 extends 'Integrations::Surrey::Boomi';
 
 my $lwp = Test::MockModule->new('LWP::UserAgent');
-my $lwp_counter = 0;
 
 $lwp->mock(request => sub {
     my ($ua, $req) = @_;
@@ -58,6 +57,49 @@ $lwp->mock(request => sub {
         ]
         };
         return HTTP::Response->new(200, 'OK', [], encode_json({"ticket" => { system => "Zendesk", id => 1234 }}));
+    } elsif ($req->uri =~ /getHighwaysTicketUpdates/) {
+        is $req->method, 'GET', "Correct method used";
+
+
+        return HTTP::Response->new(200, 'OK', [], encode_json({
+            "executionId" => "execution-7701f16b-036c-4e6e-8e14-998f81f5b6b8-2024.06.27",
+            "results" => [
+                {
+                    "confirmEnquiryStatusLog" => {
+                        "loggedDate" => "2024-05-01T09:07:47.000Z",
+                        "logNumber" => 11,
+                        "statusCode" => "5800",
+                        "enquiry" => {
+                            "enquiryNumber" => 129293,
+                            "externalSystemReference" => "2929177"
+                        }
+                    },
+                    "fmsReport" => {
+                        "status" => {
+                            "state" => "Closed",
+                            "label" => "Enquiry closed"
+                        }
+                    }
+                },
+                {
+                    "confirmEnquiryStatusLog" => {
+                        "loggedDate" => "2024-05-01T09:10:41.000Z",
+                        "logNumber" => 7,
+                        "statusCode" => "3200",
+                        "enquiry" => {
+                            "enquiryNumber" => 132361,
+                            "externalSystemReference" => "2939061"
+                        }
+                    },
+                    "fmsReport" => {
+                        "status" => {
+                            "state" => "Action scheduled",
+                            "label" => "Assessed - scheduling a repair within 5 Working Days"
+                        }
+                    }
+                },
+            ]
+    }));
     }
 });
 
@@ -141,6 +183,31 @@ subtest "POST report" => sub {
         service_request_id => 'Zendesk_1234',
     }];
     restore_time();
+};
+
+subtest "GET Service Request Updates" => sub {
+    my $res = $surrey_endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?jurisdiction_id=surrey_boomi&api_key=api-key&start_date=2024-05-01T09:00:00Z&end_date=2024-05-01T10:00:00Z',
+    );
+    is $res->code, 200;
+    is_deeply decode_json($res->content), [
+       {
+          "description" => "Enquiry closed",
+          "media_url" => "",
+          "service_request_id" => "Zendesk_2929177",
+          "status" => "closed",
+          "update_id" => "2929177_11",
+          "updated_datetime" => "2024-05-01T09:07:47Z",
+       },
+       {
+          "description" => "Assessed - scheduling a repair within 5 Working Days",
+          "media_url" => "",
+          "service_request_id" => "Zendesk_2939061",
+          "status" => "action_scheduled",
+          "update_id" => "2939061_7",
+          "updated_datetime" => "2024-05-01T09:10:41Z",
+       }
+    ];
 };
 
 done_testing;
