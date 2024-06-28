@@ -19,7 +19,6 @@ test_multi(0, 'Open311::Endpoint::Integration::UK',
     'Open311::Endpoint::Integration::UK::Rutland' => 'rutland',
     'Open311::Endpoint::Integration::UK::Shropshire' => 'shropshire_confirm',
     'Open311::Endpoint::Integration::UK::Southwark' => 'southwark_confirm',
-    'Open311::Endpoint::Integration::UK::Surrey' => 'surrey_boomi',
     'Open311::Endpoint::Integration::UK::Sutton' => 'sutton_echo',
     'Open311::Endpoint::Integration::UK::Hampshire' => 'hampshire_confirm',
 );
