@@ -9,6 +9,7 @@ with 'Role::Logger';
 use POSIX qw(strftime);
 use MIME::Base64 qw(encode_base64);
 use Open311::Endpoint::Service::UKCouncil::Boomi;
+use Open311::Endpoint::Service::Request::Update::mySociety;
 use Integrations::Surrey::Boomi;
 use JSON::MaybeXS;
 use DateTime::Format::W3CDTF;
@@ -66,7 +67,7 @@ sub post_service_request {
     $self->logger->debug("[Boomi] POST service request args: " . encode_json($args));
 
     my $ticket = {
-        integrationId => $self->endpoint_config->{integrationId},
+        integrationId => $self->endpoint_config->{integration_ids}->{upsertHighwaysTicket},
         subject => $args->{attributes}->{title},
         status => 'open',
         description => $args->{attributes}->{description},
@@ -108,10 +109,32 @@ sub post_service_request {
 sub get_service_request_updates {
     my ($self, $args) = @_;
 
-    # TBC
+    my $start = DateTime::Format::W3CDTF->parse_datetime($args->{start_date});
+    my $end = DateTime::Format::W3CDTF->parse_datetime($args->{end_date});
 
-    return ();
+    my $results = $self->boomi->getHighwaysTicketUpdates($start, $end);
+    my $w3c = DateTime::Format::W3CDTF->new;
 
+    my @updates;
+
+    for my $update (@$results) {
+        my $log = $update->{confirmEnquiryStatusLog};
+        my $fms = $update->{fmsReport};
+
+        my $id = $log->{enquiry}->{externalSystemReference} . "_" . $log->{logNumber};
+        my $status = lc $fms->{status}->{state};
+        $status =~ s/ /_/g;
+
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
+            status => $status,
+            update_id => $id,
+            service_request_id => "Zendesk_" . $log->{enquiry}->{externalSystemReference},
+            description => $fms->{status}->{label},
+            updated_datetime => $w3c->parse_datetime( $log->{loggedDate} )->truncate( to => 'second' ),
+        );
+    }
+
+    return @updates;
 }
 
 
