@@ -14,6 +14,7 @@ use JSON::MaybeXS;
 use DateTime::Format::W3CDTF;
 use Path::Tiny;
 use Try::Tiny;
+use Encode qw(encode);
 
 has jurisdiction_id => (
     is => 'ro',
@@ -118,13 +119,9 @@ sub _format_issue_text {
         $category, $group, $location_name, $title, $url
     );
 
-    use bytes; # length returns byte count, not character count
-
     # +2 for the not yet used format directive for detail (%s).
-    my $max_detail_bytes = $byte_limit - length($issue_text) + 2;
-    my $detail_bytes = length($detail);
-
-    no bytes;
+    my $max_detail_bytes = $byte_limit - length(encode('UTF-8', $issue_text)) + 2;
+    my $detail_bytes = length(encode('UTF-8', $detail));
 
     # We need at least 3 bytes of leeway so we can use an ellipsis to indicate
     # the detail was truncated.
@@ -135,7 +132,8 @@ sub _format_issue_text {
 
     if ($detail_bytes > $max_detail_bytes) {
         # In theory we could truncate less for the ellipsis if the trailing characters are multi-byte, but keeping it simple.
-        $detail = substr($detail, 0, $max_detail_bytes - 3) . "...";
+        my $characters_to_strip = $detail_bytes - $max_detail_bytes + 3;
+        $detail = substr($detail, 0, -$characters_to_strip) . "...";
     }
 
     return sprintf($issue_text, $detail);

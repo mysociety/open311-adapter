@@ -4,6 +4,7 @@ use Object::Tiny qw(method result);
 package main;
 use strict;
 use warnings;
+use utf8;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
@@ -11,6 +12,7 @@ use JSON::MaybeXS;
 use YAML::XS qw(LoadFile);
 use Path::Tiny;
 use File::Temp qw(tempfile);
+use Encode qw(encode);
 use Test::More;
 use Test::MockModule;
 use Test::LongString;
@@ -1111,8 +1113,6 @@ subtest "GET ATAK service request updates OK" => sub {
 };
 
 subtest "ATAK issue text formatting" => sub {
-    use bytes;
-
     dies_ok { $atak_endpoint->_format_issue_text(
         133, 'category', 'group', 'location name', 'url', 'title', 'detail'
     ) } "formatting issue text fails when inputs are too big";
@@ -1122,21 +1122,21 @@ subtest "ATAK issue text formatting" => sub {
     );
     is $issue_text, "Category: category\nGroup: group\nLocation: location name\n\nlocation of problem: title\n\n" .
         "detail: d...\n\nurl: url\n\nSubmitted via FixMyStreet\n", "truncates detail when too large";
-    is length($issue_text), 135, "restricts to max byte length";
+    is length(encode('UTF-8', $issue_text)), 135, "restricts to max byte length";
 
     $issue_text =  $atak_endpoint->_format_issue_text(
         138, 'category', 'group', 'location name', 'url', 'title', 'detail'
     );
     is $issue_text, "Category: category\nGroup: group\nLocation: location name\n\nlocation of problem: title\n\n" .
         "detail: detail\n\nurl: url\n\nSubmitted via FixMyStreet\n", "does not truncate detail when within size";
-    is length($issue_text), 137;
+    is length(encode('UTF-8', $issue_text)), 137;
 
     $issue_text =  $atak_endpoint->_format_issue_text(
         139, 'category', 'group', 'location name', 'url', 'title', '£detail£'
     );
     is $issue_text, "Category: category\nGroup: group\nLocation: location name\n\nlocation of problem: title\n\n" .
-        "detail: £det...\n\nurl: url\n\nSubmitted via FixMyStreet\n", "accounts for multi-byte characters";
-    is length($issue_text), 139, "restricts to max byte length";
+        "detail: £de...\n\nurl: url\n\nSubmitted via FixMyStreet\n", "accounts for multi-byte characters";
+    is length(encode('UTF-8', $issue_text)), 138, "restricts to max byte length";
 
     $issue_text =  $atak_endpoint->_format_issue_text(
         900,
@@ -1147,9 +1147,7 @@ subtest "ATAK issue text formatting" => sub {
         'vTe 123',
         'UZimzSj jH bFcLloC: vTe 123\r\n\r\nXCirvX: yGS NWnFH vB lmB kOjAYZiO kLsHnG nz ZFdaxVrTi iImOpfdpV, lt’b YubrkhPX TWi cZYjpuMt wUU PZXvyfet OqTwYH hB tNhGrFHsZ ADCiW OO wo AfJW ICTrVHV ek QN SNW RUD TLLJD JJ tJ dqMJ zNytzeQh. uMwRj OHL 15 QCQRLipkt wxze xBDxgnN QXQ zoJvutWO FLHmzVuDc lWl yEWK fbc £1.84 KkA ExNF npH RUDwCSdVVDR Wg LcSn NgBse fBCOR (£1,435.20Hn lHxPTJZTR £119.60DYc) Gd gDV fsOvhA OPv l zMYWFXx Qsw UeQ dnXKhqsxD LZ. jedA mj jzpjWStcI hAcEMwvo, Kh vdz’B Niz CTv ciDwwwvT (OO BEUUeEgtq BbD Za vA H hfvskpZwzN PNEcZ Gh MXe uUp ieZq wS qZoXYe shd VzMsTV), UW BEp’q wtkNva HNk jFZYK lg PkW nyXU dnz TdCRx rhItc An nq ROMGSdNkf. bOJP Rx DG zmAPeY VgWBvN. O jRXq lAqxRoA FCLLkanb mtfd XoxpRd Ysw Rb’R ZMfN RjyLcKm. oT qHJV SpHcGl Bu oRV eJElODIp VquIVE Igx lbpt EoRoT NFGn z ewAf DlXU z ANDiPL TomFsansS Nl WFG Jzwqe FGzSgazXZF jFLuge.\r\n\r\nCKV: qOYft://TkCXIl.ccaNq.cQK.sk/fZCAxJ/0000000\r\n\r\nhHwZBhUTO Ojs FWhxEGjyaaC\r\n'
     );
-    is length($issue_text), 900, "restricts to max byte length on real world example";
-
-    no bytes;
+    is length(encode('UTF-8', $issue_text)), 898, "restricts to max byte length on real world example";
 };
 
 done_testing;
