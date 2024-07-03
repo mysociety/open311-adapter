@@ -15,6 +15,7 @@ use JSON::MaybeXS;
 use DateTime::Format::W3CDTF;
 use Path::Tiny;
 use Try::Tiny;
+use LWP::UserAgent;
 
 has jurisdiction_id => (
     is => 'ro',
@@ -97,6 +98,35 @@ sub post_service_request {
             },
         ],
     };
+
+    my @attachments;
+
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+
+    for my $photo (@{ $args->{media_url} }) {
+        my $photo_response = $ua->get($photo);
+        unless ( $photo_response->is_success) {
+            $self->logger->error("Failed to retrieve photo from $photo\n");
+            die "Failed to retrieve photo from $photo";
+        }
+
+        push @attachments, {
+            fileName => $photo_response->filename,
+            url => $photo,
+            base64 => encode_base64($photo_response->content),
+        };
+    }
+
+    if (@{$args->{uploads}}) {
+        foreach (@{$args->{uploads}}) {
+            push @attachments, {
+                fileName => $_->filename,
+                base64 => encode_base64(path($_)->slurp),
+            };
+        }
+    }
+    $ticket->{attachments} = \@attachments if @attachments;
+
     my $service_request_id = $self->boomi->upsertHighwaysTicket($ticket);
 
     return $self->new_request(
