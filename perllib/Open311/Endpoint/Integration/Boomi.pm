@@ -65,7 +65,7 @@ sub post_service_request {
     die "Args must be a hashref" unless ref $args eq 'HASH';
 
     $self->logger->info("[Boomi] Creating issue");
-    $self->logger->debug("[Boomi] POST service request args: " . encode_json($args));
+    # $self->logger->debug("[Boomi] POST service request args: " . encode_json($args));
 
     my $ticket = {
         integrationId => $self->endpoint_config->{integration_ids}->{upsertHighwaysTicket},
