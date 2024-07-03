@@ -67,6 +67,17 @@ sub post_service_request {
     $self->logger->info("[Boomi] Creating issue");
     # $self->logger->debug("[Boomi] POST service request args: " . encode_json($args));
 
+    my @custom_fields = (
+        {
+            id => 'category',
+            values => [ $args->{attributes}->{group} ],
+        },
+        {
+            id => 'subCategory',
+            values => [ $args->{attributes}->{category} ],
+        },
+    );
+
     my $ticket = {
         integrationId => $self->endpoint_config->{integration_ids}->{upsertHighwaysTicket},
         subject => $args->{attributes}->{title},
@@ -83,21 +94,20 @@ sub post_service_request {
             email => $args->{email},
             phone => $args->{attributes}->{phone},
         },
-        customFields => [
-            {
-                id => 'category',
-                values => [ $args->{attributes}->{group} ],
-            },
-            {
-                id => 'subCategory',
-                values => [ $args->{attributes}->{category} ],
-            },
-            {
-                id => 'fixmystreet_id',
-                values => [ $args->{attributes}->{fixmystreet_id} ],
-            },
-        ],
     };
+
+    foreach (qw/group category easting northing title description phone/) {
+        if (defined $args->{attributes}->{$_}) {
+            delete $args->{attributes}->{$_};
+        }
+    }
+    for my $attr (sort keys %{ $args->{attributes} }) {
+        push @custom_fields, {
+            id => $attr,
+            values => [ $args->{attributes}->{$attr} ],
+        };
+    }
+    $ticket->{customFields} = \@custom_fields;
 
     my @attachments;
 
