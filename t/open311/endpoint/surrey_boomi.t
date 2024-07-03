@@ -20,41 +20,48 @@ $lwp->mock(request => sub {
         is $req->uri, 'http://localhost/ws/simple/upsertHighwaysTicket';
         my $content = decode_json($req->content);
         is_deeply $content, {
-        "location" => {
-            "longitude" => "0.1",
-            "northing" => "2",
-            "latitude" => "50",
-            "easting" => "1"
-        },
-        "subject" => "Pot hole on road",
-        "description" => "Big hole in the road",
-        "status" => "open",
-        "integrationId" => "Integration.1",
-        "requester" => {
-            "email" => 'test@example.com',
-            "fullName" => "Bob Mould",
-            "phone" => undef
-        },
-        "customFields" => [
-            {
-                "values" => [
-                    "Roads"
-                ],
-                "id" => "category"
+            "location" => {
+                "longitude" => "0.1",
+                "northing" => "2",
+                "latitude" => "50",
+                "easting" => "1"
             },
-            {
-                "values" => [
-                    "Pothole"
-                ],
-                "id" => "subCategory"
+            "subject" => "Pot hole on road",
+            "description" => "Big hole in the road",
+            "status" => "open",
+            "integrationId" => "Integration.1",
+            "requester" => {
+                "email" => 'test@example.com',
+                "fullName" => "Bob Mould",
+                "phone" => undef
             },
-            {
-                "id" => "fixmystreet_id",
-                "values" => [
-                    "1"
-                ]
-            }
-        ]
+            "customFields" => [
+                {
+                    "values" => [
+                        "Roads"
+                    ],
+                    "id" => "category"
+                },
+                {
+                    "values" => [
+                        "Pothole"
+                    ],
+                    "id" => "subCategory"
+                },
+                {
+                    "id" => "fixmystreet_id",
+                    "values" => [
+                        "1"
+                    ]
+                }
+            ],
+            "attachments" => [
+                {
+                    "url" => "http://localhost/photo/one.jpeg",
+                    "fileName" => "1.jpeg",
+                    "base64" => "/9j/4AAQSkZJRgABAQAAAAAAAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkI\nCQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAA\nAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==\n",
+                },
+            ]
         };
         return HTTP::Response->new(200, 'OK', [], encode_json({"ticket" => { system => "Zendesk", id => 1234 }}));
     } elsif ($req->uri =~ /getHighwaysTicketUpdates/) {
@@ -99,7 +106,14 @@ $lwp->mock(request => sub {
                     }
                 },
             ]
-    }));
+        }));
+    } elsif ($req->uri eq 'http://localhost/photo/one.jpeg') {
+        my $image_data = path(__FILE__)->sibling('files')->child('test_image.jpg')->slurp;
+        my $response = HTTP::Response->new(200, 'OK', []);
+        $response->header('Content-Disposition' => 'attachment; filename="1.jpeg"');
+        $response->header('Content-Type' => 'image/jpeg');
+        $response->content($image_data);
+        return $response;
     }
 });
 
@@ -166,7 +180,7 @@ subtest "POST report" => sub {
         last_name => 'Mould',
         email => 'test@example.com',
         description => 'title: Pothole on road detail: Big hole in the road',
-        media_url => ['https://localhost/one.jpeg?123', 'https://localhost/two.jpeg?123'],
+        media_url => ['http://localhost/photo/one.jpeg'],
         lat => '50',
         long => '0.1',
         'attribute[description]' => 'Big hole in the road',
