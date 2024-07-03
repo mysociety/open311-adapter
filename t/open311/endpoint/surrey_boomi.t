@@ -49,11 +49,23 @@ $lwp->mock(request => sub {
                     "id" => "subCategory"
                 },
                 {
+                    "id" => "RM1",
+                    "values" => [
+                        "RM1B"
+                    ]
+                },
+                {
                     "id" => "fixmystreet_id",
                     "values" => [
                         "1"
                     ]
-                }
+                },
+                {
+                    "id" => "report_url",
+                    "values" => [
+                        "http://localhost/report/1"
+                    ]
+                },
             ],
             "attachments" => [
                 {
@@ -185,12 +197,13 @@ subtest "POST report" => sub {
         long => '0.1',
         'attribute[description]' => 'Big hole in the road',
         'attribute[title]' => 'Pot hole on road',
-        'attribute[report_url]' => 'http://localhost/1',
+        'attribute[report_url]' => 'http://localhost/report/1',
         'attribute[easting]' => 1,
         'attribute[northing]' => 2,
         'attribute[category]' => 'Pothole',
         'attribute[group]' => 'Roads',
         'attribute[fixmystreet_id]' => 1,
+        'attribute[RM1]' => "RM1B",
         );
     is $res->code, 200;
     is_deeply decode_json($res->content), [{
