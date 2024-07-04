@@ -24,7 +24,9 @@ $lwp->mock(request => sub {
                 "longitude" => "0.1",
                 "northing" => "2",
                 "latitude" => "50",
-                "easting" => "1"
+                "easting" => "1",
+                "usrn" => "31200342",
+                "streetName" => "Cockshot Hill",
             },
             "subject" => "Pot hole on road",
             "description" => "Big hole in the road",
@@ -204,6 +206,8 @@ subtest "POST report" => sub {
         'attribute[group]' => 'Roads',
         'attribute[fixmystreet_id]' => 1,
         'attribute[RM1]' => "RM1B",
+        'attribute[USRN]' => "31200342",
+        'attribute[ROADNAME]' => "Cockshot Hill",
         );
     is $res->code, 200;
     is_deeply decode_json($res->content), [{
