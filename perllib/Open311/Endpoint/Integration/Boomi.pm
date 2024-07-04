@@ -88,6 +88,8 @@ sub post_service_request {
             longitude => $args->{long},
             easting => $args->{attributes}->{easting},
             northing => $args->{attributes}->{northing},
+            usrn => $args->{attributes}->{USRN},
+            streetName => $args->{attributes}->{ROADNAME},
         },
         requester => {
             fullName => $args->{first_name} . " " . $args->{last_name},
@@ -96,7 +98,7 @@ sub post_service_request {
         },
     };
 
-    foreach (qw/group category easting northing title description phone/) {
+    foreach (qw/group category easting northing title description phone USRN ROADNAME/) {
         if (defined $args->{attributes}->{$_}) {
             delete $args->{attributes}->{$_};
         }
