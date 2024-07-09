@@ -1,0 +1,8 @@
+endpoint: https://localhost:4000/
+api_key: 123
+
+oauth2_url: https://localhost:5000/
+oauth2_client_id: client_id
+oauth2_client_secret: client_secret
+oauth2_tenant_id: tenant_id
+ocp_apim_subscription_key: subscription_key
