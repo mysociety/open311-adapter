@@ -51,6 +51,12 @@ $lwp->mock(request => sub {
                     "id" => "subCategory"
                 },
                 {
+                    "id" => "Q7",
+                    "values" => [
+                        "T1", "T3"
+                    ]
+                },
+                {
                     "id" => "RM1",
                     "values" => [
                         "RM1B"
@@ -208,6 +214,8 @@ subtest "POST report" => sub {
         'attribute[RM1]' => "RM1B",
         'attribute[USRN]' => "31200342",
         'attribute[ROADNAME]' => "Cockshot Hill",
+        'attribute[Q7]' => "T1",
+        'attribute[Q7]' => "T3",
         );
     is $res->code, 200;
     is_deeply decode_json($res->content), [{
