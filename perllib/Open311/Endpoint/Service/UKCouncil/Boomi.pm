@@ -44,6 +44,69 @@ sub _build_attributes {
             required => 1,
             automated => 'server_set',
         ),
+
+        # XXX these should not be hardcoded here but haven't yet figured out
+        # how to allow any attribute/value to pass schema validation
+        Open311::Endpoint::Service::Attribute->new(
+            code => "Q7",
+            description => "Q7",
+            datatype => "multivaluelist",
+            required => 0,
+            variable => 1,
+            values => {
+                "T1" => "T1",
+                "T2" => "T2",
+                "T3" => "T3",
+                "T4" => "T4",
+                "T5" => "T5",
+            },
+        ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => "pothole_severity",
+            description => "pothole_severity",
+            datatype => "multivaluelist",
+            required => 0,
+            variable => 1,
+            values => {
+                "4" => "4",
+                "5" => "5",
+                "6" => "6",
+            },
+        ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => "pothole_location",
+            description => "pothole_location",
+            datatype => "multivaluelist",
+            required => 0,
+            variable => 1,
+            values => {
+                "1" => "1",
+                "2" => "2",
+                "3" => "3",
+            },
+        ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => "D1_Declaration",
+            description => "D1_Declaration",
+            datatype => "multivaluelist",
+            required => 0,
+            variable => 1,
+            values => {
+                "D2" => "D2",
+            },
+        ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => "1_Location",
+            description => "1_Location",
+            datatype => "multivaluelist",
+            required => 0,
+            variable => 1,
+            values => {
+                "2_Location" => "2_Location",
+                "3_Location" => "3_Location",
+                "4_Location" => "4_Location",
+            },
+        ),
     );
 
     return \@attributes;
