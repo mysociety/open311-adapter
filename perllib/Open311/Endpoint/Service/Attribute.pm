@@ -70,6 +70,15 @@ has values => (
     }
 );
 
+# for singlevaluelist or multivalue list, allow any value so we don't have to
+# hardcode a list when defining attribute.
+has allow_any_value => (
+    is => 'ro',
+    isa => Bool,
+    default => sub { 0 },
+);
+
+
 has values_sorted => (
     is => 'ro',
     isa => ArrayRef,
@@ -88,6 +97,10 @@ sub schema_definition {
     # FMS will send a blank string for optional singlevaluelist attributes where
     # the user didn't make a selection. Make sure this is allowed by the schema.
     push(@values, { type => '//str', value => '' }) unless $self->required;
+    # Some integrations have extra fields whose options are managed within
+    # the FMS admin rather than being fixed. For these we need to ensure
+    # we can accept any value.
+    push(@values, { type => '//str' }) if $self->allow_any_value;
 
     my %schema_types = (
         string => '//str',
