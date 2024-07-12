@@ -94,7 +94,7 @@ sub post_service_request {
         requester => {
             fullName => $args->{first_name} . " " . $args->{last_name},
             email => $args->{email},
-            phone => $args->{attributes}->{phone},
+            phone => $args->{phone},
         },
     };
 
