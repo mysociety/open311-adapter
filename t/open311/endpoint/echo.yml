@@ -14,8 +14,11 @@ service_whitelist:
   Highways:
     2135: Flytipping
     2136: Flyposting
+    2137: 'General Litter'
   Superhighways:
     2135: Flytipping
+  Avenues:
+    2137_1: 'Local Litter'
 
 service_extra_data:
   2149-add:

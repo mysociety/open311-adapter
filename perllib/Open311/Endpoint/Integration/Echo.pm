@@ -422,7 +422,11 @@ sub process_service_request_args {
     my $self = shift;
     my $args = shift;
 
-    my $event_type = $args->{service_code};
+    # Strip off any extra data added as a suffix in FMS config
+    # to reuse event type with multiple category names
+    # - ie 2951, 2951_1 and 2951_2 should be posted as 2951
+    # as that is the actual EventTypeId
+    my ($event_type) = split /_/, $args->{service_code};
     my $service = $args->{attributes}{service_id} || '';
     my $uprn = $args->{attributes}{uprn};
     my $client_reference = $self->client_reference($args);

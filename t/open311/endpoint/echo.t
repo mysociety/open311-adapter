@@ -94,6 +94,8 @@ $soap_lite->mock(call => sub {
         } elsif ($event_type == EVENT_TYPE_REQUEST) {
             is $uprn, 1000001;
             is @data, 4, 'Name, source and container stuff';
+        } elsif ($uprn == 1000011) {
+            is $event_type, 2137, 'Underscore suffix removed from event_type';
         } else {
             is $uprn, 1000001;
             is @data, 5, 'Name, source, notes, and image';
@@ -203,7 +205,7 @@ $soap_lite->mock(call => sub {
     } elsif ($method eq 'GetEventType') {
         my @params = ${$args[3]->value}->value;
         my $event_type = ${$params[2]->value}->value->value->value;
-        if ( $event_type == EVENT_TYPE_SUBSCRIBE ) {
+        if ( $event_type !~ /_/ && $event_type == EVENT_TYPE_SUBSCRIBE ) {
             return SOAP::Result->new(result => {
                 Datatypes => { ExtensibleDatatype => [
                     { Id => 1001, Name => "First Name" },
@@ -337,6 +339,15 @@ subtest "GET services" => sub {
       "metadata" => "true"
    },
    {
+      "service_name" => "Local Litter",
+      "service_code" => "2137_1",
+      "keywords" => "",
+      "description" => "Local Litter",
+      "groups" => ["Avenues"],
+      "type" => "realtime",
+      "metadata" => "true"
+   },
+   {
       "service_name" => "Flytipping",
       "service_code" => "2135",
       "keywords" => "",
@@ -350,6 +361,15 @@ subtest "GET services" => sub {
       "service_code" => "2136",
       "keywords" => "",
       "description" => "Flyposting",
+      "groups" => ["Highways"],
+      "type" => "realtime",
+      "metadata" => "true"
+   },
+   {
+      "service_name" => "General Litter",
+      "service_code" => "2137",
+      "keywords" => "",
+      "description" => "General Litter",
       "groups" => ["Highways"],
       "type" => "realtime",
       "metadata" => "true"
@@ -463,6 +483,28 @@ subtest "POST new multi-request OK" => sub {
         'attribute[Container_Type]' => 12, # Black Box (Paper)
         'attribute[Quantity]' => 2,
         'attribute[Reason]' => '7::1',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST new request with service_code with underscore" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => '2137_1',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 1000011,
+        'attribute[fixmystreet_id]' => 2000123,
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
