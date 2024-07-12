@@ -187,9 +187,8 @@ sub get_service_request_updates {
             status => $status,
             update_id => $id,
             service_request_id => "Zendesk_" . $log->{enquiry}->{externalSystemReference},
-            description => "", # no description from Boomi
+            description => $fms->{status}->{label},
             updated_datetime => $w3c->parse_datetime( $log->{loggedDate} )->truncate( to => 'second' ),
-            external_status_code => $fms->{status}->{label},
         );
     }
 
