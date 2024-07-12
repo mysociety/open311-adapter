@@ -248,8 +248,7 @@ subtest "GET Service Request Updates" => sub {
     is $res->code, 200;
     is_deeply decode_json($res->content), [
        {
-          "description" => "",
-          "external_status_code" => "Enquiry closed",
+          "description" => "Enquiry closed",
           "media_url" => "",
           "service_request_id" => "Zendesk_2929177",
           "status" => "closed",
@@ -257,8 +256,7 @@ subtest "GET Service Request Updates" => sub {
           "updated_datetime" => "2024-05-01T09:07:47Z",
        },
        {
-          "description" => "",
-          "external_status_code" => "Assessed - scheduling a repair within 5 Working Days",
+          "description" => "Assessed - scheduling a repair within 5 Working Days",
           "media_url" => "",
           "service_request_id" => "Zendesk_2939061",
           "status" => "action_scheduled",
