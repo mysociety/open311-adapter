@@ -104,12 +104,11 @@ sub post_service_request {
         }
     }
     for my $attr (sort keys %{ $args->{attributes} }) {
-        # multivaluelist fields arrive as an arrayref
-        my $vals = $args->{attributes}->{$attr};
-        $vals = [ $vals ] unless ref $vals eq 'ARRAY';
+        my $val = $args->{attributes}->{$attr};
         push @custom_fields, {
             id => $attr,
-            values => $vals,
+            # multivaluelist fields arrive as an arrayref
+            values => ref $val eq 'ARRAY' ? $val : [ $val ],
         };
     }
     $ticket->{customFields} = \@custom_fields;
