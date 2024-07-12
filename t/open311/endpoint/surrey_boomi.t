@@ -63,6 +63,21 @@ $lwp->mock(request => sub {
                     ]
                 },
                 {
+                    "values" => [
+                        "A value"
+                    ],
+                    "id" => "complexfield",
+                    "name" => "A complex field"
+                },
+                {
+                    "values" => [
+                        "A value",
+                        "Another value"
+                    ],
+                    "id" => "complexlist",
+                    "name" => "A complex array"
+                },
+                {
                     "id" => "fixmystreet_id",
                     "values" => [
                         "1"
@@ -216,6 +231,8 @@ subtest "POST report" => sub {
         'attribute[ROADNAME]' => "Cockshot Hill",
         'attribute[Q7]' => "T1",
         'attribute[Q7]' => "T3",
+        'attribute[complexfield]' => "{\"description\":\"A complex field\", \"value\":\"A value\"}",
+        'attribute[complexlist]' => "{\"description\":\"A complex array\", \"value\":[\"A value\", \"Another value\"]}",
         );
     is $res->code, 200;
     is_deeply decode_json($res->content), [{
