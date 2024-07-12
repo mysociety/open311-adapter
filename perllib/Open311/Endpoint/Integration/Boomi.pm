@@ -104,12 +104,25 @@ sub post_service_request {
         }
     }
     for my $attr (sort keys %{ $args->{attributes} }) {
-        # multivaluelist fields arrive as an arrayref
-        my $vals = $args->{attributes}->{$attr};
-        $vals = [ $vals ] unless ref $vals eq 'ARRAY';
+        my $val = $args->{attributes}->{$attr};
+
+        my $name;
+        # see if it's a JSON string that encodes a value and a description
+        if ($val =~ /^{/) {
+            try {
+                my $decoded = decode_json($val);
+                $val = $decoded->{value} || $val;
+                $name = $decoded->{description} || "";
+            } catch {
+                $self->logger->debug("[Boomi] Couldn't decode JSON from Open311 attribute value: $val");
+            };
+        }
+
         push @custom_fields, {
             id => $attr,
-            values => $vals,
+            # multivaluelist fields arrive as an arrayref
+            values => ref $val eq 'ARRAY' ? $val : [ $val ],
+            $name ? ( name => $name) : (),
         };
     }
     $ticket->{customFields} = \@custom_fields;
