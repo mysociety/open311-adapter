@@ -35,7 +35,7 @@ $lwp->mock(request => sub {
             "requester" => {
                 "email" => 'test@example.com',
                 "fullName" => "Bob Mould",
-                "phone" => undef
+                "phone" => "07123123123"
             },
             "customFields" => [
                 {
@@ -214,6 +214,7 @@ subtest "POST report" => sub {
         first_name => 'Bob',
         last_name => 'Mould',
         email => 'test@example.com',
+        phone => '07123123123',
         description => 'title: Pothole on road detail: Big hole in the road',
         media_url => ['http://localhost/photo/one.jpeg'],
         lat => '50',
