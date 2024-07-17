@@ -121,7 +121,7 @@ sub post {
 
     my $response = $self->ua->post(
         $url,
-        Content         => $content,
+        Content => $content,
     );
 
     $self->logger->debug("[Boomi] Response status: " . $response->status_line);
