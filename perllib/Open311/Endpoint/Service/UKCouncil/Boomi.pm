@@ -53,13 +53,7 @@ sub _build_attributes {
             datatype => "multivaluelist",
             required => 0,
             variable => 1,
-            values => {
-                "T1" => "T1",
-                "T2" => "T2",
-                "T3" => "T3",
-                "T4" => "T4",
-                "T5" => "T5",
-            },
+            allow_any_value => 1,
         ),
         Open311::Endpoint::Service::Attribute->new(
             code => "pothole_severity",
@@ -67,11 +61,7 @@ sub _build_attributes {
             datatype => "multivaluelist",
             required => 0,
             variable => 1,
-            values => {
-                "4" => "4",
-                "5" => "5",
-                "6" => "6",
-            },
+            allow_any_value => 1,
         ),
         Open311::Endpoint::Service::Attribute->new(
             code => "pothole_location",
@@ -79,11 +69,7 @@ sub _build_attributes {
             datatype => "multivaluelist",
             required => 0,
             variable => 1,
-            values => {
-                "1" => "1",
-                "2" => "2",
-                "3" => "3",
-            },
+            allow_any_value => 1,
         ),
         Open311::Endpoint::Service::Attribute->new(
             code => "D1_Declaration",
@@ -91,9 +77,7 @@ sub _build_attributes {
             datatype => "multivaluelist",
             required => 0,
             variable => 1,
-            values => {
-                "D2" => "D2",
-            },
+            allow_any_value => 1,
         ),
         Open311::Endpoint::Service::Attribute->new(
             code => "1_Location",
@@ -101,11 +85,7 @@ sub _build_attributes {
             datatype => "multivaluelist",
             required => 0,
             variable => 1,
-            values => {
-                "2_Location" => "2_Location",
-                "3_Location" => "3_Location",
-                "4_Location" => "4_Location",
-            },
+            allow_any_value => 1,
         ),
     );
 
