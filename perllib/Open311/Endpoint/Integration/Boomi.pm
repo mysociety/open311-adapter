@@ -16,6 +16,7 @@ use DateTime::Format::W3CDTF;
 use Path::Tiny;
 use Try::Tiny;
 use LWP::UserAgent;
+use Digest::MD5 qw(md5_hex);
 
 has jurisdiction_id => (
     is => 'ro',
@@ -193,6 +194,41 @@ sub get_service_request_updates {
     }
 
     return @updates;
+}
+
+sub post_service_request_update {
+    my ($self, $args) = @_;
+
+    die "Args must be a hashref" unless ref $args eq 'HASH';
+
+    if ($args->{media_url}->[0]) {
+        $args->{description} .= "\n\n[ This update contains a photo, see: " . $args->{media_url}->[0] . " ]";
+    }
+
+
+    $self->logger->info("[Boomi] Creating update");
+
+    my ($system, $id) = split('_', $args->{service_request_id});
+
+    my $ticket = {
+        integrationId => $self->endpoint_config->{integration_ids}->{upsertHighwaysTicket},
+        ticketId => $id,
+        comments => [
+            { body => $args->{description} },
+        ],
+    };
+
+    # we don't get back a unique ID from Boomi, so calculate one ourselves
+    # XXX is this going to be mirrored back next time we fetch updates?
+    my $update_id = $args->{service_request_id} . "_" . substr(md5_hex($id . $args->{description}), 0, 8);
+
+    my $service_request_id = $self->boomi->upsertHighwaysTicket($ticket);
+
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        service_request_id => $args->{service_request_id},
+        status => lc $args->{status},
+        update_id => $update_id,
+    );
 }
 
 

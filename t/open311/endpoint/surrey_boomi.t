@@ -19,86 +19,100 @@ $lwp->mock(request => sub {
         is $req->method, 'POST', "Correct method used";
         is $req->uri, 'http://localhost/ws/simple/upsertHighwaysTicket';
         my $content = decode_json($req->content);
-        is_deeply $content, {
-            "location" => {
-                "longitude" => "0.1",
-                "northing" => "2",
-                "latitude" => "50",
-                "easting" => "1",
-                "usrn" => "31200342",
-                "streetName" => "Cockshot Hill",
-            },
-            "subject" => "Pot hole on road",
-            "description" => "Big hole in the road",
-            "status" => "open",
-            "integrationId" => "Integration.1",
-            "requester" => {
-                "email" => 'test@example.com',
-                "fullName" => "Bob Mould",
-                "phone" => "07123123123"
-            },
-            "customFields" => [
-                {
-                    "values" => [
-                        "Roads"
-                    ],
-                    "id" => "category"
+        if ($content && $content->{ticketId}) {
+            # it's an update to an existing ticket
+            is_deeply $content, {
+                "comments" => [
+                    {
+                        "body" => "This is an update"
+                    }
+                ],
+                "ticketId" => "123456",
+                "integrationId" => "Integration.1"
+            };
+            return HTTP::Response->new(200, 'OK', [], encode_json({"ticket" => { system => "Zendesk", id => 1234 }}));
+        } else {
+            is_deeply $content, {
+                "location" => {
+                    "longitude" => "0.1",
+                    "northing" => "2",
+                    "latitude" => "50",
+                    "easting" => "1",
+                    "usrn" => "31200342",
+                    "streetName" => "Cockshot Hill",
                 },
-                {
-                    "values" => [
-                        "Pothole"
-                    ],
-                    "id" => "subCategory"
+                "subject" => "Pot hole on road",
+                "description" => "Big hole in the road",
+                "status" => "open",
+                "integrationId" => "Integration.1",
+                "requester" => {
+                    "email" => 'test@example.com',
+                    "fullName" => "Bob Mould",
+                    "phone" => "07123123123"
                 },
-                {
-                    "id" => "Q7",
-                    "values" => [
-                        "T1", "T3"
-                    ]
-                },
-                {
-                    "id" => "RM1",
-                    "values" => [
-                        "RM1B"
-                    ]
-                },
-                {
-                    "values" => [
-                        "A value"
-                    ],
-                    "id" => "complexfield",
-                    "name" => "A complex field"
-                },
-                {
-                    "values" => [
-                        "A value",
-                        "Another value"
-                    ],
-                    "id" => "complexlist",
-                    "name" => "A complex array"
-                },
-                {
-                    "id" => "fixmystreet_id",
-                    "values" => [
-                        "1"
-                    ]
-                },
-                {
-                    "id" => "report_url",
-                    "values" => [
-                        "http://localhost/report/1"
-                    ]
-                },
-            ],
-            "attachments" => [
-                {
-                    "url" => "http://localhost/photo/one.jpeg",
-                    "fileName" => "1.jpeg",
-                    "base64" => "/9j/4AAQSkZJRgABAQAAAAAAAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkI\nCQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAA\nAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==\n",
-                },
-            ]
-        };
-        return HTTP::Response->new(200, 'OK', [], encode_json({"ticket" => { system => "Zendesk", id => 1234 }}));
+                "customFields" => [
+                    {
+                        "values" => [
+                            "Roads"
+                        ],
+                        "id" => "category"
+                    },
+                    {
+                        "values" => [
+                            "Pothole"
+                        ],
+                        "id" => "subCategory"
+                    },
+                    {
+                        "id" => "Q7",
+                        "values" => [
+                            "T1", "T3"
+                        ]
+                    },
+                    {
+                        "id" => "RM1",
+                        "values" => [
+                            "RM1B"
+                        ]
+                    },
+                    {
+                        "values" => [
+                            "A value"
+                        ],
+                        "id" => "complexfield",
+                        "name" => "A complex field"
+                    },
+                    {
+                        "values" => [
+                            "A value",
+                            "Another value"
+                        ],
+                        "id" => "complexlist",
+                        "name" => "A complex array"
+                    },
+                    {
+                        "id" => "fixmystreet_id",
+                        "values" => [
+                            "1"
+                        ]
+                    },
+                    {
+                        "id" => "report_url",
+                        "values" => [
+                            "http://localhost/report/1"
+                        ]
+                    },
+                ],
+                "attachments" => [
+                    {
+                        "url" => "http://localhost/photo/one.jpeg",
+                        "fileName" => "1.jpeg",
+                        "base64" => "/9j/4AAQSkZJRgABAQAAAAAAAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkI\nCQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAA\nAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==\n",
+                    },
+                ]
+            };
+            return HTTP::Response->new(200, 'OK', [], encode_json({"ticket" => { system => "Zendesk", id => 1234 }}));
+        }
     } elsif ($req->uri =~ /getHighwaysTicketUpdates/) {
         is $req->method, 'GET', "Correct method used";
 
@@ -266,5 +280,30 @@ subtest "GET Service Request Updates" => sub {
        }
     ];
 };
+
+subtest "POST Service Request Update" => sub {
+    set_fixed_time('2023-05-01T12:00:00Z');
+
+    my $res = $surrey_endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'surrey_boomi',
+        api_key => 'api-key',
+        updated_datetime => '2023-05-02T12:00:00Z',
+        service_request_id => 'Zendesk_123456',
+        status => 'OPEN',
+        description => 'This is an update',
+        last_name => "Smith",
+        first_name => "John",
+        update_id => '10000000',
+    );
+    is $res->code, 200;
+    is_deeply decode_json($res->content),
+        [ {
+            'update_id' => "Zendesk_123456_6f0922d6",
+        } ], 'correct json returned';
+
+    restore_time();
+};
+
 
 done_testing;
