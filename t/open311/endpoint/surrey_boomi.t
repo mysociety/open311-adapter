@@ -21,16 +21,36 @@ $lwp->mock(request => sub {
         my $content = decode_json($req->content);
         if ($content && $content->{ticketId}) {
             # it's an update to an existing ticket
-            is_deeply $content, {
-                "comments" => [
-                    {
-                        "body" => "This is an update"
-                    }
-                ],
-                "ticketId" => "123456",
-                "integrationId" => "Integration.1"
-            };
-            return HTTP::Response->new(200, 'OK', [], encode_json({"ticket" => { system => "Zendesk", id => 1234 }}));
+            if ($content->{ticketId} eq '123457') {
+                is_deeply $content, {
+                    "comments" => [
+                        {
+                            "body" => "This is an update with a photo"
+                        }
+                    ],
+                    "ticketId" => "123457",
+                    "integrationId" => "Integration.1",
+                    "attachments" => [
+                        {
+                            "url" => "http://localhost/photo/one.jpeg",
+                            "fileName" => "1.jpeg",
+                            "base64" => "/9j/4AAQSkZJRgABAQAAAAAAAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkI\nCQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAA\nAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==\n",
+                        },
+                    ]
+                };
+                return HTTP::Response->new(200, 'OK', [], encode_json({"ticket" => { system => "Zendesk", id => 123457 }}));
+            } else {
+                is_deeply $content, {
+                    "comments" => [
+                        {
+                            "body" => "This is an update"
+                        }
+                    ],
+                    "ticketId" => "123456",
+                    "integrationId" => "Integration.1"
+                };
+                return HTTP::Response->new(200, 'OK', [], encode_json({"ticket" => { system => "Zendesk", id => 123456 }}));
+            }
         } else {
             is_deeply $content, {
                 "location" => {
@@ -301,7 +321,32 @@ subtest "POST Service Request Update" => sub {
     is $res->code, 200;
     is_deeply decode_json($res->content),
         [ {
-            'update_id' => "Zendesk_123456_6f0922d6",
+            'update_id' => "Zendesk_123456_ac95b36b",
+        } ], 'correct json returned';
+
+    restore_time();
+};
+
+subtest "POST Service Request Update with photo" => sub {
+    set_fixed_time('2023-05-01T12:00:00Z');
+
+    my $res = $surrey_endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'surrey_boomi',
+        api_key => 'api-key',
+        updated_datetime => '2023-05-02T12:42:00Z',
+        service_request_id => 'Zendesk_123457',
+        status => 'OPEN',
+        description => 'This is an update with a photo',
+        last_name => "Smith",
+        first_name => "John",
+        update_id => '10000001',
+        media_url => ['http://localhost/photo/one.jpeg'],
+    );
+    is $res->code, 200;
+    is_deeply decode_json($res->content),
+        [ {
+            'update_id' => "Zendesk_123457_050d1cc8",
         } ], 'correct json returned';
 
     restore_time();
