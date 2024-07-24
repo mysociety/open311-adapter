@@ -129,33 +129,7 @@ sub post_service_request {
     }
     $ticket->{customFields} = \@custom_fields;
 
-    my @attachments;
-
-    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
-
-    for my $photo (@{ $args->{media_url} }) {
-        my $photo_response = $ua->get($photo);
-        unless ( $photo_response->is_success) {
-            $self->logger->error("Failed to retrieve photo from $photo\n");
-            die "Failed to retrieve photo from $photo";
-        }
-
-        push @attachments, {
-            fileName => $photo_response->filename,
-            url => $photo,
-            base64 => encode_base64($photo_response->content),
-        };
-    }
-
-    if (@{$args->{uploads}}) {
-        foreach (@{$args->{uploads}}) {
-            push @attachments, {
-                fileName => $_->filename,
-                base64 => encode_base64(path($_)->slurp),
-            };
-        }
-    }
-    $ticket->{attachments} = \@attachments if @attachments;
+    $self->_add_attachments($args, $ticket);
 
     my $service_request_id = $self->boomi->upsertHighwaysTicket($ticket);
 
@@ -202,11 +176,6 @@ sub post_service_request_update {
 
     die "Args must be a hashref" unless ref $args eq 'HASH';
 
-    if ($args->{media_url}->[0]) {
-        $args->{description} .= "\n\n[ This update contains a photo, see: " . $args->{media_url}->[0] . " ]";
-    }
-
-
     $self->logger->info("[Boomi] Creating update");
 
     my ($system, $id) = split('_', $args->{service_request_id});
@@ -219,9 +188,13 @@ sub post_service_request_update {
         ],
     };
 
+    $self->_add_attachments($args, $ticket);
+
     # we don't get back a unique ID from Boomi, so calculate one ourselves
     # XXX is this going to be mirrored back next time we fetch updates?
-    my $update_id = $args->{service_request_id} . "_" . substr(md5_hex($id . $args->{description}), 0, 8);
+    my @parts = map { $args->{$_} } qw/service_request_id description update_id updated_datetime/;
+    my $hash = substr(md5_hex(join('', @parts)), 0, 8);
+    my $update_id = $args->{service_request_id} . "_" . $hash;
 
     my $service_request_id = $self->boomi->upsertHighwaysTicket($ticket);
 
@@ -232,6 +205,37 @@ sub post_service_request_update {
     );
 }
 
+sub _add_attachments {
+    my ($self, $args, $ticket) = @_;
 
+    my @attachments;
+
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+
+    for my $photo (@{ $args->{media_url} }) {
+        my $photo_response = $ua->get($photo);
+        unless ( $photo_response->is_success) {
+            $self->logger->error("Failed to retrieve photo from $photo\n");
+            die "Failed to retrieve photo from $photo";
+        }
+
+        push @attachments, {
+            fileName => $photo_response->filename,
+            url => $photo,
+            base64 => encode_base64($photo_response->content),
+        };
+    }
+
+    if (@{$args->{uploads}}) {
+        foreach (@{$args->{uploads}}) {
+            push @attachments, {
+                fileName => $_->filename,
+                base64 => encode_base64(path($_)->slurp),
+            };
+        }
+    }
+
+    $ticket->{attachments} = \@attachments if @attachments;
+}
 
 1;
