@@ -179,6 +179,9 @@ sub _get_service_requests_for_integration_id {
         };
         $loggedDate = DateTime::Format::W3CDTF->parse_datetime($loggedDate);
 
+        # if any of these is missing then ignore this record.
+        next unless $id && $loggedDate && $e && $n;
+
         my $status = lc $result->{fmsReport}->{status}->{state};
         $status =~ s/ /_/g;
 
