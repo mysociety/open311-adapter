@@ -136,8 +136,6 @@ $lwp->mock(request => sub {
         }
     } elsif ($req->uri =~ /getHighwaysTicketUpdates/) {
         is $req->method, 'GET', "Correct method used";
-
-
         return HTTP::Response->new(200, 'OK', [], encode_json({
             "executionId" => "execution-7701f16b-036c-4e6e-8e14-998f81f5b6b8-2024.06.27",
             "results" => [
@@ -177,6 +175,70 @@ $lwp->mock(request => sub {
                 },
             ]
         }));
+    } elsif ($req->uri =~ /getNewHighwaysTickets/) {
+        is $req->method, 'GET', "Correct method used";
+        my %query = $req->uri->query_form;
+        if ($query{integration_id} eq 'Integration.3') { # enquiries
+            return HTTP::Response->new(200, 'OK', [], encode_json({
+                "executionId" => "execution-7701f16b-036c-4e6e-8e14-998f81f5b6b8-2024.06.27",
+                "results" => [
+                    {
+                        "confirmEnquiry" => {
+                            "enquiryNumber" => 136416,
+                            "loggedDate" => "2024-07-26T08:42:52.000Z",
+                            "statusCode" => "6000",
+                            "subject" => {
+                                "name" => "Overgrown vegetation",
+                                "code" => "A006",
+                                "serviceCode" => "AR01"
+                            },
+                            "easting" => 507323,
+                            "northing" => 164194
+                        },
+                        "fmsReport" => {
+                            "status" => {
+                                "state" => "Open",
+                                "label" => "Allocated to a Highways Officer"
+                            },
+                            "categorisation" => {
+                                "category" => "Trees and roots",
+                                "subCategory" => "Other tree or roots issue"
+                            }
+                        }
+                    },
+                ]
+            }));
+        } else { # jobs
+            return HTTP::Response->new(200, 'OK', [], encode_json({
+                "executionId" => "execution-7701f16b-036c-4e6e-8e14-998f81f5b6b8-2024.06.27",
+                "results" => [
+                    {
+                        "confirmJob" => {
+                            "entryDate" => "2024-07-26T07:46:33.000Z",
+                            "jobNumber" => 569081,
+                            "statusCode" => "2000",
+                            "priorityCode" => "HW09",
+                            "jobType" => {
+                                "code" => "HW18",
+                                "name" => "HW:Grit Bins-Damaged"
+                            },
+                            "easting" => 522869,
+                            "northing" => 162735
+                        },
+                        "fmsReport" => {
+                            "status" => {
+                                "state" => "Action scheduled",
+                                "label" => "Inspection scheduled"
+                            },
+                            "categorisation" => {
+                                "category" => "Gritting and Grit Bins",
+                                "subCategory" => "Damaged grit bin"
+                            }
+                        }
+                    },
+                ]
+            }));
+        }
     } elsif ($req->uri eq 'http://localhost/photo/one.jpeg') {
         my $image_data = path(__FILE__)->sibling('files')->child('test_image.jpg')->slurp;
         my $response = HTTP::Response->new(200, 'OK', []);
@@ -352,5 +414,45 @@ subtest "POST Service Request Update with photo" => sub {
     restore_time();
 };
 
+subtest "GET Service Requests" => sub {
+    my $res = $surrey_endpoint->run_test_request(
+        GET => '/requests.json?jurisdiction_id=surrey_boomi&api_key=api-key&start_date=2024-05-01T09:00:00Z&end_date=2024-05-01T10:00:00Z',
+    );
+    is $res->code, 200;
+    is_deeply decode_json($res->content), [
+       {
+            'zipcode' => '',
+            'service_name' => 'Other tree or roots issue',
+            'address' => '',
+            'status' => 'open',
+            'long' => 507323,
+            'updated_datetime' => '2024-07-26T08:42:52Z',
+            'service_code' => 'foobar',
+            'lat' => 164194,
+            'requested_datetime' => '2024-07-26T08:42:52Z',
+            'media_url' => '',
+            'service_request_id' => 'Zendesk_136416',
+            'description' => 'Other tree or roots issue problem',
+            'service_notice' => 'Trees and roots',
+            'address_id' => ''
+        },
+        {
+            'requested_datetime' => '2024-07-26T07:46:33Z',
+            'zipcode' => '',
+            'service_name' => 'Damaged grit bin',
+            'lat' => 162735,
+            'address' => '',
+            'service_notice' => 'Gritting and Grit Bins',
+            'description' => 'Damaged grit bin problem',
+            'status' => 'action_scheduled',
+            'service_code' => 'foobar',
+            'media_url' => '',
+            'long' => 522869,
+            'updated_datetime' => '2024-07-26T07:46:33Z',
+            'address_id' => '',
+            'service_request_id' => 'Zendesk_JOB_569081'
+        }
+    ];
+};
 
 done_testing;

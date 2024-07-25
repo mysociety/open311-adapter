@@ -101,6 +101,33 @@ sub getHighwaysTicketUpdates {
     return $resp->{results} || [];
 }
 
+=head2 getNewHighwaysTickets
+
+Get new tickets from the Surrey Boomi system.
+
+=cut
+
+sub getNewHighwaysTickets {
+    my ($self, $integration_id, $start, $end) = @_;
+
+    my $resp = $self->get('getNewHighwaysTickets', {
+        integration_id => $integration_id,
+        from => format_datetime($start),
+        to => format_datetime($end),
+    });
+
+    if (my $errors = $resp->{errors}) {
+        $self->logger->error("[Boomi] Error fetching new tickets:");
+        $self->logger->error($_->{error} . ": " . $_->{details}) for @$errors;
+        die;
+    }
+    if (my $warnings = $resp->{warnings}) {
+        $self->logger->warn("[Boomi] Warnings when fetching new tickets:");
+        $self->logger->warn($_->{warning} . ": " . $_->{details}) for @$warnings;
+    }
+
+    return $resp->{results} || [];
+}
 
 =head2 post
 

@@ -10,6 +10,7 @@ use POSIX qw(strftime);
 use MIME::Base64 qw(encode_base64);
 use Open311::Endpoint::Service::UKCouncil::Boomi;
 use Open311::Endpoint::Service::Request::Update::mySociety;
+use Open311::Endpoint::Service::Request::ExtendedStatus;
 use Integrations::Surrey::Boomi;
 use JSON::MaybeXS;
 use DateTime::Format::W3CDTF;
@@ -17,6 +18,15 @@ use Path::Tiny;
 use Try::Tiny;
 use LWP::UserAgent;
 use Digest::MD5 qw(md5_hex);
+
+has '+request_class' => (
+    is => 'ro',
+    default => 'Open311::Endpoint::Service::Request::ExtendedStatus',
+);
+
+sub service_request_content {
+    '/open311/service_request_extended'
+}
 
 has jurisdiction_id => (
     is => 'ro',
@@ -136,6 +146,69 @@ sub post_service_request {
     return $self->new_request(
         service_request_id => $service_request_id,
     )
+}
+
+sub get_service_requests {
+    my ($self, $args) = @_;
+
+    my $integration_ids = $self->endpoint_config->{integration_ids}->{getNewHighwaysTickets};
+    return () unless $integration_ids;
+    $integration_ids = [ $integration_ids ] unless ref $integration_ids eq 'ARRAY';
+
+    my @requests;
+    foreach (@$integration_ids) {
+        push @requests, $self->_get_service_requests_for_integration_id($_, $args);
+    }
+    return @requests;
+}
+
+
+sub _get_service_requests_for_integration_id {
+    my ($self, $integration_id, $args) = @_;
+
+    my $start = DateTime::Format::W3CDTF->parse_datetime($args->{start_date});
+    my $end = DateTime::Format::W3CDTF->parse_datetime($args->{end_date});
+
+    my $results = $self->boomi->getNewHighwaysTickets($integration_id, $start, $end);
+
+    my @requests;
+    for my $result (@$results) {
+        my ($id, $loggedDate, $e, $n) = do {
+            if (my $enq = $result->{confirmEnquiry}) {
+                ($enq->{enquiryNumber}, $enq->{loggedDate}, $enq->{easting}, $enq->{northing});
+            } else {
+                my $job = $result->{confirmJob};
+                ("JOB_" . $job->{jobNumber}, $job->{entryDate}, $job->{easting}, $job->{northing});
+            }
+        };
+        $loggedDate = DateTime::Format::W3CDTF->parse_datetime($loggedDate);
+
+        # if any of these is missing then ignore this record.
+        next unless $id && $loggedDate && $e && $n;
+
+        my $status = lc $result->{fmsReport}->{status}->{state};
+        $status =~ s/ /_/g;
+
+        my $args = {
+            service_request_id => "Zendesk_$id",
+            status => $status,
+            description => $result->{fmsReport}->{categorisation}->{subCategory} . " problem",
+            title => $result->{fmsReport}->{categorisation}->{subCategory} . " problem",
+            requested_datetime => $loggedDate,
+            updated_datetime => $loggedDate,
+            service => Open311::Endpoint::Service->new(
+                service_name => $result->{fmsReport}->{categorisation}->{subCategory},
+                service_code => "foobar",
+            ),
+            service_notice => $result->{fmsReport}->{categorisation}->{category},
+            latlong => [ $n, $e ],
+        };
+        my $service_request = $self->new_request(%$args);
+
+        push @requests, $service_request;
+    }
+
+    return @requests;
 }
 
 
