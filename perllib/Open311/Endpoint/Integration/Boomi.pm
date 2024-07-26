@@ -174,7 +174,7 @@ sub _get_service_requests_for_integration_id {
                 ($enq->{enquiryNumber}, $enq->{loggedDate}, $enq->{easting}, $enq->{northing});
             } else {
                 my $job = $result->{confirmJob};
-                ("JOB_" . $job->{jobNumber}, $job->{entryDate}, $enq->{easting}, $enq->{northing});
+                ("JOB_" . $job->{jobNumber}, $job->{entryDate}, $job->{easting}, $job->{northing});
             }
         };
         $loggedDate = DateTime::Format::W3CDTF->parse_datetime($loggedDate);
