@@ -247,6 +247,7 @@ sub get_service_request_updates {
     my @updates;
     foreach (@{$xml->{request_update}}) {
         $_->{status} = lc $_->{status};
+        $_->{status} =~ s/ /_/g; # Some backends use spaces
         $_->{updated_datetime} = $self->date_parser->parse_datetime($_->{updated_datetime});
         $_->{description} ||= "";
         my $update = Open311::Endpoint::Service::Request::Update::mySociety->new(%$_);
@@ -268,6 +269,7 @@ sub get_service_requests {
     my @requests;
     foreach (@{$xml->{request}}) {
         $_->{status} = lc $_->{status};
+        $_->{status} =~ s/ /_/g; # Some backends use spaces
         $_->{updated_datetime} = $self->date_parser->parse_datetime($_->{updated_datetime});
         $_->{requested_datetime} = $self->date_parser->parse_datetime($_->{requested_datetime});
         $_->{latlong} = [ delete $_->{lat}, delete $_->{long} ];
