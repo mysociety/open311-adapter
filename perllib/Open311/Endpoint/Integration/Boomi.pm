@@ -83,6 +83,10 @@ sub post_service_request {
             id => 'subCategory',
             values => [ $args->{attributes}->{category} ],
         },
+        {
+            id => 'service_code',
+            values => [ $args->{service_code} ],
+        },
     );
 
     my $ticket = {

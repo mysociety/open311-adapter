@@ -85,6 +85,12 @@ $lwp->mock(request => sub {
                         "id" => "subCategory"
                     },
                     {
+                        "values" => [
+                            "potholes"
+                        ],
+                        "id" => "service_code"
+                    },
+                    {
                         "id" => "Q7",
                         "values" => [
                             "T1", "T3"
