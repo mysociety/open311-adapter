@@ -1,3 +1,33 @@
+=head1 NAME
+
+Open311::Endpoint::Integration::Ezytreev; - An integration with the Ezytreev backend
+
+=head1 SYNOPSIS
+
+=over 4
+
+=item * Posts reports.
+
+=item * Posts updates.
+
+=item * Fetches updates.
+
+=back
+
+=head1 CONFIGURATION
+
+Services are provided statically in the config under the C<category_mapping> key
+with mappings from the Ezytreev C<EnquiryType> to C<name> and C<group> mappings.
+
+C<forward_status_mapping> maps from FixMyStreet extended statuses to Ezytreev C<EnquiryStatusCode>.
+
+C<reverse_status_mapping> maps from C<EnquiryStatusCode> to the corresponding FixMyStreet status.
+
+C<statuses_to_show_notes_for> is a list of Ezytreev C<EnquiryType>s for which descriptions
+will be pulled from the Ezytreev C<StatusInfo>.
+
+=cut
+
 package Open311::Endpoint::Integration::Ezytreev;
 
 use JSON::MaybeXS;

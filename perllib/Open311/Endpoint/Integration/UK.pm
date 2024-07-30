@@ -34,6 +34,8 @@ has '+identifier_types' => (
             service_code => { type => '/open311/regex', pattern => qr/^ [&,\.\w_\- \/\(\)]+ $/ax },
             # some request IDs include slashes
             service_request_id => { type => '/open311/regex', pattern => qr/^ [\w_\-\/]+ $/ax },
+            # one backend, service codes have colons in
+            update_id => { type => '/open311/regex', pattern => qr/^ [:\w_\-]+ $/ax },
         };
     },
 );

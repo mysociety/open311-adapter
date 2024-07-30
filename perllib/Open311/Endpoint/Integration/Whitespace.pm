@@ -100,4 +100,13 @@ sub _worksheet_message {
     return $args->{description};
 }
 
+=head2 get_service_request_updates
+
+This is not possible, so we have a blank function in order to not error when
+used as part of a Multi integration.
+
+=cut
+
+sub get_service_request_updates { }
+
 1;
