@@ -268,6 +268,7 @@ subtest "POST a successful payment" => sub {
         update_id => 456,
         status => 'OPEN',
         description => 'Payment confirmed, reference ABC, amount £34.56',
+        'attribute[payments]' => 'ABC|34.56',
         first_name => 'Bob',
         last_name => 'Mould',
     );
