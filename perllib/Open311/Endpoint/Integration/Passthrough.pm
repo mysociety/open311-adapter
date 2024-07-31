@@ -104,19 +104,28 @@ the function to die.
 sub _request {
     my ($self, $method, $url, $params) = @_;
     $url = URI->new($self->endpoint . $url);
+    my $headers = $self->_headers();
     my $resp;
     if ($method eq 'POST') {
         $params->{api_key} = $self->api_key;
-        $resp = $self->ua->post($url, $params);
+        $resp = $self->ua->post($url, %$headers, Content => $params);
     } else {
         $url->query_form(%$params);
-        $resp = $self->ua->get($url);
+        $resp = $self->ua->get($url, %$headers);
     }
     my $content = $resp->decoded_content;
     my $xml = $self->pt_xml->XMLin(\$content);
     die $xml->{error}[0]->{description} . "\n" if $xml->{error};
     return $xml;
 }
+
+=head2 _headers
+
+This can be overriden to return headers used by C<_request>.
+
+=cut
+
+sub _headers { {} }
 
 =head2 services
 
