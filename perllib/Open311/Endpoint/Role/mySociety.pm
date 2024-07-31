@@ -196,11 +196,9 @@ sub POST_Service_Request_Update_input_schema {
         delete $attributes->{required}{update_id};
     }
 
-    # Allow attributes through for Oxfordshire XXX
-    if ($jurisdiction eq 'oxfordshire') {
-        for my $key (grep { /^attribute\[\w+\]$/ } keys %$args) {
-            $attributes->{optional}{$key} = '//str';
-        }
+    # Allow attributes through
+    for my $key (grep { /^attribute\[\w+\]$/ } keys %$args) {
+        $attributes->{optional}{$key} = '//str';
     }
 
     # Allow nsg_ref through for Bexley XXX
