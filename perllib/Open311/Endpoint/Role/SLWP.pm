@@ -23,7 +23,7 @@ around check_for_data_value => sub {
     return 1 if $name eq 'Container Mix' && ($service eq '2241' || $service eq '2250' || $service eq '2246' || $service eq '3571');
     return 1 if $name eq 'Paper' && ($service eq '2240' || $service eq '2249' || $service eq '2632');
     return 1 if $name eq 'Food' && ($service eq '2239' || $service eq '2248');
-    return 1 if $name eq 'Garden' && $service eq '2247';
+    return 1 if ($name eq 'Garden' || $name eq 'Garden Waste ') && $service eq '2247'; # Attribute has a space at the end
     return 1 if $name eq 'Refuse Bag' && $service eq '2242';
     return 1 if $name eq 'Refuse Bin' && ($service eq '2238' || $service eq '2243' || $service eq '3576');
 
@@ -45,24 +45,19 @@ around post_service_request_update => sub {
     my ($orig, $class, $args) = @_;
     return $class->$orig($args) unless $args->{description};
 
-    if ($args->{description} =~ /Payment confirmed, reference (.*), amount (.*)/) {
+    if (my $payments = $args->{attributes}{payments}) {
+        my @data = split /\|/, $payments;
+        my @payments;
+        for (my $i=0; $i<@data; $i+=2) {
+            push @payments, { ref => $data[$i], amount => $data[$i+1] }
+        }
+        $class->update_event_payment($args, \@payments);
+    } elsif ($args->{description} =~ /Payment confirmed, reference (.*), amount (.*)/) {
         my ($ref, $amount) = ($1, $2);
-        $amount =~ s/£//;
-        my $integ = $class->get_integration;
-        my $event = $integ->GetEvent($args->{service_request_id});
-        # Could GetEventType and loop through it all to find these IDs out but for just this seemed okay
-        my $data = {
-            id => 27409,
-            childdata => [
-                { id => 27410, value => $ref },
-                { id => 27411, value => $amount },
-            ],
-        };
-        $integ->UpdateEvent({ id => $event->{Id}, data => [ $data ] });
-        $args->{description} = ''; # Blank out so nothing sent to Echo now
+        $class->update_event_payment($args, [ { ref => $ref, amount => $amount } ]);
     }
 
-    if ($args->{description} eq 'Booking cancelled by customer') {
+    if ($args->{description} =~ /Booking cancelled/ || $args->{attributes}{booking_cancelled}) {
         $args->{actiontype_id} = 8;
         $args->{datatype_id} = 0;
     }

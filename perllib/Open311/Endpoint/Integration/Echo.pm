@@ -13,6 +13,7 @@ pushed to us by Echo or fetched directly.
 package Open311::Endpoint::Integration::Echo;
 
 use v5.14;
+use utf8;
 
 use Moo;
 use JSON::MaybeXS;
@@ -500,5 +501,34 @@ used as part of a Multi integration.
 =cut
 
 sub get_service_request_updates { }
+
+=head2 update_event_payment
+
+Given an update args and an arrayref of payment details, update the event
+to add those details. This is currently only for SLWP, and includes
+hard-coded SLWP IDs.
+
+=cut
+
+sub update_event_payment {
+    my ($self, $args, $payments) = @_;
+
+    my $integ = $self->get_integration;
+    my $event = $integ->GetEvent($args->{service_request_id});
+    my $data = [];
+    foreach (@$payments) {
+        $_->{amount} =~ s/£//;
+        push @$data, {
+            # Could GetEventType and loop through it all to find these IDs out but for just this seemed okay
+            id => 27409,
+            childdata => [
+                { id => 27410, value => $_->{ref} },
+                { id => 27411, value => $_->{amount} },
+            ],
+        };
+    }
+    $integ->UpdateEvent({ id => $event->{Id}, data => $data });
+    $args->{description} = ''; # Blank out so nothing sent to Echo now
+}
 
 1;
