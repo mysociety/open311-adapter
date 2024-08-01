@@ -233,7 +233,7 @@ $lwp->mock(request => sub {
                         },
                         "fmsReport" => {
                             "status" => {
-                                "state" => "Open",
+                                "state" => "Action scheduled",
                                 "label" => "Inspection scheduled"
                             },
                             "categorisation" => {
@@ -450,7 +450,7 @@ subtest "GET Service Requests" => sub {
             'address' => '',
             'service_notice' => 'Gritting and Grit Bins',
             'description' => 'Damaged grit bin problem',
-            'status' => 'open',
+            'status' => 'action_scheduled',
             'service_code' => 'foobar',
             'media_url' => '',
             'long' => 522869,

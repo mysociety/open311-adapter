@@ -24,6 +24,10 @@ has '+request_class' => (
     default => 'Open311::Endpoint::Service::Request::ExtendedStatus',
 );
 
+sub service_request_content {
+    '/open311/service_request_extended'
+}
+
 has jurisdiction_id => (
     is => 'ro',
     required => 1,
