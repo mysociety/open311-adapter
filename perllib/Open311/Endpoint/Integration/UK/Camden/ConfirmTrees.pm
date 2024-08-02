@@ -16,4 +16,13 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
+sub process_service_request_args {
+    my $self = shift;
+    my $args = $self->SUPER::process_service_request_args(shift);
+
+    $args->{location} = $args->{location} . '; ' . $args->{attributes}->{closest_address};
+
+    return $args;
+}
+
 1;
