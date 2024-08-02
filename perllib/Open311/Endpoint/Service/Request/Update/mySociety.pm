@@ -19,6 +19,7 @@ has status => (
         'not_councils_responsibility',
         'no_further_action',
         'internal_referral',
+        'cancelled',
         'reopen',
         'for_triage',
     ],
