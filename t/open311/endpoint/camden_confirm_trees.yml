@@ -1,0 +1,4 @@
+"service_whitelist":
+  "Trees":
+     "ABC_DEF": "Blocking streetlight"
+     "ABC_DEF_1": "Blocking traffic signal/sign"
