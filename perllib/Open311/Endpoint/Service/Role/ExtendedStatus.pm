@@ -15,6 +15,7 @@ has '+status' => (
         'not_councils_responsibility',
         'duplicate',
         'internal_referral',
+        'cancelled',
         'fixed',
         'closed',
         'for_triage',

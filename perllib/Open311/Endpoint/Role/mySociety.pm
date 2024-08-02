@@ -337,6 +337,7 @@ sub learn_additional_types {
             'not_councils_responsibility',
             'no_further_action',
             'internal_referral',
+            'cancelled',
             'reopen',
             'for_triage',
             'referred_to_veolia_streets', # Bromley passthrough
@@ -355,6 +356,7 @@ sub learn_additional_types {
             'NOT_COUNCILS_RESPONSIBILITY',
             'NO_FURTHER_ACTION',
             'INTERNAL_REFERRAL',
+            'CANCELLED',
             'REOPEN',
             'FOR_TRIAGE',
         )
