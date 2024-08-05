@@ -208,7 +208,8 @@ $lwp->mock(request => sub {
                             },
                             "categorisation" => {
                                 "category" => "Trees and roots",
-                                "subCategory" => "Other tree or roots issue"
+                                "subCategory" => "Other tree or roots issue",
+                                "serviceId" => 'foobar',
                             }
                         }
                     },
@@ -238,7 +239,9 @@ $lwp->mock(request => sub {
                             },
                             "categorisation" => {
                                 "category" => "Gritting and Grit Bins",
-                                "subCategory" => "Damaged grit bin"
+                                "subCategory" => "Damaged grit bin",
+                                "serviceId" => 'foobar',
+
                             }
                         }
                     },
