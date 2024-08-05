@@ -196,15 +196,15 @@ sub _get_service_requests_for_integration_id {
         my $args = {
             service_request_id => "Zendesk_$id",
             status => $status,
-            description => $result->{fmsReport}->{categorisation}->{subCategory} . " problem",
-            title => $result->{fmsReport}->{categorisation}->{subCategory} . " problem",
+            description => $result->{fmsReport}->{title},
+            title => $result->{fmsReport}->{title},
             requested_datetime => $loggedDate,
             updated_datetime => $loggedDate,
             service => Open311::Endpoint::Service->new(
-                service_name => $result->{fmsReport}->{categorisation}->{subCategory},
-                service_code => "foobar",
+                service_name => $result->{fmsReport}->{title},
+                service_code => $result->{fmsReport}->{categorisation}->{serviceId},
             ),
-            service_notice => $result->{fmsReport}->{categorisation}->{category},
+            service_notice => $result->{fmsReport}->{title},
             latlong => [ $n, $e ],
         };
         my $service_request = $self->new_request(%$args);

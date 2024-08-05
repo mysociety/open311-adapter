@@ -202,13 +202,13 @@ $lwp->mock(request => sub {
                             "northing" => 164194
                         },
                         "fmsReport" => {
+                            "title" => "Other tree or roots issue problem",
                             "status" => {
                                 "state" => "Open",
                                 "label" => "Allocated to a Highways Officer"
                             },
                             "categorisation" => {
-                                "category" => "Trees and roots",
-                                "subCategory" => "Other tree or roots issue"
+                                "serviceId" => 'foobar',
                             }
                         }
                     },
@@ -232,13 +232,13 @@ $lwp->mock(request => sub {
                             "northing" => 162735
                         },
                         "fmsReport" => {
+                            "title" => "Damaged grit bin",
                             "status" => {
                                 "state" => "Action scheduled",
                                 "label" => "Inspection scheduled"
                             },
                             "categorisation" => {
-                                "category" => "Gritting and Grit Bins",
-                                "subCategory" => "Damaged grit bin"
+                                "serviceId" => 'foobar',
                             }
                         }
                     },
@@ -428,7 +428,7 @@ subtest "GET Service Requests" => sub {
     is_deeply decode_json($res->content), [
        {
             'zipcode' => '',
-            'service_name' => 'Other tree or roots issue',
+            'service_name' => 'Other tree or roots issue problem',
             'address' => '',
             'status' => 'open',
             'long' => 507323,
@@ -439,7 +439,7 @@ subtest "GET Service Requests" => sub {
             'media_url' => '',
             'service_request_id' => 'Zendesk_136416',
             'description' => 'Other tree or roots issue problem',
-            'service_notice' => 'Trees and roots',
+            'service_notice' => 'Other tree or roots issue problem',
             'address_id' => ''
         },
         {
@@ -448,8 +448,8 @@ subtest "GET Service Requests" => sub {
             'service_name' => 'Damaged grit bin',
             'lat' => 162735,
             'address' => '',
-            'service_notice' => 'Gritting and Grit Bins',
-            'description' => 'Damaged grit bin problem',
+            'service_notice' => 'Damaged grit bin',
+            'description' => 'Damaged grit bin',
             'status' => 'action_scheduled',
             'service_code' => 'foobar',
             'media_url' => '',
