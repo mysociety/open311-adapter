@@ -202,7 +202,7 @@ sub _get_service_requests_for_integration_id {
             updated_datetime => $loggedDate,
             service => Open311::Endpoint::Service->new(
                 service_name => $result->{fmsReport}->{categorisation}->{subCategory},
-                service_code => "foobar",
+                service_code => $result->{fmsReport}->{categorisation}->{serviceId},
             ),
             service_notice => $result->{fmsReport}->{categorisation}->{category},
             latlong => [ $n, $e ],
