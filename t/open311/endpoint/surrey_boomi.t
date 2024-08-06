@@ -190,7 +190,6 @@ $lwp->mock(request => sub {
                 "results" => [
                     {
                         "confirmEnquiry" => {
-                            "enquiryNumber" => 136416,
                             "loggedDate" => "2024-07-26T08:42:52.000Z",
                             "statusCode" => "6000",
                             "subject" => {
@@ -203,6 +202,7 @@ $lwp->mock(request => sub {
                         },
                         "fmsReport" => {
                             "title" => "Other tree or roots issue problem",
+                            "externalId" => 136416,
                             "status" => {
                                 "state" => "Open",
                                 "label" => "Allocated to a Highways Officer"
@@ -221,7 +221,6 @@ $lwp->mock(request => sub {
                     {
                         "confirmJob" => {
                             "entryDate" => "2024-07-26T07:46:33.000Z",
-                            "jobNumber" => 569081,
                             "statusCode" => "2000",
                             "priorityCode" => "HW09",
                             "jobType" => {
@@ -233,6 +232,7 @@ $lwp->mock(request => sub {
                         },
                         "fmsReport" => {
                             "title" => "Damaged grit bin",
+                            "externalId" => 569081,
                             "status" => {
                                 "state" => "Action scheduled",
                                 "label" => "Inspection scheduled"
