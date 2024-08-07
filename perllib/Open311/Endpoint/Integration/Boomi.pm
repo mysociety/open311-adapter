@@ -177,12 +177,14 @@ sub _get_service_requests_for_integration_id {
 
     my @requests;
     for my $result (@$results) {
-        my ($id, $loggedDate, $e, $n) = do {
+        my $id = $result->{fmsReport}->{externalId};
+        my ($loggedDate, $e, $n) = do {
             if (my $enq = $result->{confirmEnquiry}) {
-                ($enq->{enquiryNumber}, $enq->{loggedDate}, $enq->{easting}, $enq->{northing});
+                ($enq->{loggedDate}, $enq->{easting}, $enq->{northing});
             } else {
+                $id = "JOB_" . $id;
                 my $job = $result->{confirmJob};
-                ("JOB_" . $job->{jobNumber}, $job->{entryDate}, $job->{easting}, $job->{northing});
+                ($job->{entryDate}, $job->{easting}, $job->{northing});
             }
         };
         $loggedDate = DateTime::Format::W3CDTF->parse_datetime($loggedDate);
