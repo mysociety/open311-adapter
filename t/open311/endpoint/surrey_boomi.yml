@@ -1,0 +1,10 @@
+username: "my_surrey_username"
+password: "my_surrey_password"
+api_url: http://localhost/ws/simple/
+
+integration_ids:
+  upsertHighwaysTicket: "Integration.1"
+  getHighwaysTicketUpdates: "Integration.2"
+  getNewHighwaysTickets:
+    - "Integration.3"
+    - "Integration.4"
