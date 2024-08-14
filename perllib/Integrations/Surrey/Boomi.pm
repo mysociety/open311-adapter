@@ -80,12 +80,12 @@ Returns the ID of the created or updated ticket.
 =cut
 
 sub getHighwaysTicketUpdates {
-    my ($self, $start, $end) = @_;
+    my ($self, $integration_id, $start, $end) = @_;
 
     my $resp = $self->get('getHighwaysTicketUpdates', {
         from => format_datetime($start),
         to => format_datetime($end),
-        integration_id => $self->config->{integration_ids}->{getHighwaysTicketUpdates},
+        integration_id => $integration_id,
     });
 
     if (my $errors = $resp->{errors}) {
