@@ -217,31 +217,50 @@ sub _get_service_requests_for_integration_id {
     return @requests;
 }
 
-
-
 sub get_service_request_updates {
     my ($self, $args) = @_;
+
+    my $integration_ids = $self->endpoint_config->{integration_ids}->{getHighwaysTicketUpdates};
+    return () unless $integration_ids;
+    $integration_ids = [ $integration_ids ] unless ref $integration_ids eq 'ARRAY';
+
+    my @updates;
+    foreach (@$integration_ids) {
+        push @updates, $self->_get_service_request_updates_for_integration_id($_, $args);
+    }
+
+    return @updates;
+}
+
+sub _get_service_request_updates_for_integration_id {
+    my ($self, $integration_id, $args) = @_;
 
     my $start = DateTime::Format::W3CDTF->parse_datetime($args->{start_date});
     my $end = DateTime::Format::W3CDTF->parse_datetime($args->{end_date});
 
-    my $results = $self->boomi->getHighwaysTicketUpdates($start, $end);
+    my $results = $self->boomi->getHighwaysTicketUpdates($integration_id, $start, $end);
     my $w3c = DateTime::Format::W3CDTF->new;
 
     my @updates;
 
     for my $update (@$results) {
-        my $log = $update->{confirmEnquiryStatusLog};
+        my $enquiry_update = $update->{confirmEnquiryStatusLog} ? 1 : 0;
+        my $log = $enquiry_update ? $update->{confirmEnquiryStatusLog} : $update->{confirmJobStatusLog};
         my $fms = $update->{fmsReport};
 
-        my $id = $log->{enquiry}->{externalSystemReference} . "_" . $log->{logNumber};
+        my $id = $enquiry_update
+            ? $log->{enquiry}->{externalSystemReference} . "_" . $log->{logNumber}
+            : $log->{job}->{jobNumber} . "_" . $log->{logNumber};
+        my $service_request_id = $enquiry_update
+            ? "Zendesk_" . $log->{enquiry}->{externalSystemReference}
+            : "Zendesk_JOB_" . $log->{job}->{jobNumber};
         my $status = lc $fms->{status}->{state};
         $status =~ s/ /_/g;
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
             status => $status,
             update_id => $id,
-            service_request_id => "Zendesk_" . $log->{enquiry}->{externalSystemReference},
+            service_request_id => $service_request_id,
             description => $fms->{status}->{label},
             updated_datetime => $w3c->parse_datetime( $log->{loggedDate} )->truncate( to => 'second' ),
         );

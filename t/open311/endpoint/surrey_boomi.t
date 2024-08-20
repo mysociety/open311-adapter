@@ -141,46 +141,72 @@ $lwp->mock(request => sub {
             return HTTP::Response->new(200, 'OK', [], encode_json({"ticket" => { system => "Zendesk", id => 1234 }}));
         }
     } elsif ($req->uri =~ /getHighwaysTicketUpdates/) {
+        my %query = $req->uri->query_form;
         is $req->method, 'GET', "Correct method used";
-        return HTTP::Response->new(200, 'OK', [], encode_json({
-            "executionId" => "execution-7701f16b-036c-4e6e-8e14-998f81f5b6b8-2024.06.27",
-            "results" => [
-                {
-                    "confirmEnquiryStatusLog" => {
-                        "loggedDate" => "2024-05-01T09:07:47.000Z",
-                        "logNumber" => 11,
-                        "statusCode" => "5800",
-                        "enquiry" => {
-                            "enquiryNumber" => 129293,
-                            "externalSystemReference" => "2929177"
+        if ($query{integration_id} eq 'Integration.2') {
+            return HTTP::Response->new(200, 'OK', [], encode_json({
+                "executionId" => "execution-7701f16b-036c-4e6e-8e14-998f81f5b6b8-2024.06.27",
+                "results" => [
+                    {
+                        "confirmEnquiryStatusLog" => {
+                            "loggedDate" => "2024-05-01T09:07:47.000Z",
+                            "logNumber" => 11,
+                            "statusCode" => "5800",
+                            "enquiry" => {
+                                "enquiryNumber" => 129293,
+                                "externalSystemReference" => "2929177"
+                            }
+                        },
+                        "fmsReport" => {
+                            "status" => {
+                                "state" => "Closed",
+                                "label" => "Enquiry closed"
+                            }
                         }
                     },
-                    "fmsReport" => {
-                        "status" => {
-                            "state" => "Closed",
-                            "label" => "Enquiry closed"
-                        }
-                    }
-                },
-                {
-                    "confirmEnquiryStatusLog" => {
-                        "loggedDate" => "2024-05-01T09:10:41.000Z",
-                        "logNumber" => 7,
-                        "statusCode" => "3200",
-                        "enquiry" => {
-                            "enquiryNumber" => 132361,
-                            "externalSystemReference" => "2939061"
+                    {
+                        "confirmEnquiryStatusLog" => {
+                            "loggedDate" => "2024-05-01T09:10:41.000Z",
+                            "logNumber" => 7,
+                            "statusCode" => "3200",
+                            "enquiry" => {
+                                "enquiryNumber" => 132361,
+                                "externalSystemReference" => "2939061"
+                            }
+                        },
+                        "fmsReport" => {
+                            "status" => {
+                                "state" => "Action scheduled",
+                                "label" => "Assessed - scheduling a repair within 5 Working Days"
+                            }
                         }
                     },
-                    "fmsReport" => {
-                        "status" => {
-                            "state" => "Action scheduled",
-                            "label" => "Assessed - scheduling a repair within 5 Working Days"
+                ]
+            }));
+        } elsif ($query{integration_id} eq 'Integration.5') {
+            return HTTP::Response->new(200, 'OK', [], encode_json({
+                "executionId" => "execution-7701f16b-036c-4e6e-8e14-998f81f5b6b8-2024.06.27",
+                "results" => [
+                    {
+                        "confirmJobStatusLog" => {
+                            "loggedDate" => "2024-08-09T11:23:10.000Z",
+                            "logNumber" => 2,
+                            "statusCode" => "2000",
+                            "job" => {
+                            "jobNumber" => 569276
+                            }
+                        },
+                        "fmsReport" => {
+                            "externalId" => "569276",
+                            "status" => {
+                                "state" => "Action scheduled",
+                                "label" => "Assessed - scheduling a repair within 5 Working Days"
+                            }
                         }
                     }
-                },
-            ]
-        }));
+                ]
+            }));
+        }
     } elsif ($req->uri =~ /getNewHighwaysTickets/) {
         is $req->method, 'GET', "Correct method used";
         my %query = $req->uri->query_form;
@@ -367,6 +393,14 @@ subtest "GET Service Request Updates" => sub {
           "status" => "action_scheduled",
           "update_id" => "2939061_7",
           "updated_datetime" => "2024-05-01T09:10:41Z",
+       },
+       {
+          "update_id" => "569276_2",
+          "service_request_id" => "Zendesk_JOB_569276",
+          "description" => "Assessed - scheduling a repair within 5 Working Days",
+          "media_url" => "",
+          "updated_datetime" => "2024-08-09T11:23:10Z",
+          "status" => "action_scheduled"
        }
     ];
 };
