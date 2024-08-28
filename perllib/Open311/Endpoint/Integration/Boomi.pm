@@ -198,7 +198,7 @@ sub _get_service_requests_for_integration_id {
         my $args = {
             service_request_id => "Zendesk_$id",
             status => $status,
-            description => $result->{fmsReport}->{title},
+            description => $result->{fmsReport}->{description},
             title => $result->{fmsReport}->{title},
             requested_datetime => $loggedDate,
             updated_datetime => $loggedDate,

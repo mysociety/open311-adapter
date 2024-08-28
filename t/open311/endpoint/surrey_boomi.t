@@ -228,6 +228,7 @@ $lwp->mock(request => sub {
                         },
                         "fmsReport" => {
                             "title" => "Other tree or roots issue problem",
+                            "description" => "Roots sticking through pavement",
                             "externalId" => 136416,
                             "status" => {
                                 "state" => "Open",
@@ -258,6 +259,7 @@ $lwp->mock(request => sub {
                         },
                         "fmsReport" => {
                             "title" => "Damaged grit bin",
+                            "description" => "Lid come off grit bin",
                             "externalId" => 569081,
                             "status" => {
                                 "state" => "Action scheduled",
@@ -472,7 +474,7 @@ subtest "GET Service Requests" => sub {
             'requested_datetime' => '2024-07-26T08:42:52Z',
             'media_url' => '',
             'service_request_id' => 'Zendesk_136416',
-            'description' => 'Other tree or roots issue problem',
+            'description' => 'Roots sticking through pavement',
             'service_notice' => 'Other tree or roots issue problem',
             'address_id' => ''
         },
@@ -483,7 +485,7 @@ subtest "GET Service Requests" => sub {
             'lat' => 162735,
             'address' => '',
             'service_notice' => 'Damaged grit bin',
-            'description' => 'Damaged grit bin',
+            'description' => 'Lid come off grit bin',
             'status' => 'action_scheduled',
             'service_code' => 'foobar',
             'media_url' => '',
