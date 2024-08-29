@@ -403,8 +403,9 @@ subtest "check fetch updates" => sub {
             update_id          => '100001',
             updated_datetime   => '2023-11-13T11:05:00Z',
             extras             => {
-                assigned_user_name  => 'FMS User 123',
-                assigned_user_email => '123@email.com',
+                assigned_user_name   => 'FMS User 123',
+                assigned_user_email  => '123@email.com',
+                detailed_information => 'Hello there',
             },
         },
         {   description        => '',
@@ -416,6 +417,7 @@ subtest "check fetch updates" => sub {
             extras             => {
                 assigned_user_name  => 'FMS User 234',
                 assigned_user_email => '234@email.com',
+                detailed_information => '',
             },
         },
         {   description        => '',
@@ -427,6 +429,7 @@ subtest "check fetch updates" => sub {
             extras             => {
                 assigned_user_name  => 'FMS User 345',
                 assigned_user_email => '345@email.com',
+                detailed_information => '',
             },
         },
     ], 'correct json returned';
