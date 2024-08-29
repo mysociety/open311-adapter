@@ -630,6 +630,11 @@ sub _get_inspection_updates {
             };
 
             $args{extras} = { %{$args{extras}}, %$assigned_to_user } if $assigned_to_user;
+
+            if ( my $extra_details_code = $mapping->{extra_details} ) {
+                $args{extras}{detailed_information}
+                    = $attributes->{$extra_details_code} // '';
+            }
         }
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
