@@ -418,7 +418,13 @@ subtest "check fetch updates" => sub {
     ], 'correct json returned';
 };
 
-subtest "update status on problem" => sub {
+subtest "send updates for problem" => sub {
+    my $extra_details = <<HERE;
+Red and
+yellow and
+    pink
+HERE
+
     my $res = $endpoint->run_test_request(
         POST => '/servicerequestupdates.json',
         jurisdiction_id => 'dummy',
@@ -426,6 +432,7 @@ subtest "update status on problem" => sub {
         service_code => 'Damaged_/_Missing_/_Facing_Wrong_Way',
         description => 'update',
         status => 'FIXED',
+        extra_details => $extra_details,
         service_request_id => '642062376be3a0036bbbb64b',
         update_id => '1',
         updated_datetime => '2023-05-15T14:55:55+00:00',
@@ -440,15 +447,17 @@ subtest "update status on problem" => sub {
     my $expected_status_attribute_code = 'attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb';
     my $expected_status_attribute_value = '63fcb00c753aed036a5e43a2';
 
-    my $status_match_found = 0;
+    my $expected_extra_details_attribute_code = 'attributes_customerRequestFMSExtraDetails_646e07533726d8036a7a4022';
+    my $expected_extra_details_attribute_value = $extra_details;
+
     foreach (@{ $attributes }) {
         if ($_->{attributeCode} eq $expected_status_attribute_code) {
             ok ref($_->{value}) eq 'ARRAY' && $_->{value}[0] eq $expected_status_attribute_value, "value sent in status attribute update is correct";
-            $status_match_found = 1;
-            last;
+        }
+        if ($_->{attributeCode} eq $expected_extra_details_attribute_code) {
+            ok $_->{value} eq $expected_extra_details_attribute_value, "value sent in extra_details attribute update is correct";
         }
     }
-    ok $status_match_found, "status attribute update was sent";
 };
 
 done_testing;
