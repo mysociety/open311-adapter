@@ -88,15 +88,25 @@ sub process_attributes {
 
 Adds an update for the status attribute given by C<update_status_attribute_id>, using the mapping C<update_status_mapping>.
 
+Adds an update for 'extra_details' field ('FMS Extra Details' on Alloy end).
+
 =cut
 
 sub update_additional_attributes {
     my ($self, $args) = @_;
 
-    return [{
-        attributeCode => $self->config->{update_status_attribute_id},
-        value => [ $self->config->{update_status_mapping}->{lc ($args->{status})} ]
-    }];
+    return [
+        {   attributeCode => $self->config->{update_status_attribute_id},
+            value         => [
+                $self->config->{update_status_mapping}
+                    ->{ lc( $args->{status} ) }
+            ],
+        },
+        {   attributeCode =>
+                $self->config->{inspection_attribute_mapping}{extra_details},
+            value => $args->{extra_details},
+        },
+    ];
 }
 
 =head2 get_assigned_to_users
