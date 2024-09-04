@@ -185,7 +185,6 @@ sub POST_Service_Request_Update_input_schema {
             public_anonymity_required => Open311::Endpoint::Schema->enum('//str', 'TRUE', 'FALSE'),
             email_alerts_requested => Open311::Endpoint::Schema->enum('//str', 'TRUE', 'FALSE'),
             service_code => $self->get_identifier_type('service_code'),
-            extra_details => '//str',
         }
     };
 

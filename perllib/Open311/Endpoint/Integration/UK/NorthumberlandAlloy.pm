@@ -90,12 +90,14 @@ Adds an update for the status attribute given by C<update_status_attribute_id>, 
 
 Adds an update for 'extra_details' field ('FMS Extra Details' on Alloy end).
 
+Adds an update for the assigned user ('Assigned to' on Alloy end).
+
 =cut
 
 sub update_additional_attributes {
     my ($self, $args) = @_;
 
-    return [
+    my $attr = [
         {   attributeCode => $self->config->{update_status_attribute_id},
             value         => [
                 $self->config->{update_status_mapping}
@@ -104,9 +106,47 @@ sub update_additional_attributes {
         },
         {   attributeCode =>
                 $self->config->{inspection_attribute_mapping}{extra_details},
-            value => $args->{extra_details},
+            value => $args->{attributes}{extra_details},
         },
     ];
+
+    if ( exists $args->{attributes}{assigned_to_user_email} ) {
+        my $email = $args->{attributes}{assigned_to_user_email};
+
+        if ($email) {
+            # TODO Handle failure
+
+            # Search for existing user
+            my $mapping = $self->config->{assigned_to_user_mapping};
+            my $body = $self->find_item_body(
+                dodi_code      => $mapping->{design},
+                attribute_code => $mapping->{email_attribute},
+                search_term    => $args->{attributes}{assigned_to_user_email},
+            );
+
+            my $res = $self->alloy->search($body);
+
+            # We don't update if user does not exist in Alloy
+            if (@$res) {
+                push @$attr, {
+                    attributeCode =>
+                        $self->config->{inspection_attribute_mapping}
+                        {assigned_to_user},
+                    value => [ $res->[0]{itemId} ],
+                };
+            }
+        } else {
+            # Unset user
+            push @$attr, {
+                attributeCode =>
+                    $self->config->{inspection_attribute_mapping}
+                    {assigned_to_user},
+                value => [],
+            };
+        }
+    }
+
+    return $attr;
 }
 
 =head2 get_assigned_to_users
