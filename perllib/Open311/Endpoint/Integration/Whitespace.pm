@@ -78,14 +78,29 @@ sub post_service_request {
 
     my $integration = $self->get_integration;
 
-    my $worksheet_id = $integration->CreateWorksheet({
-        uprn => $args->{attributes}->{uprn},
-        service_item_name => $args->{attributes}->{service_item_name},
-        worksheet_reference => $args->{attributes}->{fixmystreet_id},
-        worksheet_message => $self->_worksheet_message($args),
-        assisted_yn => $args->{attributes}->{assisted_yn},
-        location_of_containers => $args->{attributes}->{location_of_containers},
-    });
+    my %worksheet_params;
+    if ( $args->{service_code} eq 'request_new_container' ) {
+        %worksheet_params = (
+            uprn                => $args->{attributes}->{uprn},
+            service_item_name   => $args->{attributes}->{service_item_name},
+            worksheet_reference => $args->{attributes}->{fixmystreet_id},
+            worksheet_message   => '# TODO',
+            service_code        => $args->{service_code},
+        );
+    } else {
+        # Missed collection
+        %worksheet_params = (
+            uprn                => $args->{attributes}->{uprn},
+            service_item_name   => $args->{attributes}->{service_item_name},
+            worksheet_reference => $args->{attributes}->{fixmystreet_id},
+            worksheet_message   => $self->_worksheet_message($args),
+            assisted_yn         => $args->{attributes}->{assisted_yn},
+            location_of_containers =>
+                $args->{attributes}->{location_of_containers},
+        );
+    }
+
+    my $worksheet_id = $integration->CreateWorksheet( \%worksheet_params );
 
     my $request = $self->new_request(
         service_request_id => $worksheet_id,
@@ -94,6 +109,8 @@ sub post_service_request {
     return $request;
 }
 
+# TODO Is this the sub we use, or the identically named sub in
+# Open311/Endpoint/Integration/UK/Bexley/Whitespace.pm?
 sub _worksheet_message {
     my ($self, $args) = @_;
 

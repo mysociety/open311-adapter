@@ -92,6 +92,14 @@ sub CreateWorksheet {
         die "No service_item_name provided";
     }
 
+    # EXAMPLE FOR conf/council-bexley_whitespace.yml
+    # service_mapping:
+    #    PG-240:
+    #        service_item_id: 802 # Plastics & glass 240 ltr wheeled bin
+    #        service_id: 319 # Missed Collection Plastics & Glass
+    #        delivery_service_id: 331 # Deliver Plastics & Glass 240 ltr Bin
+    #        collection_service_id: 339 # Collect Plastics & Glass 240 ltr Bin
+
     my $service_mapping = $self->config->{service_mapping};
     my $service_params = $service_mapping->{$params->{service_item_name}};
 
@@ -100,35 +108,61 @@ sub CreateWorksheet {
         die "No service mapping found for $params->{service_item_name}";
     }
 
-    my $worksheet = ixhash(
-        Uprn => $params->{uprn},
-        ServiceId => $service_params->{service_id},
+    my %common_params = (
+        Uprn               => $params->{uprn},
         WorksheetReference => $params->{worksheet_reference},
-        WorksheetMessage => $params->{worksheet_message},
-        ServiceItemInputs => ixhash(
-            'wsap:Input.CreateWorksheetInput.ServiceItemInput' => [
-                ixhash(
-                    'wsap:ServiceItemId' => $service_params->{service_item_id},
-                    'wsap:ServiceItemName' => '',
-                    'wsap:ServiceItemQuantity' => 1,
-                )
-            ]
-        ),
-        ServicePropertyInputs => [
-            {
-                'wsap:Input.CreateWorksheetInput.ServicePropertyInput' => ixhash(
-                    'wsap:ServicePropertyId' => 79,
-                    'wsap:ServicePropertyValue' => $params->{assisted_yn},
-                ),
-            },
-            {
-                'wsap:Input.CreateWorksheetInput.ServicePropertyInput' => ixhash(
-                    'wsap:ServicePropertyId' => 80,
-                    'wsap:ServicePropertyValue' => $params->{location_of_containers},
-                ),
-            },
-        ],
+        WorksheetMessage   => $params->{worksheet_message},
     );
+
+    my $worksheet;
+    if ( $params->{service_code} eq 'request_new_container' ) {
+
+        # TODO Worksheet for collection as well
+
+        $worksheet = ixhash(
+            %common_params,
+            ServiceId         => $service_params->{delivery_service_id},
+            ServiceItemInputs => ixhash(
+                'wsap:Input.CreateWorksheetInput.ServiceItemInput' => [
+                    ixhash(
+                        'wsap:ServiceItemId' => $service_params->{service_item_id},
+                        'wsap:ServiceItemName' => '',
+                        'wsap:ServiceItemQuantity' => 1,
+                    )
+                ]
+            ),
+            # TODO ServicePropertyInputs?
+        );
+    } else {
+        # Missed collection
+        $worksheet = ixhash(
+            %common_params,
+            ServiceId         => $service_params->{service_id},
+            ServiceItemInputs => ixhash(
+                'wsap:Input.CreateWorksheetInput.ServiceItemInput' => [
+                    ixhash(
+                        'wsap:ServiceItemId' => $service_params->{service_item_id},
+                        'wsap:ServiceItemName' => '',
+                        'wsap:ServiceItemQuantity' => 1,
+                    )
+                ]
+            ),
+            ServicePropertyInputs => [
+                {
+                    'wsap:Input.CreateWorksheetInput.ServicePropertyInput' => ixhash(
+                        'wsap:ServicePropertyId' => 79,
+                        'wsap:ServicePropertyValue' => $params->{assisted_yn},
+                    ),
+                },
+                {
+                    'wsap:Input.CreateWorksheetInput.ServicePropertyInput' => ixhash(
+                        'wsap:ServicePropertyId' => 80,
+                        'wsap:ServicePropertyValue' => $params->{location_of_containers},
+                    ),
+                },
+            ],
+        );
+    }
 
     my $res = $self->call('CreateWorksheet', worksheetInput => $worksheet);
     $self->logger->debug("CreateWorksheet response: " . encode_json($res));
