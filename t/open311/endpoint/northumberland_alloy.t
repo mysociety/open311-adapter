@@ -507,7 +507,7 @@ HERE
 
     note 'unset assigned user';
 
-    my $res = $endpoint->run_test_request(
+    $res = $endpoint->run_test_request(
         POST => '/servicerequestupdates.json',
         jurisdiction_id => 'dummy',
         api_key => 'test',

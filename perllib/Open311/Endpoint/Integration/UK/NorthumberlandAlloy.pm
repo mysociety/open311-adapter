@@ -118,35 +118,13 @@ sub update_additional_attributes {
 
             # Search for existing user
             my $mapping = $self->config->{assigned_to_user_mapping};
-
-            my $res = $self->alloy->search(
-                {   properties => {
-                        dodiCode       => $mapping->{design},
-                        collectionCode => 'Live',
-                        attributes     => [
-                            $mapping->{email_attribute},
-                        ],
-                    },
-                    children => [
-                        {   type     => "Equals",
-                            children => [
-                                {   type       => 'Attribute',
-                                    properties => {
-                                        attributeCode =>
-                                            $mapping->{email_attribute}
-                                    },
-                                },
-                                {   type       => 'String',
-                                    properties => {
-                                        value =>
-                                            [ $args->{attributes}{assigned_to_user_email} ]
-                                    },
-                                }
-                            ],
-                        },
-                    ],
-                },
+            my $body = $self->SUPER::find_item_body(
+                dodi_code      => $mapping->{design},
+                attribute_code => $mapping->{email_attribute},
+                search_term    => $args->{attributes}{assigned_to_user_email},
             );
+
+            my $res = $self->alloy->search($body);
 
             # We don't update if user does not exist in Alloy
             if (@$res) {
