@@ -33,7 +33,10 @@ has ua => (
     is  => 'rw',
     default => sub {
         my $self = shift;
-        my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+        my $ua = LWP::UserAgent->new(
+            agent => "FixMyStreet/open311-adapter",
+            timeout => 3 * 60, # Boomi can take longer than the default 60s when handling large/multiple photos.
+        );
         $ua->ssl_opts(SSL_cipher_list => 'DEFAULT:!DH'); # Disable DH ciphers, server's key is too small apparently
         my $hash = encode_base64($self->config->{username} . ':' . $self->config->{password}, "");
         $ua->default_header('Authorization' => "Basic $hash");
