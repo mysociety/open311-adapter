@@ -311,8 +311,10 @@ sub _add_attachments {
     my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
 
     for my $photo (@{ $args->{media_url} }) {
+        my $filename = (URI->new($photo)->path_segments)[-1];
         push @attachments, {
             url => $photo,
+            fileName => $filename,
         };
     }
 

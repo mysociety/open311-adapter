@@ -33,6 +33,7 @@ $lwp->mock(request => sub {
                     "attachments" => [
                         {
                             "url" => "http://localhost/photo/one.jpeg",
+                            "fileName" => "one.jpeg",
                         },
                     ]
                 };
@@ -131,6 +132,7 @@ $lwp->mock(request => sub {
                 "attachments" => [
                     {
                         "url" => "http://localhost/photo/one.jpeg",
+                        "fileName" => "one.jpeg",
                     },
                 ]
             };
