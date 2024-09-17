@@ -33,8 +33,6 @@ $lwp->mock(request => sub {
                     "attachments" => [
                         {
                             "url" => "http://localhost/photo/one.jpeg",
-                            "fileName" => "1.jpeg",
-                            "base64" => "/9j/4AAQSkZJRgABAQAAAAAAAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkI\nCQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAA\nAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==\n",
                         },
                     ]
                 };
@@ -133,8 +131,6 @@ $lwp->mock(request => sub {
                 "attachments" => [
                     {
                         "url" => "http://localhost/photo/one.jpeg",
-                        "fileName" => "1.jpeg",
-                        "base64" => "/9j/4AAQSkZJRgABAQAAAAAAAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkI\nCQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/wAALCAABAAEBAREA/8QAFAABAAAAAAAA\nAAAAAAAAAAAACf/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8AKp//2Q==\n",
                     },
                 ]
             };
