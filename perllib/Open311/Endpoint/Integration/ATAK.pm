@@ -52,17 +52,29 @@ sub post_service_request {
     die "Args must be a hashref" unless ref $args eq 'HASH';
 
     $self->logger->info("[ATAK] Creating issue for service " . $service->service_name);
+
+    # Uploads break the json encoding for the debug logs, so popping beforehand.
+    my $uploads = delete $args->{uploads};
     $self->logger->debug("[ATAK] POST service request args: " . encode_json($args));
 
     my @attachments;
 
-    if ($args->{media_url}) {
-        my $i = 1;
+    my $image_counter = 1;
+    if (@{$uploads}) {
         @attachments = map {
             my $content_type = $_->content_type ? $_->content_type : 'image/jpeg';
             {
                 filename => $_->filename,
-                description => "Image " . $i++,
+                description => "Image " . $image_counter++,
+                data => "data:" . $content_type . ";base64," . encode_base64(path($_)->slurp)
+            }
+        } @{$uploads};
+    } elsif (@{$args->{media_url}}) {
+        @attachments = map {
+            my $content_type = $_->content_type ? $_->content_type : 'image/jpeg';
+            {
+                filename => $_->filename,
+                description => "Image " . $image_counter++,
                 data => "data:" . $content_type . ";base64," . encode_base64($_->content)
             }
         } $self->_get_attachments($args->{media_url});

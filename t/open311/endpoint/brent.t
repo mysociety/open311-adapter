@@ -13,6 +13,7 @@ use YAML::XS qw(LoadFile);
 use Path::Tiny;
 use File::Temp qw(tempfile);
 use Encode qw(encode);
+use HTTP::Request::Common;
 use Test::More;
 use Test::MockModule;
 use Test::LongString;
@@ -634,81 +635,101 @@ subtest "POST sack waste Echo service request OK" => sub {
         } ], 'correct json returned';
 };
 
-subtest "POST Parks littering ATAK service request OK" => sub {
-    set_fixed_time('2023-07-27T12:00:00Z');
-    my $mock_ua = Test::MockModule->new('LWP::UserAgent');
-    $mock_ua->mock('get', sub {
-        my ($self, $url) = @_;
-        if ($url eq 'http://example.org/photo/1.jpeg') {
-            my $image_data = path(__FILE__)->sibling('files')->child('test_image.jpg')->slurp;
-            my $response = HTTP::Response->new(200, 'OK', []);
-            $response->header('Content-Disposition' => 'attachment; filename="1.jpeg"');
-            $response->header('Content-Type' => 'image/jpeg');
-            $response->content($image_data);
-            return $response;
-        } else {
-            return HTTP::Response->new(404, 'Not Found', [], '');
-        }
-    });
+for my $test (
+    { upload => 0 },
+    { upload => 1 },
+) {
+    subtest "POST Parks littering ATAK service request OK (photo upload $test->{upload})" => sub {
+        set_fixed_time('2023-07-27T12:00:00Z');
+        my $mock_ua = Test::MockModule->new('LWP::UserAgent');
+        $mock_ua->mock('get', sub {
+            my ($self, $url) = @_;
+            if ($url eq 'http://example.org/photo/1.jpeg') {
+                my $image_data = path(__FILE__)->sibling('files')->child('test_image.jpg')->slurp;
+                my $response = HTTP::Response->new(200, 'OK', []);
+                $response->header('Content-Disposition' => 'attachment; filename="1.jpeg"');
+                $response->header('Content-Type' => 'image/jpeg');
+                $response->content($image_data);
+                return $response;
+            } else {
+                return HTTP::Response->new(404, 'Not Found', [], '');
+            }
+        });
 
-    $mock_ua->mock('post', sub {
-        my ($self, $url, %headers) = @_;
-        if ($url eq 'https://example.com/ords/hws/atak/v1/enq') {
-            is $headers{Authorization}, 'AUTH-123';
+        $mock_ua->mock('post', sub {
+            my ($self, $url, %headers) = @_;
+            if ($url eq 'https://example.com/ords/hws/atak/v1/enq') {
+                is $headers{Authorization}, 'AUTH-123';
 
-            my $data = decode_json($headers{Content})->{tasks}->[0];
-            is $data->{issue}, "Category: Parks littering\nGroup: Parks and open spaces\nLocation: Location name\n\n" .
-                "location of problem: title\n\ndetail: detail\n\nurl: url\n\n" .
-                "Submitted via FixMyStreet\n";
-            is $data->{client_ref}, '42';
-            is $data->{project_name}, 'LB BRENT';
-            is $data->{project_code}, 'C123';
-            is $data->{taken_on}, '2023-07-27T12:00:00Z';
-            is $data->{location_name}, 'Location name';
-            is $data->{caller}, '';
-            is $data->{resolve_by}, '';
-            is $data->{location}->{type}, 'Point';
-            is_deeply $data->{location}->{coordinates}, [ -1, 51 ];
-            my $photo = $data->{attachments}->[0];
-            is $photo->{filename}, '1.jpeg';
-            is $photo->{description}, 'Image 1';
-            like $photo->{data}, qr{^data:image/jpeg;base64,/9j/4};
+                my $data = decode_json($headers{Content})->{tasks}->[0];
+                is $data->{issue}, "Category: Parks littering\nGroup: Parks and open spaces\nLocation: Location name\n\n" .
+                    "location of problem: title\n\ndetail: detail\n\nurl: url\n\n" .
+                    "Submitted via FixMyStreet\n";
+                is $data->{client_ref}, '42';
+                is $data->{project_name}, 'LB BRENT';
+                is $data->{project_code}, 'C123';
+                is $data->{taken_on}, '2023-07-27T12:00:00Z';
+                is $data->{location_name}, 'Location name';
+                is $data->{caller}, '';
+                is $data->{resolve_by}, '';
+                is $data->{location}->{type}, 'Point';
+                is_deeply $data->{location}->{coordinates}, [ -1, 51 ];
+                my $photo = $data->{attachments}->[0];
+                if ($test->{upload}) {
+                    is $photo->{filename}, 'test_image.jpg';
+                } else {
+                    is $photo->{filename}, '1.jpeg';
+                }
+                is $photo->{description}, 'Image 1';
+                like $photo->{data}, qr{^data:image/jpeg;base64,/9j/4};
 
-            return HTTP::Response->new(200, 'OK', [], '{"Processed task 1": "123ABC"}');
-        } elsif ($url eq 'https://example.com/ords/hws/atak/v1/login') {
-            return HTTP::Response->new(200, 'OK', [], '{"token": "AUTH-123"}');
-        } else {
-            return HTTP::Response->new(404, 'Not Found', [], '');
-        }
-    });
+                return HTTP::Response->new(200, 'OK', [], '{"Processed task 1": "123ABC"}');
+            } elsif ($url eq 'https://example.com/ords/hws/atak/v1/login') {
+                return HTTP::Response->new(200, 'OK', [], '{"token": "AUTH-123"}');
+            } else {
+                return HTTP::Response->new(404, 'Not Found', [], '');
+            }
+        });
 
-    my $res = $endpoint->run_test_request(
-        POST => '/requests.json',
-        api_key => 'test',
-        service_code => 'ATAK-PARK_LITTERING',
-        first_name => 'Bob',
-        last_name => 'Mould',
-        description => "Lots of litter in the park",
-        lat => 51,
-        long => -1,
-        media_url => 'http://example.org/photo/1.jpeg',
-        'attribute[location_name]' => 'Location name',
-        'attribute[easting]' => EASTING,
-        'attribute[northing]' => NORTHING,
-        'attribute[fixmystreet_id]' => 42,
-        'attribute[report_url]' => 'url',
-        'attribute[detail]' => 'detail',
-        'attribute[title]' => 'title',
-        'attribute[group]' => 'Parks and open spaces',
-    );
-    ok $res->is_success, 'valid request';
+        my $photo_upload = Web::Dispatch::Upload->new(
+            tempname => path(__FILE__)->dirname . '/files/test_image.jpg',
+            filename => 'image.jpg',
+        );
+        my $req = POST '/requests.json',
+                Content_Type => 'form-data',
+                Content => [
+                    api_key => 'test',
+                    service_code => 'ATAK-PARK_LITTERING',
+                    first_name => 'Bob',
+                    last_name => 'Mould',
+                    description => "Lots of litter in the park",
+                    lat => 51,
+                    long => -1,
+                    (
+                        $test->{upload}
+                        ? ('uploads' => [ $photo_upload ])
+                        : ('media_url' => 'http://example.org/photo/1.jpeg')
+                    ),
+                    'attribute[location_name]' => 'Location name',
+                    'attribute[easting]' => EASTING,
+                    'attribute[northing]' => NORTHING,
+                    'attribute[fixmystreet_id]' => 42,
+                    'attribute[report_url]' => 'url',
+                    'attribute[detail]' => 'detail',
+                    'attribute[title]' => 'title',
+                    'attribute[group]' => 'Parks and open spaces',
+                ];
 
-    is_deeply decode_json($res->content), [
-        {
-            "service_request_id" => "ATAK-123ABC"
-        }
-    ], 'correct json returned' or diag $res->content;
-};
+        my $res = $endpoint->run_test_request($req);
+        ok $res->is_success, 'valid request';
+
+        is_deeply decode_json($res->content), [
+            {
+                "service_request_id" => "ATAK-123ABC"
+            }
+        ], 'correct json returned' or diag $res->content;
+    };
+}
 
 subtest "POST Echo update OK" => sub {
     my $res = $endpoint->run_test_request(
