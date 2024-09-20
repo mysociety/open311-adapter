@@ -298,7 +298,11 @@ sub post_service_request_update {
     my $hash = substr(md5_hex(join('', @parts)), 0, 8);
     my $update_id = $args->{service_request_id} . "_" . $hash;
 
-    my $service_request_id = $self->boomi->upsertHighwaysTicket($ticket);
+    if ($args->{description}) {
+        # State changes on FMS may create updates with empty descriptions, which
+        # we don't want to send to Boomi as it will return an error.
+        $self->boomi->upsertHighwaysTicket($ticket);
+    }
 
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
         service_request_id => $args->{service_request_id},

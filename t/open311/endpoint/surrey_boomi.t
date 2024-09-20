@@ -38,6 +38,8 @@ $lwp->mock(request => sub {
                     ]
                 };
                 return HTTP::Response->new(200, 'OK', [], encode_json({"ticket" => { system => "Zendesk", id => 123457 }}));
+            } elsif ($content && !$content->{comments}->[0]->{body}) {
+                return HTTP::Response->new(400, 'Bad request', [], "Bad request");
             } else {
                 is_deeply $content, {
                     "comments" => [
@@ -499,6 +501,30 @@ subtest "POST Service Request Update with photo" => sub {
     is_deeply decode_json($res->content),
         [ {
             'update_id' => "Zendesk_123457_050d1cc8",
+        } ], 'correct json returned';
+
+    restore_time();
+};
+
+subtest "POST Service Request Update with blank description" => sub {
+    set_fixed_time('2023-05-01T12:00:00Z');
+
+    my $res = $surrey_endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'surrey_boomi',
+        api_key => 'api-key',
+        updated_datetime => '2023-05-02T12:43:00Z',
+        service_request_id => 'Zendesk_123458',
+        status => 'FIXED',
+        description => '',
+        last_name => "Smith",
+        first_name => "John",
+        update_id => '10000002',
+    );
+    is $res->code, 200;
+    is_deeply decode_json($res->content),
+        [ {
+            'update_id' => "Zendesk_123458_830d4308",
         } ], 'correct json returned';
 
     restore_time();
