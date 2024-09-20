@@ -359,6 +359,7 @@ sub learn_additional_types {
             'CANCELLED',
             'REOPEN',
             'FOR_TRIAGE',
+            'REFERRED_TO_VEOLIA_STREETS', # Bromley passthrough
         )
     );
     $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/service_request_update',
