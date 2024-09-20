@@ -194,6 +194,8 @@ sub _get_service_requests_for_integration_id {
 
         my $status = lc $result->{fmsReport}->{status}->{state};
         $status =~ s/ /_/g;
+        # fixup invalid status from Boomi
+        $status = "not_councils_responsibility" if $status eq "not_responsible";
 
         my $args = {
             service_request_id => "Zendesk_$id",
@@ -256,6 +258,8 @@ sub _get_service_request_updates_for_integration_id {
             : "Zendesk_JOB_" . $log->{job}->{jobNumber};
         my $status = lc $fms->{status}->{state};
         $status =~ s/ /_/g;
+        # fixup invalid status from Boomi
+        $status = "not_councils_responsibility" if $status eq "not_responsible";
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
             status => $status,
