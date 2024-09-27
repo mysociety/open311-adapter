@@ -155,10 +155,10 @@ $lwp->mock(request => sub {
                             "statusCode" => "5800",
                             "enquiry" => {
                                 "enquiryNumber" => 129293,
-                                "externalSystemReference" => "2929177"
                             }
                         },
                         "fmsReport" => {
+                            "externalId" => 2929177,
                             "status" => {
                                 "state" => "Closed",
                                 "label" => "Enquiry closed"
@@ -172,10 +172,10 @@ $lwp->mock(request => sub {
                             "statusCode" => "3200",
                             "enquiry" => {
                                 "enquiryNumber" => 132361,
-                                "externalSystemReference" => "2939061"
                             }
                         },
                         "fmsReport" => {
+                            "externalId" => 2939061,
                             "status" => {
                                 "state" => "Action scheduled",
                                 "label" => "Assessed - scheduling a repair within 5 Working Days"
@@ -189,10 +189,10 @@ $lwp->mock(request => sub {
                             "statusCode" => "3201",
                             "enquiry" => {
                                 "enquiryNumber" => 132361,
-                                "externalSystemReference" => "2939061"
                             }
                         },
                         "fmsReport" => {
+                            "externalId" => 2939061,
                             "status" => {
                                 "state" => "Not responsible",
                                 "label" => "Not Surrey CC's responsibility"
@@ -211,7 +211,6 @@ $lwp->mock(request => sub {
                             "logNumber" => 2,
                             "statusCode" => "2000",
                             "job" => {
-                            "jobNumber" => 569276
                             }
                         },
                         "fmsReport" => {
