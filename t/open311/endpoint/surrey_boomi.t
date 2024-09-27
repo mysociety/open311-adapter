@@ -1,4 +1,5 @@
 package Integrations::Surrey::Boomi::Dummy;
+use utf8;
 use Path::Tiny;
 use Moo;
 use HTTP::Response;
@@ -44,7 +45,7 @@ $lwp->mock(request => sub {
                 is_deeply $content, {
                     "comments" => [
                         {
-                            "body" => "This is an update"
+                            "body" => "This is an 🐙 update"
                         }
                     ],
                     "ticketId" => "123456",
@@ -467,7 +468,7 @@ subtest "POST Service Request Update" => sub {
         updated_datetime => '2023-05-02T12:00:00Z',
         service_request_id => 'Zendesk_123456',
         status => 'OPEN',
-        description => 'This is an update',
+        description => 'This is an 🐙 update',
         last_name => "Smith",
         first_name => "John",
         update_id => '10000000',
@@ -475,7 +476,7 @@ subtest "POST Service Request Update" => sub {
     is $res->code, 200;
     is_deeply decode_json($res->content),
         [ {
-            'update_id' => "Zendesk_123456_ac95b36b",
+            'update_id' => "Zendesk_123456_59275cb0",
         } ], 'correct json returned';
 
     restore_time();

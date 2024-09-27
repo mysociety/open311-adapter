@@ -6,6 +6,7 @@ with 'Open311::Endpoint::Role::mySociety';
 with 'Role::EndpointConfig';
 with 'Role::Logger';
 
+use Encode qw(encode_utf8);
 use POSIX qw(strftime);
 use MIME::Base64 qw(encode_base64);
 use Open311::Endpoint::Service::UKCouncil::Boomi;
@@ -295,7 +296,7 @@ sub post_service_request_update {
     # we don't get back a unique ID from Boomi, so calculate one ourselves
     # XXX is this going to be mirrored back next time we fetch updates?
     my @parts = map { $args->{$_} } qw/service_request_id description update_id updated_datetime/;
-    my $hash = substr(md5_hex(join('', @parts)), 0, 8);
+    my $hash = substr(md5_hex(encode_utf8(join('', @parts))), 0, 8);
     my $update_id = $args->{service_request_id} . "_" . $hash;
 
     if ($args->{description}) {
