@@ -76,7 +76,7 @@ sub _update_status {
             'internal_referral'
         } elsif ($action_due eq 'NCR') {
             'not_councils_responsibility'
-        } elsif ($action_due =~ /^([NS]I[1-6]MOB|IPSGM|IGF|IABV)$/) {
+        } elsif ($action_due =~ /^([NS]I[1-6]MOB|IPSGM|IGF|IABV|ECI)$/) {
             'investigating'
         } elsif ($action_due =~ /^PT[CS]|TPHR|REIN|SNPR$/) {
             'action_scheduled'
