@@ -6,6 +6,7 @@ with 'Open311::Endpoint::Role::mySociety';
 with 'Role::EndpointConfig';
 with 'Role::Logger';
 
+use Encode qw(encode_utf8);
 use POSIX qw(strftime);
 use MIME::Base64 qw(encode_base64);
 use Open311::Endpoint::Service::UKCouncil::Boomi;
@@ -194,6 +195,8 @@ sub _get_service_requests_for_integration_id {
 
         my $status = lc $result->{fmsReport}->{status}->{state};
         $status =~ s/ /_/g;
+        # fixup invalid status from Boomi
+        $status = "not_councils_responsibility" if $status eq "not_responsible";
 
         my $args = {
             service_request_id => "Zendesk_$id",
@@ -256,6 +259,8 @@ sub _get_service_request_updates_for_integration_id {
             : "Zendesk_JOB_" . $log->{job}->{jobNumber};
         my $status = lc $fms->{status}->{state};
         $status =~ s/ /_/g;
+        # fixup invalid status from Boomi
+        $status = "not_councils_responsibility" if $status eq "not_responsible";
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
             status => $status,
@@ -291,10 +296,14 @@ sub post_service_request_update {
     # we don't get back a unique ID from Boomi, so calculate one ourselves
     # XXX is this going to be mirrored back next time we fetch updates?
     my @parts = map { $args->{$_} } qw/service_request_id description update_id updated_datetime/;
-    my $hash = substr(md5_hex(join('', @parts)), 0, 8);
+    my $hash = substr(md5_hex(encode_utf8(join('', @parts))), 0, 8);
     my $update_id = $args->{service_request_id} . "_" . $hash;
 
-    my $service_request_id = $self->boomi->upsertHighwaysTicket($ticket);
+    if ($args->{description}) {
+        # State changes on FMS may create updates with empty descriptions, which
+        # we don't want to send to Boomi as it will return an error.
+        $self->boomi->upsertHighwaysTicket($ticket);
+    }
 
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
         service_request_id => $args->{service_request_id},

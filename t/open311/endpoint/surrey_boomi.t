@@ -1,4 +1,5 @@
 package Integrations::Surrey::Boomi::Dummy;
+use utf8;
 use Path::Tiny;
 use Moo;
 use HTTP::Response;
@@ -38,11 +39,13 @@ $lwp->mock(request => sub {
                     ]
                 };
                 return HTTP::Response->new(200, 'OK', [], encode_json({"ticket" => { system => "Zendesk", id => 123457 }}));
+            } elsif ($content && !$content->{comments}->[0]->{body}) {
+                return HTTP::Response->new(400, 'Bad request', [], "Bad request");
             } else {
                 is_deeply $content, {
                     "comments" => [
                         {
-                            "body" => "This is an update"
+                            "body" => "This is an 🐙 update"
                         }
                     ],
                     "ticketId" => "123456",
@@ -179,6 +182,23 @@ $lwp->mock(request => sub {
                             }
                         }
                     },
+                    {
+                        "confirmEnquiryStatusLog" => {
+                            "loggedDate" => "2024-05-01T09:12:41.000Z",
+                            "logNumber" => 8,
+                            "statusCode" => "3201",
+                            "enquiry" => {
+                                "enquiryNumber" => 132361,
+                                "externalSystemReference" => "2939061"
+                            }
+                        },
+                        "fmsReport" => {
+                            "status" => {
+                                "state" => "Not responsible",
+                                "label" => "Not Surrey CC's responsibility"
+                            }
+                        }
+                    },
                 ]
             }));
         } elsif ($query{integration_id} eq 'Integration.5') {
@@ -231,6 +251,31 @@ $lwp->mock(request => sub {
                             "status" => {
                                 "state" => "Open",
                                 "label" => "Allocated to a Highways Officer"
+                            },
+                            "categorisation" => {
+                                "serviceId" => 'foobar',
+                            }
+                        },
+                    },
+                    {
+                        "confirmEnquiry" => {
+                            "loggedDate" => "2024-07-26T08:43:52.000Z",
+                            "statusCode" => "6001",
+                            "subject" => {
+                                "name" => "Overgrown vegetation",
+                                "code" => "A006",
+                                "serviceCode" => "AR01"
+                            },
+                            "easting" => 507323,
+                            "northing" => 164194
+                        },
+                        "fmsReport" => {
+                            "title" => "Other tree or roots issue problem",
+                            "description" => "Roots sticking through pavement",
+                            "externalId" => 136417,
+                            "status" => {
+                                "state" => "Not responsible",
+                                "label" => "Not Surrey CC's responsibility"
                             },
                             "categorisation" => {
                                 "serviceId" => 'foobar',
@@ -395,6 +440,14 @@ subtest "GET Service Request Updates" => sub {
           "updated_datetime" => "2024-05-01T09:10:41Z",
        },
        {
+          "description" => "Not Surrey CC's responsibility",
+          "media_url" => "",
+          "service_request_id" => "Zendesk_2939061",
+          "status" => "not_councils_responsibility",
+          "update_id" => "2939061_8",
+          "updated_datetime" => "2024-05-01T09:12:41Z",
+       },
+       {
           "update_id" => "569276_2",
           "service_request_id" => "Zendesk_JOB_569276",
           "description" => "Assessed - scheduling a repair within 5 Working Days",
@@ -415,7 +468,7 @@ subtest "POST Service Request Update" => sub {
         updated_datetime => '2023-05-02T12:00:00Z',
         service_request_id => 'Zendesk_123456',
         status => 'OPEN',
-        description => 'This is an update',
+        description => 'This is an 🐙 update',
         last_name => "Smith",
         first_name => "John",
         update_id => '10000000',
@@ -423,7 +476,7 @@ subtest "POST Service Request Update" => sub {
     is $res->code, 200;
     is_deeply decode_json($res->content),
         [ {
-            'update_id' => "Zendesk_123456_ac95b36b",
+            'update_id' => "Zendesk_123456_59275cb0",
         } ], 'correct json returned';
 
     restore_time();
@@ -454,6 +507,30 @@ subtest "POST Service Request Update with photo" => sub {
     restore_time();
 };
 
+subtest "POST Service Request Update with blank description" => sub {
+    set_fixed_time('2023-05-01T12:00:00Z');
+
+    my $res = $surrey_endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'surrey_boomi',
+        api_key => 'api-key',
+        updated_datetime => '2023-05-02T12:43:00Z',
+        service_request_id => 'Zendesk_123458',
+        status => 'FIXED',
+        description => '',
+        last_name => "Smith",
+        first_name => "John",
+        update_id => '10000002',
+    );
+    is $res->code, 200;
+    is_deeply decode_json($res->content),
+        [ {
+            'update_id' => "Zendesk_123458_830d4308",
+        } ], 'correct json returned';
+
+    restore_time();
+};
+
 subtest "GET Service Requests" => sub {
     my $res = $surrey_endpoint->run_test_request(
         GET => '/requests.json?jurisdiction_id=surrey_boomi&api_key=api-key&start_date=2024-05-01T09:00:00Z&end_date=2024-05-01T10:00:00Z',
@@ -472,6 +549,22 @@ subtest "GET Service Requests" => sub {
             'requested_datetime' => '2024-07-26T08:42:52Z',
             'media_url' => '',
             'service_request_id' => 'Zendesk_136416',
+            'description' => 'Roots sticking through pavement',
+            'service_notice' => 'Other tree or roots issue problem',
+            'address_id' => ''
+        },
+       {
+            'zipcode' => '',
+            'service_name' => 'Other tree or roots issue problem',
+            'address' => '',
+            'status' => 'not_councils_responsibility',
+            'long' => 507323,
+            'updated_datetime' => '2024-07-26T08:43:52Z',
+            'service_code' => 'foobar',
+            'lat' => 164194,
+            'requested_datetime' => '2024-07-26T08:43:52Z',
+            'media_url' => '',
+            'service_request_id' => 'Zendesk_136417',
             'description' => 'Roots sticking through pavement',
             'service_notice' => 'Other tree or roots issue problem',
             'address_id' => ''
