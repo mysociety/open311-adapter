@@ -251,12 +251,10 @@ sub _get_service_request_updates_for_integration_id {
         my $log = $enquiry_update ? $update->{confirmEnquiryStatusLog} : $update->{confirmJobStatusLog};
         my $fms = $update->{fmsReport};
 
-        my $id = $enquiry_update
-            ? $log->{enquiry}->{externalSystemReference} . "_" . $log->{logNumber}
-            : $log->{job}->{jobNumber} . "_" . $log->{logNumber};
+        my $id = $fms->{externalId} . "_" . $log->{logNumber};
         my $service_request_id = $enquiry_update
-            ? "Zendesk_" . $log->{enquiry}->{externalSystemReference}
-            : "Zendesk_JOB_" . $log->{job}->{jobNumber};
+            ? "Zendesk_" . $fms->{externalId}
+            : "Zendesk_JOB_" . $fms->{externalId};
         my $status = lc $fms->{status}->{state};
         $status =~ s/ /_/g;
         # fixup invalid status from Boomi
