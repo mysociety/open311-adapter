@@ -34,7 +34,7 @@ my $expected_services = <<XML;
       <group>Flooding</group>
       <group>Flooding &amp; Drainage</group>
     </groups>
-    <keywords></keywords>
+    <keywords>hello,hello2,hello3</keywords>
     <metadata>true</metadata>
     <service_code>ABC_DEF</service_code>
     <service_name>Flooding</service_name>
