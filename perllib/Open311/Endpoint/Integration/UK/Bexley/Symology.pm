@@ -5,7 +5,7 @@ package Open311::Endpoint::Integration::UK::Bexley::Symology;
 use Moo;
 extends 'Open311::Endpoint::Integration::Symology';
 
-use Open311::Endpoint::Service::UKCouncil::BexleySymology;
+use Open311::Endpoint::Service::UKCouncil::Symology::Bexley;
 
 has jurisdiction_id => (
     is => 'ro',
@@ -14,7 +14,7 @@ has jurisdiction_id => (
 
 has service_class  => (
     is => 'ro',
-    default => 'Open311::Endpoint::Service::UKCouncil::BexleySymology'
+    default => 'Open311::Endpoint::Service::UKCouncil::Symology::Bexley'
 );
 
 sub process_service_request_args {

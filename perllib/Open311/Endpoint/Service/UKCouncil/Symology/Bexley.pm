@@ -1,4 +1,4 @@
-package Open311::Endpoint::Service::UKCouncil::BexleySymology;
+package Open311::Endpoint::Service::UKCouncil::Symology::Bexley;
 
 use Moo;
 extends 'Open311::Endpoint::Service::UKCouncil::Symology';
