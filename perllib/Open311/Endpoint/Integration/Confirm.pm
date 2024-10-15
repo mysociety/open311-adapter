@@ -825,6 +825,7 @@ sub get_service_requests {
         my $code = $enquiry->{ServiceCode} . "_" . $enquiry->{SubjectCode};
         my $service = $services{$code};
         my $status = $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}};
+        next if $status && $status eq 'IGNORE';
 
         unless ($service || ($service = $self->_find_wrapping_service($code, \@services))) {
             $self->logger->warn("no service for service code $code");
