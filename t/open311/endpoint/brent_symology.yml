@@ -7,6 +7,11 @@ request_defaults:
     ServiceCode: 'ServiceCode'
 customer_defaults:
     CustomerType: "PB"
+field_defaults:
+  URL: 3
+  PhotoStart: 4
+  PhotoEnd: 6
+  PhotoType: 7
 event_action_event_type: CHRR
 event_status_mapping:
   19: 'investigating'

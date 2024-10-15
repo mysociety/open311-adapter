@@ -5,7 +5,7 @@ package Open311::Endpoint::Integration::UK::Bexley::Symology;
 use Moo;
 extends 'Open311::Endpoint::Integration::Symology';
 
-use Open311::Endpoint::Service::UKCouncil::BexleySymology;
+use Open311::Endpoint::Service::UKCouncil::Symology::Bexley;
 
 has jurisdiction_id => (
     is => 'ro',
@@ -14,15 +14,24 @@ has jurisdiction_id => (
 
 has service_class  => (
     is => 'ro',
-    default => 'Open311::Endpoint::Service::UKCouncil::BexleySymology'
+    default => 'Open311::Endpoint::Service::UKCouncil::Symology::Bexley'
 );
 
 sub process_service_request_args {
     my $self = shift;
     my @args = $self->SUPER::process_service_request_args(@_);
     my $request = $args[0];
+    my $customer = $args[1];
 
     $request->{NextAction} = $self->post_add_next_action_update($request->{NSGRef});
+
+    $customer->{contact_type} = $request->{contributed_by} ? 'TL' : 'OL';
+
+    push @{ $args[2] }, [
+        FieldLine => 17,
+        ValueType => 1,
+        DataValue => delete $request->{contributed_by},
+    ];
 
     return @args;
 }
