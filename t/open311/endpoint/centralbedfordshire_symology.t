@@ -133,6 +133,10 @@ $centralbeds_symology_end->mock(endpoint_config => sub {
     {
         username => 'FMS',
         nsgref_to_action => {},
+        field_defaults => {
+            PhotoStart => 15,
+            PhotoEnd => 15,
+        },
         customer_defaults => {
             CustomerType => "",
             ContactType => "",

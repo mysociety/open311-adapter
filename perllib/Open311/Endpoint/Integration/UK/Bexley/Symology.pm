@@ -21,8 +21,17 @@ sub process_service_request_args {
     my $self = shift;
     my @args = $self->SUPER::process_service_request_args(@_);
     my $request = $args[0];
+    my $customer = $args[1];
 
     $request->{NextAction} = $self->post_add_next_action_update($request->{NSGRef});
+
+    $customer->{contact_type} = $request->{contributed_by} ? 'TL' : 'OL';
+
+    push @{ $args[2] }, [
+        FieldLine => 17,
+        ValueType => 1,
+        DataValue => delete $request->{contributed_by},
+    ];
 
     return @args;
 }

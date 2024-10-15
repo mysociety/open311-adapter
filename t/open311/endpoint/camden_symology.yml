@@ -2,6 +2,9 @@ username: FMS
 customer_defaults:
   CustomerType: ""
   ContactType: ""
+field_defaults:
+  PhotoStart: 10
+  PhotoEnd: 12
 event_action_event_type: NOTE
 category_mapping:
   Potholes:
