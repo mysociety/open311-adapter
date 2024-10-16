@@ -56,6 +56,8 @@ sub api_call {
         $request->content(encode_json($body));
         $self->logger->debug($call);
         $self->logger->debug(encode_json($body));
+    } else {
+        $self->logger->debug($call);
     }
     my $response = $ua->request($request);
     if ($response->is_success) {
