@@ -79,6 +79,7 @@ sub post_service_request {
     my $integration = $self->get_integration;
 
     my $worksheet_id = $integration->CreateWorksheet({
+        service_code => $args->{service_code},
         uprn => $args->{attributes}->{uprn},
         service_item_name => $args->{attributes}->{service_item_name},
         worksheet_reference => $args->{attributes}->{fixmystreet_id},

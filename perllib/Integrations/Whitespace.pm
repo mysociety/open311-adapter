@@ -100,9 +100,13 @@ sub CreateWorksheet {
         die "No service mapping found for $params->{service_item_name}";
     }
 
+    my $service_id = $params->{service_code} eq 'request_new_container'
+        ? $service_params->{delivery_service_id}
+        : $service_params->{service_id};
+
     my $worksheet = ixhash(
         Uprn => $params->{uprn},
-        ServiceId => $service_params->{service_id},
+        ServiceId => $service_id,
         WorksheetReference => $params->{worksheet_reference},
         WorksheetMessage => $params->{worksheet_message},
         ServiceItemInputs => ixhash(
