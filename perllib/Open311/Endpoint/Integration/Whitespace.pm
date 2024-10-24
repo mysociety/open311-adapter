@@ -78,13 +78,18 @@ sub post_service_request {
 
     my $integration = $self->get_integration;
 
+    $args->{attributes}{location_of_containers} //= '';
+    $args->{attributes}{quantity} ||= 1;
+
     my $worksheet_id = $integration->CreateWorksheet({
+        service_code => $args->{service_code},
         uprn => $args->{attributes}->{uprn},
         service_item_name => $args->{attributes}->{service_item_name},
         worksheet_reference => $args->{attributes}->{fixmystreet_id},
         worksheet_message => $self->_worksheet_message($args),
         assisted_yn => $args->{attributes}->{assisted_yn},
         location_of_containers => $args->{attributes}->{location_of_containers},
+        quantity => $args->{attributes}->{quantity},
     });
 
     my $request = $self->new_request(

@@ -109,6 +109,7 @@ subtest "GET service" => sub {
           { code => 'fixmystreet_id', order => 3, required => 'true', variable => 'false', datatype => 'string', datatype_description => '', automated => 'server_set', description => 'external system ID' },
           { code => 'assisted_yn', order => 4, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Assisted collection (Yes/No)' },
           { code => 'location_of_containers', order => 5, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Location of containers' },
+          { code => 'quantity', order => 6, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Number of containers' },
       ],
     }, 'correct json returned';
 };
