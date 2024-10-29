@@ -102,6 +102,8 @@ sub CreateWorksheet {
 
     my $service_id = $params->{service_code} eq 'request_new_container'
         ? $service_params->{delivery_service_id}
+        : $params->{service_code} eq 'request_container_removal'
+        ? $service_params->{collection_service_id}
         : $service_params->{service_id};
 
     my $worksheet = ixhash(
