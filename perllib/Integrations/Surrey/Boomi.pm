@@ -38,7 +38,9 @@ has ua => (
             timeout => 3 * 60, # Boomi can take longer than the default 60s when handling large/multiple photos.
         );
         $ua->ssl_opts(SSL_cipher_list => 'DEFAULT:!DH'); # Disable DH ciphers, server's key is too small apparently
-        my $hash = encode_base64($self->config->{username} . ':' . $self->config->{password}, "");
+        my $un = $self->config->{username} || '';
+        my $pw = $self->config->{password} || '';
+        my $hash = encode_base64("$un:$pw", "");
         $ua->default_header('Authorization' => "Basic $hash");
         $ua->default_header('Content-Type' => "application/json");
         return $ua;

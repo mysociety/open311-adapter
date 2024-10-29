@@ -1,0 +1,24 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use v5.14;
+
+BEGIN {
+    use File::Basename qw(dirname);
+    use File::Spec;
+    my $d = dirname(File::Spec->rel2abs($0));
+    require "$d/../setenv.pl";
+}
+
+use Getopt::Long;
+use Open311::Endpoint::Integration::UK;
+
+my ($verbose);
+GetOptions (
+    'verbose|v' => \$verbose,
+);
+
+my $uk = Open311::Endpoint::Integration::UK->new;
+
+$uk->check_endpoints($verbose);
