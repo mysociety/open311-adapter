@@ -12,6 +12,7 @@ use Module::Pluggable
     instantiate => 'new';
 use JSON::MaybeXS;
 use Path::Tiny;
+use URI;
 
 use Open311::Endpoint::Schema;
 
@@ -138,6 +139,41 @@ sub confirm_upload {
                 }
             }
         }
+    }
+}
+
+sub check_endpoints {
+    my ($self, $verbose) = @_;
+    my @plugins = ();
+    foreach ($self->plugins) {
+        if ($_->isa('Open311::Endpoint::Integration::Multi')) {
+            push @plugins, $_ foreach $_->plugins;
+        } else {
+            push @plugins, $_;
+        }
+    }
+    my @urls = ();
+    foreach (@plugins) {
+        if ($_->can('get_integration')) {
+            my $config = $_->get_integration->config;
+            push @urls, $config->{api_url}          # Abavus, ATAK, Alloy, Boomi
+                || $config->{endpoint_url}          # Confirm, Ezytreev, Symology, Uniform, WDM
+                || $config->{endpoint}              # Salesforce
+                || $config->{url}                   # Echo, Whitespace
+                || $config->{jadu_api_base_url}     # Jadu
+                || $config->{collective_endpoint};  # Bartec
+        } elsif ($_->can('endpoint')) {
+            push @urls, $_->endpoint;
+        }
+    }
+    my %hosts;
+    foreach (grep { $_ } @urls) {
+        $hosts{URI->new($_)->host} = 1;
+    }
+    foreach (sort keys %hosts) {
+        my $check = `openssl s_client -connect $_:443 < /dev/null 2>/dev/null| openssl x509 -checkend 604800 -noout`;
+        next if $check =~ /will not expire/ && !$verbose;
+        print "$_: $check";
     }
 }
 

@@ -44,7 +44,7 @@ has integration_class => (
     default => 'Integrations::Surrey::Boomi',
 );
 
-
+sub get_integration { $_[0]->boomi }
 
 sub service {
     my ($self, $id, $args) = @_;
