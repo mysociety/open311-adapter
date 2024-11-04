@@ -46,10 +46,16 @@ sub _build_attributes {
             required => 0,
             automated => 'hidden_field',
         ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'quantity',
+            description => 'Number of containers',
+            datatype => 'number',
+            required => 0,
+            automated => 'hidden_field',
+        ),
     );
 
     return \@attributes;
 }
 
 1;
-
