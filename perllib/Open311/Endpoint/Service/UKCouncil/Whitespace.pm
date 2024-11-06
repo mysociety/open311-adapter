@@ -49,7 +49,7 @@ sub _build_attributes {
         Open311::Endpoint::Service::Attribute->new(
             code => 'quantity',
             description => 'Number of containers',
-            datatype => 'number',
+            datatype => 'string',
             required => 0,
             automated => 'hidden_field',
         ),
