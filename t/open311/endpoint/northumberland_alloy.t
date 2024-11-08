@@ -72,13 +72,6 @@ $integration->mock('api_call', sub {
         # Looking up asset.
         $content = path(__FILE__)->sibling("json/alloyv2/northumberland_asset_lookup_response.json")->slurp;
 
-    } elsif ($body && $call =~ 'item-log/item/([^/]*)/reconstruct') {
-        my $id   = $1;
-        my $date = $body->{date};
-        $date =~ s/\D//g;
-        $content
-            = path(__FILE__)
-            ->sibling("json/alloyv2/northumberland/reconstruct_${id}_$date.json")->slurp;
     } elsif ($call =~ 'item-log/item/([^/]*)') {
         my $id = $1;
         $content
@@ -400,9 +393,10 @@ subtest "check fetch updates" => sub {
             media_url          => '',
             service_request_id => '123456',
             status             => 'open',
-            update_id          => '100001',
+            update_id          => '123456_20231113110500',
             updated_datetime   => '2023-11-13T11:05:00Z',
             extras             => {
+                latest_data_only => 1,
                 assigned_user_name  => 'FMS User 123',
                 assigned_user_email => '123@email.com',
             },
@@ -411,20 +405,10 @@ subtest "check fetch updates" => sub {
             media_url          => '',
             service_request_id => '234567',
             status             => 'open',
-            update_id          => '200002',
-            updated_datetime   => '2023-11-13T11:05:00Z',
-            extras             => {
-                assigned_user_name  => 'FMS User 234',
-                assigned_user_email => '234@email.com',
-            },
-        },
-        {   description        => '',
-            media_url          => '',
-            service_request_id => '234567',
-            status             => 'open',
-            update_id          => '200002',
+            update_id          => '234567_20231113111000',
             updated_datetime   => '2023-11-13T11:10:00Z',
             extras             => {
+                latest_data_only => 1,
                 assigned_user_name  => 'FMS User 345',
                 assigned_user_email => '345@email.com',
             },

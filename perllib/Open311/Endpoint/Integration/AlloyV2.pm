@@ -121,7 +121,7 @@ has service_whitelist => (
 
 =head2 update_store
 
-Directory for storing reconstructions of Alloy items to save on API calls
+Directory for storing some Alloy API calls to save on calls
 
 =cut
 
@@ -546,8 +546,8 @@ sub get_service_request_updates {
 =head3 'Inspections'
 
 'Inspection' updates fetch the C<rfs_design> resources that have been updated
-in the relevant time frame, fetching previous versions of each item.
-It uses C<inspection_attribute_mapping> for attribute mapping:
+in the relevant time frame. It uses C<inspection_attribute_mapping> for
+attribute mapping:
 
 =over 4
 
@@ -566,7 +566,7 @@ closure that can be used to override these at the end.
 
 =item C<inspector_comments>
 
-Used to find the attribute to look at to see if the comments have changed, for
+Used to find the attribute to look at to see if there are any comments, for
 providing as the text update.
 
 =back
@@ -587,72 +587,52 @@ sub _get_inspection_updates {
 
     my $assigned_to_users = $self->get_assigned_to_users(@$updates);
 
-    for my $update (@$updates) {
-        next unless $self->_accept_updated_resource($update);
+    for my $report (@$updates) {
+        next unless $self->_accept_updated_resource($report);
 
-        # We need to fetch all versions that changed in the time wanted
-        my @version_ids = $self->get_versions_of_resource($update->{itemId});
+        # The main result doesn't actually include the last edit date
+        my $date = $self->get_latest_version_date($report->{itemId});
+        my $update_dt = $self->date_to_truncated_dt($date);
+        next unless $update_dt >= $start_time && $update_dt <= $end_time;
 
-        my $last_description = '';
-        foreach my $date (@version_ids) {
-            my $description_to_send = '';
-            my $update_dt;
+        my $attributes = $self->alloy->attributes_to_hash($report);
 
-            # If we don't need to compare the comments field, we can
-            # consider updates only within the desired date range
-            if (!$mapping->{inspector_comments}) {
-                $update_dt = $self->date_to_truncated_dt( $date );
-                next unless $update_dt >= $start_time && $update_dt <= $end_time;
-            }
+        my ($status, $reason_for_closure) = $self->_get_inspection_status($attributes, $mapping);
 
-            my $resource = $self->call_reconstruct($update->{itemId}, $date) or next;
-            my $attributes = $self->alloy->attributes_to_hash($resource);
-
-            my ($status, $reason_for_closure) = $self->_get_inspection_status($attributes, $mapping);
-
-            # If we are checking if the comments field has changed, we will
-            # have to fetch all the updates. Once we've fetched them we can
-            # throw away the ones that don't match the date range.
-            if ($mapping->{inspector_comments}) {
-                my $description = $attributes->{$mapping->{inspector_comments} || ''} || '';
-                # only want to put a description in the update if it's
-                # changed, so compare it to the last one.
-                $description_to_send = $description ne $last_description ? $description : '';
-                $last_description = $description;
-
-                $update_dt = $self->date_to_truncated_dt( $date );
-                next unless $update_dt >= $start_time && $update_dt <= $end_time;
-            }
-
-            (my $id_date = $date) =~ s/\D//g;
-            my $id = $update->{itemId} . "_$id_date";
-
-            my %args = (
-                status => $status,
-                external_status_code => $reason_for_closure,
-                update_id => $resource->{signature},
-                service_request_id => $update->{itemId},
-                description => $description_to_send,
-                updated_datetime => $update_dt,
-            );
-
-            if ( my $assigned_to_user_id
-                = $attributes->{ $mapping->{assigned_to_user} // '' }[0] )
-            {
-                my $assigned_to_user
-                    = $assigned_to_users->{$assigned_to_user_id} ||= do {
-                    # There is a possibility the assigned-to user is not
-                    # already in the $assigned_to_users hash; do another
-                    # lookup if so
-                    $self->get_assigned_to_users($resource)
-                        ->{$assigned_to_user_id}
-                };
-
-                $args{extras} = $assigned_to_user if $assigned_to_user;
-            }
-
-            push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
+        my $description = '';
+        if ($mapping->{inspector_comments}) {
+            $description = $attributes->{$mapping->{inspector_comments}} || '';
         }
+
+        (my $id_date = $date) =~ s/\D//g;
+        my $id = $report->{itemId} . "_$id_date";
+
+        my %args = (
+            status => $status,
+            external_status_code => $reason_for_closure,
+            update_id => $id,
+            service_request_id => $report->{itemId},
+            description => $description,
+            updated_datetime => $update_dt,
+            extras => { latest_data_only => 1 },
+        );
+
+        if ( my $assigned_to_user_id
+            = $attributes->{ $mapping->{assigned_to_user} // '' }[0] )
+        {
+            my $assigned_to_user
+                = $assigned_to_users->{$assigned_to_user_id} ||= do {
+                # There is a possibility the assigned-to user is not
+                # already in the $assigned_to_users hash; do another
+                # lookup if so
+                $self->get_assigned_to_users($report)
+                    ->{$assigned_to_user_id}
+            };
+
+            $args{extras} = { %{$args{extras}}, %$assigned_to_user } if $assigned_to_user;
+        }
+
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
 
     return @updates;
@@ -722,11 +702,6 @@ Alloy value to a status.
 If the status is open or investigating and there is a linked defect, the update
 is skipped.
 
-Previous versions are fetched, as with 'inspections', their status worked out;
-there are no text attributes checked here. It has some special code that I'm
-not sure still applies, to prevent FMS adding phantom updates due to confusion
-over external status codes.
-
 =cut
 
 sub _get_defect_updates {
@@ -748,59 +723,37 @@ sub _get_defect_updates_resource {
     my $end_time = $self->date_to_dt($args->{end_date});
 
     my @updates;
-    my $closure_mapping = $self->config->{inspection_closure_mapping};
-    my %reverse_closure_mapping = map { $closure_mapping->{$_} => $_ } keys %{$closure_mapping};
-
     my $updates = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date});
-    for my $update (@$updates) {
-        next if $self->is_ignored_category( $update );
+    for my $report (@$updates) {
+        next if $self->is_ignored_category( $report );
 
         my $linked_defect;
-        my $attributes = $self->alloy->attributes_to_hash($update);
+        my $attributes = $self->alloy->attributes_to_hash($report);
 
-        my $service_request_id = $update->{itemId};
+        my $service_request_id = $report->{itemId};
 
-        my $fms_id = $self->_get_defect_fms_id( $attributes );
-
-        ($linked_defect, $service_request_id) = $self->_get_defect_inspection($update, $service_request_id);
-        $fms_id = undef if $linked_defect;
+        ($linked_defect, $service_request_id) = $self->_get_defect_inspection($report, $service_request_id);
 
         # we don't care about linked defects until they have been scheduled
         my $status = $self->defect_status($attributes);
         next if $self->_skip_job_update($linked_defect, $status);
 
-        my @version_ids = $self->get_versions_of_resource($update->{itemId});
-        foreach my $date (@version_ids) {
-            my $update_dt = $self->date_to_truncated_dt($date);
-            next unless $update_dt >= $start_time && $update_dt <= $end_time;
+        my $date = $self->get_latest_version_date($report->{itemId});
+        my $update_dt = $self->date_to_truncated_dt($date);
+        next unless $update_dt >= $start_time && $update_dt <= $end_time;
 
-            my $resource = $self->call_reconstruct($update->{itemId}, $date) or next;
-            my $attributes = $self->alloy->attributes_to_hash($resource);
-            my $status = $self->defect_status($attributes);
+        (my $id_date = $date) =~ s/\D//g;
+        my $id = $report->{itemId} . "_$id_date";
+        my %args = (
+            status => $status,
+            update_id => $id,
+            service_request_id => $service_request_id,
+            description => '',
+            updated_datetime => $update_dt,
+            extras => { latest_data_only => 1 },
+        );
 
-            my %args = (
-                status => $status,
-                update_id => $resource->{signature},
-                service_request_id => $service_request_id,
-                description => '',
-                updated_datetime => $update_dt,
-            );
-
-            # we need to set this to stop phantom updates being produced. This happens because
-            # when an inspection is closed it always sets an external_status_code which we never
-            # unset. Then when updates arrive from defects with no external_status_code the template
-            # fetching code at FixMyStreet sees that the external_status_code has changed and fetches
-            # the template. This means we always get an update even if nothing has changed. So, set
-            # this to the external_status_code used when an inspection is marked for raising as a
-            # defect. Only do this for 'action_scheduled' thouogh as otherwise the template lookup
-            # will fail as it will be looking for status + ext code which won't match.
-            if ( $status eq 'action_scheduled' && ( $fms_id || $linked_defect ) ) {
-                $args{external_status_code} = $reverse_closure_mapping{'action_scheduled'};
-            }
-            $args{fixmystreet_id} = $fms_id if $fms_id;
-
-            push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
-        }
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
 
     return @updates;
@@ -1000,7 +953,7 @@ sub service_request_id_for_resource {
     return $resource->{item}->{itemId};
 }
 
-sub get_versions_of_resource {
+sub get_latest_version_date {
     my ($self, $resource_id) = @_;
 
     my $versions = $self->alloy->api_call(call => "item-log/item/$resource_id")->{results};
@@ -1011,7 +964,7 @@ sub get_versions_of_resource {
     }
 
     @version_ids = sort(@version_ids);
-    return @version_ids;
+    return pop @version_ids;
 }
 
 sub date_to_dt {
@@ -1147,8 +1100,6 @@ sub process_attributes {
 
     return \@remapped;
 }
-
-sub _get_defect_fms_id { return undef; }
 
 sub _get_defect_inspection {
     my ($self, $defect, $service_request_id) = @_;

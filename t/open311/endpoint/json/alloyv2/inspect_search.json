@@ -17,12 +17,12 @@
       "colour": "#99cf22",
       "attributes":[
         {
-          "attributeCode": "attributes_tastStatus",
-          "value": [""]
+          "attributeCode": "attributes_taskStatus",
+          "value": ["5bc5bdd281d088d177342c73"]
         },
         {
           "attributeCode": "attributes_enquiryInspectionRFS1001181ResponseToCustomer1011096_5d3245dafe2ad806f8dfbb2e",
-          "value": ""
+          "value": "This is an updated customer response"
         },
         {
           "attributeCode": "attributes_enquiryInspectionRFS1001181ReasonForClosure1010926_5d3245d8fe2ad806f8dfbb24",
@@ -47,8 +47,8 @@
       "colour": "#99cf22",
       "attributes":[
         {
-          "attributeCode": "attributes_tastStatus",
-          "value": [""]
+          "attributeCode": "attributes_taskStatus",
+          "value": ["5bc5bdd281d088d177342c74"]
         },
         {
           "attributeCode": "attributes_enquiryInspectionRFS1001181ResponseToCustomer1011096_5d3245dafe2ad806f8dfbb2e",
@@ -77,8 +77,8 @@
       "colour": "#99cf22",
       "attributes":[
         {
-          "attributeCode": "attributes_tastStatus",
-          "value": [""]
+          "attributeCode": "attributes_taskStatus",
+          "value": ["5bc5bdd281d088d177342c76"]
         },
         {
           "attributeCode": "attributes_enquiryInspectionRFS1001181ResponseToCustomer1011096_5d3245dafe2ad806f8dfbb2e",
@@ -86,7 +86,7 @@
         },
         {
           "attributeCode": "attributes_enquiryInspectionRFS1001181ReasonForClosure1010926_5d3245d8fe2ad806f8dfbb24",
-          "value": [""]
+          "value": ["01b51bb5c0de101a004154b5"]
         }
       ],
       "signature": "5d32469bb4e1b90150014305",
@@ -107,8 +107,8 @@
       "colour": "#99cf22",
       "attributes":[
         {
-          "attributeCode": "attributes_tastStatus",
-          "value": [""]
+          "attributeCode": "attributes_taskStatus",
+          "value": ["5bc5bdd281d088d177342c73"]
         },
         {
           "attributeCode": "attributes_enquiryInspectionRFS1001181ResponseToCustomer1011096_5d3245dafe2ad806f8dfbb2e",

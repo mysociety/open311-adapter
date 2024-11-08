@@ -60,11 +60,6 @@ $integration->mock('api_call', sub {
             } elsif ($type eq 'designs_fixedMyStreetDefect') {
                 $content = path(__FILE__)->sibling('json/hackney_environment/defects_search.json')->slurp;
             }
-        } elsif ( $call =~ 'item-log/item/([^/]*)/reconstruct' ) {
-            my $id = $1;
-            my $date = $body->{date};
-            $date =~ s/\D//g;
-            $content = path(__FILE__)->sibling("json/hackney_environment/reconstruct_${id}_$date.json")->slurp;
         }
     } elsif ( $call =~ 'item-log/item/(.*)$' ) {
         $content = path(__FILE__)->sibling("json/hackney_environment/item_log_$1.json")->slurp;
@@ -162,19 +157,12 @@ subtest "check fetch updates" => sub {
             description => "",
             media_url => "",
             service_request_id => "625ffffffffae7015ac40c5b",
-            status => "open",
-            update_id => "625fffffff62a1016ce7f779",
-            updated_datetime => "2022-04-20T08:19:26Z"
-        },
-        {
-            description => "",
-            media_url => "",
-            service_request_id => "625ffffffffae7015ac40c5b",
             # this is derived from the Hackney Environment-specific defect_status code
             status => "not_councils_responsibility",
-            update_id => "625fe4b24edcdb01584733b2",
-            updated_datetime => "2022-04-20T10:47:14Z"
-        }
+            update_id => "625ffffffffae7015ac40c5b_20220420104714612",
+            updated_datetime => "2022-04-20T10:47:14Z",
+            extras => { latest_data_only => 1 },
+        },
     ], 'correct json returned';
 };
 
