@@ -18,6 +18,7 @@ use Moo;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 with 'Open311::Endpoint::Role::ConfigFile';
+with 'Role::Logger';
 with 'Role::Memcached';
 
 use DateTime::Format::W3CDTF;
@@ -107,12 +108,16 @@ sub _request {
     my $resp;
     if ($method eq 'POST') {
         $params->{api_key} = $self->api_key;
+        $self->logger->debug($url);
+        $self->logger->dump($params);
         $resp = $self->ua->post($url, $params);
     } else {
         $url->query_form(%$params);
+        $self->logger->debug($url);
         $resp = $self->ua->get($url);
     }
     my $content = $resp->decoded_content;
+    $self->logger->debug($content);
     my $xml = $self->pt_xml->XMLin(\$content);
     die $xml->{error}[0]->{description} . "\n" if $xml->{error};
     return $xml;
