@@ -133,6 +133,12 @@ sub CreateWorksheet {
                     'wsap:ServicePropertyValue' => $params->{location_of_containers},
                 ),
             },
+            $params->{location_of_letterbox} ? ({
+                'wsap:Input.CreateWorksheetInput.ServicePropertyInput' => ixhash(
+                    'wsap:ServicePropertyId' => 82,
+                    'wsap:ServicePropertyValue' => $params->{location_of_letterbox},
+                ),
+            }) : (),
         ],
     );
 
