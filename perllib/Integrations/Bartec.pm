@@ -206,6 +206,17 @@ sub _methods {
             namespace  => 'http://bartec-systems.com/',
             parameters => [],
         },
+        'ServiceRequest_Status_Set' => {
+            endpoint   => $self->collective_endpoint,
+            soapaction => 'http://bartec-systems.com/ServiceRequest_Status_Set',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [
+                SOAP::Data->new(name => 'token', type => 'string'),
+                SOAP::Data->new(name => 'ServiceCode', type => 'string'),
+                SOAP::Data->new(name => 'StatusID', type => 'int'),
+                SOAP::Data->new(name => 'Comments', type => 'string'),
+            ],
+        },
         'ServiceRequest_Document_Create' => {
             endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/ServiceRequest_Document_Create',
@@ -460,6 +471,19 @@ sub ServiceRequest_Create {
     my $elem = SOAP::Data->value( make_soap_structure( %data ) );
 
     return $self->_wrapper('ServiceRequest_Create', 1, $elem);
+}
+
+sub ServiceRequest_Status_Set {
+    my ($self, $sr, $status) = @_;
+
+    my $service_code = $sr->{ServiceRequest}{ServiceCode};
+    my $service_type_id = $sr->{ServiceRequest}{ServiceType}{ID};
+
+    my $statuses = $self->ServiceRequests_Statuses_Get;
+    # e.g. 2388 for OPEN Bulky Collection
+    my ($open_status) = grep { $_->{Status} eq $status && $_->{ServiceTypeID} eq $service_type_id } @{ $statuses->{ServiceStatus} };
+
+    return $self->_wrapper('ServiceRequest_Status_Set', 0, $service_code, $open_status->{ID}, '');
 }
 
 sub ServiceRequest_Document_Create {

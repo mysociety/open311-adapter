@@ -100,6 +100,7 @@ my %responses = (
 </AuthenticateResponse>',
     ServiceRequests_Types_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_types_get.xml')->slurp,
     ServiceRequest_Create => \&ServiceRequest_Create,
+    ServiceRequest_Status_Set => '',
     ServiceRequests_Statuses_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_status_get.xml')->slurp,
     Premises_Get => \&Premises_Get,
     ServiceRequests_History_Get =>  \&ServiceRequests_History_Get,
@@ -914,6 +915,14 @@ subtest "check send bulky report with a photo" => sub {
         ServiceCode => '0001',
     }, "correct request for servicerequests_get";
 
+    my $status_set = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Status_Set} );
+    is_deeply $status_set->body->{ServiceRequest_Status_Set}, {
+        token => 'ABC=',
+        ServiceCode => '0001',
+        StatusID => '2388',
+        Comments => '',
+    }, "correct request for servicerequests_get";
+
     my $sr_doc = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Document_Create} );
     is_deeply $sr_doc->body->{ServiceRequest_Document_Create}, {
         token => 'ABC=',
@@ -1128,6 +1137,14 @@ subtest "check send bulky report with a photo as an upload" => sub {
     is_deeply $sr_sent->body->{ServiceRequests_Get}, {
         token => 'ABC=',
         ServiceCode => '0001',
+    }, "correct request for servicerequests_get";
+
+    my $status_set = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Status_Set} );
+    is_deeply $status_set->body->{ServiceRequest_Status_Set}, {
+        token => 'ABC=',
+        ServiceCode => '0001',
+        StatusID => '2388',
+        Comments => '',
     }, "correct request for servicerequests_get";
 
     my $sr_doc = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Document_Create} );
