@@ -12,8 +12,14 @@ around BUILDARGS => sub {
 sub _worksheet_message {
     my ($self, $args) = @_;
 
-    return "Assisted collection? $args->{attributes}->{assisted_yn}\n\n" .
-           "Location of containers: $args->{attributes}->{location_of_containers}\n";
+    my $msg = "Assisted collection? $args->{attributes}->{assisted_yn}\n\n"
+        . "Location of containers: $args->{attributes}->{location_of_containers}\n";
+
+    $msg
+        .= "\nLocation of letterbox: $args->{attributes}->{location_of_letterbox}\n"
+        if $args->{attributes}->{location_of_letterbox};
+
+    return $msg;
 }
 
 __PACKAGE__->run_if_script;
