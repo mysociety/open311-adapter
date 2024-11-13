@@ -551,7 +551,7 @@ subtest "check send basic report" => sub {
     my $note_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Note_Create} );
     is_deeply $note_sent->body->{ServiceRequest_Note_Create}, {
         token => 'ABC=',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         NoteTypeID => 11,
         Note => "a title\n\na description",
         Comment => 'Note added by FixMyStreet',
@@ -651,7 +651,7 @@ subtest "check send report with extended info & ampersands " => sub {
     my $note_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Note_Create} );
     is_deeply $note_sent->body->{ServiceRequest_Note_Create}, {
         token => 'ABC=',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         NoteTypeID => 11,
         Note => "a title\n\na description & some text",
         Comment => "Logged by staff\@example.org\n\nNote added by FixMyStreet",
@@ -762,7 +762,7 @@ subtest "check send report with assets" => sub {
     my $note_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Note_Create} );
     is_deeply $note_sent->body->{ServiceRequest_Note_Create}, {
         token => 'ABC=',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         NoteTypeID => 11,
         Note => "a title\n\na description\n\nAsset id: 8080\nAsset detail: this is an asset",
         Comment => 'Note added by FixMyStreet',
@@ -838,7 +838,7 @@ subtest "check send report with a photo" => sub {
     is_deeply $sr_doc->body->{ServiceRequest_Document_Create}, {
         token => 'ABC=',
         Public => 'true',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         DateTaken => '2020-06-17T17:28:30+01:00',
         Comment => 'Photo uploaded from FixMyStreet',
         AttachedDocument => {
@@ -918,7 +918,7 @@ subtest "check send bulky report with a photo" => sub {
     is_deeply $sr_doc->body->{ServiceRequest_Document_Create}, {
         token => 'ABC=',
         Public => 'true',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         DateTaken => '2020-06-17T17:28:30+01:00',
         Comment => 'Bulky waste photo',
         AttachedDocument => {
@@ -1044,7 +1044,7 @@ subtest "check send report with a photo as an upload" => sub {
     is_deeply $sr_doc->body->{ServiceRequest_Document_Create}, {
         token => 'ABC=',
         Public => 'true',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         DateTaken => '2020-06-17T17:28:30+01:00',
         Comment => 'Photo uploaded from FixMyStreet',
         AttachedDocument => {
@@ -1134,7 +1134,7 @@ subtest "check send bulky report with a photo as an upload" => sub {
     is_deeply $sr_doc->body->{ServiceRequest_Document_Create}, {
         token => 'ABC=',
         Public => 'true',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         DateTaken => '2020-06-17T17:28:30+01:00',
         Comment => 'Bulky waste photo',
         AttachedDocument => {
