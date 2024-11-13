@@ -3,6 +3,9 @@
       <ServiceRequest>
           <id>1234</id>
           <ServiceCode>0001</ServiceCode>
+          <ServiceType>
+              <ID>238</ID>
+          </ServiceType>
       </ServiceRequest>
   </ServiceRequests_GetResult>
 </ServiceRequests_GetResponse>
