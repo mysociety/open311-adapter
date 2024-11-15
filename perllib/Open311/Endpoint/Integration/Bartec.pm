@@ -206,6 +206,14 @@ sub post_service_request {
         return $request;
     };
 
+    if ($service->service_name eq 'Bulky collection') {
+        try {
+            $integ->ServiceRequest_Status_Set($sr, 'OPEN');
+        } catch {
+            $self->logger->warn("failed to open bulky collection " . $res->{ServiceCode} . " (FMS ID " . $args->{attributes}->{fixmystreet_id} . ")");
+        };
+    }
+
     try {
         $self->_attach_note( $args, $sr );
     } catch {
