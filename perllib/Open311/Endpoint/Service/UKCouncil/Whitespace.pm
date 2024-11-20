@@ -47,6 +47,13 @@ sub _build_attributes {
             automated => 'hidden_field',
         ),
         Open311::Endpoint::Service::Attribute->new(
+            code => 'location_of_letterbox',
+            description => 'Location of letterbox',
+            datatype => 'string',
+            required => 0,
+            automated => 'hidden_field',
+        ),
+        Open311::Endpoint::Service::Attribute->new(
             code => 'quantity',
             description => 'Number of containers',
             datatype => 'string',
