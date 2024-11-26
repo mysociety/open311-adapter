@@ -54,11 +54,23 @@
                     ]
                 },
                 {
+                    "attributeCode": "attributes_fixedMyStreetDefectFixMyStreetCancellationReason",
+                    "value": [
+                        "617807ffffffff015d18e75f"
+                    ]
+                },
+                {
                     "attributeCode": "attributes_defectsStatus",
                     "value": [
                         "5c8bdfc88ae862230019dc22"
                     ]
                 },
+                 {
+                "attributeCode": "attributes_tasksStatus",
+                "value": [
+                    "5bc5bffffffff8d177342c79"
+                ]
+            },
                 {
                     "attributeCode": "attributes_defectsDefectNumber",
                     "value": 7379

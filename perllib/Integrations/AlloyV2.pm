@@ -184,7 +184,7 @@ sub search {
     return [] unless $result_count;
 
     my $maxPages = 100;
-    my $pageSize = $result_count <= 2000 ? 20 : ( ceil($result_count / $maxPages) + 1 );
+    my $pageSize = $result_count <= 10000 ? 100 : ( ceil($result_count / $maxPages) + 1 );
     my $pages = int( $result_count / $pageSize ) + 1;
 
     my $query_body = $body_base;

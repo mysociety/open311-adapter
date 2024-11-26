@@ -167,11 +167,6 @@ $integration->mock('api_call', sub {
             } else {
                 $content = path(__FILE__)->sibling('json/alloyv2/inspect_search.json')->slurp;
             }
-        } elsif ( $call =~ 'item-log/item/([^/]*)/reconstruct' ) {
-            my $id = $1;
-            my $date = $body->{date};
-            $date =~ s/\D//g;
-            $content = path(__FILE__)->sibling("json/alloyv2/reconstruct_${id}_$date.json")->slurp;
         }
     } else {
         if ( $call eq 'design/designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6' ) {
@@ -498,8 +493,6 @@ subtest "create problem with no resource_id" => sub {
 };
 
 subtest "check fetch updates" => sub {
-  # Do it twice to check cache
-  for (1..2) {
     my $res = $endpoint->run_test_request(
       GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z&end_date=2019-03-01T02:00:00Z',
     );
@@ -512,62 +505,59 @@ subtest "check fetch updates" => sub {
     [ {
         status => 'investigating',
         service_request_id => '3027029',
-        description => '',
-        updated_datetime => '2019-01-01T00:22:40Z',
-        update_id => '5d32469bb4e1b90150014306',
-        media_url => '',
-    },
-    {
-        status => 'investigating',
-        service_request_id => '3027029',
         description => 'This is an updated customer response',
         updated_datetime => '2019-01-01T00:32:40Z',
-        update_id => '5d32469bb4e1b90150014305',
+        update_id => '3027029_20190101003240',
         media_url => '',
+        extras => { latest_data_only => 1 },
     },
     {
         status => 'investigating',
         service_request_id => '3027030',
         description => '',
         updated_datetime => '2019-01-01T01:42:40Z',
-        update_id => '5d32469bb4e1b90150014307',
+        update_id => '3027030_20190101014240',
         media_url => '',
+        extras => { latest_data_only => 1 },
     },
     {
         status => 'not_councils_responsibility',
         service_request_id => '3027031',
         description => '',
         updated_datetime => '2019-01-01T01:43:40Z',
-        update_id => '6d32469bb4e1b90150014305',
+        update_id => '3027031_20190101014340',
         media_url => '',
         external_status_code => '01b51bb5c0de101a004154b5',
+        extras => { latest_data_only => 1 },
     },
     {
         status => 'action_scheduled',
         service_request_id => '3027032',
         description => '',
         updated_datetime => '2019-01-01T01:48:13Z',
-        update_id => '5d324086b4e1b90150f946a0',
+        update_id => '4947501_20190101014813',
         media_url => '',
+        extras => { latest_data_only => 1 },
     },
     {
         status => 'investigating',
         service_request_id => '3027034',
         description => '',
         updated_datetime => '2019-01-01T01:49:13Z',
-        update_id => '5d324086b4e1b90150f946a1',
+        update_id => '3027034_20190101014913',
         media_url => '',
+        extras => { latest_data_only => 1 },
     },
     {
-        status => 'fixed',
+        status => 'open',
         service_request_id => '4947502',
         description => '',
         updated_datetime => '2019-01-01T01:51:08Z',
-        update_id => '5d324049b4e1b90150f94191',
+        update_id => '4947502_20190101015108',
         media_url => '',
+        extras => { latest_data_only => 1 },
     }
     ], 'correct json returned';
-  }
 };
 
 subtest "check fetch updates with cobrand skipping update where job has unchanged parent defect" => sub {
@@ -583,43 +573,39 @@ subtest "check fetch updates with cobrand skipping update where job has unchange
     [ {
         status => 'investigating',
         service_request_id => '3027029',
-        description => '',
-        updated_datetime => '2019-01-01T00:22:40Z',
-        update_id => '5d32469bb4e1b90150014306',
-        media_url => '',
-    },
-    {
-        status => 'investigating',
-        service_request_id => '3027029',
         description => 'This is an updated customer response',
         updated_datetime => '2019-01-01T00:32:40Z',
-        update_id => '5d32469bb4e1b90150014305',
+        update_id => '3027029_20190101003240',
         media_url => '',
+        extras => { latest_data_only => 1 },
     },
     {
         status => 'investigating',
         service_request_id => '3027030',
         description => '',
         updated_datetime => '2019-01-01T01:42:40Z',
-        update_id => '5d32469bb4e1b90150014307',
+        update_id => '3027030_20190101014240',
         media_url => '',
+        extras => { latest_data_only => 1 },
     },
     {
         status => 'not_councils_responsibility',
         service_request_id => '3027031',
         description => '',
         updated_datetime => '2019-01-01T01:43:40Z',
-        update_id => '6d32469bb4e1b90150014305',
+        update_id => '3027031_20190101014340',
         media_url => '',
         external_status_code => '01b51bb5c0de101a004154b5',
+        extras => { latest_data_only => 1 },
     },
     {
         status => 'investigating',
         service_request_id => '3027034',
         description => '',
         updated_datetime => '2019-01-01T01:49:13Z',
-        update_id => '5d324086b4e1b90150f946a1',
+        update_id => '3027034_20190101014913',
         media_url => '',
+        extras => { latest_data_only => 1 },
     }
     ], 'correct json returned';
 };

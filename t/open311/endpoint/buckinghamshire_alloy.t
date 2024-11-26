@@ -62,11 +62,6 @@ $integration->mock('api_call', sub {
             } elsif ($type eq 'designs_customerReportDefect_62e43ee75039cb015e3287e9') {
                 $content = path(__FILE__)->sibling('json/alloyv2/bucks_defects_search.json')->slurp;
             }
-        } elsif ( $call =~ 'item-log/item/([^/]*)/reconstruct' ) {
-            my $id = $1;
-            my $date = $body->{date};
-            $date =~ s/\D//g;
-            $content = path(__FILE__)->sibling("json/alloyv2/bucks_reconstruct_${id}_$date.json")->slurp;
         }
     } elsif ( $call eq 'design/designs_streetLights' ) {
         $content = path(__FILE__)->sibling('json/alloyv2/occ_design_resource.json')->slurp;
@@ -159,20 +154,12 @@ subtest "check fetch updates" => sub {
             description => "",
             media_url => "",
             service_request_id => "63ee34826965f30390f01cda",
-            status => "open",
-            external_status_code => '060',
-            update_id => "63ee34826965f30390f01ce3",
-            updated_datetime => "2023-02-16T13:49:54Z"
-        },
-        {
-            description => "",
-            media_url => "",
-            service_request_id => "63ee34826965f30390f01cda",
             status => "action_scheduled",
             external_status_code => '306',
-            update_id => "63ee3490b016c303ae032113",
-            updated_datetime => "2023-02-16T13:50:08Z"
-        }
+            update_id => "63ee34826965f30390f01cda_20230216135008792",
+            updated_datetime => "2023-02-16T13:50:08Z",
+            extras => { latest_data_only => 1 },
+        },
     ], 'correct json returned';
 };
 
