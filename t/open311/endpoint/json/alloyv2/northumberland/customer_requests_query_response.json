@@ -75,6 +75,10 @@
           "value": "person@email.com"
         },
         {
+          "attributeCode": "attributes_customerRequestFMSExtraDetails_646e07533726d8036a7a4022",
+          "value": "Hello there"
+        },
+        {
           "attributeCode": "attributes_customerRequestAssignedTo_653664b0557119eef53a97e1",
           "value": [
             "345"
