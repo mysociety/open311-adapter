@@ -204,10 +204,8 @@ sub post_service_request {
     # extract attribute values
     my $resource_id = $args->{attributes}->{asset_resource_id} || '';
 
-    my $category = $args->{service_code};
-    $category =~ s/(_\d+)+$//;
-    $category =~ s/_/ /g;
-    $args->{service_code_alloy} = $category;
+    $args->{service_code_alloy}
+        = $self->_munge_service_code( $args->{service_code} );
 
     my $resource = {
         # This appears to be shared amongst all asset types for now,
@@ -251,6 +249,15 @@ sub post_service_request {
         service_request_id => $item_id
     );
 
+}
+
+sub _munge_service_code {
+    my ( $self, $service_code ) = @_;
+
+    my $category = $service_code;
+    $category =~ s/(_\d+)+$//;
+    $category =~ s/_/ /g;
+    return $category;
 }
 
 sub _update_item {

@@ -61,27 +61,42 @@ sub process_attributes {
         value => [ $contact_resource_id ],
     };
 
-    my $category_code = $self->_find_category_code($args->{service_code_alloy});
-    if (my $group = $args->{attributes}->{group}) {
-        foreach (keys %{$self->service_whitelist}) {
-            if (my $alias = $self->service_whitelist->{$_}->{alias}) {
-                if ($alias eq $group) {
+    $self->_populate_category_and_group_attr(
+        $attributes,
+        $args->{service_code_alloy},
+        $args->{attributes}{group},
+    );
+
+    return $attributes;
+}
+
+sub _populate_category_and_group_attr {
+    my ( $self, $attr, $service_code, $group ) = @_;
+
+    my $category_code = $self->_find_category_code($service_code);
+    if ($group) {
+        foreach ( keys %{ $self->service_whitelist } ) {
+            if ( my $alias = $self->service_whitelist->{$_}->{alias} ) {
+                if ( $alias eq $group ) {
                     $group = $_;
                 }
             }
         }
         my $group_code = $self->_find_group_code($group);
-        push @$attributes, {
-           attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{group},
-           value => [ $group_code ],
+        push @$attr, {
+            attributeCode =>
+                $self->config->{request_to_resource_attribute_manual_mapping}
+                {group},
+            value => [$group_code],
         };
     }
-    push @$attributes, {
-        attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{category},
-        value => [ $category_code ],
-    };
 
-    return $attributes;
+    push @$attr, {
+        attributeCode =>
+            $self->config->{request_to_resource_attribute_manual_mapping}
+            {category},
+        value => [$category_code],
+    };
 }
 
 =head2 update_additional_attributes
@@ -91,6 +106,9 @@ Adds an update for the status attribute given by C<update_status_attribute_id>, 
 Adds an update for 'extra_details' field ('FMS Extra Details' on Alloy end).
 
 Adds an update for the assigned user ('Assigned to' on Alloy end).
+
+Adds an update for category ('Request Category' on Alloy end), and group
+if applicable.
 
 =cut
 
@@ -144,6 +162,14 @@ sub update_additional_attributes {
                 value => [],
             };
         }
+    }
+
+    if ( my $service_code = $self->_munge_service_code( $args->{service_code} || '' ) ) {
+        $self->_populate_category_and_group_attr(
+            $attr,
+            $service_code,
+            $args->{attributes}{group},
+        );
     }
 
     return $attr;
