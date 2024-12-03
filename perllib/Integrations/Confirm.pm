@@ -315,12 +315,17 @@ sub perform_request_graphql {
     my $body = {
         query => $query,
     };
+    my $encoded_body = encode_json($body);
 
-    $request->content(encode_json($body));
+    $request->content($encoded_body);
 
     my $response = $self->ua->request($request);
 
     my $content = decode_json($response->content);
+
+    if ($content->{errors} && @{$content->{errors}}) {
+        $self->logger->warn("Got errors in response to GraphQL query $encoded_body: " . $response->content);
+    }
 
     return $content;
 }
