@@ -606,7 +606,13 @@ sub _get_inspection_updates {
 
     my $mapping = $self->config->{inspection_attribute_mapping};
     return () unless $mapping;
-    my $updates = $self->fetch_updated_resources($self->config->{rfs_design}, $args->{start_date}, $args->{end_date});
+
+    my %join;
+    $join{joinAttributes}
+        = [ $mapping->{category_title}, $mapping->{group_title} ]
+        if $mapping->{category_title};
+
+    my $updates = $self->fetch_updated_resources($self->config->{rfs_design}, $args->{start_date}, $args->{end_date}, \%join);
 
     my $assigned_to_users = $self->get_assigned_to_users(@$updates);
 
@@ -658,6 +664,16 @@ sub _get_inspection_updates {
                 $args{extras}{detailed_information}
                     = $attributes->{$extra_details_code} // '';
             }
+        }
+
+        if ( $mapping->{category_title} ) {
+            $args{extras}{category}
+                = $attributes->{ $mapping->{category_title} }
+                if $attributes->{ $mapping->{category_title} };
+
+            $args{extras}{group}
+                = $attributes->{ $mapping->{group_title} }
+                if $attributes->{ $mapping->{group_title} };
         }
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
@@ -892,7 +908,7 @@ sub get_request_description {
 }
 
 sub fetch_updated_resources {
-    my ($self, $code, $start_date, $end_date) = @_;
+    my ($self, $code, $start_date, $end_date, $join) = @_;
 
     my @results;
 
@@ -900,6 +916,7 @@ sub fetch_updated_resources {
         properties =>  {
             dodiCode => $code,
             attributes => ["all"],
+            %{ $join || {} },
         },
         children => [{
             type => "And",
@@ -1277,6 +1294,39 @@ sub _find_group_code {
             return $grp->{itemId};
         }
     }
+}
+
+=head2 _search_by_code
+
+This looks up an item in Alloy, given an Alloy item ID.
+
+=cut
+
+sub _search_by_code {
+    my ( $self, $params ) = @_;
+
+    my $res = $self->alloy->search(
+        {   properties => {
+                dodiCode       => $params->{dodi_code},
+                attributes     => ['all'],
+                collectionCode => 'Live',
+            },
+            children => [
+                {   type     => "Equals",
+                    children => [
+                        {   type       => 'ItemProperty',
+                            properties => { itemPropertyName => 'itemID' },
+                        },
+                        {   type       => 'AlloyId',
+                            properties => { value => [ $params->{item_code} ] },
+                        }
+                    ],
+                },
+            ],
+        },
+    );
+
+    return $res;
 }
 
 sub call_reconstruct {

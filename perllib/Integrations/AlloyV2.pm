@@ -188,13 +188,20 @@ sub search {
     my $pages = int( $result_count / $pageSize ) + 1;
 
     my $query_body = $body_base;
-    $query_body->{type} = 'Query';
+    my $call = 'aqs/';
+    if ( $query_body->{properties}{joinAttributes} ) {
+        $query_body->{type} = 'Join';
+        $call .= 'join';
+    } else {
+        $query_body->{type} = 'Query';
+        $call .= 'query';
+    }
 
     my @results;
     my $page = 1;
     while ($page <= $pages) {
         my $result = $self->api_call(
-            call => "aqs/query",
+            call => $call,
             params => { page => $page, pageSize => $pageSize },
             body => { aqs => $query_body },
         );
@@ -202,7 +209,30 @@ sub search {
         $page++;
 
         next unless $result->{results};
-        push @results, @{ $result->{results} }
+        push @results, @{ $result->{results} };
+
+        if ( my $join_results = $result->{joinResults} ) {
+            my %id_to_res = map { $_->{itemId} => $_ } @results;
+
+            for my $jr ( @$join_results ) {
+                my $item_id = $jr->{itemId};
+
+                for my $jq ( @{ $jr->{joinQueries} } ) {
+                    # Make sure attribute code is unique.
+                    # E.g. Attribute code may originally be something like
+                    # 'attributes_itemsTitle' but this doesn't make it clear
+                    # if it is referring to a request, category, group, etc.
+                    # joinAttributes contains full code 'path' so we use this
+                    # instead.
+                    my $attr = @{ $jq->{item}{attributes} }[0];
+                    my $attr_code = $jq->{joinAttributes}[0];
+                    $attr->{attributeCode} = $attr_code;
+
+                    # Append to top-level attribute list
+                    push @{ $id_to_res{$item_id}{attributes} }, $attr;
+                }
+            }
+        }
     }
 
     return \@results;

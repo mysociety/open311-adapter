@@ -174,6 +174,8 @@ $integration->mock('api_call', sub {
         } elsif ($designCode eq 'designs_contacts') {
             $content = '{}';
         }
+    } elsif ($body && $call =~ 'aqs/join') {
+        $content = path(__FILE__)->sibling("json/alloyv2/northumberland/customer_requests_query_response.json")->slurp;
     }
 
     if (!$content) {
@@ -414,6 +416,8 @@ subtest "check fetch updates" => sub {
                 assigned_user_name   => 'FMS User 123',
                 assigned_user_email  => '123@email.com',
                 detailed_information => '',
+                category => 'Damaged / Missing / Facing Wrong Way',
+                group => 'Street Lighting',
             },
         },
         {   description        => '',
@@ -427,6 +431,8 @@ subtest "check fetch updates" => sub {
                 assigned_user_name  => 'FMS User 345',
                 assigned_user_email => '345@email.com',
                 detailed_information => 'Hello there',
+                category => 'Fly-tipping/Rubbish Bin Overflowing',
+                group => 'Winter',
             },
         },
     ], 'correct json returned';
@@ -443,7 +449,7 @@ HERE
         POST => '/servicerequestupdates.json',
         jurisdiction_id => 'dummy',
         api_key => 'test',
-        service_code => 'Damaged_/_Missing_/_Facing_Wrong_Way',
+        service_code => 'Loose_/_Raised_/_Sunken',
         description => 'update',
         status => 'FIXED',
         service_request_id => '642062376be3a0036bbbb64b',
@@ -455,40 +461,37 @@ HERE
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
-
     my $sent = pop @sent;
     my $attributes = $sent->{attributes};
 
-    my $expected_status_attribute_code = 'attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb';
-    my $expected_status_attribute_value = '63fcb00c753aed036a5e43a2';
+    is_deeply $attributes, [
+        {   'attributeCode' =>
+                'attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb',
+            'value' => ['63fcb00c753aed036a5e43a2'],
+        },
+        {   'attributeCode' =>
+                'attributes_customerRequestFMSExtraDetails_646e07533726d8036a7a4022',
+            'value' => 'Red and
+yellow and
+    pink
+',
+        },
+        {   'attributeCode' =>
+                'attributes_customerRequestAssignedTo_653664b0557119eef53a97e1',
+            'value' => ['123'],
+        },
+        {   'attributeCode' =>
+                'attributes_customerRequestRequestCategory_63862851fb3d97038c4e1cfc',
+            'value' => ['61fb016c4c5c56015448093e'],
+        },
+        {   'attributeCode' =>
+                'attributes_customerRequestFMSUpdates_6387cc9805cb250393e00e2f',
+            'value' => 'Customer update at 2023-05-15 14:55:55
+update',
+        },
+    ];
 
-    my $expected_extra_details_attribute_code = 'attributes_customerRequestFMSExtraDetails_646e07533726d8036a7a4022';
-    my $expected_extra_details_attribute_value = $extra_details;
-
-    my $expected_assigned_user_attribute_code =
-        'attributes_customerRequestAssignedTo_653664b0557119eef53a97e1';
-    my $expected_assigned_user_attribute_value = '123';
-
-    my $check_count = 0;
-    foreach (@{ $attributes }) {
-        if ($_->{attributeCode} eq $expected_status_attribute_code) {
-            is_deeply $_->{value}, [$expected_status_attribute_value],
-                "value sent in status attribute update is correct";
-            $check_count++;
-        }
-        if ($_->{attributeCode} eq $expected_extra_details_attribute_code) {
-            ok $_->{value} eq $expected_extra_details_attribute_value, "value sent in extra_details attribute update is correct";
-            $check_count++;
-        }
-        if ( $_->{attributeCode} eq $expected_assigned_user_attribute_code ) {
-            is_deeply $_->{value}, [$expected_assigned_user_attribute_value],
-                "value sent in assigned_to_user attribute update is correct";
-            $check_count++;
-        }
-    }
-    is $check_count, 3, 'correct number of attributes tested';
-
-    note 'unset assigned user';
+    note 'unset assigned user; change category & group';
 
     $res = $endpoint->run_test_request(
         POST => '/servicerequestupdates.json',
@@ -502,21 +505,44 @@ HERE
         updated_datetime => '2023-05-15T14:55:55+00:00',
         'attribute[extra_details]' => $extra_details,
         'attribute[assigned_to_user_email]' => '',
+        'attribute[group]' => 'Winter',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
     $sent = pop @sent;
     $attributes = $sent->{attributes};
-    $check_count = 0;
-    for (@$attributes) {
-        if ( $_->{attributeCode} eq $expected_assigned_user_attribute_code ) {
-            is_deeply $_->{value}, [],
-                "empty arrayref sent for assigned_to_user attribute";
-            $check_count++;
-        }
-    }
-    is $check_count, 1, 'correct number of attributes tested';
+
+    is_deeply $attributes, [
+        {   'attributeCode' =>
+                'attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb',
+            'value' => ['63fcb00c753aed036a5e43a2'],
+        },
+        {   'attributeCode' =>
+                'attributes_customerRequestFMSExtraDetails_646e07533726d8036a7a4022',
+            'value' => 'Red and
+yellow and
+    pink
+',
+        },
+        {   'attributeCode' =>
+                'attributes_customerRequestAssignedTo_653664b0557119eef53a97e1',
+            'value' => [],
+        },
+        {   'attributeCode' =>
+                'attributes_customerRequestRequestGroup_638627f005cb250393c1705a',
+            'value' => ['61fafee3e3b879015205f7cc'],
+        },
+        {   'attributeCode' =>
+                'attributes_customerRequestRequestCategory_63862851fb3d97038c4e1cfc',
+            'value' => ['61fb016c4c5c56015448093f'],
+        },
+        {   'attributeCode' =>
+                'attributes_customerRequestFMSUpdates_6387cc9805cb250393e00e2f',
+            'value' => 'Customer update at 2023-05-15 14:55:55
+update',
+        },
+    ];
 };
 
 done_testing;

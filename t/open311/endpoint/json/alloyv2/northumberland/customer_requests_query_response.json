@@ -1,4 +1,68 @@
 {
+  "joinResults": [
+    {
+      "itemId": "123456",
+      "joinQueries": [
+        {
+          "item": {
+            "attributes": [
+              {
+                "attributeCode": "attributes_itemsTitle",
+                "value": "Damaged / Missing / Facing Wrong Way"
+              }
+            ]
+          },
+          "joinAttributes": [
+            "root.attributes_customerRequestRequestCategory_63862851fb3d97038c4e1cfc.attributes_itemsTitle"
+          ]
+        },
+        {
+          "item": {
+            "attributes": [
+              {
+                "attributeCode": "attributes_itemsTitle",
+                "value": "Street Lighting"
+              }
+            ]
+          },
+          "joinAttributes": [
+            "root.attributes_customerRequestRequestGroup_638627f005cb250393c1705a.attributes_itemsTitle"
+          ]
+        }
+      ]
+    },
+    {
+      "itemId": "234567",
+      "joinQueries": [
+        {
+          "item": {
+            "attributes": [
+              {
+                "attributeCode": "attributes_itemsTitle",
+                "value": "Fly-tipping/Rubbish Bin Overflowing"
+              }
+            ]
+          },
+          "joinAttributes": [
+            "root.attributes_customerRequestRequestCategory_63862851fb3d97038c4e1cfc.attributes_itemsTitle"
+          ]
+        },
+        {
+          "item": {
+            "attributes": [
+              {
+                "attributeCode": "attributes_itemsTitle",
+                "value": "Winter"
+              }
+            ]
+          },
+          "joinAttributes": [
+            "root.attributes_customerRequestRequestGroup_638627f005cb250393c1705a.attributes_itemsTitle"
+          ]
+        }
+      ]
+    }
+  ],
   "results": [
     {
       "collection": "Live",
