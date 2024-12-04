@@ -660,6 +660,26 @@ sub _get_inspection_updates {
             }
         }
 
+        if ( $mapping->{category} ) {
+            my $category_code = @{ $attributes->{ $mapping->{category} } || [] }[0];
+            my $group_code    = @{ $attributes->{ $mapping->{group} } || [] }[0];
+
+            if ($category_code) {
+                my $res = $self->_find_category_by_code($category_code);
+                my $title = $self->alloy->attributes_to_hash( $res->[0] )
+                    ->{ $self->config->{category_title_attribute} } if @$res;
+
+                $args{extras}{category} = $title if $title;
+            }
+            if ($group_code) {
+                my $res = $self->_find_group_by_code($group_code);
+                my $title = $self->alloy->attributes_to_hash( $res->[0] )
+                    ->{ $self->config->{group_title_attribute} } if @$res;
+
+                $args{extras}{group} = $title if $title;
+            }
+        }
+
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
 
@@ -1277,6 +1297,75 @@ sub _find_group_code {
             return $grp->{itemId};
         }
     }
+}
+
+=head2 _search_by_code
+
+This looks up an item in Alloy, given an Alloy item ID.
+
+=cut
+
+sub _search_by_code {
+    my ( $self, $params ) = @_;
+
+    my $res = $self->alloy->search(
+        {   properties => {
+                dodiCode       => $params->{dodi_code},
+                attributes     => ['all'],
+                collectionCode => 'Live',
+            },
+            children => [
+                {   type     => "Equals",
+                    children => [
+                        {   type       => 'ItemProperty',
+                            properties => { itemPropertyName => 'itemID' },
+                        },
+                        {   type       => 'AlloyId',
+                            properties => { value => [ $params->{item_code} ] },
+                        }
+                    ],
+                },
+            ],
+        },
+    );
+
+    return $res;
+}
+
+=head2 _find_category_by_code
+
+This looks up the C<category_list_code> design in Alloy, and finds the entry
+that matches the provided Alloy code.
+
+=cut
+
+sub _find_category_by_code {
+    my ( $self, $code ) = @_;
+
+    my $res = $self->_search_by_code( {
+        dodi_code => $self->config->{category_list_code},
+        item_code => $code,
+    } );
+
+    return $res;
+}
+
+=head2 _find_group_by_code
+
+This looks up the C<group_list_code> design in Alloy, and finds the entry
+that matches the provided Alloy code.
+
+=cut
+
+sub _find_group_by_code {
+    my ( $self, $code ) = @_;
+
+    my $res = $self->_search_by_code( {
+        dodi_code => $self->config->{group_list_code},
+        item_code => $code,
+    } );
+
+    return $res;
 }
 
 sub call_reconstruct {
