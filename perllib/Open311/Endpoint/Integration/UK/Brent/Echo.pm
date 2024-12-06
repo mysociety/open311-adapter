@@ -13,6 +13,10 @@ around process_service_request_args => sub {
     my ($orig, $class, $args) = @_;
     my $request = $class->$orig($args);
 
+    if ($args->{attributes}{CarParkIssueType}) {
+        $args->{attributes}{description} .= " | " . $args->{attributes}{CarParkIssueType};
+    }
+
     # Missed collection
     if ($request->{event_type} == 2891) {
         my $service_id = $args->{attributes}{service_id};
