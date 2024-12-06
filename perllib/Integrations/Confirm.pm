@@ -323,8 +323,8 @@ sub perform_request_graphql {
 
     my $content = decode_json($response->content);
 
-    if ($content->{errors}) {
-        $self->logger->warn("Got errors in response to GraphQL query $encoded_body: $response->{content} ");
+    if ($content->{errors} && @{$content->{errors}}) {
+        $self->logger->warn("Got errors in response to GraphQL query $encoded_body: " . $response->content);
     }
 
     return $content;
