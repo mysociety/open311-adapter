@@ -606,7 +606,13 @@ sub _get_inspection_updates {
 
     my $mapping = $self->config->{inspection_attribute_mapping};
     return () unless $mapping;
-    my $updates = $self->fetch_updated_resources($self->config->{rfs_design}, $args->{start_date}, $args->{end_date});
+
+    my %join;
+    $join{joinAttributes}
+        = [ $mapping->{category_title}, $mapping->{group_title} ]
+        if $mapping->{category_title};
+
+    my $updates = $self->fetch_updated_resources($self->config->{rfs_design}, $args->{start_date}, $args->{end_date}, \%join);
 
     my $assigned_to_users = $self->get_assigned_to_users(@$updates);
 
@@ -660,24 +666,14 @@ sub _get_inspection_updates {
             }
         }
 
-        if ( $mapping->{category} ) {
-            my $category_code = @{ $attributes->{ $mapping->{category} } || [] }[0];
-            my $group_code    = @{ $attributes->{ $mapping->{group} } || [] }[0];
+        if ( $mapping->{category_title} ) {
+            $args{extras}{category}
+                = $attributes->{ $mapping->{category_title} }
+                if $attributes->{ $mapping->{category_title} };
 
-            if ($category_code) {
-                my $res = $self->_find_category_by_code($category_code);
-                my $title = $self->alloy->attributes_to_hash( $res->[0] )
-                    ->{ $self->config->{category_title_attribute} } if @$res;
-
-                $args{extras}{category} = $title if $title;
-            }
-            if ($group_code) {
-                my $res = $self->_find_group_by_code($group_code);
-                my $title = $self->alloy->attributes_to_hash( $res->[0] )
-                    ->{ $self->config->{group_title_attribute} } if @$res;
-
-                $args{extras}{group} = $title if $title;
-            }
+            $args{extras}{group}
+                = $attributes->{ $mapping->{group_title} }
+                if $attributes->{ $mapping->{group_title} };
         }
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
@@ -912,7 +908,7 @@ sub get_request_description {
 }
 
 sub fetch_updated_resources {
-    my ($self, $code, $start_date, $end_date) = @_;
+    my ($self, $code, $start_date, $end_date, $join) = @_;
 
     my @results;
 
@@ -920,6 +916,7 @@ sub fetch_updated_resources {
         properties =>  {
             dodiCode => $code,
             attributes => ["all"],
+            %{ $join || {} },
         },
         children => [{
             type => "And",
@@ -1328,42 +1325,6 @@ sub _search_by_code {
             ],
         },
     );
-
-    return $res;
-}
-
-=head2 _find_category_by_code
-
-This looks up the C<category_list_code> design in Alloy, and finds the entry
-that matches the provided Alloy code.
-
-=cut
-
-sub _find_category_by_code {
-    my ( $self, $code ) = @_;
-
-    my $res = $self->_search_by_code( {
-        dodi_code => $self->config->{category_list_code},
-        item_code => $code,
-    } );
-
-    return $res;
-}
-
-=head2 _find_group_by_code
-
-This looks up the C<group_list_code> design in Alloy, and finds the entry
-that matches the provided Alloy code.
-
-=cut
-
-sub _find_group_by_code {
-    my ( $self, $code ) = @_;
-
-    my $res = $self->_search_by_code( {
-        dodi_code => $self->config->{group_list_code},
-        item_code => $code,
-    } );
 
     return $res;
 }
