@@ -33,7 +33,6 @@ has endpoint => (
         $ENV{PERL_LWP_SSL_CA_PATH} = '/etc/ssl/certs' unless $ENV{DEV_USE_SYSTEM_CA_PATH};
 
         my $soap = SOAP::Lite->new(
-            soapversion => 1.1,
             proxy => $self->url,
             default_ns => $self->attr,
             on_action => sub { $self->attr . $_[1] }
@@ -67,6 +66,8 @@ sub call {
 
     require SOAP::Lite;
     @params = make_soap_structure(@params);
+    # See comment in Echo.pm
+    SOAP::Lite->soapversion(1.1);
     my $som = $self->endpoint->call(
         $method => @params,
         $self->security
