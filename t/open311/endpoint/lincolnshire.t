@@ -55,6 +55,21 @@ $open311->mock(perform_request => sub {
     return {};
 });
 
+subtest "bad look up of completion photo" => sub {
+    my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
+    my $lwp = Test::MockModule->new('LWP::UserAgent');
+    $lwp->mock(request => sub {
+        my ($ua, $req) = @_;
+        return HTTP::Response->new(200, 'OK', [], '{"access_token":"123","expires_in":3600}') if $req->uri =~ /oauth\/token/;
+        return HTTP::Response->new(404, 'Not found', [], '<html><body>Hmm</body></html>') if $req->uri =~ /enquiries\/2020/;
+    });
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.xml?start_date=2022-10-23T00:00:00Z&end_date=2022-10-24T00:00:00Z',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+    contains_string $res->content, '<media_url></media_url>';
+};
+
 subtest "looking up of completion photos" => sub {
     my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
     my $lwp = Test::MockModule->new('LWP::UserAgent');
