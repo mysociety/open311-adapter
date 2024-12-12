@@ -168,6 +168,7 @@
     "updates": "attributes_customerRequestFMSUpdates_6387cc9805cb250393e00e2f",
     "status": "attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb",
     "inspector_comments": "attributes_customerRequestInspectorsComments_638629fcfb3d97038c4e5d5a",
+    "extra_details": "attributes_customerRequestFMSExtraDetails_646e07533726d8036a7a4022",
     "assigned_to_user": "attributes_customerRequestAssignedTo_653664b0557119eef53a97e1",
   },
 

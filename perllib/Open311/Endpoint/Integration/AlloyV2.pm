@@ -364,32 +364,11 @@ sub _find_contact {
         return undef;
     }
 
-    my $body = {
-        properties => {
-            dodiCode => $self->config->{contact}->{code},
-            collectionCode => "Live",
-            attributes => [ $attribute_code ],
-        },
-        children => [
-            {
-                type => "Equals",
-                children => [
-                    {
-                        type => "Attribute",
-                        properties => {
-                            attributeCode => $attribute_code,
-                        },
-                    },
-                    {
-                        type => "String",
-                        properties => {
-                            value => [ $search_term ]
-                        }
-                    }
-                ]
-            }
-        ]
-    };
+    my $body = $self->find_item_body(
+        dodi_code      => $self->config->{contact}->{code},
+        attribute_code => $attribute_code,
+        search_term    => $search_term,
+    );
 
     my $results = $self->alloy->search($body);
 
@@ -402,6 +381,43 @@ sub _find_contact {
     return undef unless $a->{$attribute_code} && $a->{$attribute_code} eq $search_term;
 
     return $contact;
+}
+
+=head2 find_item_body
+
+Builds query body for looking up a specific item in Alloy.
+
+=cut
+
+sub find_item_body {
+    my ( $self, %params ) = @_;
+
+    return {
+        properties => {
+            dodiCode => $params{dodi_code},
+            collectionCode => "Live",
+            attributes => [ $params{attribute_code} ],
+        },
+        children => [
+            {
+                type => "Equals",
+                children => [
+                    {
+                        type => "Attribute",
+                        properties => {
+                            attributeCode => $params{attribute_code},
+                        },
+                    },
+                    {
+                        type => "String",
+                        properties => {
+                            value => [ $params{search_term} ]
+                        }
+                    }
+                ]
+            }
+        ]
+    };
 }
 
 =head2 _create_contact
@@ -630,6 +646,11 @@ sub _get_inspection_updates {
             };
 
             $args{extras} = { %{$args{extras}}, %$assigned_to_user } if $assigned_to_user;
+
+            if ( my $extra_details_code = $mapping->{extra_details} ) {
+                $args{extras}{detailed_information}
+                    = $attributes->{$extra_details_code} // '';
+            }
         }
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );

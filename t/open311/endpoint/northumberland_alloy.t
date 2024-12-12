@@ -143,15 +143,29 @@ $integration->mock('api_call', sub {
             $content = path(__FILE__)->sibling("json/alloyv2/northumberland/fixmystreet_users_query_response.json")->slurp;
 
             # Only get the IDs that are provided in the body
+            my $id_type = $body->{aqs}{children}[0]{children}[0]{type};
             my @body_ids
                 = @{
                     $body->{aqs}{children}[0]{children}[1]{properties}{value}
                 };
 
             my @matching_items;
-            for my $item ( @{ decode_json($content)->{results} } ) {
-                for (@body_ids) {
-                    push @matching_items, $item if $item->{itemId} == $_;
+            if ( $id_type eq 'ItemProperty' ) {
+                # Searching for multiple users
+                for my $item ( @{ decode_json($content)->{results} } ) {
+                    for (@body_ids) {
+                        push @matching_items, $item if $item->{itemId} eq $_;
+                    }
+                }
+            } elsif ( $id_type eq 'Attribute' ) {
+                # Searching for a single user via email
+                for my $item ( @{ decode_json($content)->{results} } ) {
+                    for ( @{ $item->{attributes} } ) {
+                        push @matching_items, $item
+                            if $_->{attributeCode} eq
+                            'attributes_fixMyStreetUsersEmail_6532518cac7139477485ec38'
+                            && $_->{value} eq $body_ids[0];
+                    }
                 }
             }
 
@@ -397,8 +411,9 @@ subtest "check fetch updates" => sub {
             updated_datetime   => '2023-11-13T11:05:00Z',
             extras             => {
                 latest_data_only => 1,
-                assigned_user_name  => 'FMS User 123',
-                assigned_user_email => '123@email.com',
+                assigned_user_name   => 'FMS User 123',
+                assigned_user_email  => '123@email.com',
+                detailed_information => '',
             },
         },
         {   description        => '',
@@ -411,12 +426,19 @@ subtest "check fetch updates" => sub {
                 latest_data_only => 1,
                 assigned_user_name  => 'FMS User 345',
                 assigned_user_email => '345@email.com',
+                detailed_information => 'Hello there',
             },
         },
     ], 'correct json returned';
 };
 
-subtest "update status on problem" => sub {
+subtest "send updates for problem" => sub {
+    my $extra_details = <<HERE;
+Red and
+yellow and
+    pink
+HERE
+
     my $res = $endpoint->run_test_request(
         POST => '/servicerequestupdates.json',
         jurisdiction_id => 'dummy',
@@ -427,6 +449,8 @@ subtest "update status on problem" => sub {
         service_request_id => '642062376be3a0036bbbb64b',
         update_id => '1',
         updated_datetime => '2023-05-15T14:55:55+00:00',
+        'attribute[extra_details]' => $extra_details,
+        'attribute[assigned_to_user_email]' => '123@email.com',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -438,15 +462,61 @@ subtest "update status on problem" => sub {
     my $expected_status_attribute_code = 'attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb';
     my $expected_status_attribute_value = '63fcb00c753aed036a5e43a2';
 
-    my $status_match_found = 0;
+    my $expected_extra_details_attribute_code = 'attributes_customerRequestFMSExtraDetails_646e07533726d8036a7a4022';
+    my $expected_extra_details_attribute_value = $extra_details;
+
+    my $expected_assigned_user_attribute_code =
+        'attributes_customerRequestAssignedTo_653664b0557119eef53a97e1';
+    my $expected_assigned_user_attribute_value = '123';
+
+    my $check_count = 0;
     foreach (@{ $attributes }) {
         if ($_->{attributeCode} eq $expected_status_attribute_code) {
-            ok ref($_->{value}) eq 'ARRAY' && $_->{value}[0] eq $expected_status_attribute_value, "value sent in status attribute update is correct";
-            $status_match_found = 1;
-            last;
+            is_deeply $_->{value}, [$expected_status_attribute_value],
+                "value sent in status attribute update is correct";
+            $check_count++;
+        }
+        if ($_->{attributeCode} eq $expected_extra_details_attribute_code) {
+            ok $_->{value} eq $expected_extra_details_attribute_value, "value sent in extra_details attribute update is correct";
+            $check_count++;
+        }
+        if ( $_->{attributeCode} eq $expected_assigned_user_attribute_code ) {
+            is_deeply $_->{value}, [$expected_assigned_user_attribute_value],
+                "value sent in assigned_to_user attribute update is correct";
+            $check_count++;
         }
     }
-    ok $status_match_found, "status attribute update was sent";
+    is $check_count, 3, 'correct number of attributes tested';
+
+    note 'unset assigned user';
+
+    $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        service_code => 'Damaged_/_Missing_/_Facing_Wrong_Way',
+        description => 'update',
+        status => 'FIXED',
+        service_request_id => '642062376be3a0036bbbb64b',
+        update_id => '1',
+        updated_datetime => '2023-05-15T14:55:55+00:00',
+        'attribute[extra_details]' => $extra_details,
+        'attribute[assigned_to_user_email]' => '',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    $sent = pop @sent;
+    $attributes = $sent->{attributes};
+    $check_count = 0;
+    for (@$attributes) {
+        if ( $_->{attributeCode} eq $expected_assigned_user_attribute_code ) {
+            is_deeply $_->{value}, [],
+                "empty arrayref sent for assigned_to_user attribute";
+            $check_count++;
+        }
+    }
+    is $check_count, 1, 'correct number of attributes tested';
 };
 
 done_testing;
