@@ -1,0 +1,88 @@
+#!/usr/bin/env perl
+
+=head1 NAME
+
+invoke - Command line interface for making Alloy API calls
+
+=head1 SYNOPSIS
+
+    bin/alloy/invoke <config_filename> <method_name> [parameters_json]
+
+=head1 DESCRIPTION
+
+Makes API calls to an Alloy instance with optional parameters. Parameters can be
+passed as JSON (array/object) or as a simple string.
+
+=head1 CONFIGURATION
+
+Requires a valid Alloy V2 configuration file for the given config_filename.
+
+=head1 EXAMPLES
+
+Basic API call to get designs:
+
+    bin/alloy/invoke northumberland_alloy get_designs
+
+Search with JSON parameters:
+
+    bin/alloy/invoke northumberland_alloy search '{"type":"Query","properties":{"designCode":"design_fms_1"}}'
+
+Get valuetype mapping:
+
+    bin/alloy/invoke northumberland_alloy get_valuetype_mapping
+
+Get parent attributes for a design:
+
+    bin/alloy/invoke northumberland_alloy get_parent_attributes "design_fms_1"
+
+=cut
+
+use strict;
+use warnings;
+
+BEGIN {
+    use File::Basename qw(dirname);
+    use File::Spec;
+    my $d = dirname(File::Spec->rel2abs($0));
+    require "$d/../../setenv.pl";
+}
+
+use Try::Tiny;
+use JSON::MaybeXS;
+use Integrations::AlloyV2;
+
+my ($config, $method, $params_json) = @ARGV;
+die "Usage: $0 <config_filename> <method_name> [parameters_json]\n" unless $config && $method;
+
+my $alloy = Integrations::AlloyV2->new(config_filename => $config);
+die "No API key found in config\n" unless $alloy->config->{api_key};
+
+try {
+    my @params;
+    if ($params_json) {
+        # First try parsing as JSON
+        my $params_decoded = eval { decode_json($params_json) };
+        if ($@) {
+            # If JSON parsing fails, treat as plain parameter
+            @params = ($params_json);
+        } else {
+            @params = ref $params_decoded eq 'ARRAY' ? @$params_decoded : ($params_decoded);
+        }
+    }
+
+    die "Method '$method' does not exist in AlloyV2\n"
+        unless $alloy->can($method);
+
+    my $res = $alloy->$method(@params);
+
+    if ($res) {
+        print JSON->new->pretty->canonical->encode($res);
+        exit 0;
+    } else {
+        print "Method call '$method' returned no results ($config)\n";
+        exit 1;
+    }
+} catch {
+    print "Error calling method '$method' ($config): $_\n";
+    exit 1;
+};
