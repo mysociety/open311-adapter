@@ -1,0 +1,129 @@
+#!/usr/bin/env perl
+
+=head1 NAME
+
+inspect-designs - Inspect and validate Alloy V2 API designs and configurations
+
+=head1 SYNOPSIS
+
+    # Inspect a single design
+    bin/alloy/inspect-designs northumberland_alloy designs_FMSDefect_613f1ff6dcf79201590c5eeb
+
+    # Inspect all designs
+    bin/alloy/inspect-designs northumberland_alloy
+
+=head1 DESCRIPTION
+
+This tool allows inspection of Alloy API designs and related info.
+
+It can be used to:
+- Validate single design configurations
+- List all available designs
+- Check API connectivity
+- Verify design structure and attributes
+
+=head1 CONFIGURATION
+
+Requires a valid Alloy V2 configuration file with api_key and api_url defined.
+
+=cut
+
+use strict;
+use warnings;
+
+BEGIN {
+    use File::Basename qw(dirname);
+    use File::Spec;
+    my $d = dirname(File::Spec->rel2abs($0));
+    require "$d/../../setenv.pl";
+}
+
+use Integrations::AlloyV2;
+use JSON::MaybeXS;
+use Try::Tiny;
+use feature qw(say);
+
+# Get config name from command line
+my $config = shift;
+die "Usage: $0 <config_filename> (e.g. 'northumberland_alloy')\n" unless $config;
+
+# Initialize Alloy integration
+my $alloy = Integrations::AlloyV2->new(config_filename => $config);
+die "No API key found in config\n" unless $alloy->config->{api_key};
+
+my @designs;
+
+if ($ARGV[0]) {
+    # Single design mode
+    my $design = try {
+        $alloy->api_call(
+            call => "design/$ARGV[0]",
+        );
+    } catch {
+        die "Error fetching design $ARGV[0]: $_\n";
+    };
+
+    die "No design found with code $ARGV[0]\n" unless $design && $design->{design};
+    push @designs, $design;
+} else {
+    # All designs mode
+    my $page = 1;
+    my $page_size = 100;
+
+    say STDERR "Fetching designs from Alloy API...";
+
+    while (1) {
+        my $designs = try {
+            $alloy->api_call(
+                call => "design",
+                params => {
+                    page => $page,
+                    pageSize => $page_size
+                }
+            );
+        } catch {
+            die "Error fetching designs: $_\n";
+        };
+
+        last unless $designs->{results} && @{$designs->{results}};
+
+        push @designs, @{$designs->{results}};
+
+        last if $page >= $designs->{totalPages};
+        $page++;
+    }
+
+    say "\nFound " . scalar(@designs) . " designs\n";
+}
+
+foreach my $design (@designs) {
+    my $design_info = $design->{design};
+
+    say "Design: " . $design_info->{name};
+    say "Code: " . $design_info->{code};
+    say "Context: " . $design_info->{context};
+
+    if ($design_info->{attributes} && @{$design_info->{attributes}}) {
+        say "\nAttributes:";
+        foreach my $attr (@{$design_info->{attributes}}) {
+            # Skip if no code/name
+            next unless $attr->{code} && $attr->{name};
+
+            say sprintf("  %-40s %-20s %-10s %s",
+                $attr->{code},
+                $attr->{name},
+                $attr->{type},
+                $attr->{required} ? "Required" : "Optional"
+            );
+        }
+    }
+
+    if ($design_info->{implements} && @{$design_info->{implements}}) {
+        say "\nImplements:";
+        foreach my $impl (@{$design_info->{implements}}) {
+            say "  " . $impl->{code};
+        }
+    }
+
+    say "\n" . "-" x 80 . "\n";
+}
