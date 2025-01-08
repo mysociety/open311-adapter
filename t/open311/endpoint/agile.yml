@@ -1,0 +1,6 @@
+url: http://agile.example.org/
+
+category_mapping:
+  garden_subscription:
+    name: Garden Subscription
+    group: Waste
