@@ -12,6 +12,10 @@ sub new_service {
     Open311::Endpoint::Service->new(description => $_[0], service_code => $_[0], service_name => $_[0]);
 }
 
+my $agile = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::Agile');
+$agile->mock(services => sub {
+    return ( new_service('GARDEN') );
+});
 my $confirm_grounds = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::ConfirmGrounds');
 $confirm_grounds->mock(services => sub {
     return ( new_service('A_BC'), new_service('D_EF') );
@@ -62,6 +66,15 @@ subtest "GET Service List" => sub {
     is_string $res->content, <<CONTENT, 'xml string ok';
 <?xml version="1.0" encoding="utf-8"?>
 <services>
+  <service>
+    <description>GARDEN</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>false</metadata>
+    <service_code>Agile-GARDEN</service_code>
+    <service_name>GARDEN</service_name>
+    <type>realtime</type>
+  </service>
   <service>
     <description>A_BC</description>
     <group></group>
