@@ -29,6 +29,7 @@ test_multi(1, 'Open311::Endpoint::Integration::UK::Bexley',
     'Open311::Endpoint::Integration::UK::Bexley::ConfirmTrees' => 'bexley_confirm_trees',
     'Open311::Endpoint::Integration::UK::Bexley::Uniform' => 'bexley_uniform',
     'Open311::Endpoint::Integration::UK::Bexley::Whitespace' => 'bexley_whitespace',
+    'Open311::Endpoint::Integration::UK::Bexley::Agile' => 'bexley_agile',
 );
 
 test_multi(1, 'Open311::Endpoint::Integration::UK::Brent',
