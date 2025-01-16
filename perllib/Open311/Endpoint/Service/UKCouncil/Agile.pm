@@ -27,6 +27,13 @@ sub _build_attributes {
             automated => 'hidden_field',
         ),
         Open311::Endpoint::Service::Attribute->new(
+            code => "property_id",
+            description => "Property ID",
+            datatype => "string",
+            required => 0,
+            automated => 'hidden_field',
+        ),
+        Open311::Endpoint::Service::Attribute->new(
             code => 'total_containers',
             description => 'Total number of requested containers',
             datatype => 'string',
@@ -57,6 +64,29 @@ sub _build_attributes {
         Open311::Endpoint::Service::Attribute->new(
             code => 'payment',
             description => 'Payment amount in pence',
+            datatype => 'string',
+            required => 0,
+            automated => 'hidden_field',
+        ),
+
+        # For cancellations
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'reason',
+            description => 'Cancellation reason',
+            datatype => 'string',
+            required => 0,
+            automated => 'hidden_field',
+        ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'due_date',
+            description => 'Cancellation date',
+            datatype => 'string',
+            required => 0,
+            automated => 'hidden_field',
+        ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'customer_external_ref',
+            description => 'Customer external ref',
             datatype => 'string',
             required => 0,
             automated => 'hidden_field',
