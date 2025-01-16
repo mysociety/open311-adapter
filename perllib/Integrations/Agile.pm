@@ -69,6 +69,16 @@ sub api_call {
     }
 }
 
+sub Cancel {
+    my ( $self, $params ) = @_;
+
+    return $self->api_call(
+        action     => 'cancel',
+        controller => 'servicecontract',
+        data       => $params,
+    );
+}
+
 sub IsAddressFree {
     my ( $self, $uprn ) = @_;
 
