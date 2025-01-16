@@ -59,6 +59,11 @@ $integration->mock( api_call => sub {
                 ServiceContractReference => 'GW-SERV-001',
             };
         }
+    } elsif ( $action eq 'cancel' ) {
+        return {
+            Reference => 'GWIT2025-001-001',
+            Status => 'Hold',
+        };
     }
 } );
 
@@ -69,7 +74,10 @@ subtest 'GET services' => sub {
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
-    is_deeply decode_json($res->content), [
+    my @got = sort { $a->{service_code} cmp $b->{service_code} }
+        @{ decode_json( $res->content ) };
+
+    is_deeply \@got, [
         {
             group        => "Waste",
             service_code => "garden_subscription",
@@ -78,7 +86,16 @@ subtest 'GET services' => sub {
             type         => "realtime",
             service_name => "Garden Subscription",
             metadata     => "true"
-        }
+        },
+        {
+            group        => "Waste",
+            service_code => "garden_subscription_cancel",
+            description  => "Cancel Garden Subscription",
+            keywords     => "waste_only",
+            type         => "realtime",
+            service_name => "Cancel Garden Subscription",
+            metadata     => "true"
+        },
     ], 'correct json returned';
 };
 
@@ -114,20 +131,41 @@ subtest 'GET service' => sub {
                 order                => 2,
             },
             {   %defaults,
+                code                 => 'property_id',
+                description          => 'Property ID',
+                order                => 3,
+            },
+            {   %defaults,
                 code                 => 'current_containers',
                 description          => 'Number of current containers',
-                order                => 3,
+                order                => 4,
             },
             {   %defaults,
                 code                 => 'new_containers',
                 description          => 'Number of new containers',
-                order                => 4,
+                order                => 5,
             },
             {   %defaults,
                 code                 => 'payment_method',
                 description          => 'Payment method: credit card or direct debit',
-                order                => 5,
-            }
+                order                => 6,
+            },
+            {   %defaults,
+                code                 => 'reason',
+                description          => 'Cancellation reason',
+                order                => 7,
+            },
+            {   %defaults,
+                code                 => 'due_date',
+                description          => 'Cancellation date',
+                order                => 8,
+            },
+            {   %defaults,
+                code                 => 'customer_external_ref',
+                description          => 'Customer external ref',
+                order                => 9,
+            },
+
         ],
     }, 'correct json returned';
 };
@@ -203,6 +241,49 @@ subtest 'handle unknown error' => sub {
     my $content = decode_json($res->content);
     is $content->[0]{code}, 500;
     like $content->[0]{description}, qr/Unhandled error/,
+        'Dies with error msg';
+};
+
+subtest 'successfully cancel a garden subscription' => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'garden_subscription_cancel',
+        lat => 51,
+        long => -1,
+        'attribute[fixmystreet_id]' => 2000002,
+        'attribute[customer_external_ref]' => 'customer_ABC',
+        'attribute[uprn]' => '234_has_sub',
+        'attribute[reason]' => 'I used all my garden waste for a bonfire',
+        'attribute[due_date]' => '01/01/2025',
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content), [ {
+        service_request_id => 'GWIT2025-001-001',
+    } ], 'correct json returned';
+};
+
+subtest 'try to cancel when no subscription' => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'garden_subscription_cancel',
+        lat => 51,
+        long => -1,
+        'attribute[fixmystreet_id]' => 2000002,
+        'attribute[customer_external_ref]' => 'customer_ABC',
+        'attribute[uprn]' => '123_no_sub',
+        'attribute[reason]' => 'I used all my garden waste for a bonfire',
+        'attribute[due_date]' => '01/01/2025',
+    );
+
+    my $content = decode_json($res->content);
+    is $content->[0]{code}, 500;
+    like $content->[0]{description},
+        qr/UPRN 123_no_sub does not have a subscription to be cancelled/,
         'Dies with error msg';
 };
 
