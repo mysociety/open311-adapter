@@ -47,6 +47,11 @@ has agile => (
     },
 );
 
+use constant SERVICE_TO_SUB_MAPPING => {
+    garden_subscription        => \&_garden_subscription,
+    garden_subscription_cancel => \&_garden_subscription_cancel,
+};
+
 use constant PAYMENT_METHOD_MAPPING => {
     credit_card  => 'CREDITCARD',
     direct_debit => 'DIRECTDEBIT',
@@ -87,6 +92,16 @@ sub post_service_request {
         "post_service_request(" . $service->service_code . ")" );
     $self->logger->debug(
         "post_service_request arguments: " . encode_json($args) );
+
+    my $sub = SERVICE_TO_SUB_MAPPING->{$service->service_code};
+
+    die 'Service \'' . $service->service_code . '\' not handled' unless $sub;
+
+    return &$sub( $self, $args );
+}
+
+sub _garden_subscription {
+    my ( $self, $args) = @_;
 
     my $integration = $self->get_integration;
 
@@ -131,6 +146,39 @@ sub post_service_request {
         die 'UPRN '
             . $args->{attributes}{uprn}
             . ' already has a subscription or is invalid';
+    }
+}
+
+sub _garden_subscription_cancel {
+    my ( $self, $args ) = @_;
+
+    my $integration = $self->get_integration;
+
+    my $is_free = $integration->IsAddressFree( $args->{attributes}{uprn} );
+
+    if ( $is_free->{IsFree} eq 'False' ) {
+        my $res = $integration->Cancel( {
+            CustomerExternalReference => $args->{attributes}{customer_external_ref},
+            ServiceContractUPRN       => $args->{attributes}{uprn},
+            Reason                    => $args->{attributes}{reason},
+            DueDate                   => $args->{attributes}{due_date},
+        } );
+
+        # Expected response:
+        # {
+        #   Reference: string,
+        #   Status: string,
+        # }
+        my $request = $self->new_request(
+            service_request_id => $res->{Reference},
+        );
+
+        return $request;
+
+    } else {
+        die 'UPRN '
+            . $args->{attributes}{uprn}
+            . ' does not have a subscription to be cancelled, or is invalid';
     }
 }
 
