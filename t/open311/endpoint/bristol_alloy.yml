@@ -1,0 +1,105 @@
+{
+  "api_key": "api_key",
+  "api_url": "http://localhost/api/",
+
+"rfs_design": {
+    "SC-Fly-Post Defect": 'designs_bWCSCFlyPostDefect_5e203bd4ca315009b4e5c714',
+    "SC-Fly-Tip Defect": 'designs_bWCSCFlyTipDefect_5dfa127dca31500ee80ea8df',
+    "SC-Graffiti Defect": 'designs_bWCSCGraffitiDefect_5dfa4261ca31500cec4147de',
+    "SC-Street Cleansing": 'designs_bWCSCStreetCleansingDefect_5e21a98bca315003e0983035',
+  },
+
+  "service_whitelist": {
+    "": {
+      "SC-Fly-Post Defect": { "alias": "Fly posting" },
+      "SC-Fly-Tip Defect": { "alias": "Flytipping" },
+      "SC-Graffiti Defect": { "alias": "Graffiti" },
+    },
+    "SC-Street Cleansing": {
+        "alias": "Street cleansing",
+        "Bin overflowing": 1,
+        "Blood": 1,
+        "Dead animal": 1,
+        "Dog fouling": 1,
+      },
+  },
+
+  "locality_list_details": {
+    "code": "designs_locality_5e16f845ca3150037850b67a",
+    "attribute": "attributes_localityLocality_5e16f867ca3150090498a4c1",
+  },
+
+  "locality_attribute_field": "attributes_streetCleansingNetworkLocality_5ddbea54ca31500a84196f97",
+
+  "street_cleaning_network_details": {
+    "code": "designs_streetCleansingNetwork_5ddbe68aca315006c08f4097",
+    "attribute": "attributes_streetCleansingNetworkUSRN_5ddbe6adca315006c08f40fb",
+  },
+
+  "locality_title_attribute": "attributes_itemsTitle",
+
+  "request_to_resource_attribute_manual_mapping": {
+      "SC-Fly-Post Defect": {
+         'SizeOfIssue': 'attributes_bWCSCFlyPostDefectSizeOfIssue_5e203bfeca31501354c02576',
+         'Private': 'attributes_bWCSCFlyPostDefectPrivateProperty_5e203c9aca315009b4e5c76f',
+         'Offensive': 'attributes_bWCSCFlyPostDefectIsItOffensive_5e203c6fca315009b4e5c756',
+         'PropertyType': 'attributes_bWCSCFlyPostDefectPropertyType_5e203c33ca315009b4e5c742',
+         'SurfaceType': 'attributes_bWCSCFlyPostDefectSurfaceType_5e203d32ca315012d094d511',
+         'Height': 'attributes_bWCSCFlyPostDefectHeight_5e203f18ca31500a180d3f86',
+      },
+      "SC-Fly-Tip Defect": {
+         'Witness': 'attributes_bWCSCFlyTipDefectEvidenceLikely_5dfa156cca31500ee80ea93c',
+         'SizeOfIssue': 'attributes_bWCSCFlyTipDefectSizeOfIssue_5e20654dca315012d094f4b9',
+         'Health': 'attributes_bWCSCFlyTipDefectAffectingPublicHealthSafety_5e20604fca31500a180d5b98',
+         'Hazardous': 'attributes_bWCSCFlyTipDefectHazardousSubstance_5e206019ca315012d094f293',
+      },
+      "SC-Graffiti Defect": {
+         'Private': 'attributes_bWCSCGraffitiDefectPrivateLand_5dfa4398ca31500d9808ecfb',
+         'PropertyType': 'attributes_bWCSCGraffitiDefectPropertyType_5e20358dca315009b4e5bc08',
+         'SurfaceType': 'attributes_bWCSCGraffitiDefectSurface_5e204149ca31501354c02803',
+         'Height': 'attributes_bWCSCGraffitiDefectHeight_5e204239ca315012d094d706',
+         'SizeOfIssue': 'attributes_bWCSCGraffitiDefectSizeOfIssue_5e2035adca315009b4e5bc0d',
+         'Offensive': 'attributes_bWCSCGraffitiDefectIsItOffensive_5dfa42edca31500418946fc8',
+      },
+      "SC-Street Cleansing": {
+         'SizeOfIssue': 'attributes_bWCSCStreetCleansingDefectSizeOfIssue_5e21b5ccca31500d1c836be0',
+         'JobType': 'attributes_bWCSCStreetCleansingDefectJobType_5e21b5adca31500d1c836bc9',
+         "fixmystreet_id": "attributes_bWCSCStreetCleansingDefectFixMyStreetID_67654e2a1e4316383b73050f",
+      },
+   },
+
+  "request_attribute_to_values": {
+    "SizeOfIssue": ["5e1f1be1ca3150041c4141fb", "5e1f1bf0ca31500c541f82cb", "5e1f1bffca31500c541f82d8", "5e1f1c0aca31500f4ca4d4e5"],
+    "PropertyType": ['5e1f3aa5ca31500b78e78b16', '5e1f3ad1ca31500b78e78c3f'],
+    "SurfaceType": ['627b90df39417c0183caafd6', '5e203bc0ca31500a180d3d2e', '5e203ba1ca31500a180d3d15',
+    '5e203bb0ca31500a180d3d26'],
+    "Height": ['5e203e36ca315012d094d5b7', '5e203e6eca315012d094d5f3'],
+    "TypeOfAnimal": ['5e21a668ca31500cc0a2dccf', '5e21a679ca31500d1c836901'],
+    "CleansingTypes": {
+      'Bin overflowing': '5e217a6cca315012d0956696',
+      'Blood': '5e21782dca315003e09804a2',
+      'Dog fouling': '5e2179a3ca315012d0956667',
+    },
+  },
+
+  "extra_attribute_mapping": {
+    "SC-Fly-Post Defect": {
+      "locality_attribute": 'attributes_bWCSCFlyPostDefectLocality_5e6f97874cee260f90aca0d0',
+      "fullText_attribute": 'attributes_bWCSCFlyPostDefectFullDetails_5e203cd5ca315012d094d4eb',
+    },
+    "SC-Street Cleansing": {
+      "locality_attribute": 'attributes_bWCSCStreetCleansingDefectLocality_5e6f97fe4cee260f90aca0d6',
+      "fullText_attribute": 'attributes_bWCSCStreetCleansingDefectFullDetails_5e21b587ca31500cc0a2df3a',
+    },
+    "SC-Graffiti Defect": {
+      "locality_attribute": 'attributes_bWCSCGraffitiDefectLocality_5e6f97e54cee260f780bf4e6',
+      "fullText_attribute": 'attributes_bWCSCGraffitiDefectLocationDescription_5dfa4406ca31500d9808ed27',
+    },
+    "SC-Fly-Tip Defect": {
+      "locality_attribute": 'attributes_bWCSCFlyTipDefectLocality_5e6f97c54cee260f780bf4e1',
+      "fullText_attribute": 'attributes_bWCSCFlyTipDefectLocationDescription_5dfa16deca31500ee80ea988',
+    },
+  },
+
+  "created_datetime_attribute_id": 'attributes_defectsReportedDate',
+}

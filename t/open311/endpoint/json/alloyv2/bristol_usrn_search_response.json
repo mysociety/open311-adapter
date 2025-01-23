@@ -1,0 +1,19 @@
+{
+   "page": 1,
+   "pageSize": 1,
+   "results": [
+      {
+         "attributes" : [
+            {
+               "attributeCode" : "attributes_streetCleansingNetworkUSRN_5ddbe6adca315006c08f40fb",
+               "value" : "01234567"
+            },
+            {
+               "attributeCode" : "attributes_streetCleansingNetworkLocality_5ddbea54ca31500a84196f97",
+               "value" : "Bedminster"
+            }
+         ]
+      }
+   ]
+}
+
