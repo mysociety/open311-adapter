@@ -1,0 +1,15 @@
+{
+   "page": 1,
+   "pageSize": 1,
+   "results": [
+      {
+         "attributes" : [
+            {
+               "attributeCode" : "attributes_localityLocality_5e16f867ca3150090498a4c1",
+               "value" : "Bedminster"
+            }
+         ],
+         "itemId" : "5e16fa66ca314f0980300be5"
+      }
+   ]
+}
