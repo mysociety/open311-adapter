@@ -1,0 +1,12 @@
+{
+    "page": 1,
+    "pageSize": 100,
+    "results": [
+        {
+            "value": {
+                "attributeCode": "attributes_fake",
+                "value": 1.0
+            }
+        }
+    ]
+}
