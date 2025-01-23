@@ -205,25 +205,25 @@ $integration->mock('api_call', sub {
 });
 
 subtest "existing contact can be found" => sub {
-    my $result = $endpoint->_find_contact('exists@example.com');
+    my $result = $endpoint->_search_for_code_by_argument({ search => 'exists@example.com', dodi_code => $endpoint->config->{contact}->{code}, attribute => $endpoint->config->{contact}->{search_attribute_code_email}} );
     ok $result, "User exists";
     is $result->{itemId}, "708824", "correct user returned";
 };
 
 subtest "non-existing contact isn't found" => sub {
-    my $result = $endpoint->_find_contact('doesntexist@example.com');
+    my $result = $endpoint->_search_for_code_by_argument({ search => 'doesntexist@example.com', dodi_code => $endpoint->config->{contact}->{code}, attribute => $endpoint->config->{contact}->{search_attribute_code_email} });
     is $result, undef, "User doesn't exist";
 };
 
 subtest "invalid contact from Alloy is ignored" => sub {
-    my $result = $endpoint->_find_contact('error@example.com');
+    my $result = $endpoint->_search_for_code_by_argument({'error@example.com', dodi_code => $endpoint->config->{contact}->{code}, attribute => $endpoint->config->{contact}->{search_attribute_code_email}});
     is $result, undef, "User doesn't exist";
 };
 
 subtest "create basic problem" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
-    my $res = $endpoint->run_test_request( 
-        POST => '/requests.json', 
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
         jurisdiction_id => 'dummy',
         api_key => 'test',
         service_code => 'Missing',
@@ -282,8 +282,8 @@ subtest "create basic problem" => sub {
 
 subtest "create problem with file" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
-    my $res = $endpoint->run_test_request( 
-        POST => '/requests.json', 
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
         jurisdiction_id => 'dummy',
         api_key => 'test',
         service_code => 'Missing',
@@ -434,8 +434,8 @@ subtest "check send report with a photo as an upload" => sub {
 
 subtest "create problem with no resource_id" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
-    my $res = $endpoint->run_test_request( 
-        POST => '/requests.json', 
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
         jurisdiction_id => 'dummy',
         api_key => 'test',
         service_code => 'Missing',
@@ -612,8 +612,8 @@ subtest "check fetch updates with cobrand skipping update where job has unchange
 
 
 subtest "create comment" => sub {
-    my $res = $endpoint->run_test_request( 
-        POST => '/servicerequestupdates.json', 
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
         jurisdiction_id => 'dummy',
         api_key => 'test',
         first_name => 'Bob',
@@ -648,8 +648,8 @@ This is an update"
 };
 
 subtest "update comment" => sub {
-    my $res = $endpoint->run_test_request( 
-        POST => '/servicerequestupdates.json', 
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
         jurisdiction_id => 'dummy',
         api_key => 'test',
         first_name => 'Bob',
