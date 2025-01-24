@@ -131,7 +131,9 @@ $bexley_end->mock(_get_update_files => sub {
 17/04/2019 14:06,04/04/2019,560062,RECORDED,,SI5,NCR,N1,,1
 17/04/2019 14:07,04/04/2019,560062,RECORDED,,SI5,NCR,RPOS,,1
 17/04/2019 14:08,04/04/2019,560062,RECORDED,,SI5,NCR,ROD,FOO,1
-17/04/2019 14:09,04/04/2019,560062,RECORDED,,SI5,NCR,CR,,1
+17/04/2019 14:09,04/04/2019,560062,RECORDED,,SI5,NCR,MAJ,BAR,1
+17/04/2019 14:10,04/04/2019,560062,RECORDED,,SI5,NCR,SNPR,BAZ,1
+17/04/2019 14:11,04/04/2019,560062,RECORDED,,SI5,NCR,CR,,1
 EOF
     \<<EOF,
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -623,8 +625,26 @@ subtest "GET updates OK" => sub {
               "external_status_code" => 'FOO',
            },
            {
-              "update_id" => "560062_2e55f431",
+              "update_id" => "560062_bbc7a396",
               "updated_datetime" => "2019-04-17T14:09:00+01:00",
+              "service_request_id" => "560062",
+              "status" => "closed",
+              "description" => "",
+              "media_url" => "",
+              "external_status_code" => 'BAR',
+           },
+           {
+              "update_id" => "560062_75abf42f",
+              "updated_datetime" => "2019-04-17T14:10:00+01:00",
+              "service_request_id" => "560062",
+              "status" => "closed",
+              "description" => "",
+              "media_url" => "",
+              "external_status_code" => 'BAZ',
+           },
+           {
+              "update_id" => "560062_3be9a4bd",
+              "updated_datetime" => "2019-04-17T14:11:00+01:00",
               "service_request_id" => "560062",
               "status" => "fixed",
               "description" => "",
