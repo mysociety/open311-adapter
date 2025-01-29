@@ -19,6 +19,7 @@ use HTTP::Request;
 use JSON::MaybeXS;
 use LWP::UserAgent;
 use Moo;
+use URI;
 
 with 'Role::Config';
 with 'Role::Logger';
