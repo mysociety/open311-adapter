@@ -1,6 +1,8 @@
 *.pyc
 local
 .env
+/conf/crontab
+/conf/crontab.deployed
 /conf/general.yml
 /conf/general.yml.deployed
 /conf/httpd.conf
@@ -10,4 +12,5 @@ local
 /conf/council-*
 !/conf/council-*-example
 /t/open311/test.log
+/web/down.html
 .DS_Store
