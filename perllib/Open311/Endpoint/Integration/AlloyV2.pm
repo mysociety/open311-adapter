@@ -114,7 +114,7 @@ Both groups and categories can have an 'alias' field set in their maps. This let
 has service_whitelist => (
     is => 'ro',
     default => sub {
-        return {} if $ENV{TEST_MODE};
+        return {} if $ENV{TEST_MODE} || ($ENV{PLACK_ENV}||'') eq 'development';
         die "Attribute Alloy::service_whitelist not overridden";
     }
 );
