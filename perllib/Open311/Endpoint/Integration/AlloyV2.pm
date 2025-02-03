@@ -488,7 +488,8 @@ sub _create_contact {
 
 This fetches the relevant item from Alloy and adds the update text to the
 relevant attribute as given in either the C<inspection_attribute_mapping> or
-C<defect_attribute_mapping> updates key. It also uploads a photo if given.
+C<defect_attribute_mapping> updates key (single design) or (multiple design)
+inside C<extra_attribute_mapping>. It also uploads a photo if given.
 
 =cut
 
@@ -499,9 +500,18 @@ sub post_service_request_update {
     my $item = $self->alloy->api_call(call => "item/$resource_id")->{item};
 
     my $attributes = $self->alloy->attributes_to_hash($item);
-    my $attribute_code = $self->config->{inspection_attribute_mapping}->{updates} || $self->config->{defect_attribute_mapping}->{updates};
-    my $updates = $attributes->{$attribute_code} || '';
 
+    my $attribute_code;
+    if (ref $self->config->{rfs_design} eq 'HASH') {
+        # Multiple designs, assume unique values and look up attribute based upon item design
+        my %design_to_category = reverse %{$self->config->{rfs_design}};
+        my $category = $design_to_category{$item->{designCode}};
+        $attribute_code = $self->config->{extra_attribute_mapping}{$category}{updates_attribute};
+    } else {
+        $attribute_code = $self->config->{inspection_attribute_mapping}->{updates} || $self->config->{defect_attribute_mapping}->{updates};
+    }
+
+    my $updates = $attributes->{$attribute_code} || '';
     $updates = $self->_generate_update($args, $updates);
 
     my $updated_attributes = $self->update_additional_attributes($args);
@@ -1221,7 +1231,8 @@ sub upload_attachments {
 
 =head2 update_additional_attributes
 
-Extended by a particular intregration subclass to update additional alloy attributes when processing a service request update.
+Extended by a particular integration subclass to update additional
+alloy attributes when processing a service request update.
 
 =cut
 
