@@ -518,14 +518,21 @@ sub update_event_payment {
     my $data = [];
     foreach (@$payments) {
         $_->{amount} =~ s/£//;
-        push @$data, {
-            # Could GetEventType and loop through it all to find these IDs out but for just this seemed okay
-            id => 27409,
-            childdata => [
-                { id => 27410, value => $_->{ref} },
-                { id => 27411, value => $_->{amount} },
-            ],
-        };
+        # Could GetEventType and loop through it all to find these IDs out but for just this seemed okay
+        if ($self->jurisdiction_id eq 'sutton_echo') {
+            push @$data,
+                { id => 57236, value => $_->{ref} },
+                { id => 57237, value => $_->{amount} };
+        } else {
+            push @$data, {
+                # Could GetEventType and loop through it all to find these IDs out but for just this seemed okay
+                id => 27409,
+                childdata => [
+                    { id => 27410, value => $_->{ref} },
+                    { id => 27411, value => $_->{amount} },
+                ],
+            };
+        }
     }
     $integ->UpdateEvent({ id => $event->{Id}, data => $data });
     $args->{description} = ''; # Blank out so nothing sent to Echo now
