@@ -519,7 +519,7 @@ sub update_event_payment {
     foreach (@$payments) {
         $_->{amount} =~ s/£//;
         # Could GetEventType and loop through it all to find these IDs out but for just this seemed okay
-        if ($self->jurisdiction_id eq 'sutton_echo') {
+        if ($self->jurisdiction_id eq 'kingston_echo' || $self->jurisdiction_id eq 'sutton_echo') {
             push @$data,
                 { id => 57236, value => $_->{ref} },
                 { id => 57237, value => $_->{amount} };
