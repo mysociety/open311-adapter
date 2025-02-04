@@ -62,6 +62,8 @@ sub process_attributes {
 
     for my $att (keys %$attributes_names) {
         next if $att eq 'JobType';
+        next unless length $args->{attributes}->{$att};
+
         my $myattrib = {
             attributeCode => $attributes_names->{$att},
             value => $attributes_values->{$att} ?  $attributes_values->{$att}->[ $args->{attributes}->{$att} ] : $args->{attributes}->{$att},
