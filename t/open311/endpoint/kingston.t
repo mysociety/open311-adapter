@@ -13,7 +13,7 @@ use Moo;
 extends 'Open311::Endpoint::Integration::UK::Kingston';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
-    $args{jurisdiction_id} = 'echo_dummy';
+    $args{jurisdiction_id} = 'kingston_echo';
     $args{config_file} = path(__FILE__)->sibling("kingston.yml")->stringify;
     return $class->$orig(%args);
 };
@@ -34,8 +34,8 @@ use JSON::MaybeXS;
 
 use_ok 'Open311::Endpoint::Integration::UK::Kingston';
 
-use constant EVENT_TYPE_SUBSCRIBE => 1638;
-use constant EVENT_TYPE_BULKY => 1636;
+use constant EVENT_TYPE_SUBSCRIBE => 3159;
+use constant EVENT_TYPE_BULKY => 3130;
 
 my $soap_lite = Test::MockModule->new('SOAP::Lite');
 $soap_lite->mock(call => sub {
@@ -77,15 +77,12 @@ $soap_lite->mock(call => sub {
         } elsif (@params == 2) {
             is $params[0]->value, '123pay';
             my @data = ${$params[1]->value}->value->value;
-            my @payment = ${$data[0]->value}->value;
-            is $payment[1]->value, 27409;
-            my @child = ${$payment[0]->value}->value->value;
-            my @ref = ${$child[0]->value}->value;
-            is $ref[0]->value, 27410;
+            my @ref = ${$data[0]->value}->value;
+            is $ref[0]->value, 57236;
             is $ref[1]->value, 'ABC';
-            @ref = ${$child[1]->value}->value;
-            is $ref[0]->value, 27411;
-            is $ref[1]->value, '34.56';
+            my @amount = ${$data[1]->value}->value;
+            is $amount[0]->value, 57237;
+            is $amount[1]->value, "34.56";
         } else {
             is @params, 'UNKNOWN';
         }
@@ -101,20 +98,11 @@ $soap_lite->mock(call => sub {
     } elsif ($method eq 'GetEventType') {
         return SOAP::Result->new(result => {
             Datatypes => { ExtensibleDatatype => [
-                { Id => 1004, Name => "Container Stuff",
-                    ChildDatatypes => { ExtensibleDatatype => [
-                        { Id => 1005, Name => "Quantity" },
-                        { Id => 1007, Name => "Containers" },
-                    ] },
-                },
                 { Id => 1008, Name => "Notes" },
-                { Id => 1011, Name => "Payment Type" },
-                { Id => 1012, Name => "Payment Taken By" },
-                { Id => 1013, Name => "Payment Method" },
-                { Id => 1020, Name => "Bulky Collection",
+                { Id => 1020, Name => "TEM - Bulky Collection",
                     ChildDatatypes => { ExtensibleDatatype => [
-                        { Id => 1021, Name => "Bulky Items" },
-                        { Id => 1022, Name => "Notes" },
+                        { Id => 1021, Name => "Item" },
+                        { Id => 1022, Name => "Description" },
                     ] },
                 },
             ] },
@@ -144,9 +132,8 @@ my @params = (
     long => -1,
     'attribute[uprn]' => 1000001,
     'attribute[fixmystreet_id]' => 2000123,
-    'attribute[Subscription_Details_Containers]' => 26, # Garden Bin
-    'attribute[Subscription_Details_Quantity]' => 1,
-    'attribute[Request_Type]' => 1,
+    'attribute[Paid_Container_Type]' => 1, # Garden Bin
+    'attribute[Paid_Container_Quantity]' => 1,
 );
 
 subtest "POST subscription request OK" => sub {
@@ -182,8 +169,8 @@ subtest "POST bulky request card payment OK" => sub {
         service_code => EVENT_TYPE_BULKY,
         'attribute[payment_method]' => 'credit_card',
         'attribute[client_reference]' => 'bulky-cc',
-        'attribute[Bulky_Collection_Bulky_Items]' => "11::77::34::34::34::23",
-        'attribute[Bulky_Collection_Notes]' => "Vanity dressing table::Looks heavy but not too bad for 2 to move::::::::",
+        'attribute[TEM_-_Bulky_Collection_Item]' => "11::77::34::34::34::23",
+        'attribute[TEM_-_Bulky_Collection_Description]' => "Vanity dressing table::Looks heavy but not too bad for 2 to move::::::::",
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
