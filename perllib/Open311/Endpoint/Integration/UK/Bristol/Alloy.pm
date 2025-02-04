@@ -10,6 +10,7 @@ package Open311::Endpoint::Integration::UK::Bristol::Alloy;
 
 use Moo;
 extends 'Open311::Endpoint::Integration::AlloyV2';
+use Open311::Endpoint::Service::UKCouncil::Alloy::Bristol;
 use JSON::MaybeXS;
 
 around BUILDARGS => sub {
@@ -19,6 +20,11 @@ around BUILDARGS => sub {
 };
 
 sub rfs_design_fallback { 'SC-Street Cleansing' }
+
+has service_class => (
+    is => 'ro',
+    default => 'Open311::Endpoint::Service::UKCouncil::Alloy::Bristol'
+);
 
 sub process_attributes {
     my ($self, $args) = @_;
