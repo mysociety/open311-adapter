@@ -36,7 +36,7 @@ around BUILDARGS => sub {
     } elsif (my $config_file = $args{config_file}) {
         my $cfg = path($config_file);
 
-        return $class->$next(%args) if !$cfg->is_file && $ENV{TEST_MODE};
+        return $class->$next(%args) if !$cfg->is_file && ($ENV{TEST_MODE} || ($ENV{PLACK_ENV}||'') eq 'development');
         croak "$config_file is not a file" unless $cfg->is_file;
 
         my $config = LoadFile($cfg) or croak "Couldn't load config from $config_file";

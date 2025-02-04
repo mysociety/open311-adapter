@@ -114,7 +114,7 @@ Both groups and categories can have an 'alias' field set in their maps. This let
 has service_whitelist => (
     is => 'ro',
     default => sub {
-        return {} if $ENV{TEST_MODE};
+        return {} if $ENV{TEST_MODE} || ($ENV{PLACK_ENV}||'') eq 'development';
         die "Attribute Alloy::service_whitelist not overridden";
     }
 );
@@ -207,10 +207,17 @@ sub post_service_request {
     $args->{service_code_alloy}
         = $self->_munge_service_code( $args->{service_code} );
 
+    my $rfs_design;
+    if ($self->can('pick_design')) {
+        $rfs_design = $self->pick_design($args->{service_code_alloy});
+    } else {
+        $rfs_design = $self->config->{rfs_design};
+    };
+
     my $resource = {
         # This appears to be shared amongst all asset types for now,
         # as everything is based off one design.
-        designCode => $self->config->{rfs_design},
+        designCode => $rfs_design,
     };
 
     $self->_set_parent_attribute($resource, $resource_id);
@@ -334,45 +341,59 @@ sub _set_parent_attribute {
 
 =head2 _find_or_create_contact
 
-This searches Alloy for the provided email, returning either the found item ID
-or creating a new contact if none found.
+This searches the C<contact.code> design in Alloy for an email,
+using the attribute C<contact.search_attribute_code_email>
+or creates a new contact if none found.
 
 =cut
 
 sub _find_or_create_contact {
     my ($self, $args) = @_;
 
-    if (my $contact = $self->_find_contact($args->{email})) {
+    if (my $contact = $self->_search_for_code_by_argument(
+            {
+                dodi_code => $self->config->{contact}->{code},
+                search => $args->{email},
+                attribute => $self->config->{contact}->{search_attribute_code_email}
+            }
+        )
+    ) {
         return $contact->{itemId};
     } else {
         return $self->_create_contact($args)->{item}->{itemId};
     }
 }
 
-=head2 _find_contact
+=head2 _search_for_code_by_argument
 
-This searches the C<contact.code> design in Alloy for either an email or phone,
-using the C<contact.search_attribute_code_email> or
-C<contact.search_attribute_code_phone> attributes.
+Expects hashref with keys dodi_code, attribute, and
+search.
+
+This looks up the provided code design in Alloy, with the attribute
+to search on with the search term - returns a single result
+and only expects a search returning a single result.
 
 =cut
 
-sub _find_contact {
-    my ($self, $email, $phone) = @_;
+sub _search_for_code_by_argument {
+    my ($self, $search_criteria) = @_;
 
-    my ($attribute_code, $search_term);
-    if ( $email ) {
-        $search_term = $email;
-        $attribute_code = $self->config->{contact}->{search_attribute_code_email};
-    } elsif ( $phone ) {
-        $search_term = $phone;
-        $attribute_code = $self->config->{contact}->{search_attribute_code_phone};
+    my ($attribute_code, $search_term, $dodi_code);
+    if (
+        $search_criteria
+        && $search_criteria->{'search'}
+        && $search_criteria->{'attribute'}
+        && $search_criteria->{'dodi_code'}
+    ){
+        $search_term = $search_criteria->{'search'};
+        $attribute_code = $search_criteria->{'attribute'};
+        $dodi_code = $search_criteria->{'dodi_code'};
     } else {
         return undef;
     }
 
     my $body = $self->find_item_body(
-        dodi_code      => $self->config->{contact}->{code},
+        dodi_code      => $dodi_code,
         attribute_code => $attribute_code,
         search_term    => $search_term,
     );
@@ -380,14 +401,14 @@ sub _find_contact {
     my $results = $self->alloy->search($body);
 
     return undef unless @$results;
-    my $contact = $results->[0];
+    my $result = $results->[0];
 
-    # Sanity check that the user we're returning actually has the correct email
-    # or phone, just in case Alloy returns something
-    my $a = $self->alloy->attributes_to_hash( $contact );
+    # Sanity check that our filtering to one result is the correct result
+    my $a = $self->alloy->attributes_to_hash( $result );
     return undef unless $a->{$attribute_code} && $a->{$attribute_code} eq $search_term;
+    $result->{attributes} = $a;
 
-    return $contact;
+    return $result;
 }
 
 =head2 find_item_body
@@ -403,7 +424,7 @@ sub find_item_body {
         properties => {
             dodiCode => $params{dodi_code},
             collectionCode => "Live",
-            attributes => [ $params{attribute_code} ],
+            attributes => [ 'all' ],
         },
         children => [
             {
@@ -493,7 +514,8 @@ sub _create_contact {
 
 This fetches the relevant item from Alloy and adds the update text to the
 relevant attribute as given in either the C<inspection_attribute_mapping> or
-C<defect_attribute_mapping> updates key. It also uploads a photo if given.
+C<defect_attribute_mapping> updates key (single design) or (multiple design)
+inside C<extra_attribute_mapping>. It also uploads a photo if given.
 
 =cut
 
@@ -504,9 +526,18 @@ sub post_service_request_update {
     my $item = $self->alloy->api_call(call => "item/$resource_id")->{item};
 
     my $attributes = $self->alloy->attributes_to_hash($item);
-    my $attribute_code = $self->config->{inspection_attribute_mapping}->{updates} || $self->config->{defect_attribute_mapping}->{updates};
-    my $updates = $attributes->{$attribute_code} || '';
 
+    my $attribute_code;
+    if ($self->can('pick_design')) {
+        # Multiple designs, assume unique values and look up attribute based upon item design
+        my %design_to_category = reverse %{$self->config->{rfs_design_options}};
+        my $category = $design_to_category{$item->{designCode}};
+        $attribute_code = $self->config->{extra_attribute_mapping}{$category}{updates_attribute};
+    } else {
+        $attribute_code = $self->config->{inspection_attribute_mapping}->{updates} || $self->config->{defect_attribute_mapping}->{updates};
+    }
+
+    my $updates = $attributes->{$attribute_code} || '';
     $updates = $self->_generate_update($args, $updates);
 
     my $updated_attributes = $self->update_additional_attributes($args);
@@ -1232,7 +1263,8 @@ sub upload_attachments {
 
 =head2 update_additional_attributes
 
-Extended by a particular intregration subclass to update additional alloy attributes when processing a service request update.
+Extended by a particular integration subclass to update additional
+alloy attributes when processing a service request update.
 
 =cut
 

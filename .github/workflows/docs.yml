@@ -19,18 +19,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ~/perl5
           key: perl-pod
-      - uses: actions/configure-pages@v2
+      - uses: actions/configure-pages@v5
       - name: Install packages
         run: bin/cpanm -l ~/perl5 --quiet --notest Pod::ProjectDocs
       - name: Generate documentation
         run: ~/perl5/bin/pod2projdocs -out _site -lib perllib -title open311-adapter -desc 'An Open311 adapter to receive Open311 reports from FixMyStreet and send them on to non-Open311 services' -nosourcecode
         env:
           PERL5LIB: /home/runner/perl5/lib/perl5
-      - uses: actions/upload-pages-artifact@v1
+      - uses: actions/upload-pages-artifact@v3
   deploy:
     needs: build
     environment:
@@ -40,4 +40,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
