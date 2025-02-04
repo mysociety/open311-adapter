@@ -11,6 +11,7 @@ package Open311::Endpoint::Integration::UK::Bristol::Alloy;
 use Moo;
 extends 'Open311::Endpoint::Integration::AlloyV2';
 use Open311::Endpoint::Service::UKCouncil::Alloy::Bristol;
+use JSON::MaybeXS;
 
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
@@ -65,9 +66,13 @@ sub process_attributes {
             attributeCode => $attributes_names->{$att},
             value => $attributes_values->{$att} ?  $attributes_values->{$att}->[ $args->{attributes}->{$att} ] : $args->{attributes}->{$att},
         };
-        if ($myattrib->{value}) {
-            $myattrib->{'value'} = $myattrib->{'value'} =~ /^[0|1]$/ ? $myattrib->{'value'} : [ $myattrib->{'value'} ];
-        };
+
+        if ($myattrib->{value} =~ /^[01]$/) {
+            $myattrib->{value} = $myattrib->{value} ? JSON->true : JSON->false;
+        } else {
+            $myattrib->{value} = [ $myattrib->{value} ];
+        }
+
         push @$attributes, $myattrib;
     };
 
