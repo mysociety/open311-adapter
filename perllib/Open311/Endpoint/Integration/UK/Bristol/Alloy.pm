@@ -10,12 +10,18 @@ package Open311::Endpoint::Integration::UK::Bristol::Alloy;
 
 use Moo;
 extends 'Open311::Endpoint::Integration::AlloyV2';
+use Open311::Endpoint::Service::UKCouncil::Alloy::Bristol;
 
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
     $args{jurisdiction_id} = 'bristol_alloy';
     return $class->$orig(%args);
 };
+
+has service_class => (
+    is => 'ro',
+    default => 'Open311::Endpoint::Service::UKCouncil::Alloy::Bristol'
+);
 
 sub pick_design {
     my ($self, $category) = @_;
