@@ -172,6 +172,7 @@ sub service {
         # Need to maintain the order
         $_->{values_sorted} = [ map { $_->{key} } @{$_->{values}} ];
         $_->{values} = { map { $_->{key} => $_->{name} } @{$_->{values}} };
+        $_->{datatype} ||= 'string';
         $_->{description} ||= '';
         my $attribute = Open311::Endpoint::Service::Attribute->new(%$_);
         push @{ $service->attributes }, $attribute;
