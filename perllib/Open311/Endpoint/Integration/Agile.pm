@@ -157,7 +157,7 @@ sub _garden_subscription_cancel {
 
     if ( $is_free->{IsFree} eq 'False' ) {
         my $res = $integration->Cancel( {
-            CustomerExternalReference => $args->{attributes}{customer_reference},
+            CustomerExternalReference => $args->{attributes}{customer_external_ref},
             ServiceContractUPRN       => $args->{attributes}{uprn},
             Reason                    => $args->{attributes}{reason},
             DueDate                   => $args->{attributes}{due_date},
