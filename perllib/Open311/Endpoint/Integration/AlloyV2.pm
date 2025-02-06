@@ -207,12 +207,10 @@ sub post_service_request {
     $args->{service_code_alloy}
         = $self->_munge_service_code( $args->{service_code} );
 
-    my $rfs_design;
-    if ($self->can('pick_design')) {
-        $rfs_design = $self->pick_design($args->{service_code_alloy});
-    } else {
-        $rfs_design = $self->config->{rfs_design};
-    };
+    my $rfs_design = $self->config->{rfs_design};
+    if (ref $rfs_design eq 'HASH') {
+        $rfs_design = $rfs_design->{$args->{service_code_alloy}} || $rfs_design->{$self->rfs_design_fallback};
+    }
 
     my $resource = {
         # This appears to be shared amongst all asset types for now,
@@ -528,9 +526,9 @@ sub post_service_request_update {
     my $attributes = $self->alloy->attributes_to_hash($item);
 
     my $attribute_code;
-    if ($self->can('pick_design')) {
+    if (ref $self->config->{rfs_design} eq 'HASH') {
         # Multiple designs, assume unique values and look up attribute based upon item design
-        my %design_to_category = reverse %{$self->config->{rfs_design_options}};
+        my %design_to_category = reverse %{$self->config->{rfs_design}};
         my $category = $design_to_category{$item->{designCode}};
         $attribute_code = $self->config->{extra_attribute_mapping}{$category}{updates_attribute};
     } else {
@@ -630,6 +628,22 @@ providing as the text update.
 sub _get_inspection_updates {
     my ($self, $args) = @_;
 
+    my $resources = $self->config->{rfs_design};
+    if (ref $resources eq 'HASH') {
+        $resources = [ values %$resources ];
+    } else {
+        $resources = [ $resources ];
+    }
+    my @updates;
+    foreach (@$resources) {
+        push @updates, $self->_get_inspection_updates_design($_, $args);
+    }
+    return @updates;
+}
+
+sub _get_inspection_updates_design {
+    my ($self, $design, $args) = @_;
+
     my $start_time = $self->date_to_dt($args->{start_date});
     my $end_time = $self->date_to_dt($args->{end_date});
 
@@ -643,12 +657,12 @@ sub _get_inspection_updates {
         = [ $mapping->{category_title}, $mapping->{group_title} ]
         if $mapping->{category_title};
 
-    my $updates = $self->fetch_updated_resources($self->config->{rfs_design}, $args->{start_date}, $args->{end_date}, \%join);
+    my $updates = $self->fetch_updated_resources($design, $args->{start_date}, $args->{end_date}, \%join);
 
     my $assigned_to_users = $self->get_assigned_to_users(@$updates);
 
     for my $report (@$updates) {
-        next unless $self->_accept_updated_resource($report);
+        next unless $self->_accept_updated_resource($report, $design);
 
         # The main result doesn't actually include the last edit date
         my $date = $self->get_latest_version_date($report->{itemId});
@@ -719,10 +733,10 @@ sub get_assigned_to_users {
 }
 
 sub _accept_updated_resource {
-    my ($self, $update) = @_;
+    my ($self, $update, $rfs_design) = @_;
 
     # we only want updates to RFS inspections
-    return 1 if $update->{designCode} eq $self->config->{rfs_design};
+    return 1 if $update->{designCode} eq $rfs_design;
 }
 
 sub _get_inspection_status {

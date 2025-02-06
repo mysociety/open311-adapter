@@ -19,20 +19,12 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
+sub rfs_design_fallback { 'SC-Street Cleansing' }
+
 has service_class => (
     is => 'ro',
     default => 'Open311::Endpoint::Service::UKCouncil::Alloy::Bristol'
 );
-
-sub pick_design {
-    my ($self, $category) = @_;
-
-    if ($self->config->{rfs_design_options}->{$category}) {
-        return $self->config->{rfs_design_options}->{$category};
-    } else {
-        return $self->config->{rfs_design_options}->{'SC-Street Cleansing'};
-    };
-};
 
 sub process_attributes {
     my ($self, $args) = @_;
