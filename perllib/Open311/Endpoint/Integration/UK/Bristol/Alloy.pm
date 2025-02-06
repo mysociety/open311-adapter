@@ -41,7 +41,7 @@ sub process_attributes {
             $value = [ $attributes_values->{CleansingTypes}->{$code} ];
         }
         $args->{service_code_alloy} = 'SC-Street Cleansing';
-        $args->{service_code} = 'SC-Street_Cleansing_1';
+
         my $myattrib = {
             attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{$args->{service_code_alloy}}->{'JobType'},
             value => $value,
