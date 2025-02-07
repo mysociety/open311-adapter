@@ -217,7 +217,7 @@ sub post_service_request {
         designCode => $rfs_design,
     };
 
-    $self->_set_parent_attribute($resource, $resource_id);
+    $resource->{parents} = $self->set_parent_attribute($args);
 
     # The Open311 attributes received from FMS may not include all the
     # the attributes we need to fully describe the Alloy resource,
@@ -305,8 +305,10 @@ sub _update_item {
     return $update;
 }
 
-sub _set_parent_attribute {
-    my ($self, $resource, $resource_id) = @_;
+sub set_parent_attribute {
+    my ($self, $args) = @_;
+
+    my $resource_id = $args->{attributes}->{asset_resource_id} || '';
 
     my $parent_attribute_id;
     if ( $resource_id ) {
@@ -328,12 +330,11 @@ sub _set_parent_attribute {
         # It's a list so perhaps an inspection can be linked to many
         # assets, and maybe even many different asset types, but for
         # now one is fine.
-        $resource->{parents} = {
+        return {
             $parent_attribute_id => [ $resource_id ],
         };
-    } else {
-        $resource->{parents} = {};
     }
+    return {};
 }
 
 =head2 _find_or_create_contact
