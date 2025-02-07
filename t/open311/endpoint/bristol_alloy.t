@@ -24,7 +24,6 @@ use utf8;
 
 use Test::More;
 use Test::MockModule;
-use Test::MockTime ':all';
 use Encode;
 use JSON::MaybeXS;
 use Path::Tiny;
@@ -302,16 +301,16 @@ for my $test (
         ok $res->is_success, 'valid request' or diag $res->content;
 
         my $sent = pop @sent;
-        is $sent->{designCode} eq $test->{expected_design}, 1;
+        is $sent->{designCode}, $test->{expected_design}, "Correct designCode selected";
         my %sent_data = map { $_->{attributeCode}, $_->{value} } @{$sent->{attributes}};
-
+        $test->{description} = "Correct attribute populated with correct data";
         for my $key (keys %{$test->{expected}}) {
             if (ref $test->{expected}->{$key} eq 'JSON::PP::Boolean') {
-                is $test->{expected}->{$key} == $sent_data{$key}, 1;
+                is $test->{expected}->{$key}, $sent_data{$key}, $test->{description};
             } elsif (ref $test->{expected}->{$key} eq 'ARRAY') {
-                is $test->{expected}->{$key}[0] eq $sent_data{$key}[0], 1;
+                is $test->{expected}->{$key}[0], $sent_data{$key}[0], $test->{description};
             } else {
-                is $test->{expected}->{$key} eq $sent_data{$key}, 1;
+                is $test->{expected}->{$key}, $sent_data{$key}, $test->{description};
             }
         }
     };
