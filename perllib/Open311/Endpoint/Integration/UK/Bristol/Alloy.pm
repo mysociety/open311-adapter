@@ -70,24 +70,13 @@ sub process_attributes {
         push @$attributes, $myattrib;
     };
 
-    my $usrn = $args->{attributes}->{'usrn'};
-
-    if (length($usrn) == 7) {
-        $usrn = "0" . $usrn;
-    };
-    my $locality_name = $self->_search_for_code_by_argument(
-        {
-            'dodi_code' => $self->config->{street_cleaning_network_details}->{code},
-            'attribute' => $self->config->{street_cleaning_network_details}->{attribute},
-            "search" => $usrn,
-        }
-    );
+    my $road = $args->{attributes}->{road_alloy} || $self->_get_road($args);
 
     my $locality = $self->_search_for_code_by_argument(
         {
             'dodi_code' => $self->config->{locality_list_details}->{code},
             'attribute' => $self->config->{locality_list_details}->{attribute},
-            "search" => $locality_name->{attributes}->{ $self->config->{locality_attribute_field} },
+            "search" => $road->{attributes}->{ $self->config->{locality_attribute_field} },
         }
     );
 
@@ -107,6 +96,38 @@ sub process_attributes {
     };
 
     return $attributes;
+}
+
+sub set_parent_attribute {
+    my ($self, $args) = @_;
+
+    my $parents = $self->SUPER::set_parent_attribute($args);
+
+    if (!%$parents) {
+        # Default to the road
+        my $road = $self->_get_road($args);
+        $parents->{attributes_defectsAssignableDefects} = [ $road->{itemId} ];
+    }
+
+    return $parents;
+}
+
+sub _get_road {
+    my ($self, $args) = @_;
+
+    my $usrn = $args->{attributes}->{'usrn'};
+    if (length($usrn) == 7) {
+        $usrn = "0" . $usrn;
+    };
+
+    my $road = $self->_search_for_code_by_argument({
+        'dodi_code' => $self->config->{street_cleaning_network_details}->{code},
+        'attribute' => $self->config->{street_cleaning_network_details}->{attribute},
+        "search" => $usrn,
+    });
+
+    $args->{attributes}->{road_alloy} = $road;
+    return $road;
 }
 
 1;

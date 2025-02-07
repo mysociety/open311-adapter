@@ -3,6 +3,7 @@
    "pageSize": 1,
    "results": [
       {
+          "itemId" : "5ddbe900ca314f0de0ec691f",
          "attributes" : [
             {
                "attributeCode" : "attributes_streetCleansingNetworkUSRN_5ddbe6adca315006c08f40fb",
@@ -16,4 +17,3 @@
       }
    ]
 }
-

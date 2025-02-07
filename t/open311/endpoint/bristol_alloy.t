@@ -305,6 +305,7 @@ for my $test (
 
         my $sent = pop @sent;
         is $sent->{designCode}, $test->{expected_design}, "Correct designCode selected";
+        is $sent->{parents}{attributes_defectsAssignableDefects}[0], '5ddbe900ca314f0de0ec691f';
         my %sent_data = map { $_->{attributeCode}, $_->{value} } @{$sent->{attributes}};
         $test->{description} = "Correct attribute populated with correct data";
         for my $key (keys %{$test->{expected}}) {
