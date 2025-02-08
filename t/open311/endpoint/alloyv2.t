@@ -492,73 +492,76 @@ subtest "create problem with no resource_id" => sub {
     restore_time;
 };
 
-subtest "check fetch updates" => sub {
-    my $res = $endpoint->run_test_request(
-      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z&end_date=2019-03-01T02:00:00Z',
-    );
+for my $use_joins_rather_than_parent_calls (1, 0) {
+    subtest "check fetch updates (using join: $use_joins_rather_than_parent_calls)" => sub {
+        $endpoint->config->{use_joins_rather_than_parent_calls} = $use_joins_rather_than_parent_calls;
+        my $res = $endpoint->run_test_request(
+          GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-01T00:00:00Z&end_date=2019-03-01T02:00:00Z',
+        );
 
-    my $sent = pop @sent;
-    ok $res->is_success, 'valid request'
-        or diag $res->content;
+        my $sent = pop @sent;
+        ok $res->is_success, 'valid request'
+            or diag $res->content;
 
-    is_deeply decode_json($res->content),
-    [ {
-        status => 'investigating',
-        service_request_id => '3027029',
-        description => 'This is an updated customer response',
-        updated_datetime => '2019-01-01T00:32:40Z',
-        update_id => '3027029_20190101003240',
-        media_url => '',
-        extras => { latest_data_only => 1 },
-    },
-    {
-        status => 'investigating',
-        service_request_id => '3027030',
-        description => '',
-        updated_datetime => '2019-01-01T01:42:40Z',
-        update_id => '3027030_20190101014240',
-        media_url => '',
-        extras => { latest_data_only => 1 },
-    },
-    {
-        status => 'not_councils_responsibility',
-        service_request_id => '3027031',
-        description => '',
-        updated_datetime => '2019-01-01T01:43:40Z',
-        update_id => '3027031_20190101014340',
-        media_url => '',
-        external_status_code => '01b51bb5c0de101a004154b5',
-        extras => { latest_data_only => 1 },
-    },
-    {
-        status => 'action_scheduled',
-        service_request_id => '3027032',
-        description => '',
-        updated_datetime => '2019-01-01T01:48:13Z',
-        update_id => '4947501_20190101014813',
-        media_url => '',
-        extras => { latest_data_only => 1 },
-    },
-    {
-        status => 'investigating',
-        service_request_id => '3027034',
-        description => '',
-        updated_datetime => '2019-01-01T01:49:13Z',
-        update_id => '3027034_20190101014913',
-        media_url => '',
-        extras => { latest_data_only => 1 },
-    },
-    {
-        status => 'open',
-        service_request_id => '4947502',
-        description => '',
-        updated_datetime => '2019-01-01T01:51:08Z',
-        update_id => '4947502_20190101015108',
-        media_url => '',
-        extras => { latest_data_only => 1 },
-    }
-    ], 'correct json returned';
-};
+        is_deeply decode_json($res->content),
+        [ {
+            status => 'investigating',
+            service_request_id => '3027029',
+            description => 'This is an updated customer response',
+            updated_datetime => '2019-01-01T00:32:40Z',
+            update_id => '3027029_20190101003240',
+            media_url => '',
+            extras => { latest_data_only => 1 },
+        },
+        {
+            status => 'investigating',
+            service_request_id => '3027030',
+            description => '',
+            updated_datetime => '2019-01-01T01:42:40Z',
+            update_id => '3027030_20190101014240',
+            media_url => '',
+            extras => { latest_data_only => 1 },
+        },
+        {
+            status => 'not_councils_responsibility',
+            service_request_id => '3027031',
+            description => '',
+            updated_datetime => '2019-01-01T01:43:40Z',
+            update_id => '3027031_20190101014340',
+            media_url => '',
+            external_status_code => '01b51bb5c0de101a004154b5',
+            extras => { latest_data_only => 1 },
+        },
+        {
+            status => 'action_scheduled',
+            service_request_id => '3027032',
+            description => '',
+            updated_datetime => '2019-01-01T01:48:13Z',
+            update_id => '4947501_20190101014813',
+            media_url => '',
+            extras => { latest_data_only => 1 },
+        },
+        {
+            status => 'investigating',
+            service_request_id => '3027034',
+            description => '',
+            updated_datetime => '2019-01-01T01:49:13Z',
+            update_id => '3027034_20190101014913',
+            media_url => '',
+            extras => { latest_data_only => 1 },
+        },
+        {
+            status => 'open',
+            service_request_id => '4947502',
+            description => '',
+            updated_datetime => '2019-01-01T01:51:08Z',
+            update_id => '4947502_20190101015108',
+            media_url => '',
+            extras => { latest_data_only => 1 },
+        }
+        ], 'correct json returned';
+    };
+}
 
 subtest "check fetch updates with cobrand skipping update where job has unchanged parent defect" => sub {
     my $res = $oxfordshire_endpoint->run_test_request(
