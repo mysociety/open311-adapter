@@ -7,6 +7,10 @@
   "irg_config_code": "ASSET_INSPECTIONS",
   "resource_attachment_attribute_id": "attributes_filesAttachableAttachments",
 
+  "use_joins_rather_than_parent_calls": 0,
+  "inspection_to_defect_attribute_link": "defect_to_inspection_link_attribute",
+  "inspection_specific_attribute": "inspection_only_attribute",
+
   "category_list_code": "designs_listFixMyStreetCategories1001257_5d3210e1fe2ad806f8df98c1",
   "category_title_attribute": "title",
   # List of categories/subcategories and parent attribute id
