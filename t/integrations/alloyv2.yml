@@ -1,0 +1,6 @@
+{
+  "api_key": "api_key",
+  "api_url": "http://localhost/api/",
+  "rfs_design": 'rfs_design',
+  "parent_attribute_name": "parent_attribute_name"
+}

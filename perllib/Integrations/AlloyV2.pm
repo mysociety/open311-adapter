@@ -217,7 +217,12 @@ sub search {
             for my $jr ( @$join_results ) {
                 my $item_id = $jr->{itemId};
 
+                my @joined_item_ids;
+
                 for my $jq ( @{ $jr->{joinQueries} } ) {
+
+                    my $joined_item_id = $jq->{item}->{itemId};
+                    push @joined_item_ids, $joined_item_id;
                     # Make sure attribute code is unique.
                     # E.g. Attribute code may originally be something like
                     # 'attributes_itemsTitle' but this doesn't make it clear
@@ -230,7 +235,11 @@ sub search {
 
                     # Append to top-level attribute list
                     push @{ $id_to_res{$item_id}{attributes} }, $attr;
+
                 }
+
+                # Push the IDs of the joined items to a top-level field.
+                $id_to_res{$item_id}{joinedItemIDs} = \@joined_item_ids;
             }
         }
     }
