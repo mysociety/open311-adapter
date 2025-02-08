@@ -1,0 +1,43 @@
+{
+  "joinResults": [
+    {
+      "itemId": "r1",
+      "joinQueries": [
+        {
+          "item": {
+            "itemId": "p1",
+            "attributes": [
+              {
+                "attributeCode": "child_attribute",
+                "value": "c1"
+              }
+            ]
+          },
+          "joinAttributes": [
+            "root.parent_attribute.child_attribute"
+          ]
+        }
+      ]
+    }
+  ],
+  "results": [
+    {
+      "itemId": "r1",
+      "attributes": [
+        {
+          "attributeCode": "normal_attribute",
+          "value": "n1"
+        }
+      ]
+    },
+    {
+      "itemId": "r2",
+      "attributes": [
+        {
+          "attributeCode": "normal_attribute",
+          "value": "n2"
+        }
+      ]
+    }
+  ]
+}
