@@ -168,7 +168,7 @@ sub design_attributes_to_hash {
 sub search {
     my ($self, $body_base, $skip_count) = @_;
 
-    my $stats = { result => 1 };
+    my $stats = { results => [{ value => { value => 1 } } ] };
     unless ($skip_count) {
         my $stats_body = { %$body_base };
         $stats_body->{type} = 'MathAggregation';
