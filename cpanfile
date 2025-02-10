@@ -30,6 +30,7 @@ requires 'Path::Tiny';
 requires 'Scalar::Util';
 requires 'SOAP::Lite';
 requires 'Starman';
+requires 'Term::Size::Any';
 requires 'Text::CSV';
 requires 'Text::CSV_XS';
 requires 'Types::Standard';

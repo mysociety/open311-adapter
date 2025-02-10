@@ -12,6 +12,12 @@ inspect-designs - Inspect and validate Alloy V2 API designs and configurations
     # Inspect all designs
     bin/alloy/inspect-designs northumberland_alloy
 
+    # List the contents of a design
+    # bin/alloy/inspect-designs bristol_alloy --list designs_bWCSCStreetCleansingJobList_5e20812fca315012d09501ea
+
+    # Search a design for a value
+    # bin/alloy/inspect-designs bristol_alloy --search USRN --value 12345 designs_streetCleansingNetwork_5ddbe68aca315006c08f4097
+
 =head1 DESCRIPTION
 
 This tool allows inspection of Alloy API designs and related info.
@@ -38,8 +44,10 @@ BEGIN {
     require "$d/../../setenv.pl";
 }
 
+use Getopt::Long;
 use Integrations::AlloyV2;
 use JSON::MaybeXS;
+use Term::Table;
 use Try::Tiny;
 use feature qw(say);
 
@@ -53,18 +61,90 @@ die "No API key found in config\n" unless $alloy->config->{api_key};
 
 my @designs;
 
-if ($ARGV[0]) {
+GetOptions(
+    'list' => \my $list,
+    'search=s' => \my $search,
+    'value=s' => \my $search_value,
+);
+
+if (my $design_id = shift) {
     # Single design mode
     my $design = try {
         $alloy->api_call(
-            call => "design/$ARGV[0]",
+            call => "design/$design_id",
         );
     } catch {
-        die "Error fetching design $ARGV[0]: $_\n";
+        die "Error fetching design $design_id: $_\n";
     };
 
-    die "No design found with code $ARGV[0]\n" unless $design && $design->{design};
-    push @designs, $design;
+    die "No design found with code $design_id\n" unless $design && $design->{design};
+
+    if ($search || $list) {
+        die "Please provide a value for $search" if $search && !$search_value;
+        my $body = {
+            "type" => "Query",
+            "properties" => {
+                "attributes" => ["all"],
+                "collectionCode" => ["Live"],
+                "dodiCode" => $design_id,
+            }
+        };
+        if ($search) {
+            my $key;
+            foreach (@{$design->{design}{attributes}}) {
+                $key = $_->{code} if $_->{name} eq $search;
+            }
+            die "Could not find a key for $search" unless $key;
+            $body->{children} = [
+                {
+                    type => "Equals",
+                    children => [
+                        {
+                            type => "Attribute",
+                            properties => {
+                                attributeCode => $key,
+                            },
+                        },
+                        {
+                            type => "String",
+                            properties => {
+                                value => [ $search_value ]
+                            }
+                        }
+                    ]
+                }
+            ];
+        }
+        my $results = $alloy->search($body);
+
+        my @header = 'ID';
+        my @cols;
+        foreach (@{$design->{design}{attributes}}) {
+            next if $_->{code} eq 'attributes_itemsGeometry';
+            next if $_->{name} eq 'Tasks' || $_->{name} eq 'Defects';
+            push @header, $_->{name};
+            push @cols, $_->{code};
+        }
+        my @rows;
+        foreach (@$results) {
+            my @row = ($_->{itemId});
+            my %map = map { $_->{attributeCode} => $_->{value} } @{$_->{attributes}};
+            foreach (@cols) {
+                my $value = $map{$_};
+                $value = join("\n", @$value) if ref $value eq 'ARRAY';
+                push @row, $value;
+            }
+            push @rows, \@row;
+        }
+        if (@rows) {
+            my $table = Term::Table->new( header => \@header, rows => \@rows, sanitize => 0 );
+            say $_ for $table->render;
+        } else {
+            say "No results";
+        }
+    } else {
+        push @designs, $design;
+    }
 } else {
     # All designs mode
     my $page = 1;
@@ -102,20 +182,23 @@ foreach my $design (@designs) {
     say "Design: " . $design_info->{name};
     say "Code: " . $design_info->{code};
     say "Context: " . $design_info->{context};
+    say "";
 
     if ($design_info->{attributes} && @{$design_info->{attributes}}) {
-        say "\nAttributes:";
+        my @rows;
         foreach my $attr (@{$design_info->{attributes}}) {
             # Skip if no code/name
             next unless $attr->{code} && $attr->{name};
 
-            say sprintf("  %-40s %-20s %-10s %s",
-                $attr->{code},
-                $attr->{name},
-                $attr->{type},
-                $attr->{required} ? "Required" : "Optional"
-            );
+            my $code = $attr->{code};
+            if ($attr->{options}{code}) {
+                $code .= "\n  -> $attr->{options}{code}";
+            }
+            push @rows, [ $code, $attr->{name}, $attr->{type}, $attr->{required} ? "Yes" : "" ];
         }
+        my @header = ('Attributes', 'Name', 'Type', 'Required');
+        my $table = Term::Table->new( header => \@header, rows => \@rows, sanitize => 0);
+        say $_ for $table->render;
     }
 
     if ($design_info->{implements} && @{$design_info->{implements}}) {
