@@ -279,7 +279,6 @@ for my $test (
     {
         title => "Dead cow report",
         extra_params => {
-            'attribute[SizeOfIssue]' => '1',
             'attribute[TypeOfAnimal]' => '1',
             'attribute[category]' => 'Dead animal',
             'service_code' => 'Dead_animal',
