@@ -310,11 +310,11 @@ for my $test (
         $test->{description} = "Correct attribute populated with correct data";
         for my $key (keys %{$test->{expected}}) {
             if (ref $test->{expected}->{$key} eq 'JSON::PP::Boolean') {
-                is $test->{expected}->{$key}, $sent_data{$key}, $test->{description};
+                is $sent_data{$key}, $test->{expected}->{$key}, $test->{description};
             } elsif (ref $test->{expected}->{$key} eq 'ARRAY') {
-                is $test->{expected}->{$key}[0], $sent_data{$key}[0], $test->{description};
+                is $sent_data{$key}[0], $test->{expected}->{$key}[0], $test->{description};
             } else {
-                is $test->{expected}->{$key}, $sent_data{$key}, $test->{description};
+                is $sent_data{$key}, $test->{expected}->{$key}, $test->{description};
             }
         }
     };
