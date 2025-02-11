@@ -68,6 +68,13 @@
       },
    },
 
+  "request_attribute_defaults": {
+    "Bin overflowing": { "SizeOfIssue": 1 },
+    "Bin damaged": { "SizeOfIssue": 1 },
+    "Dead animal": { "SizeOfIssue": 1 },
+    "Dog fouling": { "SizeOfIssue": 1 },
+  },
+
   "request_attribute_to_values": {
     "SizeOfIssue": ["5e1f1be1ca3150041c4141fb", "5e1f1bf0ca31500c541f82cb", "5e1f1bffca31500c541f82d8", "5e1f1c0aca31500f4ca4d4e5"],
     "PropertyType": ['5e1f3aa5ca31500b78e78b16', '5e1f3ad1ca31500b78e78c3f'],

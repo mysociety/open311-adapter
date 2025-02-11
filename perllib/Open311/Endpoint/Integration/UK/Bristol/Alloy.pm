@@ -51,14 +51,18 @@ sub process_attributes {
     };
 
     my $attributes_names = $self->config->{request_to_resource_attribute_manual_mapping}->{$args->{service_code_alloy}};
+    my $attribute_fallback = $self->config->{request_attribute_defaults}{$code};
 
     for my $att (keys %$attributes_names) {
         next if $att eq 'JobType';
-        next unless length $args->{attributes}->{$att};
+        next unless length $args->{attributes}->{$att} || $attribute_fallback->{$att};
+
+        my $value = length $args->{attributes}->{$att} ? $args->{attributes}->{$att} : $attribute_fallback->{$att};
+        $value = $attributes_values->{$att}->[ $value ] if $attributes_values->{$att};
 
         my $myattrib = {
             attributeCode => $attributes_names->{$att},
-            value => $attributes_values->{$att} ?  $attributes_values->{$att}->[ $args->{attributes}->{$att} ] : $args->{attributes}->{$att},
+            value => $value,
         };
 
         if ($myattrib->{value} =~ /^[01]$/) {
