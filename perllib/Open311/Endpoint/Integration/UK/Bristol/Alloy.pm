@@ -63,7 +63,7 @@ sub process_attributes {
 
         if ($myattrib->{value} =~ /^[01]$/) {
             $myattrib->{value} = $myattrib->{value} ? JSON->true : JSON->false;
-        } else {
+        } elsif ($attributes_values->{$att}) {
             $myattrib->{value} = [ $myattrib->{value} ];
         }
 
@@ -80,10 +80,11 @@ sub process_attributes {
         }
     );
 
+    my $text = $args->{attributes}->{title} . "\n\n" . $args->{attributes}->{description};
     my @extras = (
         {
             attributeCode => $self->config->{extra_attribute_mapping}->{$args->{service_code_alloy}}->{fullText_attribute},
-            value => $args->{description}
+            value => $text
         },
         {
             attributeCode => $self->config->{extra_attribute_mapping}->{$args->{service_code_alloy}}->{locality_attribute},

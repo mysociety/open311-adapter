@@ -1016,6 +1016,14 @@ DISTRIBUTIONS
       ExtUtils::MakeMaker 0
       Sub::Exporter::Progressive 0.001011
       perl 5.006
+  Devel-Hide-0.0015
+    pathname: D/DC/DCANTRELL/Devel-Hide-0.0015.tar.gz
+    provides:
+      Devel::Hide 0.0015
+    requirements:
+      ExtUtils::MakeMaker 0
+      File::Temp 0
+      perl 5.006001
   Devel-StackTrace-2.04
     pathname: D/DR/DROLSKY/Devel-StackTrace-2.04.tar.gz
     provides:
@@ -2527,6 +2535,24 @@ DISTRIBUTIONS
       File::Spec 0.8
       File::Temp 0.12
       Scalar::Util 0
+  Term-Size-Any-0.002
+    pathname: F/FE/FERREIRA/Term-Size-Any-0.002.tar.gz
+    provides:
+      Term::Size::Any 0.002
+    requirements:
+      Devel::Hide 0
+      ExtUtils::MakeMaker 0
+      Module::Load::Conditional 0
+      Term::Size::Perl 0
+      Test::More 0
+  Term-Size-Perl-0.031
+    pathname: F/FE/FERREIRA/Term-Size-Perl-0.031.tar.gz
+    provides:
+      Term::Size::Perl 0.031
+    requirements:
+      Exporter 0
+      ExtUtils::CBuilder 0
+      ExtUtils::MakeMaker 0
   Term-Table-0.016
     pathname: E/EX/EXODIST/Term-Table-0.016.tar.gz
     provides:

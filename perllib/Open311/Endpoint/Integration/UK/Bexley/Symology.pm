@@ -87,9 +87,9 @@ sub _update_status {
             'not_councils_responsibility'
         } elsif ($action_due =~ /^([NS]I[1-6]MOB|IPSGM|IGF|IABV|ECI)$/) {
             'investigating'
-        } elsif ($action_due =~ /^PT[CS]|TPHR|REIN|SNPR$/) {
+        } elsif ($action_due =~ /^PT[CS]|TPHR|REIN$/) {
             'action_scheduled'
-        } elsif ($action_due eq 'ROD') {
+        } elsif ($action_due =~ /^(ROD|MAJ|SNPR)$/) {
             'closed'
         } elsif ($row->{Stage} == 9 || $row->{Stage} == 8) {
             undef

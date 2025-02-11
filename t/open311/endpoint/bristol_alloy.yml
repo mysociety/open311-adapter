@@ -64,6 +64,7 @@
       "SC-Street Cleansing": {
          'SizeOfIssue': 'attributes_bWCSCStreetCleansingDefectSizeOfIssue_5e21b5ccca31500d1c836be0',
          'JobType': 'attributes_bWCSCStreetCleansingDefectJobType_5e21b5adca31500d1c836bc9',
+         "fixmystreet_id": "attributes_bWCSCStreetCleansingDefectFixMyStreetID_67654e2a1e4316383b73050f",
       },
    },
 
