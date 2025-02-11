@@ -49,6 +49,7 @@ has agile => (
 
 use constant SERVICE_TO_SUB_MAPPING => {
     garden_subscription        => \&_garden_subscription,
+    garden_subscription_renew  => \&_garden_subscription_renew,
     garden_subscription_cancel => \&_garden_subscription_cancel,
 };
 
@@ -93,7 +94,11 @@ sub post_service_request {
     $self->logger->debug(
         "post_service_request arguments: " . encode_json($args) );
 
-    my $sub = SERVICE_TO_SUB_MAPPING->{$service->service_code};
+    # Garden Subscription may be a 'renew' type
+    my $lookup = $service->service_code;
+    $lookup .= "_$args->{attributes}{type}" if $args->{attributes}{type};
+
+    my $sub = SERVICE_TO_SUB_MAPPING->{$lookup};
 
     die 'Service \'' . $service->service_code . '\' not handled' unless $sub;
 
@@ -146,6 +151,48 @@ sub _garden_subscription {
         die 'UPRN '
             . $args->{attributes}{uprn}
             . ' already has a subscription or is invalid';
+    }
+}
+
+sub _garden_subscription_renew {
+    my ( $self, $args ) = @_;
+
+    my $integration = $self->get_integration;
+
+    my $is_free = $integration->IsAddressFree( $args->{attributes}{uprn} );
+
+    if ( $is_free->{IsFree} eq 'False' ) {
+        my $res = $integration->Renew( {
+            CustomerExternalReference => $args->{attributes}{customer_external_ref},
+            ServiceContractUPRN       => $args->{attributes}{uprn},
+            WasteContainerQuantity    => int( $args->{attributes}{total_containers} ) || 1,
+            AlreadyHasBinQuantity     => int( $args->{attributes}{current_containers} ) || 0,
+            PaymentReference          => $args->{attributes}{PaymentCode},
+            PaymentMethodCode         =>
+                PAYMENT_METHOD_MAPPING->{ $args->{attributes}{payment_method} },
+        } );
+
+        # Expected response:
+        # {
+        #   Id: int,
+        #   Address: string,
+        #   ServiceContractStatus: string,
+        #   WasteContainerType: string,
+        #   WasteContainerQuantity: int,
+        #   StartDate: string,
+        #   EndDate: string,
+        #   ReminderDate: string,
+        # }
+        my $request = $self->new_request(
+            service_request_id => $res->{Id}, # TODO Is this correct?
+        );
+
+        return $request;
+
+    } else {
+        die 'UPRN '
+            . $args->{attributes}{uprn}
+            . ' does not have a subscription to be renewed, or is invalid';
     }
 }
 

@@ -175,6 +175,11 @@ subtest 'GET service' => sub {
                 description          => 'Customer external ref',
                 order                => 11,
             },
+            {   %defaults,
+                code                 => 'type',
+                description          => 'Denotes whether subscription request is a renewal or not',
+                order                => 12,
+            },
         ],
     }, 'correct json returned';
 };

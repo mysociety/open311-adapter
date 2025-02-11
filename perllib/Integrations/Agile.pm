@@ -90,6 +90,16 @@ sub IsAddressFree {
     );
 }
 
+sub Renew {
+    my ( $self, $params ) = @_;
+
+    return $self->api_call(
+        action     => 'renewal',
+        controller => 'servicecontract',
+        data       => $params,
+    );
+}
+
 sub SignUp {
     my ( $self, $params ) = @_;
 

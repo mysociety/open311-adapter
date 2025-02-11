@@ -91,6 +91,15 @@ sub _build_attributes {
             required => 0,
             automated => 'hidden_field',
         ),
+
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'type',
+            description => 'Denotes whether subscription request is a renewal or not',
+            datatype => 'string',
+            required => 0,
+            automated => 'hidden_field',
+        ),
+
     );
 
     return \@attributes;
