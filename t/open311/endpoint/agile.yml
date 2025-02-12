@@ -4,3 +4,6 @@ category_mapping:
   garden_subscription:
     name: Garden Subscription
     group: Waste
+  garden_subscription_cancel:
+    name: Cancel Garden Subscription
+    group: Waste

@@ -19,6 +19,7 @@ use HTTP::Request;
 use JSON::MaybeXS;
 use LWP::UserAgent;
 use Moo;
+use URI;
 
 with 'Role::Config';
 with 'Role::Logger';
@@ -67,6 +68,16 @@ sub api_call {
         $self->logger->error( $res->content );
         die $res->content;
     }
+}
+
+sub Cancel {
+    my ( $self, $params ) = @_;
+
+    return $self->api_call(
+        action     => 'cancel',
+        controller => 'servicecontract',
+        data       => $params,
+    );
 }
 
 sub IsAddressFree {
