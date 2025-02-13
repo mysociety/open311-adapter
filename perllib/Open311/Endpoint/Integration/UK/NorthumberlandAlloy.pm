@@ -136,7 +136,7 @@ sub update_additional_attributes {
 
             # Search for existing user
             my $mapping = $self->config->{assigned_to_user_mapping};
-            my $body = $self->SUPER::find_item_body(
+            my $body = $self->find_item_body(
                 dodi_code      => $mapping->{design},
                 attribute_code => $mapping->{email_attribute},
                 search_term    => $args->{attributes}{assigned_to_user_email},
