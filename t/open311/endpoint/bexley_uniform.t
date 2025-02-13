@@ -44,7 +44,9 @@ $soap_lite->mock(call => sub {
         }
         my $photo_desc = "\n\n[ This report contains a photo, see: http://example.org/photo/1.jpeg ]";
         is $request[3]->value, "This is the details$photo_desc";
-        is $request[7], undef, 'No extra data';
+        is $request[6]->value, 'CALL';
+        is $request[7]->value, 'CALL';
+        is $request[9], undef, 'No extra data';
         return SOAP::Result->new(method => {
             ServiceRequestIdentification => {
                 ReferenceValue => 1001,
@@ -87,7 +89,7 @@ $end->mock(endpoint_config => sub {
     {
         username => 'FMS',
         service_whitelist => {
-            DFOUL => { name => 'Dog fouling' },
+            DFOUL => { name => 'Dog fouling', allocated => 'CALL' },
             FLY => { name => 'Fly tipping' },
         },
     }

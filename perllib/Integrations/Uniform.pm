@@ -244,6 +244,10 @@ sub SOAP::Serializer::as_SubmittedGeneralServiceRequestType {
                 }
             }
         },
+        $value->{allocated} ? (
+            AllocatedTo => $value->{allocated},
+            ReceivedBy => $value->{allocated},
+        ) : (),
         TimeReceived => $time,
         %xtra,
     ));
