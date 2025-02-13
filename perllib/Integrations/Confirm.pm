@@ -877,6 +877,7 @@ sub get_enquiry_json {
 
 sub documents_for_job {
     my ($self, $job_id) = @_;
+    return unless $job_id;
     my $data = $self->json_web_api_call("/jobs/$job_id");
     return $data->{documents} || [];
 }

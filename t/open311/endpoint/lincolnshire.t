@@ -76,7 +76,7 @@ subtest "looking up of completion photos" => sub {
     $lwp->mock(request => sub {
         my ($ua, $req) = @_;
         return HTTP::Response->new(200, 'OK', [], '{"access_token":"123","expires_in":3600}') if $req->uri =~ /oauth\/token/;
-        return HTTP::Response->new(200, 'OK', [], '{"primaryJobNumber":"432"}') if $req->uri =~ /enquiries\/2020/;
+        return HTTP::Response->new(200, 'OK', [], '{"jobNumber":"432"}') if $req->uri =~ /enquiries\/2020/;
         return HTTP::Response->new(200, 'OK', [], '{"documents":[
             {"documentNo":1,"fileName":"photo1.jpeg","documentNotes":"Before"},
             {"documentNo":2,"fileName":"photo2.jpeg","documentNotes":"After"}

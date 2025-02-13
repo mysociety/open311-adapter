@@ -639,7 +639,7 @@ sub photo_urls_for_update {
     my $integ = $self->get_integration;
 
     my $enquiry = $integ->get_enquiry_json($enquiry_id) or return;
-    my $job_id = $enquiry->{primaryJobNumber};
+    my $job_id = $enquiry->{jobNumber};
     my $documents = $integ->documents_for_job($job_id) or return;
 
     my @ids = map { $_->{documentNo} } grep { $self->photo_filter($_) } @$documents;
