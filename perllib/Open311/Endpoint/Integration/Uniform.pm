@@ -135,6 +135,10 @@ sub process_service_request_args {
         phone => $args->{phone},
     };
 
+    if ($data->{allocated}) {
+        $request->{allocated} = $data->{allocated};
+    }
+
     # We need to bump some values up from the attributes hashref to
     # the $args passed
     foreach (qw/fixmystreet_id easting northing uprn/) {
