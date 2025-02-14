@@ -197,7 +197,7 @@ subtest 'successfully subscribe to garden waste' => sub {
         'attribute[fixmystreet_id]' => 2000001,
         'attribute[uprn]' => '123_no_sub',
         'attribute[current_containers]' => 1,
-        'attribute[new_containers]' => 2,
+        'attribute[total_containers]' => 2,
         'attribute[payment_method]' => 'credit_card',
         'attribute[PaymentCode]' => 'payment_123',
     );
@@ -223,7 +223,7 @@ subtest 'try to subscribe to garden waste when already subscribed' => sub {
         'attribute[fixmystreet_id]' => 2000001,
         'attribute[uprn]' => '234_has_sub',
         'attribute[current_containers]' => 1,
-        'attribute[new_containers]' => 2,
+        'attribute[total_containers]' => 2,
         'attribute[payment_method]' => 'credit_card',
         'attribute[PaymentCode]' => 'payment_123',
     );
@@ -247,7 +247,7 @@ subtest 'handle unknown error' => sub {
         'attribute[fixmystreet_id]' => 'bad_data',
         'attribute[uprn]' => '123_no_sub',
         'attribute[current_containers]' => 1,
-        'attribute[new_containers]' => 2,
+        'attribute[total_containers]' => 2,
         'attribute[payment_method]' => 'credit_card',
         'attribute[PaymentCode]' => 'payment_123',
     );

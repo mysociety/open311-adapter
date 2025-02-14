@@ -121,7 +121,7 @@ sub _garden_subscription {
             TitleCode                 => 'Default',
             CustomerExternalReference => '',
             ServiceContractUPRN       => $args->{attributes}{uprn},
-            WasteContainerQuantity    => int( $args->{attributes}{new_containers} ) || 1,
+            WasteContainerQuantity    => int( $args->{attributes}{total_containers} ) || 1,
             AlreadyHasBinQuantity => int( $args->{attributes}{current_containers} ) || 0,
             PaymentReference      => $args->{attributes}{PaymentCode},
             PaymentMethodCode     =>
