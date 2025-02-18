@@ -130,9 +130,8 @@ sub _garden_subscription {
             # Used for FMS report ID
             ActionReference => $args->{attributes}{fixmystreet_id},
 
-            # TODO
-            DirectDebitDate => '',
-            DirectDebitReference => '',
+            DirectDebitDate => $args->{attributes}{direct_debit_start_date} // '',
+            DirectDebitReference => $args->{attributes}{direct_debit_reference} // '',
         } );
 
         # Expected response:
@@ -170,6 +169,9 @@ sub _garden_subscription_renew {
             PaymentReference          => $args->{attributes}{PaymentCode},
             PaymentMethodCode         =>
                 PAYMENT_METHOD_MAPPING->{ $args->{attributes}{payment_method} },
+
+            DirectDebitDate => $args->{attributes}{direct_debit_start_date} // '',
+            DirectDebitReference => $args->{attributes}{direct_debit_reference} // '',
         } );
 
         # Expected response:

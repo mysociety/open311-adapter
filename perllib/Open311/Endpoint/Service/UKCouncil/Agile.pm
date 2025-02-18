@@ -92,6 +92,22 @@ sub _build_attributes {
             automated => 'hidden_field',
         ),
 
+        # For direct debit payments
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'direct_debit_reference',
+            description => 'Direct debit reference',
+            datatype => 'string',
+            required => 0,
+            automated => 'hidden_field',
+        ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'direct_debit_start_date',
+            description => 'Direct debit initial payment date',
+            datatype => 'string',
+            required => 0,
+            automated => 'hidden_field',
+        ),
+
         Open311::Endpoint::Service::Attribute->new(
             code => 'type',
             description => 'Denotes whether subscription request is a renewal or not',
