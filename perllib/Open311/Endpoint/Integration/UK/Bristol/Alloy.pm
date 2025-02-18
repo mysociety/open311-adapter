@@ -33,7 +33,12 @@ sub process_attributes {
 
     my $attributes_values = $self->config->{'request_attribute_to_values'};
     my $code = $args->{service_code_alloy};
-    if (grep { $code =~ /$_/ } keys %{$self->config->{service_whitelist}->{'SC-Street Cleansing'}}) {
+    if (grep { $code =~ /$_/ } keys %{
+            {
+                %{$self->config->{service_whitelist}->{'SC-Street Cleansing'} || {} },
+                %{$self->config->{service_whitelist}->{'Abandoned bikes/scooters'} || {} }
+            }
+        }) {
         my $value;
         if ($code eq 'Dead animal') {
             $value = [ $attributes_values->{TypeOfAnimal}->[ $args->{attributes}->{TypeOfAnimal} ] ];
