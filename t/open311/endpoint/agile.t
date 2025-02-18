@@ -170,6 +170,16 @@ subtest 'GET service' => sub {
                 description          => 'Customer external ref',
                 order                => 10,
             },
+            {   %defaults,
+                code                 => 'direct_debit_reference',
+                description          => 'Direct debit reference',
+                order                => 11,
+            },
+            {   %defaults,
+                code                 => 'direct_debit_start_date',
+                description          => 'Direct debit initial payment date',
+                order                => 12,
+            },
 
         ],
     }, 'correct json returned';
