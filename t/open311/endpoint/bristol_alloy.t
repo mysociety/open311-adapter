@@ -111,6 +111,17 @@ subtest "check service group and category aliases" => sub {
             'service_code' => 'SC-Graffiti_Defect_1'
           },
           {
+            "description" => "Abandoned private bike/scooter",
+            "service_code" => "Abandoned_private_bike/scooter",
+            "metadata" => "true",
+            "service_name" => "Abandoned private bike/scooter",
+            "groups" => [
+                "Abandoned bikes/scooters"
+            ],
+            "type" => "realtime",
+            "keywords" => ""
+          },
+          {
             'service_name' => 'Bin overflowing',
             'metadata' => 'true',
             'type' => 'realtime',
@@ -286,6 +297,22 @@ for my $test (
         expected => {
             'attributes_bWCSCStreetCleansingDefectSizeOfIssue_5e21b5ccca31500d1c836be0' => ['5e1f1bf0ca31500c541f82cb'],
             'attributes_bWCSCStreetCleansingDefectJobType_5e21b5adca31500d1c836bc9' => ['5e21a679ca31500d1c836901'],
+            'attributes_bWCSCStreetCleansingDefectFullDetails_5e21b587ca31500cc0a2df3a' => "title\n\ndescription",
+            'attributes_bWCSCStreetCleansingDefectLocality_5e6f97fe4cee260f90aca0d6' => ['5e16fa66ca314f0980300be5'],
+            'attributes_bWCSCStreetCleansingDefectFixMyStreetID_67654e2a1e4316383b73050f' => '123',
+        },
+        expected_design => 'designs_bWCSCStreetCleansingDefect_5e21a98bca315003e0983035',
+    },
+    {
+        title => "Bike report",
+        extra_params => {
+            'attribute[SizeOfIssue]' => '1',
+            'attribute[category]' => 'Abandoned_private_bike/scooter',
+            'service_code' => 'Abandoned_private_bike/scooter',
+        },
+        expected => {
+            'attributes_bWCSCStreetCleansingDefectSizeOfIssue_5e21b5ccca31500d1c836be0' => ['5e1f1bf0ca31500c541f82cb'],
+            'attributes_bWCSCStreetCleansingDefectJobType_5e21b5adca31500d1c836bc9' => ['5e2179a3ca315012d099999'],
             'attributes_bWCSCStreetCleansingDefectFullDetails_5e21b587ca31500cc0a2df3a' => "title\n\ndescription",
             'attributes_bWCSCStreetCleansingDefectLocality_5e6f97fe4cee260f90aca0d6' => ['5e16fa66ca314f0980300be5'],
             'attributes_bWCSCStreetCleansingDefectFixMyStreetID_67654e2a1e4316383b73050f' => '123',

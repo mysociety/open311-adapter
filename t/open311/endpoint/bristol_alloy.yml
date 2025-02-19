@@ -15,6 +15,9 @@
       "SC-Fly-Tip Defect": { "alias": "Flytipping" },
       "SC-Graffiti Defect": { "alias": "Graffiti" },
     },
+    "Abandoned bikes/scooters": {
+        "Abandoned private bike/scooter": 1,
+    },
     "SC-Street Cleansing": {
         "alias": "Street cleansing",
         "Bin overflowing": 1,
@@ -86,6 +89,7 @@
       'Bin overflowing': '5e217a6cca315012d0956696',
       'Blood': '5e21782dca315003e09804a2',
       'Dog fouling': '5e2179a3ca315012d0956667',
+      'Abandoned private bike/scooter': '5e2179a3ca315012d099999',
     },
   },
 
