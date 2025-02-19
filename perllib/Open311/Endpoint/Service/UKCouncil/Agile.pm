@@ -55,7 +55,7 @@ sub _build_attributes {
             automated => 'hidden_field',
         ),
         Open311::Endpoint::Service::Attribute->new(
-            code => 'payment_method',
+            code => 'payment',
             description => 'Payment amount in pence',
             datatype => 'string',
             required => 0,
