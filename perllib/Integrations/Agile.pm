@@ -110,4 +110,24 @@ sub SignUp {
     );
 }
 
+sub AddBin {
+    my ( $self, $params ) = @_;
+
+    return $self->api_call(
+        action     => 'addbin',
+        controller => 'servicecontract',
+        data       => $params,
+    );
+}
+
+sub RemoveBin {
+    my ( $self, $params ) = @_;
+
+    return $self->api_call(
+        action     => 'removebin',
+        controller => 'servicecontract',
+        data       => $params,
+    );
+}
+
 1;
