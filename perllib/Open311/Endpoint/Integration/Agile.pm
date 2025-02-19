@@ -106,7 +106,12 @@ sub post_service_request {
 }
 
 sub _garden_subscription {
-    my ( $self, $args) = @_;
+    my ( $self, $args ) = @_;
+
+    my $title = $args->{attributes}{title};
+    if ( $title && $title =~ /Amend$/ ) {
+        return $self->_garden_subscription_amend($args);
+    }
 
     my $integration = $self->get_integration;
 
@@ -231,4 +236,62 @@ sub _garden_subscription_cancel {
     }
 }
 
+sub _garden_subscription_amend {
+    my ( $self, $args) = @_;
+
+    my $integration = $self->get_integration;
+
+    my $is_free = $integration->IsAddressFree( $args->{attributes}{uprn} );
+
+    if ( $is_free->{IsFree} ne 'False' ) {
+            die 'UPRN '
+                . $args->{attributes}{uprn}
+                . ' does not have a subscription to be amended, or is invalid';
+    }
+
+    # We have to call a different Agile API method depending on whether
+    # containers are being added or taken away.
+    my $current_bins = int( $args->{attributes}{current_containers} );
+    my $adjust_bins = int( $args->{attributes}{new_containers} );
+    if ( $adjust_bins > 0 ) {
+        my $res = $integration->AddBin( {
+            CustomerExternalReference => $args->{attributes}{customer_external_ref},
+            ServiceContractUPRN       => $args->{attributes}{uprn},
+            AlreadyHasBinQuantity     => $current_bins,
+            QuantityToAdd             => $adjust_bins,
+        } );
+
+        # Expected response:
+        # {
+        #   Reference: string,
+        #   Status: string,
+        # }
+        my $request = $self->new_request(
+            service_request_id => $res->{Reference},
+        );
+
+        return $request;
+    } elsif ( $adjust_bins < 0 ) {
+        my $res = $integration->RemoveBin( {
+            CustomerExternalReference => $args->{attributes}{customer_external_ref},
+            ServiceContractUPRN       => $args->{attributes}{uprn},
+            QuantityToRemove          => abs($adjust_bins),
+        } );
+
+        # Expected response:
+        # {
+        #   Reference: string,
+        #   Status: string,
+        # }
+        my $request = $self->new_request(
+            service_request_id => $res->{Reference},
+        );
+
+        return $request;
+    } else {
+        die 'Amendment for UPRN '
+            . $args->{attributes}{uprn}
+            . " does not seem to change number of bins?! Current: $current_bins Adjust: $adjust_bins";
+    }
+}
 1;
