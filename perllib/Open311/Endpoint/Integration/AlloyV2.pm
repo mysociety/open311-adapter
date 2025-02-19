@@ -201,9 +201,6 @@ sub post_service_request {
     # this is a display only thing for the website
     delete $args->{attributes}->{emergency};
 
-    # extract attribute values
-    my $resource_id = $args->{attributes}->{asset_resource_id} || '';
-
     $args->{service_code_alloy}
         = $self->_munge_service_code( $args->{service_code} );
     my $rfs_design = $self->config->{rfs_design};
