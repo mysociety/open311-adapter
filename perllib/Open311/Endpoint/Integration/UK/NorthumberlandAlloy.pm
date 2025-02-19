@@ -136,21 +136,21 @@ sub update_additional_attributes {
 
             # Search for existing user
             my $mapping = $self->config->{assigned_to_user_mapping};
-            my $body = $self->find_item_body(
-                dodi_code      => $mapping->{design},
-                attribute_code => $mapping->{email_attribute},
-                search_term    => $args->{attributes}{assigned_to_user_email},
+            my $res = $self->_search_for_code_by_argument(
+                {
+                    dodi_code => $mapping->{design},
+                    attribute => $mapping->{email_attribute},
+                    search    => $args->{attributes}{assigned_to_user_email},
+                }
             );
 
-            my $res = $self->alloy->search($body);
-
             # We don't update if user does not exist in Alloy
-            if (@$res) {
+            if ($res) {
                 push @$attr, {
                     attributeCode =>
                         $self->config->{inspection_attribute_mapping}
                         {assigned_to_user},
-                    value => [ $res->[0]{itemId} ],
+                    value => [ $res->{itemId} ],
                 };
             }
         } else {

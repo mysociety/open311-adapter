@@ -203,7 +203,6 @@ sub post_service_request {
 
     $args->{service_code_alloy}
         = $self->_munge_service_code( $args->{service_code} );
-
     my $rfs_design = $self->config->{rfs_design};
     if (ref $rfs_design eq 'HASH') {
         $rfs_design = $rfs_design->{$args->{service_code_alloy}} || $rfs_design->{$self->rfs_design_fallback};
@@ -388,11 +387,32 @@ sub _search_for_code_by_argument {
         return undef;
     }
 
-    my $body = $self->find_item_body(
-        dodi_code      => $dodi_code,
-        attribute_code => $attribute_code,
-        search_term    => $search_term,
-    );
+    my $body = {
+        properties => {
+            dodiCode => $dodi_code,
+            collectionCode => "Live",
+            attributes => [ 'all' ],
+        },
+        children => [
+            {
+                type => "Equals",
+                children => [
+                    {
+                        type => "Attribute",
+                        properties => {
+                            attributeCode => $attribute_code,
+                        },
+                    },
+                    {
+                        type => "String",
+                        properties => {
+                            value => [ $search_term ]
+                        }
+                    }
+                ]
+            }
+        ]
+    };
 
     my $results = $self->alloy->search($body);
 
@@ -405,43 +425,6 @@ sub _search_for_code_by_argument {
     $result->{attributes} = $a;
 
     return $result;
-}
-
-=head2 find_item_body
-
-Builds query body for looking up a specific item in Alloy.
-
-=cut
-
-sub find_item_body {
-    my ( $self, %params ) = @_;
-
-    return {
-        properties => {
-            dodiCode => $params{dodi_code},
-            collectionCode => "Live",
-            attributes => [ 'all' ],
-        },
-        children => [
-            {
-                type => "Equals",
-                children => [
-                    {
-                        type => "Attribute",
-                        properties => {
-                            attributeCode => $params{attribute_code},
-                        },
-                    },
-                    {
-                        type => "String",
-                        properties => {
-                            value => [ $params{search_term} ]
-                        }
-                    }
-                ]
-            }
-        ]
-    };
 }
 
 =head2 _create_contact
