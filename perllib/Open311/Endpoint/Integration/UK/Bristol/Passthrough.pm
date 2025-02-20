@@ -20,4 +20,11 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
+around post_service_request_update => sub {
+    my ($orig, $self, $args) = @_;
+    # Bristol's endpoint gets confused if it receives a service_code on an update
+    delete $args->{service_code};
+    return $self->$orig($args);
+};
+
 1;
