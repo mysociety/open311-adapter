@@ -180,6 +180,11 @@ subtest 'GET service' => sub {
                 description          => 'Direct debit initial payment date',
                 order                => 12,
             },
+            {   %defaults,
+                code                 => 'type',
+                description          => 'Denotes whether subscription request is a renewal or not',
+                order                => 13,
+            },
 
         ],
     }, 'correct json returned';
