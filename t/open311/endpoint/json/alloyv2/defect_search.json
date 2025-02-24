@@ -1,6 +1,46 @@
 {
   "page": 1,
   "pageSize": 20,
+  "joinResults": [
+      {
+          "itemId": "4947501",
+          "joinQueries": [
+              {
+                  "item": {
+                      "itemId": "3027032"
+                  },
+                  "attributes": [
+                      {
+                          "attributeCode": "inspection_only_attribute",
+                          "value": "doesn't matter"
+                      }
+                  ]
+              }
+          ],
+          "joinAttributes": [
+            "root.defect_to_inspection_link_attribute.inspection_only_attribute"
+          ]
+      },
+      {
+          "itemId": "0203824fc0de101a008fbb4f",
+          "joinQueries": [
+              {
+                  "item": {
+                      "itemId": "irrelevant"
+                  },
+                  "attributes": [
+                      {
+                          "attributeCode": "inspection_only_attribute",
+                          "value": "doesn't matter"
+                      }
+                  ]
+              }
+          ],
+          "joinAttributes": [
+            "root.defect_to_inspection_link_attribute.inspection_only_attribute"
+          ]
+      }
+  ],
   "results": [
     {
       "itemId": "4947501",

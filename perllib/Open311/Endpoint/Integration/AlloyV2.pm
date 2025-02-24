@@ -765,6 +765,10 @@ It fetches the item's parents to find any that have a C<rfs_design> designCode,
 assuming that's the 'inspection' associated with the 'defect' (or indeed, the
 defect associated with the job).
 
+If C<use_joins_rather_than_parent_calls> is set, C<inspection_to_defect_attribute_link>
+and C<inspection_specific_attribute> will be used in a join to get C<rfs_design> parents
+in the query for updated resources, rather than querying the parents of each defect separately.
+
 It uses the C<defect_attribute_mapping> status entry to find the attribute
 containing the status, and then uses C<defect_status_mapping> to map that
 Alloy value to a status.
@@ -841,6 +845,10 @@ This also uses the C<defect_resource_name>, either a string or an array, to
 fetch any new reports in those designs. As with updates, it fetches any
 resources updated in the time window. It ignores any in C<ignored_defect_types>
 or any with a C<rfs_design> parent.
+
+If C<use_joins_rather_than_parent_calls> is set, C<inspection_to_defect_attribute_link>
+and C<inspection_specific_attribute> will be used in a join to get C<rfs_design> parents
+in the query for updated resources, rather than querying the parents of each defect separately.
 
 It uses C<defect_sourcetype_category_mapping> on the designCode to fetch a
 default and a possible types mapping, which it uses to set a category if it
@@ -977,6 +985,12 @@ sub fetch_updated_resources {
             }]
         }]
     };
+
+    if ($self->config->{use_joins_rather_than_parent_calls}) {
+        my $inspection_to_defect_attribute_link = $self->config->{inspection_to_defect_attribute_link};
+        my $inspection_specific_attribute = $self->config->{inspection_specific_attribute};
+        $body_base->{joinAttributes} = ["root^$inspection_to_defect_attribute_link.$inspection_specific_attribute"]
+    }
 
     return $self->alloy->search( $body_base );
 }
@@ -1186,6 +1200,12 @@ sub _get_defect_inspection {
 
 sub _get_defect_inspection_parents {
     my ($self, $defect) = @_;
+
+    if ($self->config->{use_joins_rather_than_parent_calls}) {
+        # We should have already fetched the parents by joining in the initial query
+        # so we can return these IDs.
+        return @{ $defect->{joinedItemIDs} // [] };
+    }
 
     my $parents = $self->alloy->api_call(call => "item/$defect->{itemId}/parents")->{results};
     my @linked_defects;
