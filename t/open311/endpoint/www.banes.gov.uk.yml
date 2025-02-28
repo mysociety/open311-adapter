@@ -1,0 +1,6 @@
+endpoint: 'test'
+api_key: 'test'
+bearer_details:
+  username: 'FMS'
+  password: 'FMSPassword'
+  url: 'local/token/api'

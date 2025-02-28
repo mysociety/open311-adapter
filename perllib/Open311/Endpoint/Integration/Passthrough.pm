@@ -110,13 +110,18 @@ sub _request {
         $params->{api_key} = $self->api_key;
         $self->logger->debug($url);
         $self->logger->dump($params);
-        $resp = $self->ua->post($url, $params);
+        my $auth = delete $params->{'Authorization'};
+        if ($auth) {
+            $resp = $self->ua->post($url, 'Authorization' => $auth, 'Content' => $params->{Content});
+        } else {
+            $resp = $self->ua->post($url, $params);
+        }
     } else {
         $url->query_form(%$params);
         $self->logger->debug($url);
         $resp = $self->ua->get($url);
     }
-    my $content = $resp->decoded_content;
+    my $content = $resp->decoded_content( charset => $url =~ /bathnes/ ? 'utf-8' : undef );
     $self->logger->debug($content);
     my $xml = $self->pt_xml->XMLin(\$content);
     die $xml->{error}[0]->{description} . "\n" if $xml->{error};

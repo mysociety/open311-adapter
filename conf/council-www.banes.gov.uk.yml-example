@@ -1,0 +1,6 @@
+endpoint: https://localhost:4000/
+api_key: 123
+bearer_details:
+    username: FMS
+    password: FMSPassword
+    url: url/address
