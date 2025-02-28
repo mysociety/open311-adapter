@@ -19,7 +19,7 @@ has code => (
 has variable => (
     is => 'ro',
     isa => Bool,
-    default => sub { 1 }, 
+    default => sub { 1 },
 );
 
 # Denotes the type of field used for user input.
@@ -41,7 +41,7 @@ has datatype_description => (
 );
 
 # A description of the attribute field with instructions for the user to find
-# and identify the requested information   
+# and identify the requested information
 has description => (
     is => 'ro',
     isa => Str,

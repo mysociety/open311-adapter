@@ -133,7 +133,7 @@ sub check_jurisdiction_id {
     * jurisdictions - an array of jurisdiction_ids
         you may want to subclass the methods:
             - requires_jurisdiction_ids
-            - check_jurisdiction_id 
+            - check_jurisdiction_id
     * default_identifier_type
         Open311 doesn't mandate what these types look like, but a backend
         server may! The module provides an example identifier type which allows
@@ -141,7 +141,7 @@ sub check_jurisdiction_id {
         You can also override these individually using:
 
         identifier_types => {
-            api_key => '//str', # 
+            api_key => '//str', #
             jurisdiction_id => ...
             service_code => ...
             service_request_id  => ...
@@ -246,9 +246,9 @@ has json => (
 has xml => (
     is => 'lazy',
     default => sub {
-        XML::Simple->new( 
-            NoAttr=> 1, 
-            KeepRoot => 1, 
+        XML::Simple->new(
+            NoAttr=> 1,
+            KeepRoot => 1,
             SuppressEmpty => 0,
         );
     },
@@ -419,15 +419,15 @@ sub GET_Service_Definition {
                         %optional,
                         $attribute->has_values ? (
                             values => [
-                                map { 
+                                map {
                                     my ($key, $name) = @$_;
-                                    +{ 
-                                        key => $key, 
+                                    +{
+                                        key => $key,
                                         name => $name,
                                     }
                                 } $self->service_attribute_values( $attribute )
                             ]) : (),
-                        map { $_ => $attribute->$_ } 
+                        map { $_ => $attribute->$_ }
                             qw/ code datatype datatype_description description /,
                     }
                 } $service->get_attributes,
@@ -456,8 +456,8 @@ sub POST_Service_Request_input_schema {
         # to give a nice error message
         return {
             type => '//rec',
-            required => { 
-                service_code => $self->get_identifier_type('service_code'), 
+            required => {
+                service_code => $self->get_identifier_type('service_code'),
                 api_key => $self->get_identifier_type('api_key') },
             rest => '//any',
         };
@@ -518,7 +518,7 @@ sub POST_Service_Request_input_schema {
         };
     }
 
-    return { 
+    return {
             type => '//any',
             of => \@address_schemas,
         };
@@ -571,12 +571,12 @@ sub POST_Service_Request {
     }
 
     my @service_requests = $self->post_service_request( $service, $args );
-        
+
     return {
         service_requests => [
             map {
-                my $service_notice = 
-                    $_->service_notice 
+                my $service_notice =
+                    $_->service_notice
                     || $service->default_service_notice
                     || $self->default_service_notice;
                 +{
@@ -754,7 +754,7 @@ sub format_service_requests {
                             zipcode
                             lat
                             long
-                            / 
+                            /
                     ),
                     (
                         map {
@@ -812,11 +812,11 @@ sub get_jurisdiction_id_validation {
 
     # jurisdiction_id is documented as "Required", but with the note
     # 'This is only required if the endpoint serves multiple jurisdictions'
-    # i.e. it is optional as regards the schema, but the server may choose 
+    # i.e. it is optional as regards the schema, but the server may choose
     # to error if it is not provided.
     return {
         type => '//rec',
-        ($self->requires_jurisdiction_ids ? 'required' : 'optional') => { 
+        ($self->requires_jurisdiction_ids ? 'required' : 'optional') => {
             jurisdiction_id => $self->get_identifier_type('jurisdiction_id'),
         },
     };
@@ -834,7 +834,7 @@ sub get_jurisdiction_id_optional_clause {
 
 sub call_api {
     my ($self, $api_name, @args) = @_;
-    
+
     my $api_method = $self->can($api_name)
         or die "No such API $api_name!";
 
@@ -894,10 +894,10 @@ sub format_response {
         my $data = $response->data;
         if ($ext eq 'json') {
             return [
-                $status, 
+                $status,
                 [ 'Content-Type' => 'application/json' ],
-                [ $self->json->encode( 
-                    $self->spark->process_for_json( $data ) 
+                [ $self->json->encode(
+                    $self->spark->process_for_json( $data )
                 )]
             ];
         }
@@ -916,7 +916,7 @@ sub format_response {
                 404,
                 [ 'Content-Type' => 'text/plain' ],
                 [ 'Bad extension. We support .xml and .json' ],
-            ] 
+            ]
         }
     }
 }
