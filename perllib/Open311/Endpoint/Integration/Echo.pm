@@ -463,7 +463,7 @@ sub process_service_request_args {
        $request->{guid} = $guid;
     }
     if (my $reservation = $args->{attributes}{reservation}) {
-       $request->{reservation} = $reservation;
+       $request->{reservation} = [ split /::/, $reservation ];
     }
 
     return $request;
