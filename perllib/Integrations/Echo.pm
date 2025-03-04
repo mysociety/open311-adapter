@@ -177,7 +177,7 @@ sub PostEvent {
         EventObjects => { EventObject => $source },
         EventTypeId => $args->{event_type},
         ServiceId => $args->{service},
-        $args->{reservation} ? (TaskReservations => [ { 'msArray:string' => $args->{reservation} } ]) : (),
+        $args->{reservation} ? (TaskReservations => [ map { { 'msArray:string' => $_ } } @{$args->{reservation}} ]) : (),
     );
     $self->call('PostEvent', event => $data);
 }

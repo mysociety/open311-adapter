@@ -68,9 +68,11 @@ $soap_lite->mock(call => sub {
             is $event_type, 1568;
             is $service_id, 408;
             is $guid, 'd5f79551-3dc4-11ee-ab68-f0c87781f93b';
-            my $reservation = ${$params[5+$offset]->value}->value->value;
-            is $reservation->name, 'string';
-            is $reservation->value, 'reservation==';
+            my @reservations = ${$params[5+$offset]->value}->value->value;
+            is $reservations[0]->name, 'string';
+            is $reservations[0]->value, 'reservation1==';
+            is $reservations[1]->name, 'string';
+            is $reservations[1]->value, 'reservation2==';
             my @data = ${$params[$offset]->value}->value->value;
             my @paper = ${$data[0]->value}->value;
             is $paper[0]->value, 2002;
@@ -175,7 +177,7 @@ subtest "POST missed mixed+paper OK" => sub {
         'attribute[fixmystreet_id]' => 2000125,
         'attribute[service_id]' => 2240,
         'attribute[GUID]' => 'd5f79551-3dc4-11ee-ab68-f0c87781f93b',
-        'attribute[reservation]' => 'reservation==',
+        'attribute[reservation]' => 'reservation1==::reservation2==',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
