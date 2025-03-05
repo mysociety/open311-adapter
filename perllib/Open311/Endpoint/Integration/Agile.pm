@@ -50,6 +50,7 @@ has agile => (
 use constant PAYMENT_METHOD_MAPPING => {
     credit_card  => 'CREDITCARD',
     direct_debit => 'DIRECTDEBIT',
+    csc => 'CREDITCARD',
 };
 
 sub get_integration {
