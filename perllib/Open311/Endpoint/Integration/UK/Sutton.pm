@@ -44,4 +44,6 @@ around check_for_data_value => sub {
     return $class->$orig($name, $args, $request, $parent_name);
 };
 
+has cancel_actiontype_id => ( is => 'ro', default => 8 );
+
 1;
