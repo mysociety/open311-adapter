@@ -83,7 +83,7 @@ test_multi(1, 'Open311::Endpoint::Integration::UK::Camden',
 );
 
 test_multi(0, 'Open311::Endpoint::Integration::UK::BANES',
-    'Open311::Endpoint::Integration::UK::BANES::Confirm' => 'BANES_confirm',
+    'Open311::Endpoint::Integration::UK::BANES::Confirm' => 'banes_confirm',
     #'Open311::Endpoint::Integration::UK::Bristol::Passthrough' => 'www.banes.gov.uk',
 );
 

@@ -44,7 +44,7 @@ sub _map_with_new_id {
     return @results;
 }
 
-my $email_regex = qr/^.*\@.*?\..*$/;
+my $email_regex = qr/\@.*?\./;
 
 sub _map_from_new_id {
     my ($self, $code, $type) = @_;

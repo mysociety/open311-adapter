@@ -22,6 +22,7 @@ use Test::More;
 use Test::MockModule;
 use JSON::MaybeXS;
 use Path::Tiny;
+use Open311::Endpoint::Integration::UK::BANES;
 
 my $test_request = {
   jurisdiction_id => 'dummy',
@@ -87,6 +88,19 @@ subtest 'POST service request' => sub {
 
     ok $res->is_success, 'valid request' or diag $res->content;
     is_deeply decode_json($res->content), [ { service_request_id => '293944' } ], 'correct return';
+};
+
+subtest 'Check correct integration selected' => sub {
+    my $multi = Open311::Endpoint::Integration::UK::BANES->new;
+    my @return;
+    for my $test (
+      [ 'test@example.com', 'Passthrough'],
+      [ 'testexample.com', 'Confirm'],
+      [ 'test@examplecom', 'Confirm'],
+    ) {
+      @return = $multi->_map_from_new_id($test->[0], 'service');
+      is $return[0], $test->[1], "Correct integration selected" ;
+    };
 };
 
 done_testing;
