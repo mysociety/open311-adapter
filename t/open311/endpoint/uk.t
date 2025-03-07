@@ -6,7 +6,6 @@ use File::Basename;
 BEGIN { $ENV{TEST_MODE} = 1; }
 
 test_multi(0, 'Open311::Endpoint::Integration::UK',
-    'Open311::Endpoint::Integration::UK::BANES' => 'banes_confirm',
     'Open311::Endpoint::Integration::UK::CheshireEast' => 'cheshireeast_confirm',
     'Open311::Endpoint::Integration::UK::EastSussex' => 'eastsussex_salesforce',
     'Open311::Endpoint::Integration::UK::Gloucestershire' => 'gloucestershire_confirm',
@@ -82,6 +81,11 @@ test_multi(1, 'Open311::Endpoint::Integration::UK::CentralBedfordshire',
 test_multi(1, 'Open311::Endpoint::Integration::UK::Camden',
     'Open311::Endpoint::Integration::UK::Camden::Symology' => 'camden_symology',
     'Open311::Endpoint::Integration::UK::Camden::ConfirmTrees' => 'camden_confirm_trees',
+);
+
+test_multi(0, 'Open311::Endpoint::Integration::UK::BANES',
+    'Open311::Endpoint::Integration::UK::BANES::Confirm' => 'banes_confirm',
+    #'Open311::Endpoint::Integration::UK::Bristol::Passthrough' => 'www.banes.gov.uk',
 );
 
 done_testing;
