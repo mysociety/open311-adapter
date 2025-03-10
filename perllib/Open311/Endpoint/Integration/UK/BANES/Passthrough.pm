@@ -67,7 +67,11 @@ sub service {
 =head2 _request
 
 Rather than using an api key, we need to get a bearer token for authorisation
-and set the Bearer header
+and set the Bearer header.
+
+Also munge params - jurisdiction_id is not expected and we want to make
+the service code the same as the Confirm code now it's been established
+it's being sent to the Passthrough
 
 =cut
 
@@ -75,6 +79,8 @@ around _request => sub {
     my ($orig, $self, $method, $url, $params) = @_;
 
     delete $params->{jurisdiction_id};
+
+    ($params->{service_code}) = $params->{service_code} =~ /passthrough-(.*?)@/;
 
     if ($method eq 'POST' && $url !~ /api\/token/ ) {
         $params = { 'Content' => $params, 'Authorization' => 'Bearer ' . $self->_get_bearer_token()->content };
