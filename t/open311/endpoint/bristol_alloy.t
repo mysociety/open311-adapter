@@ -164,8 +164,19 @@ subtest "check service group and category aliases" => sub {
             'service_code' => 'Dog_fouling',
             'keywords' => '',
             'description' => 'Dog fouling'
-          }
-        ];
+          },
+          {
+            "type" => "realtime",
+            "metadata" => "true",
+            "service_name" => "Glass (broken or not)",
+            "groups" => [
+                "Street cleansing"
+            ],
+            "keywords" => "",
+            "service_code" => "Glass_(broken_or_not)",
+            "description" => "Glass (broken or not)"
+          },
+    ]
 };
 
 my %shared_params = (
@@ -313,6 +324,22 @@ for my $test (
         expected => {
             'attributes_bWCSCStreetCleansingDefectSizeOfIssue_5e21b5ccca31500d1c836be0' => ['5e1f1bf0ca31500c541f82cb'],
             'attributes_bWCSCStreetCleansingDefectJobType_5e21b5adca31500d1c836bc9' => ['5e2179a3ca315012d099999'],
+            'attributes_bWCSCStreetCleansingDefectFullDetails_5e21b587ca31500cc0a2df3a' => "title\n\ndescription",
+            'attributes_bWCSCStreetCleansingDefectLocality_5e6f97fe4cee260f90aca0d6' => ['5e16fa66ca314f0980300be5'],
+            'attributes_bWCSCStreetCleansingDefectFixMyStreetID_67654e2a1e4316383b73050f' => '123',
+        },
+        expected_design => 'designs_bWCSCStreetCleansingDefect_5e21a98bca315003e0983035',
+    },
+    {
+        title => "Glass (broken or not) report",
+        extra_params => {
+            'attribute[SizeOfIssue]' => '1',
+            'attribute[category]' => 'Glass (broken or not)',
+            'service_code' => 'Glass_(broken_or_not)',
+        },
+        expected => {
+            'attributes_bWCSCStreetCleansingDefectSizeOfIssue_5e21b5ccca31500d1c836be0' => ['5e1f1bf0ca31500c541f82cb'],
+            'attributes_bWCSCStreetCleansingDefectJobType_5e21b5adca31500d1c836bc9' => ['5e2179a3ca315012d022222'],
             'attributes_bWCSCStreetCleansingDefectFullDetails_5e21b587ca31500cc0a2df3a' => "title\n\ndescription",
             'attributes_bWCSCStreetCleansingDefectLocality_5e6f97fe4cee260f90aca0d6' => ['5e16fa66ca314f0980300be5'],
             'attributes_bWCSCStreetCleansingDefectFixMyStreetID_67654e2a1e4316383b73050f' => '123',

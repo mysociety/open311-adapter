@@ -190,7 +190,6 @@ subtest 'GET service' => sub {
                 description          => 'Denotes whether subscription request is a renewal or not',
                 order                => 14,
             },
-
         ],
     }, 'correct json returned';
 };

@@ -24,6 +24,7 @@
         "Blood": 1,
         "Dead animal": 1,
         "Dog fouling": 1,
+        "Glass (broken or not)": 1,
       },
   },
 
@@ -90,6 +91,7 @@
       'Blood': '5e21782dca315003e09804a2',
       'Dog fouling': '5e2179a3ca315012d0956667',
       'Abandoned private bike/scooter': '5e2179a3ca315012d099999',
+      'Glass (broken or not)': '5e2179a3ca315012d022222'
     },
   },
 
