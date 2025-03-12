@@ -21,7 +21,7 @@ use Module::Pluggable
 
 has jurisdiction_id => (
     is => 'ro',
-    default => 'BANES',
+    default => 'banes',
 );
 
 =head2 _map_with_new_id & _map_from_new_id
