@@ -27,7 +27,7 @@ use Open311::Endpoint::Integration::UK::BANES;
 my $test_request = {
   jurisdiction_id => 'dummy',
   api_key => 'api-key',
-  service_code => 'passthrough-confirm_graffiti@example.com',
+  service_code => 'confirm_graffiti@example.com',
   address_string => '22 Acacia Avenue',
   first_name => 'Bob',
   last_name => 'Mould',
@@ -47,7 +47,7 @@ my $test_request = {
 
 my $test_update_request = {
   api_key => 'test',
-  service_request_id => 'passthrough-248',
+  service_request_id => '248',
   update_id => 123,
   first_name => 'Bob',
   last_name => 'Mould',
@@ -91,8 +91,7 @@ $ua->mock(post => sub {
     is $content_field, 'Content', 'Content field set';
     $test_update_request->{uploads} = []; # Added over open311 process
     $test_update_request->{media_url} = []; # Added over open311 process
-    $test_update_request->{service_request_id} = '248';
-    is_deeply $args, $test_update_request, 'service_request_id has prefix removed';
+    is_deeply $args, $test_update_request, 'Content set correctly';
     return HTTP::Response->new(200, 'OK', ["Content-Type", "application/xml"], $expected_confirm_service_update_request_post);
   } else {
     my ($self, $url, $auth_field, $auth_details, $content_field, $args) = @_;
@@ -128,21 +127,6 @@ subtest 'POST service request update' => sub {
     );
 
     ok $res->is_success, 'valid request' or diag $res->content;
-};
-
-subtest 'Check correct integration selected' => sub {
-    my $multi = Open311::Endpoint::Integration::UK::BANES->new;
-    my @return;
-    for my $test (
-      [ 'test@example.com', 'Passthrough', 'service'],
-      [ 'testexample.com', 'Confirm', 'service'],
-      [ 'test@examplecom', 'Confirm', 'service'],
-      [ 'passthrough-234', 'Passthrough', 'request'],
-      [ '234', 'Confirm', 'request'],
-    ) {
-      @return = $multi->_map_from_new_id($test->[0], $test->[2]);
-      is $return[0], $test->[1], "Correct integration selected" ;
-    };
 };
 
 done_testing;

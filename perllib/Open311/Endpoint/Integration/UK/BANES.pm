@@ -24,47 +24,17 @@ has jurisdiction_id => (
     default => 'banes',
 );
 
-=head2 _map_with_new_id & _map_from_new_id
+=pod
 
-BANES's two endpoints do not overlap in service_codes as the Passthrough
-accepts all reports with email addresses and the others are Confirm.
-This code overrides the default Multi code to not change anything,
-and cope accordingly.
+BANES was previously only a Confirm backend in open311-adapter, so we
+maintain its categories/IDs without any backend prefix as any updates on pre-multi
+reports will be looking for the id without the prefix
 
 =cut
 
-sub _map_with_new_id {
-    my ($self, $attributes, @results) = @_;
-
-    @results = map {
-        my ($name, $result) = @$_;
-        $result;
-    } @results;
-
-    return @results;
-}
-
-my $email_regex = qr/\@.*?\./;
-
-sub _map_from_new_id {
-    my ($self, $code, $type) = @_;
-
-    my $integration;
-    if ($type eq 'service') {
-        if ($code =~ /$email_regex/) {
-            $integration = 'Passthrough';
-        } else {
-            $integration = 'Confirm';
-        }
-    } elsif ($type eq 'request') {
-        if ($code =~ /^passthrough-/) {
-            $integration = 'Passthrough';
-        } else {
-            $integration = 'Confirm';
-        }
-    };
-
-    return ($integration, $code);
-}
+has integration_without_prefix => (
+    is => 'ro',
+    default => 'Confirm',
+);
 
 __PACKAGE__->run_if_script;

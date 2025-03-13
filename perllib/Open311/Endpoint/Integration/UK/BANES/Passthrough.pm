@@ -79,11 +79,8 @@ around _request => sub {
     my ($orig, $self, $method, $url, $params) = @_;
 
     delete $params->{jurisdiction_id};
-    if ($params->{service_code} && $params->{service_code} =~ /passthrough-.*?@/) {
-        ($params->{service_code}) = $params->{service_code} =~ /passthrough-(.*?)@/;
-    }
-    if ($params->{service_request_id} && $params->{service_request_id} =~ /^passthrough-/) {
-        ($params->{service_request_id}) = $params->{service_request_id} =~ /^passthrough-(.*?)$/;
+    if ($params->{service_code} && $params->{service_code} =~ /.*?@/) {
+        ($params->{service_code}) = $params->{service_code} =~ /(.*?)@/;
     }
 
     if ($method eq 'POST' && $url !~ /api\/token/ ) {
