@@ -171,6 +171,7 @@ sub check_endpoints {
         $hosts{URI->new($_)->host} = 1;
     }
     foreach (sort keys %hosts) {
+        next if $_ eq 'fixwstest.bromley.gov.uk'; # Not currently working, only test instance
         my $check = `openssl s_client -connect $_:443 < /dev/null 2>/dev/null| openssl x509 -checkend 604800 -noout`;
         next if $check =~ /will not expire/ && !$verbose;
         print "$_: $check";
