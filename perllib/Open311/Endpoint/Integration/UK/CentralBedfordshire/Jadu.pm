@@ -283,7 +283,7 @@ sub post_service_request {
         $type_of_waste = join ",", @$type_of_waste;
     }
 
-    my $fly_tip_datetime = DateTime::Format::ISO8601->parse_datetime($attributes->{fly_tip_date_and_time}) if $attributes->{fly_tip_date_and_time};
+    my $fly_tip_datetime = $attributes->{fly_tip_date_and_time} ? DateTime::Format::ISO8601->parse_datetime($attributes->{fly_tip_date_and_time}) : undef;
 
     my $sys_channel = $attributes->{reported_by_staff} eq 'Yes' ? $self->sys_channel_reported_by_staff : $self->sys_channel_self_reported;
 

@@ -301,10 +301,10 @@ sub _fetch_and_apply_updated_issues_info {
     foreach my $issue (@{ $response->{tasks} }) {
         # Assumes list is already ordered in ascending update time.
 
-        my $time_created = $w3c->parse_datetime($issue->{task_d_created}) if $issue->{task_d_created};
-        my $time_approved = $w3c->parse_datetime($issue->{task_d_approved}) if $issue->{task_d_approved};
-        my $time_planned = $w3c->parse_datetime($issue->{task_d_planned}) if $issue->{task_d_planned};
-        my $time_completed = $w3c->parse_datetime($issue->{task_d_completed}) if $issue->{task_d_completed};
+        my $time_created = $issue->{task_d_created} ? $w3c->parse_datetime($issue->{task_d_created}) : undef;
+        my $time_approved = $issue->{task_d_approved} ? $w3c->parse_datetime($issue->{task_d_approved}) : undef;
+        my $time_planned = $issue->{task_d_planned} ? $w3c->parse_datetime($issue->{task_d_planned}) : undef;
+        my $time_completed = $issue->{task_d_completed} ? $w3c->parse_datetime($issue->{task_d_completed}) : undef;
         my @ordered_times = sort grep { defined } ($time_created, $time_approved, $time_planned, $time_completed);
         my $most_recent_time = pop @ordered_times;
 
