@@ -27,7 +27,7 @@ use Open311::Endpoint::Integration::UK::BANES;
 my $test_request = {
   jurisdiction_id => 'dummy',
   api_key => 'api-key',
-  service_code => 'confirm_graffiti@example.com',
+  service_code => 'confirm_graffiti',
   address_string => '22 Acacia Avenue',
   first_name => 'Bob',
   last_name => 'Mould',
@@ -100,7 +100,6 @@ $ua->mock(post => sub {
     is $content_field, 'Content', 'Content field set';
     $test_request->{uploads} = []; # Added over open311 process
     delete $test_request->{jurisdiction_id}; # Banes are not accepting a jurisdiciton_id so removed before sending
-    $test_request->{service_code} = 'confirm_graffiti'; # Service code is now the Confirm service code
     is_deeply $args, $test_request, 'Content set';
     return HTTP::Response->new(200, 'OK', ["Content-Type", "application/xml"], $expected_confirm_service_request_post);
   }
