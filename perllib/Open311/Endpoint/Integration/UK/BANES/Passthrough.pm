@@ -80,10 +80,6 @@ around _request => sub {
 
     delete $params->{jurisdiction_id};
 
-    if ($params->{service_code} =~ /passthrough-.*?@/) {
-        ($params->{service_code}) = $params->{service_code} =~ /passthrough-(.*?)@/;
-    }
-
     if ($method eq 'POST' && $url !~ /api\/token/ ) {
         $params = { 'Content' => $params, 'Authorization' => 'Bearer ' . $self->_get_bearer_token()->content };
     };
