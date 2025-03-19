@@ -41,6 +41,7 @@ my $integration = Test::MockModule->new('Integrations::AlloyV2');
 $integration->mock('api_call', sub {
     my ($self, %args) = @_;
     my $call = $args{call};
+    my $method = $args{method};
     my $params = $args{params};
     my $body = $args{body};
     my $is_file = $args{is_file};
@@ -48,7 +49,17 @@ $integration->mock('api_call', sub {
 
     my $content = undef;
 
-    if ($body && $call =~ 'aqs/statistics') {
+    if ($call =~ 'item' && !$body) {
+        if ($call =~ /67d8186729668598c9dade5a/) {
+            $content = path(__FILE__)->sibling("json/alloyv2/bristol_item_response_a.json")->slurp;
+        } elsif ($call =~ /67d8186729668598c9dade5b/) {
+            $content = path(__FILE__)->sibling("json/alloyv2/bristol_item_response_b.json")->slurp;
+        } elsif ($call =~ /67d8186729668598c9dade5c/) {
+            $content = path(__FILE__)->sibling("json/alloyv2/bristol_item_response_c.json")->slurp;
+        } elsif ($call =~ /67d8186729668598c9dade5d/) {
+            $content = path(__FILE__)->sibling("json/alloyv2/bristol_item_response_d.json")->slurp;
+        }
+    } elsif ($body && $call =~ 'aqs/statistics') {
         $content = path(__FILE__)->sibling("json/alloyv2/bristol_categories_count_response.json")->slurp;
     } elsif ($body && $call =~ 'aqs/query') {
         my $designCode = $body->{aqs}->{properties}->{dodiCode};
@@ -61,7 +72,11 @@ $integration->mock('api_call', sub {
             $content = path(__FILE__)->sibling("json/alloyv2/bristol_locality_search_response.json")->slurp;
         };
     } elsif ($body && $call =~ 'item') {
-        $content = path(__FILE__)->sibling("json/alloyv2/bristol_create_report_response.json")->slurp;
+        if ($method && $method eq 'PUT') {
+            $content = path(__FILE__)->sibling("json/alloyv2/bristol_create_update_response.json")->slurp;
+        } else {
+            $content = path(__FILE__)->sibling("json/alloyv2/bristol_create_report_response.json")->slurp;
+        }
     } elsif (!$content) {
         warn "No handler found for API call " . $call . "  " . encode_json($body);
         return decode_json('[]');
@@ -371,6 +386,47 @@ for my $test (
             }
         }
     };
-}
+};
+
+subtest "send updates for problem" => sub {
+
+for my $test (
+ {
+    attributeCode => 'attributes_bWCSCFlyTipDefectLocationDescription_5dfa16deca31500ee80ea988',
+    service_request_id => '67d8186729668598c9dade5a'
+ },
+ {
+    attributeCode => 'attributes_bWCSCStreetCleansingDefectFullDetails_5e21b587ca31500cc0a2df3a',
+    service_request_id => '67d8186729668598c9dade5b'
+ },
+ {
+    attributeCode => 'attributes_bWCSCGraffitiDefectLocationDescription_5dfa4406ca31500d9808ed27',
+    service_request_id => '67d8186729668598c9dade5c'
+ },
+ {
+    attributeCode => 'attributes_bWCSCFlyPostDefectFullDetails_5e203cd5ca315012d094d4eb',
+    service_request_id => '67d8186729668598c9dade5d'
+ }
+)
+    {
+        my $res = $endpoint->run_test_request(
+            POST => '/servicerequestupdates.json',
+            jurisdiction_id => 'dummy',
+            api_key => 'test',
+            service_code => 'Any service code',
+            description => 'update',
+            status => 'FIXED',
+            service_request_id => $test->{service_request_id},
+            update_id => '1',
+            updated_datetime => '2023-05-15T14:55:55+00:00',
+        );
+
+        ok $res->is_success, 'valid request'
+            or diag $res->content;
+
+        my $sent = pop @sent;
+        is $sent->{attributes}[0]{attributeCode}, $test->{attributeCode}, 'Correct attribute selected';
+    }
+};
 
 done_testing;

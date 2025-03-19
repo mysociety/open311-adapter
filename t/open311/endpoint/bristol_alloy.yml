@@ -99,18 +99,22 @@
     "SC-Fly-Post Defect": {
       "locality_attribute": 'attributes_bWCSCFlyPostDefectLocality_5e6f97874cee260f90aca0d0',
       "fullText_attribute": 'attributes_bWCSCFlyPostDefectFullDetails_5e203cd5ca315012d094d4eb',
+      "updates_attribute": 'attributes_bWCSCFlyPostDefectFullDetails_5e203cd5ca315012d094d4eb',
     },
     "SC-Street Cleansing": {
       "locality_attribute": 'attributes_bWCSCStreetCleansingDefectLocality_5e6f97fe4cee260f90aca0d6',
       "fullText_attribute": 'attributes_bWCSCStreetCleansingDefectFullDetails_5e21b587ca31500cc0a2df3a',
+      "updates_attribute": 'attributes_bWCSCStreetCleansingDefectFullDetails_5e21b587ca31500cc0a2df3a',
     },
     "SC-Graffiti Defect": {
       "locality_attribute": 'attributes_bWCSCGraffitiDefectLocality_5e6f97e54cee260f780bf4e6',
       "fullText_attribute": 'attributes_bWCSCGraffitiDefectLocationDescription_5dfa4406ca31500d9808ed27',
+      "updates_attribute": 'attributes_bWCSCGraffitiDefectLocationDescription_5dfa4406ca31500d9808ed27',
     },
     "SC-Fly-Tip Defect": {
       "locality_attribute": 'attributes_bWCSCFlyTipDefectLocality_5e6f97c54cee260f780bf4e1',
       "fullText_attribute": 'attributes_bWCSCFlyTipDefectLocationDescription_5dfa16deca31500ee80ea988',
+      "updates_attribute": "attributes_bWCSCFlyTipDefectLocationDescription_5dfa16deca31500ee80ea988",
     },
   },
 
