@@ -712,54 +712,87 @@ subtest "post update" => sub {
 subtest "post update that is a defect" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
 
+for my $test (
+ {
+    description => 'correct xml sent',
+    input => {
+      jurisdiction_id => 'oxfordshire',
+      api_key => 'test',
+      service_code => 'POT',
+      service_request_id => "wdm2345",
+      updated_datetime => "2014-01-01T12:00:00Z",
+      update_id => 2345,
+      first_name => 'Bob',
+      last_name => 'Mould',
+      email => 'test@example.com',
+      description => 'This is an update',
+      status => 'INVESTIGATING',
+      "attribute[raise_defect]" => 1,
+      'attribute[easting]' => 400,
+      'attribute[northing]' => 300,
+      'attribute[usrn]' => 40066632,
+      'attribute[extra_details]' => 'foo TM1 S&F 200x200',
+      'attribute[defect_location_description]' => 'Location',
+      'attribute[defect_item_category]' => 'Kerbing',
+      'attribute[defect_item_type]' => 'Damaged',
+      'attribute[defect_item_detail]' => 'Small',
+      'attribute[defect_hazards_overhanging_trees]' => '1',
+      'attribute[defect_hazards_junctions]' => '1',
+      'attribute[defect_width]' => '30',
+      'attribute[defect_speed_of_road]' => '20',
+      'attribute[defect_type_of_road]' => 'Single carriageway',
+      'attribute[defect_type_of_repair]' => 'Temporary',
+      'attribute[defect_marked_in]' => 'None',
+    },
+    output => '<wdminstruction>
+  <blind_bends>false</blind_bends>
+  <bus_routes>false</bus_routes>
+  <comments>foo TM1 S&amp;F 200x200</comments>
+  <depth>0</depth>
+  <easting>400</easting>
+  <external_system_reference>wdm2345</external_system_reference>
+  <initials></initials>
+  <instruction_time>01/01/2014 12:00</instruction_time>
+  <item_category_uid>4</item_category_uid>
+  <item_detail_uid>25</item_detail_uid>
+  <item_type_uid>37</item_type_uid>
+  <junctions>true</junctions>
+  <length>0</length>
+  <location_description>Location</location_description>
+  <marked_in_uid>5</marked_in_uid>
+  <northing>300</northing>
+  <overhanging_trees>true</overhanging_trees>
+  <overhead_cables>false</overhead_cables>
+  <parked_vehicles>false</parked_vehicles>
+  <response_time_uid>73</response_time_uid>
+  <roundabout>false</roundabout>
+  <schools>false</schools>
+  <speed_of_road_uid>2</speed_of_road_uid>
+  <traffic_signals>false</traffic_signals>
+  <type_of_repair_uid>1</type_of_repair_uid>
+  <type_of_road_uid>3</type_of_road_uid>
+  <usrn>0</usrn>
+  <width>30</width>
+</wdminstruction>
+'},
+
+) {
     my $res = $endpoint->run_test_request(
-        POST => '/servicerequestupdates.json',
-        jurisdiction_id => 'oxfordshire',
-        api_key => 'test',
-        service_code => 'POT',
-        service_request_id => "wdm2345",
-        updated_datetime => "2014-01-01T12:00:00Z",
-        update_id => 2345,
-        first_name => 'Bob',
-        last_name => 'Mould',
-        email => 'test@example.com',
-        description => 'This is an update',
-        status => 'INVESTIGATING',
-        'attribute[raise_defect]' => 1,
-        'attribute[easting]' => 400,
-        'attribute[northing]' => 300,
-        'attribute[usrn]' => 40066632,
-        'attribute[extra_details]' => 'foo TM1 S&F 200x200',
-        'attribute[defect_location_description]' => 'Location',
-        'attribute[defect_item_category]' => 'Kerbing',
-        'attribute[defect_item_type]' => 'Damaged',
-        'attribute[defect_item_detail]' => 'Small',
+      POST => '/servicerequestupdates.json',
+      %{$test->{input}}
     );
 
     my $sent = pop @sent;
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
-    is $sent->{content}, '<wdminstruction>
-  <comments>foo TM1 S&amp;F 200x200</comments>
-  <easting>400</easting>
-  <external_system_reference>wdm2345</external_system_reference>
-  <instruction_time>01/01/2014 12:00</instruction_time>
-  <item_category_uid>4</item_category_uid>
-  <item_detail_uid>25</item_detail_uid>
-  <item_type_uid>37</item_type_uid>
-  <location_description>Location</location_description>
-  <northing>300</northing>
-  <response_time_uid>73</response_time_uid>
-  <usrn>0</usrn>
-</wdminstruction>
-',
-    'correct xml sent';
+    is $sent->{content}, $test->{output}, $test->{description};
 
     is_deeply decode_json($res->content),
     [ {
         update_id => '2345',
     } ], 'correct json returned';
+  };
 };
 
 sub _generate_request_xml {

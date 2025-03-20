@@ -155,16 +155,25 @@ sub raise_defect {
             external_system_reference => $args->{service_request_id}, # XXX OR WDM REF?
             usrn => 0, # Ignore provided USRN
             comments => $attrs->{extra_details},
-            location_description => $attrs->{defect_location_description} || '',
-            item_category_uid => $defect_mapping->{category}{$attrs->{defect_item_category} || ''} || '',
-            item_type_uid => $defect_mapping->{type}{$attrs->{defect_item_type} || ''} || '',
-            item_detail_uid => $defect_mapping->{detail}{$attrs->{defect_item_detail} || ''} || '',
             easting => $attrs->{easting} || '',
             northing => $attrs->{northing} || '',
             instruction_time => $time,
             response_time_uid => '73', # Hard coded 28 days
         }
     };
+    for my $extra_field (&_inspect_form_extra_fields) {
+        my ($category) = $extra_field =~ /^defect_(.*)/;
+        if (grep { $category eq $_ } keys %$defect_mapping ) {
+            $data->{wdminstruction}->{$category . '_uid'} = $defect_mapping->{$category}{$attrs->{$extra_field} || ''} || '',
+        } else {
+            if ($category =~ s/hazards_//) {
+                $data->{wdminstruction}->{$category} = $attrs->{$extra_field} ? 'true' : 'false';
+            } else {
+                $data->{wdminstruction}->{$category} = $attrs->{$extra_field} ||
+                    ($category =~ /length|width|depth/ ? 0 : '');
+            }
+        };
+    }
     if ( defined $args->{media_url} && @{$args->{media_url}} ) {
         $data->{wdminstruction}->{documents}->{URL} = $args->{media_url};
     }
@@ -252,5 +261,15 @@ sub _category_mapping {
         detail => $map->{detail},
     };
 };
+
+sub _inspect_form_extra_fields {
+    return qw(
+        defect_item_category defect_item_type defect_item_detail defect_location_description
+        defect_initials defect_length defect_depth defect_width defect_type_of_repair
+        defect_marked_in defect_speed_of_road defect_type_of_road defect_hazards_overhead_cables
+        defect_hazards_blind_bends defect_hazards_junctions defect_hazards_schools
+        defect_hazards_bus_routes defect_hazards_traffic_signals defect_hazards_parked_vehicles defect_hazards_roundabout defect_hazards_overhanging_trees
+    );
+}
 
 1;
