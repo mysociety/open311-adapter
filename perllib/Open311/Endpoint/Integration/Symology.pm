@@ -389,7 +389,7 @@ sub get_service_request_updates {
             push @updates, @{ $self->_process_request_history($xml, 'separate') };
         } else {
             # Assume CSV, ones fetched via URL all are
-            my $csv = Text::CSV->new;
+            my $csv = Text::CSV->new({ binary => 1 });
             try {
                 $csv->header($fh, { munge_column_names => {
                     "History Date/Time" => "date_history",

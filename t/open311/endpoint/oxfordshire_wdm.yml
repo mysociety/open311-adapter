@@ -8,9 +8,13 @@
       }
     },
     "defect_mapping": {
-        "category": { "Kerbing": 4 },
-        "type": { "Damaged": 37 },
-        "detail": { "Small": 25 }
+        "item_category": { "Kerbing": 4 },
+        "item_type": { "Damaged": 37 },
+        "item_detail": { "Small": 25 },
+        "speed_of_road": { "20": 2 },
+        "type_of_repair": { "Temporary": 1},
+        "type_of_road": { "Single carriageway": 3 },
+        "marked_in": { "None": 5 }
     },
     "status_map": {
       "mapped_status": "in_progress"
