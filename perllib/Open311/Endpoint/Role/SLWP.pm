@@ -27,6 +27,10 @@ around check_for_data_value => sub {
     return 1 if $name eq 'Refuse Bag' && $service eq '2242';
     return 1 if $name eq 'Refuse Bin' && ($service eq '2238' || $service eq '2243' || $service eq '3576');
 
+    if ($args->{service_code} eq '3159') {
+        return 1 if $name eq 'Renewal' && $args->{description} =~ /Garden Subscription - Renew/;
+    }
+
     # Bulky items
     if ($args->{service_code} eq '1636') {
         # Default in configuration is Payment Type 1 (Card), Payment Method 2 (Website)

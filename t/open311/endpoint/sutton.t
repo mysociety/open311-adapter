@@ -77,7 +77,10 @@ $soap_lite->mock(call => sub {
             is $event_type, EVENT_TYPE_SUBSCRIBE;
             is $service_id, 979;
             my @data = ${$params[$offset]->value}->value->value;
-            is scalar @data, 0;
+            is scalar @data, 1;
+            my @renewal = ${$data[0]->value}->value;
+            is $renewal[0]->value, 57764;
+            is $renewal[1]->value, 1;
         } elsif ($client_ref eq 'LBS-2000126') {
             is $event_type, EVENT_TYPE_BULKY;
             is $service_id, 986;
@@ -91,6 +94,7 @@ $soap_lite->mock(call => sub {
         return SOAP::Result->new(result => {
             Datatypes => { ExtensibleDatatype => [
                 { Id => 1008, Name => "Notes" },
+                { Id => 57764, Name => "Renewal" },
             ] },
         });
     } else {
@@ -106,7 +110,6 @@ my @params = (
     api_key => 'test',
     first_name => 'Bob',
     last_name => 'Mould',
-    description => "This is the details",
     lat => 51,
     long => -1,
     'attribute[uprn]' => 1000001,
@@ -118,6 +121,7 @@ subtest "POST subscription request OK" => sub {
         'attribute[fixmystreet_id]' => 2000123,
         'attribute[Paid_Container_Type]' => 1, # Garden Bin
         'attribute[Paid_Container_Quantity]' => 1,
+        description => "title: Garden Subscription - Renew\n\ndetail: ...",
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
