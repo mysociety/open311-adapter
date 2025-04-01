@@ -51,6 +51,7 @@ use constant SERVICE_TO_SUB_MAPPING => {
     garden_subscription        => \&_garden_subscription,
     garden_subscription_renew  => \&_garden_subscription_renew,
     garden_subscription_cancel => \&_garden_subscription_cancel,
+    garden_subscription_amend  => \&_garden_subscription_amend,
 };
 
 use constant PAYMENT_METHOD_MAPPING => {
@@ -107,11 +108,6 @@ sub post_service_request {
 
 sub _garden_subscription {
     my ( $self, $args ) = @_;
-
-    my $title = $args->{attributes}{title};
-    if ( $title && $title =~ /Amend$/ ) {
-        return $self->_garden_subscription_amend($args);
-    }
 
     my $integration = $self->get_integration;
 
