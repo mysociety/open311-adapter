@@ -166,9 +166,12 @@ sub raise_defect {
         if (grep { $category eq $_ } keys %$defect_mapping ) {
             $data->{wdminstruction}->{$category . '_uid'} = $defect_mapping->{$category}{$attrs->{$extra_field} || ''} || '',
         } else {
-            $category =~ s/hazards_//;
-            $data->{wdminstruction}->{$category} = $attrs->{$extra_field} ||
-                ($category =~ /length|width|depth/ ? 0 : '');
+            if ($category =~ s/hazards_//) {
+                $data->{wdminstruction}->{$category} = $attrs->{$extra_field} ? 'true' : 'false';
+            } else {
+                $data->{wdminstruction}->{$category} = $attrs->{$extra_field} ||
+                    ($category =~ /length|width|depth/ ? 0 : '');
+            }
         };
     }
     if ( defined $args->{media_url} && @{$args->{media_url}} ) {

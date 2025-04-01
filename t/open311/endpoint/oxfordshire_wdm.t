@@ -745,8 +745,8 @@ for my $test (
       'attribute[defect_marked_in]' => 'None',
     },
     output => '<wdminstruction>
-  <blind_bends></blind_bends>
-  <bus_routes></bus_routes>
+  <blind_bends>false</blind_bends>
+  <bus_routes>false</bus_routes>
   <comments>foo TM1 S&amp;F 200x200</comments>
   <depth>0</depth>
   <easting>400</easting>
@@ -756,19 +756,19 @@ for my $test (
   <item_category_uid>4</item_category_uid>
   <item_detail_uid>25</item_detail_uid>
   <item_type_uid>37</item_type_uid>
-  <junctions>1</junctions>
+  <junctions>true</junctions>
   <length>0</length>
   <location_description>Location</location_description>
   <marked_in_uid>5</marked_in_uid>
   <northing>300</northing>
-  <overhanging_trees>1</overhanging_trees>
-  <overhead_cables></overhead_cables>
-  <parked_vehicles></parked_vehicles>
+  <overhanging_trees>true</overhanging_trees>
+  <overhead_cables>false</overhead_cables>
+  <parked_vehicles>false</parked_vehicles>
   <response_time_uid>73</response_time_uid>
-  <roundabout></roundabout>
-  <schools></schools>
+  <roundabout>false</roundabout>
+  <schools>false</schools>
   <speed_of_road_uid>2</speed_of_road_uid>
-  <traffic_signals></traffic_signals>
+  <traffic_signals>false</traffic_signals>
   <type_of_repair_uid>1</type_of_repair_uid>
   <type_of_road_uid>3</type_of_road_uid>
   <usrn>0</usrn>
