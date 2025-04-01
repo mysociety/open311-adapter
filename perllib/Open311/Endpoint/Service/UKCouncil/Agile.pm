@@ -68,6 +68,13 @@ sub _build_attributes {
             required => 0,
             automated => 'hidden_field',
         ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'pro_rata',
+            description => 'Payment amount in pence for subscription amendments',
+            datatype => 'string',
+            required => 0,
+            automated => 'hidden_field',
+        ),
 
         # For cancellations
         Open311::Endpoint::Service::Attribute->new(
