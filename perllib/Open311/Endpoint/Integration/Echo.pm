@@ -514,7 +514,7 @@ sub update_event_payment {
     my ($self, $args, $payments) = @_;
 
     my $integ = $self->get_integration;
-    my $event = $integ->GetEvent($args->{service_request_id});
+    my $event = $integ->GetEvent($args->{service_request_id}, $args->{id_type});
     my $data = [];
     foreach (@$payments) {
         $_->{amount} =~ s/£//;
