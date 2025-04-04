@@ -54,9 +54,9 @@ use constant SERVICE_TO_SUB_MAPPING => {
 };
 
 use constant PAYMENT_METHOD_MAPPING => {
-    credit_card  => 'CREDITCARD',
+    credit_card  => 'CREDITDCARD',
     direct_debit => 'DIRECTDEBIT',
-    csc => 'CREDITCARD',
+    csc => 'CREDITDCARD',
 };
 
 sub get_integration {
