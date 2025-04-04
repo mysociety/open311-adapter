@@ -195,7 +195,7 @@ sub UpdateEvent {
 sub PerformEventAction {
     my ($self, $args) = @_;
     my $ref = ixhash(
-        Key => 'Guid',
+        Key => $args->{id_type} || 'Guid',
         Type => 'Event',
         Value => [ { 'msArray:anyType' => $args->{service_request_id} }, ],
     );
