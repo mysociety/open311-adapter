@@ -61,6 +61,7 @@ sub _update_status {
         my $street_cleansing = exists $row->{'Maint.Recd.'};
         my $maint_stage = $row->{'Maint. Stage'} || '';
         my $action_due = $row->{'Action Due'} || '';
+        my $event_type = $row->{'Event Type'} || '';
         if ($street_cleansing) {
             if ($maint_stage eq 'ORDERED') {
                 'action_scheduled'
@@ -89,7 +90,7 @@ sub _update_status {
             'investigating'
         } elsif ($action_due =~ /^PT[CS]|TPHR|REIN$/) {
             'action_scheduled'
-        } elsif ($action_due =~ /^(ROD|MAJ|SNPR)$/) {
+        } elsif ($action_due =~ /^(ROD|MAJ|SNPR)$/ || $event_type eq 'MAJ') {
             'closed'
         } elsif ($row->{Stage} == 9 || $row->{Stage} == 8) {
             undef
