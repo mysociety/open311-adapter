@@ -134,6 +134,7 @@ $bexley_end->mock(_get_update_files => sub {
 17/04/2019 14:09,04/04/2019,560062,RECORDED,,SI5,NCR,MAJ,BAR,1
 17/04/2019 14:10,04/04/2019,560062,RECORDED,,SI5,NCR,SNPR,BAZ,1
 17/04/2019 14:11,04/04/2019,560062,RECORDED,,SI5,NCR,CR,,1
+17/04/2019 14:12,04/04/2019,560062,RECORDED,,SI5,NCR,,MAJ,1
 EOF
     \<<EOF,
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
@@ -649,6 +650,15 @@ subtest "GET updates OK" => sub {
               "status" => "fixed",
               "description" => "",
               "media_url" => "",
+           },
+           {
+              "update_id" => "560062_623fb31c",
+              "updated_datetime" => "2019-04-17T14:12:00+01:00",
+              "service_request_id" => "560062",
+              "status" => "closed",
+              "description" => "",
+              "media_url" => "",
+              "external_status_code" => 'MAJ',
            },
            {
               "update_id" => "2830_64d46557",
