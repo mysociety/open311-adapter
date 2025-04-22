@@ -538,4 +538,27 @@ sub update_event_payment {
     $args->{description} = ''; # Blank out so nothing sent to Echo now
 }
 
+=head2
+
+When a bulky booking has been updated, but the booking day hasn't changed,
+we want to update the current booking in place.
+
+=cut
+
+sub update_event_bulky_booking {
+    my ($self, $args) = @_;
+
+    my $integ = $self->get_integration;
+    my $event = $integ->GetEvent($args->{service_request_id}, $args->{id_type});
+    my $data = [ ];
+    foreach (@$fields) {
+    push @$data,
+                { id => 57236, value => $_->{notes} },
+                { id => 57237, value => $_->{items} };
+                { id => 57238, value => $_->{} };
+    };
+    $integ->UpdateEvent({ id => $event->{Id}, data => $data });
+    $args->{description} = ''; # Blank out so nothing sent to Echo now
+}
+
 1;
