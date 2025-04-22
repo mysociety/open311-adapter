@@ -49,7 +49,9 @@ $integration->mock('api_call', sub {
 
     my $content = undef;
 
-    if ($call =~ 'item' && !$body) {
+    if ( $call =~ 'item-log/item/(.*)$' ) {
+        $content = path(__FILE__)->sibling("json/alloyv2/bristol_item_log_$1.json")->slurp;
+    } elsif ($call =~ 'item' && !$body) {
         if ($call =~ /67d8186729668598c9dade5a/) {
             $content = path(__FILE__)->sibling("json/alloyv2/bristol_item_response_a.json")->slurp;
         } elsif ($call =~ /67d8186729668598c9dade5b/) {
@@ -70,6 +72,8 @@ $integration->mock('api_call', sub {
             $content = path(__FILE__)->sibling("json/alloyv2/bristol_usrn_search_response.json")->slurp;
         } elsif ($designCode eq 'designs_locality_5e16f845ca3150037850b67a') {
             $content = path(__FILE__)->sibling("json/alloyv2/bristol_locality_search_response.json")->slurp;
+        } else { # One of the reporting defects
+            $content = path(__FILE__)->sibling('json/alloyv2/bristol_defects_search.json')->slurp;
         };
     } elsif ($body && $call =~ 'item') {
         if ($method && $method eq 'PUT') {
@@ -428,5 +432,38 @@ for my $test (
         is $sent->{attributes}[0]{attributeCode}, $test->{attributeCode}, 'Correct attribute selected';
     }
 };
+
+subtest "check fetch updates" => sub {
+    my $res = $endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2023-02-16T07:43:46Z&end_date=2023-02-16T19:43:46Z',
+    );
+
+    my $sent = pop @sent;
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [ {
+      extras => { latest_data_only => 1 },
+      external_status_code => "Incorrect Equipment",
+      updated_datetime => "2023-02-16T13:50:08Z",
+      status => "action_scheduled",
+      update_id => "63ee34826965f30390f01cdb_20230216135008792",
+      service_request_id => "63ee34826965f30390f01cdb",
+      description => "",
+      media_url => "",
+    }, {
+      extras => { latest_data_only => 1 },
+      external_status_code => "STCFQ",
+      updated_datetime => "2023-02-16T13:50:08Z",
+      status => "action_scheduled",
+      update_id => "63ee34826965f30390f01cda_20230216135008792",
+      service_request_id => "63ee34826965f30390f01cda",
+      description => "",
+      media_url => "",
+    } ];
+};
+
+
 
 done_testing;

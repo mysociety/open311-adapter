@@ -139,4 +139,39 @@ sub _get_road {
     return $road;
 }
 
+=head2 _get_inspection_status
+
+This uses the default way of looking up the status mapping, but then
+looks up the status in Alloy in order to fetch the external status code
+stored there to send back to FMS.
+
+=cut
+
+sub _get_inspection_status {
+    my ($self, $attributes, $mapping) = @_;
+
+    my $outcome_mapping = $self->config->{inspection_closure_mapping};
+
+    my $status = 'open';
+    my $ext_code;
+    if ($attributes->{$mapping->{status}}) {
+        my $status_code = $attributes->{$mapping->{status}}->[0];
+        $status = $self->inspection_status($status_code);
+
+        my $task_outcome = "";
+        my $removal_complete = "";
+        foreach (keys %$attributes) {
+            if (/TaskOutcome/) {
+                $task_outcome = $outcome_mapping->{$attributes->{$_}[0]};
+            }
+            if (/RemovalComplete/) {
+                $removal_complete = $outcome_mapping->{$attributes->{$_}[0]};
+            }
+        }
+        $ext_code = ($removal_complete eq "Work Complete") ? $task_outcome : $removal_complete;
+    }
+    return ($status, $ext_code);
+}
+
+
 1;

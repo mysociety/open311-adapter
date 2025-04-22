@@ -119,4 +119,24 @@
   },
 
   "created_datetime_attribute_id": 'attributes_defectsReportedDate',
+
+  "inspection_status_mapping": {
+    "5c8bdfb28ae862230019dc1e": "open", # Reported
+    "5c8bdfb58ae862230019dc1f": "action_scheduled", # Awaiting Inspection
+    "5c8bdfc18ae862230019dc21": "in_progress", # Job Raised
+    "5c8bdfc88ae862230019dc22": "fixed", # Remedied
+    "5c8bdfe08ae862230019dc24": "no_further_action", # No Action Required
+  },
+
+  "inspection_attribute_mapping": {
+    "status": "attributes_defectsStatus",
+  },
+
+  "inspection_closure_mapping": {
+    "5f8563952dbc440067ab6d09": "STCFQ",
+    "5e733e274cee2613dc561939": "Work Complete",
+    "5e733e374cee2613240ccd6d": "Incorrect Equipment",
+  },
+
+  "defect_resource_name": [],
 }

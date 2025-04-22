@@ -611,7 +611,7 @@ sub _get_inspection_updates {
 
     my $resources = $self->config->{rfs_design};
     if (ref $resources eq 'HASH') {
-        $resources = [ values %$resources ];
+        $resources = [ sort values %$resources ];
     } else {
         $resources = [ $resources ];
     }
