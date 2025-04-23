@@ -1,0 +1,78 @@
+{
+  "page": 1,
+  "pageSize": 20,
+  "results": [
+    {
+      "itemId": "63ee34826965f30390f01cda",
+      "designCode": "designs_bWCSCStreetCleansingDefect_5e21a98bca315003e0983035",
+      "attributes": [
+        {
+          "attributeCode": "attributes_bWCSCStreetCleansingDefectFixMyStreetID_67b841d7d912b9f8d67a8da4",
+          "value": "123"
+        },
+        {
+          "attributeCode": "attributes_defectsDescription",
+          "value": "Test"
+        },
+        {
+          "attributeCode": "attributes_defectsStatus",
+          "value": [ "5c8bdfb58ae862230019dc1f" ]
+        },
+        {
+          "attributeCode": "attributes_bWCSCStreetCleansingDefectFullDetails_5e21b587ca31500cc0a2df3a",
+          "value": "Description"
+        },
+        {
+          "attributeCode": "attributes_defectsReportedDate",
+          "value": "2023-02-16T13:49:00.000Z"
+        },
+        {
+          "attributeCode": "attributes_bWCSCStreetCleansingDefectTaskOutcome_67e12abec16b37153272b4bd",
+          "value": [
+            "5f8563952dbc440067ab6d09"
+          ]
+        },
+        {
+          "attributeCode": "attributes_bWCSCStreetCleansingDefectRemovalComplete_67e162f66468f9e70099abcc",
+          "value": [
+            "5e733e274cee2613dc561939"
+          ]
+        }
+      ],
+      "signature": "63ee3490b016c303ae032113"
+    },
+    {
+      "itemId": "63ee34826965f30390f01cdb",
+      "designCode": "designs_bWCSCGraffitiDefect_5dfa4261ca31500cec4147de",
+      "attributes": [
+        {
+          "attributeCode": "attributes_bWCSCGraffitiDefectFixMyStreetID_67b84217d912b9f8d67a9b38",
+          "value": "123"
+        },
+        {
+          "attributeCode": "attributes_defectsDescription",
+          "value": "Test"
+        },
+        {
+          "attributeCode": "attributes_defectsStatus",
+          "value": [ "5c8bdfb58ae862230019dc1f" ]
+        },
+        {
+          "attributeCode": "attributes_bWCSCGraffitiDefectLocationDescription_5dfa4406ca31500d9808ed27",
+          "value": "Description"
+        },
+        {
+          "attributeCode": "attributes_defectsReportedDate",
+          "value": "2023-02-16T13:49:00.000Z"
+        },
+        {
+          "attributeCode": "attributes_bWCSCGraffitiDefectRemovalComplete_67e1632b9021c6804f77c967",
+          "value": [
+            "5e733e374cee2613240ccd6d"
+          ]
+        }
+      ],
+      "signature": "63ee3490b016c303ae032113"
+    }
+  ]
+}
