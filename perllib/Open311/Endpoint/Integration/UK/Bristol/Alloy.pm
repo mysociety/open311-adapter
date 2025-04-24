@@ -168,7 +168,8 @@ sub _get_inspection_status {
                 $removal_complete = $outcome_mapping->{$attributes->{$_}[0]};
             }
         }
-        $ext_code = ($removal_complete eq "Work Complete") ? $task_outcome : $removal_complete;
+        # Only one of the two fields should be set, take either as the external code
+        $ext_code = $task_outcome || $removal_complete;
     }
     return ($status, $ext_code);
 }
