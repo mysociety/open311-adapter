@@ -1,0 +1,209 @@
+package Integrations::AlloyV2::Dummy;
+use Path::Tiny;
+use Moo;
+extends 'Integrations::AlloyV2';
+sub _build_config_file { path(__FILE__)->sibling('gloucester_alloy.yml')->stringify }
+
+package Open311::Endpoint::Integration::UK::Dummy;
+use Path::Tiny;
+use Moo;
+extends 'Open311::Endpoint::Integration::UK::Gloucester';
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{jurisdiction_id} = 'dummy';
+    $args{config_file} = path(__FILE__)->sibling('gloucester_alloy.yml')->stringify;
+    return $class->$orig(%args);
+};
+has integration_class => (is => 'ro', default => 'Integrations::AlloyV2::Dummy');
+
+package main;
+
+use strict;
+use warnings;
+use utf8;
+
+use Test::More;
+use Test::MockModule;
+use Test::MockTime ':all';
+use Encode;
+use JSON::MaybeXS;
+use Path::Tiny;
+
+BEGIN { $ENV{TEST_MODE} = 1; }
+
+my (@sent);
+
+my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
+
+my $alloy_endpoint
+    = Test::MockModule->new('Open311::Endpoint::Integration::AlloyV2');
+
+my $integration = Test::MockModule->new('Integrations::AlloyV2');
+$integration->mock('api_call', sub {
+    my ( $self, %args ) = @_;
+
+    my $call    = $args{call};
+    my $params  = $args{params};
+    my $body    = $args{body};
+    my $is_file = $args{is_file};
+
+    my $content;
+
+    if ($body) {
+        push @sent, $body;
+
+        if ( $call =~ 'item' ) {
+            # Creating new report
+            $content = path(__FILE__)->sibling(
+                'json/alloyv2/gloucester/create_report_response.json')->slurp;
+        }
+    }
+
+    if ( !$content ) {
+        warn 'No handler found for API call ' . $call . ' ' . encode_json($body);
+        return decode_json('[]');
+    }
+
+    return decode_json( encode_utf8($content) );
+});
+
+subtest 'send new report to Alloy' => sub {
+    set_fixed_time('2025-04-01T12:00:00Z');
+
+    my %shared_params = (
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        'attribute[description]' => 'description',
+        'attribute[title]' => 'title',
+        'attribute[report_url]' => 'http://localhost/123',
+        'attribute[fixmystreet_id]' => 123,
+        'attribute[easting]' => 1,
+        'attribute[northing]' => 2,
+    );
+
+    subtest 'No category group' => sub {
+        my $res = $endpoint->run_test_request(
+            POST => '/requests.json',
+
+            %shared_params,
+
+            service_code => 'Dead_animal_that_needs_removing',
+            'attribute[category]' => 'Dead animal that needs removing',
+        );
+
+        my $sent = pop @sent;
+        $sent->{attributes}
+            = [ sort { $a->{attributeCode} cmp $b->{attributeCode} }
+                @{ $sent->{attributes} } ];
+        is_deeply $sent, {
+            attributes => [
+                {   attributeCode =>
+                        'attributes_customerContactCRMReference_630e97373c0f4b0153a32650',
+                    value => '123',
+                },
+                {   attributeCode =>
+                        'attributes_customerContactCategory_630e927746f558015aa26062',
+                    value => ['67612c6e97567c437eb2b190'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactCustomerComments_630e97d11aff300150181403',
+                    value => 'description',
+                },
+                {   attributeCode =>
+                        'attributes_customerContactServiceArea_630e905e1aff30015017e892',
+                    value => ['630e8f0b3c0f4b0153a2ff36'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactSubCategory_630e951646f558015aa26b41',
+                    value => ['61daed49fdc7a101544177de'],
+                },
+                {   attributeCode =>
+                        'attributes_defectsReportedDate',
+                    value => '2025-04-01T12:00:00Z',
+                },
+                {   attributeCode =>
+                        'attributes_itemsGeometry',
+                    value => {
+                        coordinates => [ 0.1, 50 ],
+                        type => 'Point',
+                    },
+                },
+            ],
+            designCode => 'designs_customerContact_630e8c4b46f558015aa248b0',
+            parents    => {},
+        }, 'correct json sent';
+
+        ok $res->is_success, 'valid request'
+            or diag $res->content;
+
+        is_deeply decode_json( $res->content ),
+            [ { service_request_id => '680125dbf87b692e8cf5def9' } ],
+            'correct json returned';
+    };
+
+    subtest 'With category group and service area' => sub {
+        my $res = $endpoint->run_test_request(
+            POST => '/requests.json',
+
+            %shared_params,
+
+            service_code => 'Broken_glass',
+            'attribute[category]' => 'Broken glass',
+            'attribute[group]' => 'Broken glass or other hazard',
+        );
+
+        my $sent = pop @sent;
+        $sent->{attributes}
+            = [ sort { $a->{attributeCode} cmp $b->{attributeCode} }
+                @{ $sent->{attributes} } ];
+        is_deeply $sent, {
+            attributes => [
+                {   attributeCode =>
+                        'attributes_customerContactCRMReference_630e97373c0f4b0153a32650',
+                    value => '123',
+                },
+                {   attributeCode =>
+                        'attributes_customerContactCategory_630e927746f558015aa26062',
+                    value => ['61c0b9fefb9e76015838c1d4'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactCustomerComments_630e97d11aff300150181403',
+                    value => 'description',
+                },
+                {   attributeCode =>
+                        'attributes_customerContactServiceArea_630e905e1aff30015017e892',
+                    value => ['630e8f0b3c0f4b0153a2ff36'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactSubCategory_630e951646f558015aa26b41',
+                    value => ['61ba1492fb9e760158060b96'],
+                },
+                {   attributeCode =>
+                        'attributes_defectsReportedDate',
+                    value => '2025-04-01T12:00:00Z',
+                },
+                {   attributeCode =>
+                        'attributes_itemsGeometry',
+                    value => {
+                        coordinates => [ 0.1, 50 ],
+                        type => 'Point',
+                    },
+                },
+            ],
+            designCode => 'designs_customerContact_630e8c4b46f558015aa248b0',
+            parents    => {},
+        }, 'correct json sent';
+
+        ok $res->is_success, 'valid request'
+            or diag $res->content;
+
+        is_deeply decode_json( $res->content ),
+            [ { service_request_id => '680125dbf87b692e8cf5def9' } ],
+            'correct json returned';
+    };
+};
+
+done_testing;
