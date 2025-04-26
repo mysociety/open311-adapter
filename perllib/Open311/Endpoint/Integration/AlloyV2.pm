@@ -1376,27 +1376,4 @@ sub _search_by_code {
     return $res;
 }
 
-sub call_reconstruct {
-    my ($self, $id, $date) = @_;
-
-    my ($dir, $file);
-    if ($dir = $self->update_store) {
-        $file = path($dir)->child("$id-$date.json");
-        if ($file->exists) {
-            return decode_json($file->slurp_raw)->{item};
-        }
-    }
-
-    my $resource = try {
-        $self->alloy->api_call(call => "item-log/item/$id/reconstruct", body => { date => $date });
-    };
-    return unless $resource && ref $resource eq 'HASH'; # Should always be, but some test calls
-
-    if ($file) {
-        $file->spew_raw(encode_json($resource));
-    }
-
-    return $resource->{item};
-}
-
 1;
