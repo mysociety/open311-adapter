@@ -20,7 +20,31 @@ category_attribute_mapping: {
   service_area: 'attributes_customerContactServiceArea_630e905e1aff30015017e892',
 }
 
-#####
+# Defect updates
+
+defect_resource_name: 'designs_customerContact_630e8c4b46f558015aa248b0'
+
+defect_attribute_mapping: {
+  status: 'attributes_defectsStatus',
+}
+
+defect_status_mapping: {
+  5c8bdfb28ae862230019dc1e: open, # Reported
+  63806a7105cb25039365ec1d: closed, # Cancelled
+  5c8bdfc88ae862230019dc22: fixed, # Remedied
+  5c8bdfb98ae862230019dc20: in_progress, # Confirmed
+  5c8bdfc18ae862230019dc21: in_progress, # Job Raised
+  63174a681890d601587661c5: in_progress, # Job Reopened
+  5c8bdfb58ae862230019dc1f: investigating, # Awaiting Inspection
+  631512f22e4e36015ea6f9ab: investigating, # On Hold
+  5c8bdfe08ae862230019dc24: no_further_action, # No Action Required
+  6381543bbafbd203973706d3: no_further_action, # Unable to complete / Approve
+  6350f6d630a1df038b0962d1: internal_referral, # Waiting Further Instructions
+  65eaf5e19566fecca0a44166: internal_referral, # Out for Tender
+  65f38e92a06877457bdfd93e: internal_referral, # Awaiting Parts
+}
+
+# Service/category mapping
 
 service_whitelist: {
   '': {
