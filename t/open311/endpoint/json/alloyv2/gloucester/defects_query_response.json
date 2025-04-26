@@ -1,0 +1,48 @@
+{
+    "page": 1,
+    "pageSize": 100,
+    "results": [
+        {
+            "itemId": "defect_1",
+            "designCode": "designs_customerContact_630e8c4b46f558015aa248b0",
+            "collection": "Live",
+            "context": "Customer",
+            "attributes": [
+                {
+                    "attributeCode": "attributes_itemsTitle",
+                    "value": "Defect 1"
+                },
+                {
+                    "attributeCode": "attributes_defectsStatus",
+                    "value": [ "5c8bdfb98ae862230019dc20" ]
+                },
+                {
+                    "attributeCode": "attributes_defectsReportedDate",
+                    "value": "2023-03-23T00:00:00.000Z"
+                }
+            ],
+            "signature": "64149c300a618a0370228fc4"
+        },
+        {
+            "itemId": "defect_2",
+            "designCode": "designs_customerContact_630e8c4b46f558015aa248b0",
+            "collection": "Live",
+            "context": "Customer",
+            "attributes": [
+                {
+                    "attributeCode": "attributes_itemsTitle",
+                    "value": "Defect 2"
+                },
+                {
+                    "attributeCode": "attributes_defectsStatus",
+                    "value": [ "63806a7105cb25039365ec1d" ]
+                },
+                {
+                    "attributeCode": "attributes_defectsReportedDate",
+                    "value": "2023-03-23T00:00:00.000Z"
+                }
+            ],
+            "signature": "64149f190a618a0370229489"
+        }
+    ]
+}

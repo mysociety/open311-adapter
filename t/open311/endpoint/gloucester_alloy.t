@@ -56,11 +56,35 @@ $integration->mock('api_call', sub {
             # Creating new report
             $content = path(__FILE__)->sibling(
                 'json/alloyv2/gloucester/create_report_response.json')->slurp;
+
+        } elsif ( $call =~ 'aqs/statistics' ) {
+            # Counting how many defects there are
+            $content = path(__FILE__)->sibling('json/alloyv2/gloucester/defects_count_response.json')->slurp;
+
+        } elsif ( $call =~ 'aqs/query' ) {
+            # Querying defects
+            $content = path(__FILE__)->sibling("json/alloyv2/gloucester/defects_query_response.json")->slurp;
+
         }
+
+    } else {
+        if ( $call =~ 'item/.*/parents' ) {
+            # Looking up defect parents - returning no parents
+            $content = path(__FILE__)->sibling("json/alloyv2/gloucester/empty_response.json")->slurp;
+
+        } elsif ( $call =~ 'item-log/item/([^/]*)' ) {
+            # Looking up individual defect
+            my $id = $1;
+            $content
+                = path(__FILE__)
+                ->sibling("json/alloyv2/gloucester/item_log_${id}.json")->slurp;
+
+        }
+
     }
 
     if ( !$content ) {
-        warn 'No handler found for API call ' . $call . ' ' . encode_json($body);
+        warn 'No handler found for API call ' . $call;
         return decode_json('[]');
     }
 
@@ -204,6 +228,39 @@ subtest 'send new report to Alloy' => sub {
             [ { service_request_id => '680125dbf87b692e8cf5def9' } ],
             'correct json returned';
     };
+};
+
+subtest 'fetch updates from Alloy' => sub {
+    my $res
+        = $endpoint->run_test_request( GET =>
+            '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2023-11-13T11:00:00Z&end_date=2023-11-13T11:59:59Z',
+        );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json( $res->content ), [
+        {   description => '',
+            media_url => '',
+            extras => {
+                latest_data_only => 1
+            },
+            updated_datetime => '2023-11-13T11:05:00Z',
+            service_request_id => 'defect_1',
+            update_id => 'defect_1_20231113110500',
+            status => 'in_progress'
+        },
+        {   description => '',
+            media_url => '',
+            extras => {
+                latest_data_only => 1
+            },
+            updated_datetime => '2023-11-13T11:05:00Z',
+            service_request_id => 'defect_2',
+            update_id => 'defect_2_20231113110500',
+            status => 'closed'
+        },
+    ], 'correct json returned';
 };
 
 done_testing;
