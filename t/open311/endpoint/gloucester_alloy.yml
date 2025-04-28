@@ -26,6 +26,7 @@ defect_resource_name: 'designs_customerContact_630e8c4b46f558015aa248b0'
 
 defect_attribute_mapping: {
   status: 'attributes_defectsStatus',
+  updates: 'attributes_customerContactAdditionalComments_67d91d7ea058928de1c00876',
 }
 
 defect_status_mapping: {

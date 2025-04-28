@@ -68,7 +68,13 @@ $integration->mock('api_call', sub {
         }
 
     } else {
-        if ( $call =~ 'item/.*/parents' ) {
+        if ( $call =~ 'item/680125dbf87b692e8cf5def9' ) {
+            # Looking up created report - returning the same response as for
+            # newly created report
+            $content = path(__FILE__)->sibling(
+                'json/alloyv2/gloucester/create_report_response.json')->slurp;
+
+        } elsif ( $call =~ 'item/.*/parents' ) {
             # Looking up defect parents - returning no parents
             $content = path(__FILE__)->sibling("json/alloyv2/gloucester/empty_response.json")->slurp;
 
@@ -261,6 +267,39 @@ subtest 'fetch updates from Alloy' => sub {
             status => 'closed'
         },
     ], 'correct json returned';
+};
+
+subtest 'send updates to Alloy' => sub {
+        my $res = $endpoint->run_test_request(
+            POST => '/servicerequestupdates.json',
+            jurisdiction_id => 'dummy',
+            api_key => 'test',
+
+            service_request_id => '680125dbf87b692e8cf5def9',
+            service_code => 'Broken_glass',
+            status => 'OPEN',
+            update_id => '1',
+            updated_datetime => '2023-05-15T14:55:55+00:00',
+
+            description => 'Hey, this is still a problem',
+        );
+        ok $res->is_success, 'valid request'
+            or diag $res->content;
+
+        my $sent = pop @sent;
+        my $attributes = $sent->{attributes};
+        is_deeply $attributes, [
+            {   'attributeCode' =>
+                    'attributes_customerContactAdditionalComments_67d91d7ea058928de1c00876',
+                'value' => 'Customer update at 2023-05-15 14:55:55
+Hey, this is still a problem',
+            },
+        ];
+
+        is_deeply decode_json( $res->content ), [ {
+            update_id => '680125dd0004c8ff5436404c',
+        } ], 'correct json returned';
+
 };
 
 done_testing;
