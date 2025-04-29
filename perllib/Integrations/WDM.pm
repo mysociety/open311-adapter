@@ -264,6 +264,7 @@ sub _category_mapping {
 
 sub _inspect_form_extra_fields {
     return qw(
+        defect_traffic_management_agreed
         defect_item_category defect_item_type defect_item_detail defect_location_description
         defect_initials defect_length defect_depth defect_width defect_type_of_repair
         defect_marked_in defect_speed_of_road defect_type_of_road defect_hazards_overhead_cables
