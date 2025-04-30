@@ -50,6 +50,8 @@ that permits the service request to be sent, but maintains the open311 flow.
 
 =cut
 
+sub services { () }
+
 sub service {
     my ($self, $service_id, $args) = @_;
 

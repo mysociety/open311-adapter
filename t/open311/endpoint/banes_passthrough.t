@@ -109,6 +109,12 @@ use_ok 'Open311::Endpoint::Integration::UK::BANES::Passthrough';
 
 my $endpoint = Open311::Endpoint::Integration::UK::BANES::Passthrough::Dummy->new;
 
+subtest 'No services' => sub {
+    my $res = $endpoint->run_test_request( GET => '/services.json' );
+    ok $res->is_success, 'valid request' or diag $res->content;
+    is_deeply decode_json($res->content), [], 'correct return';
+};
+
 subtest 'POST service request' => sub {
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
