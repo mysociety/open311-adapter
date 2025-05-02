@@ -107,11 +107,19 @@ $soap_lite->mock(call => sub {
             EventGuid => '1234',
         });
     } elsif ($method eq 'GetEvent') {
-        return SOAP::Result->new(result => {
-            Id => '123pay',
-            EventTypeId => EVENT_TYPE_BULKY,
-            EventStateId => 4002,
-        });
+        if (${(${$args[3]->value}->value)[2]->value}->value->value eq 'bulky_1') {
+            return SOAP::Result->new(result => {
+                Id => 'echo_bulky',
+                EventTypeId => EVENT_TYPE_BULKY,
+                EventStateId => 4002,
+            });
+        } else {
+            return SOAP::Result->new(result => {
+                Id => '123pay',
+                EventTypeId => EVENT_TYPE_BULKY,
+                EventStateId => 4002,
+            });
+        }
     } elsif ($method eq 'GetEventType') {
         my @params = ${$args[3]->value}->value;
         my $id = ${$params[2]->value}->value->value->value;
@@ -169,6 +177,9 @@ $soap_lite->mock(call => sub {
         }
     } elsif ($method eq 'PerformEventAction') {
         my @params = ${$args[3]->value}->value;
+        if (@params, 3) {
+            return SOAP::Result->new(result => { EventActionGuid => 'ABC' });
+        }
         is @params, 2, 'No notes';
         my $ref = ${(${$params[1]->value}->value)[2]->value}->value->value->value;
         my $actiontype_id = $params[0]->value;
@@ -256,6 +267,31 @@ subtest "POST bulky request card payment OK" => sub {
     is_deeply decode_json($res->content),
         [ {
             "service_request_id" => '1234',
+        } ], 'correct json returned';
+};
+
+subtest "POST Bulky Collection update OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        updated_datetime => '2023-09-01T19:00:00+01:00',
+        service_request_id => 'bulky_1',
+        update_id => 456,
+        status => 'OPEN',
+        description => 'Amend Bulky collection',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        'attribute[Bulky_Collection_Items]' => '83::6',
+        'attribute[Exact_Location]' => 'in the middle of the drive',
+        'attribute[Bulky_Collection_Notes]' => '::Very heavy',
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => 'BLANK',
         } ], 'correct json returned';
 };
 
