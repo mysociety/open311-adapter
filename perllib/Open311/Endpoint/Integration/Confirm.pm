@@ -806,9 +806,17 @@ sub get_service_requests {
     my $integ = $self->get_integration;
     my @requests;
     my @services = $self->services;
+    # Some Confirm configurations map multiple Open311 services to one Confirm
+    # service/subject code - these are indicated with a _1/_2/etc suffix in
+    # service_whitelist. When fetching Enquiries from Confirm we join the
+    # service & subject code with _ and lookup the corresponding Open311
+    # service, which might fail if only the _1 suffixed version exists. So here
+    # we build a list of services to match against by stripping any _1/etc
+    # suffixes. As a result the first matching service will be used.
     my %services = map {
-        $_->{service_code} => $_
-    } @services;
+        (my $code = $_->{service_code}) =~ s/^([^_]*_[^_]*)_.*$/$1/;
+        $code => $_
+    } reverse @services;
     my %private_services = map { $_ => 1 } @{$self->private_services};
 
     # Enquiries
