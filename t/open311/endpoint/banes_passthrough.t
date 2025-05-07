@@ -79,26 +79,35 @@ my $expected_confirm_service_update_request_post = <<XML;
 XML
 
 my $ua = Test::MockModule->new('LWP::UserAgent');
+$ua->mock(get => sub {
+  if ($_[1] =~ /servicerequestupdates.xml/) {
+    my ($self, $url, $auth_field, $auth_details) = @_;
+    is $auth_field, 'Authorization', 'Authorisation header set';
+    is $auth_details, 'Bearer 12345678910', 'Authorisation set';
+    return HTTP::Response->new(200, 'OK', ["Content-Type", "application/xml"], '<service_request_updates></service_request_updates>');
+  } else {
+    die;
+  }
+});
 $ua->mock(post => sub {
   if ($_[1] =~ /token\/api/) {
     is $_[2]->{username}, 'FMS', "Username picked up from config";
     is $_[2]->{password}, 'FMSPassword', "Password picked up from config";
     return HTTP::Response->new(200, 'OK', [], '12345678910');
   } elsif ($_[1] =~ /servicerequestupdates.xml/) {
-    my ($self, $url, $auth_field, $auth_details, $content_field, $args) = @_;
+    my ($self, $url, $args, $auth_field, $auth_details) = @_;
     is $auth_field, 'Authorization', 'Authorisation header set';
     is $auth_details, 'Bearer 12345678910', 'Authorisation set';
-    is $content_field, 'Content', 'Content field set';
     $test_update_request->{uploads} = []; # Added over open311 process
     $test_update_request->{media_url} = []; # Added over open311 process
     is_deeply $args, $test_update_request, 'Content set correctly';
     return HTTP::Response->new(200, 'OK', ["Content-Type", "application/xml"], $expected_confirm_service_update_request_post);
   } else {
-    my ($self, $url, $auth_field, $auth_details, $content_field, $args) = @_;
+    my ($self, $url, $args, $auth_field, $auth_details) = @_;
     is $auth_field, 'Authorization', 'Authorisation header set';
     is $auth_details, 'Bearer 12345678910', 'Authorisation set';
-    is $content_field, 'Content', 'Content field set';
     $test_request->{uploads} = []; # Added over open311 process
+    $test_request->{api_key} = 'test'; # Config value is used
     delete $test_request->{jurisdiction_id}; # Banes are not accepting a jurisdiciton_id so removed before sending
     is_deeply $args, $test_request, 'Content set';
     return HTTP::Response->new(200, 'OK', ["Content-Type", "application/xml"], $expected_confirm_service_request_post);
@@ -129,6 +138,14 @@ subtest 'POST service request update' => sub {
     my $res = $endpoint->run_test_request(
         POST => '/servicerequestupdates.json',
         %{ $test_update_request },
+    );
+
+    ok $res->is_success, 'valid request' or diag $res->content;
+};
+
+subtest 'GET service request update' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?start_date=2025-05-07T12:00:00Z&end_date=2025-05-07T13:00:00Z',
     );
 
     ok $res->is_success, 'valid request' or diag $res->content;
