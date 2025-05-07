@@ -1,2 +1,3 @@
-graphql_url: "http://example.org/graphql"
+web_url: "http://example.org/web/api"
+tenant_id: "123"
 graphql_key: "key"
