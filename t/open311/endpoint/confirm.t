@@ -10,6 +10,12 @@ use Moo;
 extends 'Integrations::Confirm';
 sub _build_config_file { path(__FILE__)->sibling("confirm_wrapped.yml")->stringify }
 
+package Integrations::Confirm::DummyDupedServices;
+use Path::Tiny;
+use Moo;
+extends 'Integrations::Confirm';
+sub _build_config_file { path(__FILE__)->sibling("confirm_duped_services.yml")->stringify }
+
 package Integrations::Confirm::DummyCustomerRef;
 use Path::Tiny;
 use Moo;
@@ -106,6 +112,18 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 has integration_class => (is => 'ro', default => 'Integrations::Confirm::DummyWrapped');
+
+package Open311::Endpoint::Integration::UK::DummyDupedServices;
+use Path::Tiny;
+use Moo;
+extends 'Open311::Endpoint::Integration::Confirm';
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{jurisdiction_id} = 'confirm_duped_services';
+    $args{config_file} = path(__FILE__)->sibling("confirm_duped_services.yml")->stringify;
+    return $class->$orig(%args);
+};
+has integration_class => (is => 'ro', default => 'Integrations::Confirm::DummyDupedServices');
 
 package main;
 
@@ -846,6 +864,43 @@ subtest "fetching of completion photos" => sub {
     );
     ok $res->is_success, 'valid request' or diag $res->content;
     contains_string $res->content, '<media_url>http://example.com/photo/completion?jurisdiction_id=confirm_dummy&amp;job=432&amp;photo=1</media_url>';
+};
+
+$endpoint = Open311::Endpoint::Integration::UK::DummyDupedServices->new;
+
+subtest 'GET reports' => sub {
+    local $ENV{TEST_LOGGER} = 'warn';
+    my $res;
+    stderr_like {
+        $res = $endpoint->run_test_request(
+            GET => '/requests.xml?jurisdiction_id=confirm_dummy&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
+        );
+    } qr{no easting/northing for Enquiry 2004\n.*?no easting/northing for Enquiry 2005\n}, 'Warnings about invalid locations output';
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+my $expected = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_requests>
+  <request>
+    <address></address>
+    <address_id></address_id>
+    <description>this is a report from confirm</description>
+    <lat>100</lat>
+    <long>100</long>
+    <media_url></media_url>
+    <requested_datetime>2018-04-17T13:34:56+01:00</requested_datetime>
+    <service_code>ABC_DEF_1</service_code>
+    <service_name>Flooding</service_name>
+    <service_request_id>2003</service_request_id>
+    <status>in_progress</status>
+    <updated_datetime>2018-04-17T13:34:56+01:00</updated_datetime>
+    <zipcode></zipcode>
+  </request>
+</service_requests>
+XML
+
+    is_string $res->content, $expected, 'xml string ok'
+    or diag $res->content;
 };
 
 $endpoint = Open311::Endpoint::Integration::UK::DummyPrivate->new;
