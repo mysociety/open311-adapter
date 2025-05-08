@@ -8,7 +8,9 @@ BEGIN { $ENV{TEST_MODE} = 1; }
 test_multi(0, 'Open311::Endpoint::Integration::UK',
     'Open311::Endpoint::Integration::UK::CheshireEast' => 'cheshireeast_confirm',
     'Open311::Endpoint::Integration::UK::EastSussex' => 'eastsussex_salesforce',
+    'Open311::Endpoint::Integration::UK::Gloucester' => 'gloucester_alloy',
     'Open311::Endpoint::Integration::UK::Gloucestershire' => 'gloucestershire_confirm',
+    'Open311::Endpoint::Integration::UK::Hampshire' => 'hampshire_confirm',
     'Open311::Endpoint::Integration::UK::Hounslow' => 'hounslow_confirm',
     'Open311::Endpoint::Integration::UK::IslandRoads' => 'island_roads_confirm',
     'Open311::Endpoint::Integration::UK::Kingston' => 'kingston_echo',
@@ -19,7 +21,6 @@ test_multi(0, 'Open311::Endpoint::Integration::UK',
     'Open311::Endpoint::Integration::UK::Southwark' => 'southwark_confirm',
     'Open311::Endpoint::Integration::UK::Surrey' => 'surrey_boomi',
     'Open311::Endpoint::Integration::UK::Sutton' => 'sutton_echo',
-    'Open311::Endpoint::Integration::UK::Hampshire' => 'hampshire_confirm',
 );
 
 test_multi(1, 'Open311::Endpoint::Integration::UK::Bexley',

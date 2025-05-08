@@ -1,0 +1,305 @@
+package Integrations::AlloyV2::Dummy;
+use Path::Tiny;
+use Moo;
+extends 'Integrations::AlloyV2';
+sub _build_config_file { path(__FILE__)->sibling('gloucester_alloy.yml')->stringify }
+
+package Open311::Endpoint::Integration::UK::Dummy;
+use Path::Tiny;
+use Moo;
+extends 'Open311::Endpoint::Integration::UK::Gloucester';
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{jurisdiction_id} = 'dummy';
+    $args{config_file} = path(__FILE__)->sibling('gloucester_alloy.yml')->stringify;
+    return $class->$orig(%args);
+};
+has integration_class => (is => 'ro', default => 'Integrations::AlloyV2::Dummy');
+
+package main;
+
+use strict;
+use warnings;
+use utf8;
+
+use Test::More;
+use Test::MockModule;
+use Test::MockTime ':all';
+use Encode;
+use JSON::MaybeXS;
+use Path::Tiny;
+
+BEGIN { $ENV{TEST_MODE} = 1; }
+
+my (@sent);
+
+my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
+
+my $alloy_endpoint
+    = Test::MockModule->new('Open311::Endpoint::Integration::AlloyV2');
+
+my $integration = Test::MockModule->new('Integrations::AlloyV2');
+$integration->mock('api_call', sub {
+    my ( $self, %args ) = @_;
+
+    my $call    = $args{call};
+    my $params  = $args{params};
+    my $body    = $args{body};
+    my $is_file = $args{is_file};
+
+    my $content;
+
+    if ($body) {
+        push @sent, $body;
+
+        if ( $call =~ 'item' ) {
+            # Creating new report
+            $content = path(__FILE__)->sibling(
+                'json/alloyv2/gloucester/create_report_response.json')->slurp;
+
+        } elsif ( $call =~ 'aqs/statistics' ) {
+            # Counting how many defects there are
+            $content = path(__FILE__)->sibling('json/alloyv2/gloucester/defects_count_response.json')->slurp;
+
+        } elsif ( $call =~ 'aqs/query' ) {
+            # Querying defects
+            $content = path(__FILE__)->sibling("json/alloyv2/gloucester/defects_query_response.json")->slurp;
+
+        }
+
+    } else {
+        if ( $call =~ 'item/680125dbf87b692e8cf5def9' ) {
+            # Looking up created report - returning the same response as for
+            # newly created report
+            $content = path(__FILE__)->sibling(
+                'json/alloyv2/gloucester/create_report_response.json')->slurp;
+
+        } elsif ( $call =~ 'item/.*/parents' ) {
+            # Looking up defect parents - returning no parents
+            $content = path(__FILE__)->sibling("json/alloyv2/gloucester/empty_response.json")->slurp;
+
+        } elsif ( $call =~ 'item-log/item/([^/]*)' ) {
+            # Looking up individual defect
+            my $id = $1;
+            $content
+                = path(__FILE__)
+                ->sibling("json/alloyv2/gloucester/item_log_${id}.json")->slurp;
+
+        }
+
+    }
+
+    if ( !$content ) {
+        warn 'No handler found for API call ' . $call;
+        return decode_json('[]');
+    }
+
+    return decode_json( encode_utf8($content) );
+});
+
+subtest 'send new report to Alloy' => sub {
+    set_fixed_time('2025-04-01T12:00:00Z');
+
+    my %shared_params = (
+        jurisdiction_id => 'dummy',
+        api_key => 'test',
+        description => 'description',
+        lat => '50',
+        long => '0.1',
+        'attribute[description]' => 'description',
+        'attribute[title]' => 'title',
+        'attribute[report_url]' => 'http://localhost/123',
+        'attribute[fixmystreet_id]' => 123,
+        'attribute[easting]' => 1,
+        'attribute[northing]' => 2,
+    );
+
+    subtest 'No category group' => sub {
+        my $res = $endpoint->run_test_request(
+            POST => '/requests.json',
+
+            %shared_params,
+
+            service_code => 'Dead_animal_that_needs_removing',
+            'attribute[category]' => 'Dead animal that needs removing',
+        );
+
+        my $sent = pop @sent;
+        $sent->{attributes}
+            = [ sort { $a->{attributeCode} cmp $b->{attributeCode} }
+                @{ $sent->{attributes} } ];
+        is_deeply $sent, {
+            attributes => [
+                {   attributeCode =>
+                        'attributes_customerContactCRMReference_630e97373c0f4b0153a32650',
+                    value => '123',
+                },
+                {   attributeCode =>
+                        'attributes_customerContactCategory_630e927746f558015aa26062',
+                    value => ['67612c6e97567c437eb2b190'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactCustomerComments_630e97d11aff300150181403',
+                    value => 'description',
+                },
+                {   attributeCode =>
+                        'attributes_customerContactServiceArea_630e905e1aff30015017e892',
+                    value => ['630e8f0b3c0f4b0153a2ff36'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactSubCategory_630e951646f558015aa26b41',
+                    value => ['61daed49fdc7a101544177de'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
+                    value => '2025-04-01T12:00:00Z',
+                },
+                {   attributeCode =>
+                        'attributes_itemsGeometry',
+                    value => {
+                        coordinates => [ 0.1, 50 ],
+                        type => 'Point',
+                    },
+                },
+            ],
+            designCode => 'designs_customerContact_630e8c4b46f558015aa248b0',
+            parents    => {},
+        }, 'correct json sent';
+
+        ok $res->is_success, 'valid request'
+            or diag $res->content;
+
+        is_deeply decode_json( $res->content ),
+            [ { service_request_id => '680125dbf87b692e8cf5def9' } ],
+            'correct json returned';
+    };
+
+    subtest 'With category group and service area' => sub {
+        my $res = $endpoint->run_test_request(
+            POST => '/requests.json',
+
+            %shared_params,
+
+            service_code => 'Broken_glass',
+            'attribute[category]' => 'Broken glass',
+            'attribute[group]' => 'Broken glass or other hazard',
+        );
+
+        my $sent = pop @sent;
+        $sent->{attributes}
+            = [ sort { $a->{attributeCode} cmp $b->{attributeCode} }
+                @{ $sent->{attributes} } ];
+        is_deeply $sent, {
+            attributes => [
+                {   attributeCode =>
+                        'attributes_customerContactCRMReference_630e97373c0f4b0153a32650',
+                    value => '123',
+                },
+                {   attributeCode =>
+                        'attributes_customerContactCategory_630e927746f558015aa26062',
+                    value => ['61c0b9fefb9e76015838c1d4'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactCustomerComments_630e97d11aff300150181403',
+                    value => 'description',
+                },
+                {   attributeCode =>
+                        'attributes_customerContactServiceArea_630e905e1aff30015017e892',
+                    value => ['630e8f0b3c0f4b0153a2ff36'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactSubCategory_630e951646f558015aa26b41',
+                    value => ['61ba1492fb9e760158060b96'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
+                    value => '2025-04-01T12:00:00Z',
+                },
+                {   attributeCode =>
+                        'attributes_itemsGeometry',
+                    value => {
+                        coordinates => [ 0.1, 50 ],
+                        type => 'Point',
+                    },
+                },
+            ],
+            designCode => 'designs_customerContact_630e8c4b46f558015aa248b0',
+            parents    => {},
+        }, 'correct json sent';
+
+        ok $res->is_success, 'valid request'
+            or diag $res->content;
+
+        is_deeply decode_json( $res->content ),
+            [ { service_request_id => '680125dbf87b692e8cf5def9' } ],
+            'correct json returned';
+    };
+};
+
+subtest 'fetch updates from Alloy' => sub {
+    my $res
+        = $endpoint->run_test_request( GET =>
+            '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2023-11-13T11:00:00Z&end_date=2023-11-13T11:59:59Z',
+        );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json( $res->content ), [
+        {   description => '',
+            media_url => '',
+            extras => {
+                latest_data_only => 1
+            },
+            updated_datetime => '2023-11-13T11:05:00Z',
+            service_request_id => 'defect_1',
+            update_id => 'defect_1_20231113110500',
+            status => 'in_progress'
+        },
+        {   description => '',
+            media_url => '',
+            extras => {
+                latest_data_only => 1
+            },
+            updated_datetime => '2023-11-13T11:05:00Z',
+            service_request_id => 'defect_2',
+            update_id => 'defect_2_20231113110500',
+            status => 'closed'
+        },
+    ], 'correct json returned';
+};
+
+subtest 'send updates to Alloy' => sub {
+        my $res = $endpoint->run_test_request(
+            POST => '/servicerequestupdates.json',
+            jurisdiction_id => 'dummy',
+            api_key => 'test',
+
+            service_request_id => '680125dbf87b692e8cf5def9',
+            service_code => 'Broken_glass',
+            status => 'OPEN',
+            update_id => '1',
+            updated_datetime => '2023-05-15T14:55:55+00:00',
+
+            description => 'Hey, this is still a problem',
+        );
+        ok $res->is_success, 'valid request'
+            or diag $res->content;
+
+        my $sent = pop @sent;
+        my $attributes = $sent->{attributes};
+        is_deeply $attributes, [
+            {   'attributeCode' =>
+                    'attributes_customerContactAdditionalComments_67d91d7ea058928de1c00876',
+                'value' => 'Customer update at 2023-05-15 14:55:55
+Hey, this is still a problem',
+            },
+        ];
+
+        is_deeply decode_json( $res->content ), [ {
+            update_id => '680125dd0004c8ff5436404c',
+        } ], 'correct json returned';
+
+};
+
+done_testing;
