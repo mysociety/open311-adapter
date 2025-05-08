@@ -105,21 +105,21 @@ the function to die.
 sub _request {
     my ($self, $method, $url, $params) = @_;
     $url = URI->new($self->endpoint . $url);
+
+    my $auth = delete $params->{Authorization};
+    my %headers;
+    $headers{Authorization} = $auth if $auth;
+
     my $resp;
     if ($method eq 'POST') {
         $params->{api_key} = $self->api_key;
         $self->logger->debug($url);
         $self->logger->dump($params);
-        my $auth = delete $params->{'Authorization'};
-        if ($auth) {
-            $resp = $self->ua->post($url, 'Authorization' => $auth, 'Content' => $params->{Content});
-        } else {
-            $resp = $self->ua->post($url, $params);
-        }
+        $resp = $self->ua->post($url, $params, %headers);
     } else {
         $url->query_form(%$params);
         $self->logger->debug($url);
-        $resp = $self->ua->get($url);
+        $resp = $self->ua->get($url, %headers);
     }
     my $content = $resp->decoded_content( charset => $url =~ /bathnes/ ? 'utf-8' : undef );
     $self->logger->debug($content);

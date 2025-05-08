@@ -81,9 +81,6 @@ sub process_attributes {
 
     my $road = $args->{attributes}->{road_alloy} || $self->_get_road($args);
     my $locality_name = $road->{attributes}->{ $self->config->{locality_attribute_field} };
-    # Override for one locality not present in live table
-    $locality_name = 'Westbury on Trym' if $args->{attributes}{usrn} == 4514576 && $locality_name eq 'Westbury';
-
     my $locality = $self->_search_for_code_by_argument(
         {
             'dodi_code' => $self->config->{locality_list_details}->{code},

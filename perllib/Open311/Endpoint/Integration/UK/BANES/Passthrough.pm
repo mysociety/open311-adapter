@@ -50,6 +50,8 @@ that permits the service request to be sent, but maintains the open311 flow.
 
 =cut
 
+sub services { () }
+
 sub service {
     my ($self, $service_id, $args) = @_;
 
@@ -80,8 +82,8 @@ around _request => sub {
 
     delete $params->{jurisdiction_id};
 
-    if ($method eq 'POST' && $url !~ /api\/token/ ) {
-        $params = { 'Content' => $params, 'Authorization' => 'Bearer ' . $self->_get_bearer_token()->content };
+    if ($params->{api_key} || ($method eq 'POST' && $url !~ /api\/token/)) {
+        $params->{Authorization} = 'Bearer ' . $self->_get_bearer_token()->content;
     };
 
     return $self->$orig($method, $url, $params);
