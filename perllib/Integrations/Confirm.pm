@@ -167,6 +167,29 @@ has base_url => (
     default => sub { $_[0]->config->{base_url}  }
 );
 
+=head2 graphql_url
+
+The URL that's used for GraphQL queries.
+
+Returns undef unless web_url & tenant_id are defined in config.
+
+=cut
+
+has graphql_url => (
+    is => 'lazy',
+    default => sub {
+        my $cfg = $_[0]->config;
+        my $web_url = $cfg->{web_url};
+        my $tenant_id = $cfg->{tenant_id};
+
+        return unless $web_url && $tenant_id;
+
+        $web_url =~ s/\/+$//;
+
+        return "$web_url/$tenant_id/graphql"
+    }
+);
+
 has oauth_token => (
     is => 'lazy',
     default => sub {
@@ -292,7 +315,7 @@ sub perform_request {
 sub perform_request_graphql {
     my ($self, %args) = @_;
 
-    my $uri = URI->new( $self->config->{graphql_url} );
+    my $uri = URI->new( $self->graphql_url );
     my $request = HTTP::Request->new(
         'POST',
         $uri,

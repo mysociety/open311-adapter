@@ -70,14 +70,14 @@ has service_whitelist => (
 =head2 handle_jobs
 
 Whether cobrand fetches jobs from Confirm alongside enquiries. This is
-based on whether the cobrand has provided a GraphQL URL in its config.
+based on whether the cobrand has provided a list of services for jobs in its config.
 
 =cut
 
 has handle_jobs => (
     is => 'lazy',
     default => sub {
-        return $_[0]->get_integration->config->{graphql_url} ? 1 : 0;
+        return $_[0]->get_integration->config->{job_service_whitelist} ? 1 : 0;
     }
 );
 
