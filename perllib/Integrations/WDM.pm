@@ -164,7 +164,7 @@ sub raise_defect {
     for my $extra_field (&_inspect_form_extra_fields) {
         my ($category) = $extra_field =~ /^defect_(.*)/;
         if (grep { $category eq $_ } keys %$defect_mapping ) {
-            $data->{wdminstruction}->{$category . '_uid'} = $defect_mapping->{$category}{$attrs->{$extra_field} || ''} || '',
+            $data->{wdminstruction}->{$category . '_uid'} = $defect_mapping->{$category}{$attrs->{$extra_field} || ''} || 0,
         } else {
             if ($category =~ s/hazards_//) {
                 $data->{wdminstruction}->{$category} = $attrs->{$extra_field} ? 'true' : 'false';

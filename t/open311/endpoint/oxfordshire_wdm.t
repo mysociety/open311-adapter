@@ -768,7 +768,7 @@ for my $test (
   <roundabout>false</roundabout>
   <schools>false</schools>
   <speed_of_road_uid>2</speed_of_road_uid>
-  <traffic_management_agreed></traffic_management_agreed>
+  <traffic_management_agreed_uid>0</traffic_management_agreed_uid>
   <traffic_signals>false</traffic_signals>
   <type_of_repair_uid>1</type_of_repair_uid>
   <type_of_road_uid>3</type_of_road_uid>

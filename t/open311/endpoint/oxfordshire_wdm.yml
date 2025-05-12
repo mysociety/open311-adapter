@@ -11,6 +11,7 @@
         "item_category": { "Kerbing": 4 },
         "item_type": { "Damaged": 37 },
         "item_detail": { "Small": 25 },
+        "traffic_management_agreed": { "Signs and Cones": 2 },
         "speed_of_road": { "20": 2 },
         "type_of_repair": { "Temporary": 1},
         "type_of_road": { "Single carriageway": 3 },
