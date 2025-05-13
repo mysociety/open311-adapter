@@ -35,9 +35,6 @@ my (@sent);
 
 my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
 
-my $alloy_endpoint
-    = Test::MockModule->new('Open311::Endpoint::Integration::AlloyV2');
-
 my $integration = Test::MockModule->new('Integrations::AlloyV2');
 $integration->mock('api_call', sub {
     my ( $self, %args ) = @_;
@@ -97,6 +94,61 @@ $integration->mock('api_call', sub {
     return decode_json( encode_utf8($content) );
 });
 
+subtest 'check questions are set for given services' => sub {
+    subtest 'Dead animal that needs removing' => sub {
+        my $res = $endpoint->run_test_request(
+            GET => '/services/Dead_animal_that_needs_removing.json' );
+        ok $res->is_success, 'json success';
+
+        my $content        = decode_json( $res->content );
+        my ($type_of_animal) = grep { $_->{code} eq 'type_of_animal' }
+            @{ $content->{attributes} };
+
+        is_deeply $type_of_animal, {
+            code                 => 'type_of_animal',
+            datatype             => 'singlevaluelist',
+            datatype_description => '',
+            description          => 'Type of animal?',
+            order                => 10,
+            required             => 'true',
+            variable             => 'true',
+            values               => [
+                map { key => $_, name => $_ },
+                'Cat',
+                'Dog',
+                'Other domestic (e.g. horse)',
+                'Livestock (e.g. cows)',
+                'Small wild animal (e.g. birds, mice)',
+                'Large wild animal (e.g. swan, badger)',
+                'Other',
+            ],
+        };
+
+    };
+
+    subtest 'Dog fouling' => sub {
+        my $res = $endpoint->run_test_request(
+            GET => '/services/Dog_fouling.json' );
+        ok $res->is_success, 'json success';
+
+        my $content         = decode_json( $res->content );
+        my ($did_you_witness) = grep { $_->{code} eq 'did_you_witness' }
+            @{ $content->{attributes} };
+
+        is_deeply $did_you_witness, {
+            code                 => 'did_you_witness',
+            datatype             => 'singlevaluelist',
+            datatype_description => '',
+            description          => 'Did you witness the dog fouling?',
+            order                => 10,
+            required             => 'true',
+            variable             => 'true',
+            values => [ map { key => $_, name => $_ }, qw/Yes No/ ],
+        };
+
+    };
+};
+
 subtest 'send new report to Alloy' => sub {
     set_fixed_time('2025-04-01T12:00:00Z');
 
@@ -122,6 +174,7 @@ subtest 'send new report to Alloy' => sub {
 
             service_code => 'Dead_animal_that_needs_removing',
             'attribute[category]' => 'Dead animal that needs removing',
+            'attribute[type_of_animal]' => 'Other',
         );
 
         my $sent = pop @sent;

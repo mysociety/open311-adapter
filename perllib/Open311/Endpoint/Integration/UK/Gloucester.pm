@@ -31,6 +31,10 @@ sub _populate_category_and_group_attr {
         ? $self->config->{service_whitelist}{$group}{$service_code}
         : $self->config->{service_whitelist}{''}{$service_code};
 
+    if ( ref($category_code) eq 'HASH' ) {
+        $category_code = $category_code->{alloy_code};
+    }
+
     # NB FMS category == Alloy subcategory; FMS group == Alloy category
 
     my $mapping = $self->config->{category_attribute_mapping};
