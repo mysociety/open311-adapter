@@ -154,10 +154,30 @@ sub services {
         for my $subcategory (sort keys %{ $group_config }) {
             next if $subcategory eq 'alias';
             my $subcategory_config = $self->service_whitelist->{$group}->{$subcategory};
+
             my $subcategory_alias;
-            if (ref($subcategory_config) eq 'HASH' && exists($subcategory_config->{alias})) {
-                $subcategory_alias = $subcategory_config->{alias};
+            my @questions;
+
+            if ( ref($subcategory_config) eq 'HASH' ) {
+                if ( exists( $subcategory_config->{alias} ) ) {
+                    $subcategory_alias = $subcategory_config->{alias};
+                }
+
+                if ( exists( $subcategory_config->{questions} ) ) {
+                    for my $q ( @{ $subcategory_config->{questions} } ) {
+                        push @questions, {
+                            code        => $q->{code},
+                            datatype    => 'singlevaluelist',
+                            description => $q->{description},
+                            required    => 1,
+                            values => { map { $_ => $_ } @{ $q->{values} } },
+                            values_sorted => [ map $_, @{ $q->{values} } ],
+                            variable      => 1,
+                        };
+                    }
+                }
             }
+
             my $subcategory_name = $subcategory_alias || $subcategory;
 
             (my $code = $subcategory) =~ s/ /_/g;
@@ -176,6 +196,11 @@ sub services {
                 groups => [ $group_name ],
             );
             my $o311_service = $self->service_class->new(%service);
+
+            push @{ $o311_service->attributes },
+                Open311::Endpoint::Service::Attribute->new(%$_)
+                for @questions;
+
             push @services, $o311_service;
             $services{$code} = $o311_service;
         }

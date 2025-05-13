@@ -49,7 +49,25 @@ defect_status_mapping: {
 
 service_whitelist: {
   '': {
-    'Dead animal that needs removing': 61daed49fdc7a101544177de,
+    'Dead animal that needs removing': {
+      questions: [
+        {
+          code: type_of_animal,
+          description: 'Type of animal?',
+          values: [
+            'Cat',
+            'Dog',
+            'Other domestic (e.g. horse)',
+            'Livestock (e.g. cows)',
+            'Small wild animal (e.g. birds, mice)',
+            'Large wild animal (e.g. swan, badger)',
+            'Other',
+          ],
+          alloy_attribute: attributes_customerContactAnimalType_67617293b20d22b010bf32e6,
+        },
+      ],
+      alloy_code: 61daed49fdc7a101544177de,
+    },
     'Fly-posting':                     67612fb03656423aa2e903eb,
     'Syringes or drugs equipment':     676130151e4316383b708af3,
   },
@@ -58,6 +76,16 @@ service_whitelist: {
     'Debris on pavement or road': 61ba1492fb9e760158060b96,
     'Leaves':                     6761303e730164f38ff14351,
     'Spillage':                   61ba1492fb9e760158060b96,
+    'Dog fouling': {
+      questions: [
+        {
+          code: did_you_witness,
+          description: 'Did you witness the dog fouling?',
+          values: [ Yes, No ],
+        },
+      ],
+      alloy_code: 61ba198c7148450165fff23f,
+    },
   },
   'Litter bins': {
     'Missing bin':            622f7387bef0e701b91e2504,
@@ -68,7 +96,16 @@ service_whitelist: {
   },
   'Graffiti': {
     'Non-offensive graffiti': 61ba15dd67018e015a6aa578,
-    'Offensive graffiti':     61ba15dd67018e015a6aa578,
+    'Offensive graffiti': {
+      questions: [
+        {
+          code: did_you_witness,
+          description: 'Did you witness the offence of the graffiti taking place, and if so do you wish to give a witness statement?  If you are willing to provide a statement please note that these can not be made anonymously and you may need to attend court if required.',
+          values: [ Yes, No ],
+        },
+      ],
+      alloy_code: 61ba15dd67018e015a6aa578,
+    },
   },
   'Hedge/vegetation issue': {
     'Overgrown hedges': 654525b2fa6eef8cf20cc7ee,
@@ -95,13 +132,34 @@ service_whitelist: {
     "Faded nameplate (can't read easily)": 676130de730164f38ff18e9c,
   },
   'Fly-tipping': {
-    'Regular flytipping': 61ba19cf7148450165fff478',
+    'Regular flytipping': {
+      questions: [
+        {
+          code: did_you_witness,
+          description: 'Did you witness the flytipping?',
+          values: [ Yes, No ],
+        },
+      ],
+      alloy_code: 61ba19cf7148450165fff478,
+    },
   },
   'Car parks': {
     'Unclean public toilets': 67612fec3656423aa2e90eec,
   },
   'Watercourse': {
     'Items in watercourse': 61ba19cf7148450165fff478,
+  },
+}
+
+question_mapping: {
+  attributes_customerContactAnimalType_67617293b20d22b010bf32e6: {
+    'Cat':                                   5d8a4fdaca31500b4030ec96,
+    'Dog':                                   5d8a4ff1ca31500b4030ec9b,
+    'Other domestic (e.g. horse)':           5d8a5010ca31500b4030eca0,
+    'Livestock (e.g. cows)':                 5d8a5032ca31500b4030eca5,
+    'Small wild animal (e.g. birds, mice)':  5d8a504dca31500b4030ecaa,
+    'Large wild animal (e.g. swan, badger)': 5d8a50c4ca31500a9469ab9d,
+    'Other':                                 5d8a50dfca31500a9469aba2,
   },
 }
 
