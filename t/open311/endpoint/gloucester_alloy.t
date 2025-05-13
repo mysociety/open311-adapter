@@ -193,7 +193,10 @@ subtest 'send new report to Alloy' => sub {
                 },
                 {   attributeCode =>
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
-                    value => 'description',
+                    value => 'description
+
+Type of animal?
+Other',
                 },
                 {   attributeCode =>
                         'attributes_customerContactServiceArea_630e905e1aff30015017e892',
@@ -233,9 +236,10 @@ subtest 'send new report to Alloy' => sub {
 
             %shared_params,
 
-            service_code => 'Broken_glass',
-            'attribute[category]' => 'Broken glass',
+            service_code => 'Dog_fouling',
+            'attribute[category]' => 'Dog fouling',
             'attribute[group]' => 'Broken glass or other hazard',
+            'attribute[did_you_witness]' => 'Yes',
         );
 
         my $sent = pop @sent;
@@ -254,7 +258,10 @@ subtest 'send new report to Alloy' => sub {
                 },
                 {   attributeCode =>
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
-                    value => 'description',
+                    value => 'description
+
+Did you witness the dog fouling?
+Yes',
                 },
                 {   attributeCode =>
                         'attributes_customerContactServiceArea_630e905e1aff30015017e892',
@@ -262,7 +269,7 @@ subtest 'send new report to Alloy' => sub {
                 },
                 {   attributeCode =>
                         'attributes_customerContactSubCategory_630e951646f558015aa26b41',
-                    value => ['61ba1492fb9e760158060b96'],
+                    value => ['61ba198c7148450165fff23f'],
                 },
                 {   attributeCode =>
                         'attributes_defectsReportedDate',
