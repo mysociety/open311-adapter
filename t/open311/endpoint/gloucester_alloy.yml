@@ -5,7 +5,7 @@ rfs_design: 'designs_customerContact_630e8c4b46f558015aa248b0'
 
 # Attributes
 
-created_datetime_attribute_id: 'attributes_customerContactTargetDate_63105e3a46f558015ab4c576'
+created_datetime_attribute_id: 'attributes_defectsReportedDate'
 resource_attachment_attribute_id: 'attributes_filesAttachableAttachments'
 geometry_attribute: 'attributes_itemsGeometry'
 

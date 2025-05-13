@@ -121,7 +121,7 @@ subtest 'send new report to Alloy' => sub {
                     value => ['61daed49fdc7a101544177de'],
                 },
                 {   attributeCode =>
-                        'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
+                        'attributes_defectsReportedDate',
                     value => '2025-04-01T12:00:00Z',
                 },
                 {   attributeCode =>
@@ -182,7 +182,7 @@ subtest 'send new report to Alloy' => sub {
                     value => ['61ba1492fb9e760158060b96'],
                 },
                 {   attributeCode =>
-                        'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
+                        'attributes_defectsReportedDate',
                     value => '2025-04-01T12:00:00Z',
                 },
                 {   attributeCode =>
