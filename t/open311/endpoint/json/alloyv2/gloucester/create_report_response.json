@@ -1,0 +1,94 @@
+{
+  "item": {
+    "itemId": "680125dbf87b692e8cf5def9",
+    "designCode": "designs_customerContact_630e8c4b46f558015aa248b0",
+    "collection": "Live",
+    "icon": "icon-resource-telephone",
+    "colour": "#44a541",
+    "locked": false,
+    "context": "Customer",
+    "attributes": [
+      {
+        "attributeCode": "attributes_customerContactCustomerComments_630e97d11aff300150181403",
+        "value": "Test City Council Alloy"
+      },
+      {
+        "attributeCode": "attributes_customerContactCRMReference_630e97373c0f4b0153a32650",
+        "value": "123"
+      },
+      {
+        "attributeCode": "attributes_itemsGeometry",
+        "value": {
+          "type": "Point",
+          "coordinates": [
+            0.1,
+            50.0
+          ]
+        }
+      },
+      {
+        "attributeCode": "attributes_customerContactSubCategory_630e951646f558015aa26b41",
+        "value": [
+          "61ba1492fb9e760158060b96"
+        ]
+      },
+      {
+        "attributeCode": "attributes_customerContactCategory_630e927746f558015aa26062",
+        "value": [
+          "61c0b9fefb9e76015838c1d4"
+        ]
+      },
+      {
+        "attributeCode": "attributes_customerContactServiceArea_630e905e1aff30015017e892",
+        "value": [
+          "630e8f0b3c0f4b0153a2ff36"
+        ]
+      },
+      {
+        "attributeCode": "attributes_customerContactRougeBin_641a47b4ac3acd036a4a3f5c",
+        "value": false
+      },
+      {
+        "attributeCode": "attributes_defectsStatus",
+        "value": [
+          "5c8bdfb28ae862230019dc1e"
+        ]
+      },
+      {
+        "attributeCode": "attributes_defectsDefectNumber",
+        "value": 144719
+      },
+      {
+        "attributeCode": "attributes_itemsTitle",
+        "value": "680125dbf87b692e8cf5def9"
+      },
+      {
+        "attributeCode": "attributes_itemsSubtitle",
+        "value": "Sweep / Litter Pick  Reported"
+      },
+      {
+        "attributeCode": "attributes_defectsReportedDate",
+        "value": "2025-04-17T16:01:00.000Z"
+      },
+      {
+        "attributeCode": "attributes_filesAttachableAttachments",
+        "value": [
+          "680125db9d79dbba0e8fee67"
+        ]
+      },
+      {
+        "attributeCode": "attributes_customerContactCaseNotes_67d18f907e3fda851c43c173",
+        "value": [
+          "680125dc0004c8ff54363f73"
+        ]
+      },
+      {
+        "attributeCode": "attributes_defectsRaisingJobsRaisedJobs",
+        "value": [
+          "680125dc0004c8ff54363fe6"
+        ]
+      }
+    ],
+    "signature": "680125dd0004c8ff5436404c"
+  }
+}
