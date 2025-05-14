@@ -35,9 +35,6 @@ my (@sent);
 
 my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
 
-my $alloy_endpoint
-    = Test::MockModule->new('Open311::Endpoint::Integration::AlloyV2');
-
 my $integration = Test::MockModule->new('Integrations::AlloyV2');
 $integration->mock('api_call', sub {
     my ( $self, %args ) = @_;
@@ -97,6 +94,61 @@ $integration->mock('api_call', sub {
     return decode_json( encode_utf8($content) );
 });
 
+subtest 'check questions are set for given services' => sub {
+    subtest 'Dead animal that needs removing' => sub {
+        my $res = $endpoint->run_test_request(
+            GET => '/services/Dead_animal_that_needs_removing.json' );
+        ok $res->is_success, 'json success';
+
+        my $content        = decode_json( $res->content );
+        my ($type_of_animal) = grep { $_->{code} eq 'type_of_animal' }
+            @{ $content->{attributes} };
+
+        is_deeply $type_of_animal, {
+            code                 => 'type_of_animal',
+            datatype             => 'singlevaluelist',
+            datatype_description => '',
+            description          => 'Type of animal?',
+            order                => 10,
+            required             => 'true',
+            variable             => 'true',
+            values               => [
+                map { key => $_, name => $_ },
+                'Cat',
+                'Dog',
+                'Other domestic (e.g. horse)',
+                'Livestock (e.g. cows)',
+                'Small wild animal (e.g. birds, mice)',
+                'Large wild animal (e.g. swan, badger)',
+                'Other',
+            ],
+        };
+
+    };
+
+    subtest 'Dog fouling' => sub {
+        my $res = $endpoint->run_test_request(
+            GET => '/services/Dog_fouling.json' );
+        ok $res->is_success, 'json success';
+
+        my $content         = decode_json( $res->content );
+        my ($did_you_witness) = grep { $_->{code} eq 'did_you_witness' }
+            @{ $content->{attributes} };
+
+        is_deeply $did_you_witness, {
+            code                 => 'did_you_witness',
+            datatype             => 'singlevaluelist',
+            datatype_description => '',
+            description          => 'Did you witness the dog fouling?',
+            order                => 10,
+            required             => 'true',
+            variable             => 'true',
+            values => [ map { key => $_, name => $_ }, qw/Yes No/ ],
+        };
+
+    };
+};
+
 subtest 'send new report to Alloy' => sub {
     set_fixed_time('2025-04-01T12:00:00Z');
 
@@ -122,6 +174,7 @@ subtest 'send new report to Alloy' => sub {
 
             service_code => 'Dead_animal_that_needs_removing',
             'attribute[category]' => 'Dead animal that needs removing',
+            'attribute[type_of_animal]' => 'Other',
         );
 
         my $sent = pop @sent;
@@ -130,6 +183,10 @@ subtest 'send new report to Alloy' => sub {
                 @{ $sent->{attributes} } ];
         is_deeply $sent, {
             attributes => [
+                {   attributeCode =>
+                        'attributes_customerContactAnimalType_67617293b20d22b010bf32e6',
+                    value => ['5d8a50dfca31500a9469aba2'],
+                },
                 {   attributeCode =>
                         'attributes_customerContactCRMReference_630e97373c0f4b0153a32650',
                     value => '123',
@@ -140,7 +197,10 @@ subtest 'send new report to Alloy' => sub {
                 },
                 {   attributeCode =>
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
-                    value => 'description',
+                    value => 'description
+
+Type of animal?
+Other',
                 },
                 {   attributeCode =>
                         'attributes_customerContactServiceArea_630e905e1aff30015017e892',
@@ -180,9 +240,10 @@ subtest 'send new report to Alloy' => sub {
 
             %shared_params,
 
-            service_code => 'Broken_glass',
-            'attribute[category]' => 'Broken glass',
+            service_code => 'Dog_fouling',
+            'attribute[category]' => 'Dog fouling',
             'attribute[group]' => 'Broken glass or other hazard',
+            'attribute[did_you_witness]' => 'Yes',
         );
 
         my $sent = pop @sent;
@@ -201,7 +262,10 @@ subtest 'send new report to Alloy' => sub {
                 },
                 {   attributeCode =>
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
-                    value => 'description',
+                    value => 'description
+
+Did you witness the dog fouling?
+Yes',
                 },
                 {   attributeCode =>
                         'attributes_customerContactServiceArea_630e905e1aff30015017e892',
@@ -209,7 +273,7 @@ subtest 'send new report to Alloy' => sub {
                 },
                 {   attributeCode =>
                         'attributes_customerContactSubCategory_630e951646f558015aa26b41',
-                    value => ['61ba1492fb9e760158060b96'],
+                    value => ['61ba198c7148450165fff23f'],
                 },
                 {   attributeCode =>
                         'attributes_defectsReportedDate',
