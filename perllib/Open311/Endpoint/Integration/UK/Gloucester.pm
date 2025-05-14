@@ -94,7 +94,8 @@ sub _populate_category_and_group_attr {
     };
 
     my $srv_area_code
-        = $self->config->{category_id_to_service_area_id}{$group_code};
+        = $self->config->{category_id_to_service_area_id}{$group_code}
+        || $self->config->{category_id_to_service_area_id}{$category_code};
     push @$attr, {
         attributeCode => $mapping->{service_area},
         value => [$srv_area_code],

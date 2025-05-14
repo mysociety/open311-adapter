@@ -94,7 +94,16 @@ $integration->mock('api_call', sub {
     return decode_json( encode_utf8($content) );
 });
 
-subtest 'check questions are set for given services' => sub {
+subtest 'check metadata set for given services' => sub {
+    subtest "Faded nameplate (can't read easily)" => sub {
+        my $res = $endpoint->run_test_request(
+            GET => '/services/Faded_nameplate_1.json' );
+        ok $res->is_success, 'json success';
+
+        my $content = decode_json( $res->content );
+        is @{ $content->{attributes} }, 9, 'has metadata attributes';
+    };
+
     subtest 'Dead animal that needs removing' => sub {
         my $res = $endpoint->run_test_request(
             GET => '/services/Dead_animal_that_needs_removing.json' );
@@ -297,6 +306,121 @@ Yes',
         is_deeply decode_json( $res->content ),
             [ { service_request_id => '680125dbf87b692e8cf5def9' } ],
             'correct json returned';
+    };
+
+    subtest 'Same group, different service areas' => sub {
+        my $res = $endpoint->run_test_request(
+            POST => '/requests.json',
+
+            %shared_params,
+
+            service_code => 'Damaged_dog_bin',
+            'attribute[category]' => 'Damaged dog bin',
+            'attribute[group]' => 'Litter bins',
+        );
+
+        my $sent = pop @sent;
+        $sent->{attributes}
+            = [ sort { $a->{attributeCode} cmp $b->{attributeCode} }
+                @{ $sent->{attributes} } ];
+        is_deeply $sent, {
+            attributes => [
+                {   attributeCode =>
+                        'attributes_customerContactCRMReference_630e97373c0f4b0153a32650',
+                    value => '123',
+                },
+                {   attributeCode =>
+                        'attributes_customerContactCategory_630e927746f558015aa26062',
+                    value => ['61b9e12d67018e015a67ec25'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactCustomerComments_630e97d11aff300150181403',
+                    value => 'description',
+                },
+                {   attributeCode =>
+                        'attributes_customerContactServiceArea_630e905e1aff30015017e892',
+                    value => ['630e8f183c0f4b0153a2ff5c'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactSubCategory_630e951646f558015aa26b41',
+                    value => ['61b9e1ccfb9e760158036bc1'],
+                },
+                {   attributeCode =>
+                        'attributes_defectsReportedDate',
+                    value => '2025-04-01T12:00:00Z',
+                },
+                {   attributeCode =>
+                        'attributes_itemsGeometry',
+                    value => {
+                        coordinates => [ 0.1, 50 ],
+                        type => 'Point',
+                    },
+                },
+            ],
+            designCode => 'designs_customerContact_630e8c4b46f558015aa248b0',
+            parents    => {},
+        }, 'correct json sent';
+
+        ok $res->is_success, 'valid request'
+            or diag $res->content;
+
+        #####
+
+        $res = $endpoint->run_test_request(
+            POST => '/requests.json',
+
+            %shared_params,
+
+            service_code => 'Overflowing_litter_bin',
+            'attribute[category]' => 'Overflowing litter bin',
+            'attribute[group]' => 'Litter bins',
+        );
+
+        $sent = pop @sent;
+        $sent->{attributes}
+            = [ sort { $a->{attributeCode} cmp $b->{attributeCode} }
+                @{ $sent->{attributes} } ];
+        is_deeply $sent, {
+            attributes => [
+                {   attributeCode =>
+                        'attributes_customerContactCRMReference_630e97373c0f4b0153a32650',
+                    value => '123',
+                },
+                {   attributeCode =>
+                        'attributes_customerContactCategory_630e927746f558015aa26062',
+                    value => ['61b9e12d67018e015a67ec25'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactCustomerComments_630e97d11aff300150181403',
+                    value => 'description',
+                },
+                {   attributeCode =>
+                        'attributes_customerContactServiceArea_630e905e1aff30015017e892',
+                    value => ['630e8f0b3c0f4b0153a2ff36'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactSubCategory_630e951646f558015aa26b41',
+                    value => ['61b9e1127148450165fd145f'],
+                },
+                {   attributeCode =>
+                        'attributes_defectsReportedDate',
+                    value => '2025-04-01T12:00:00Z',
+                },
+                {   attributeCode =>
+                        'attributes_itemsGeometry',
+                    value => {
+                        coordinates => [ 0.1, 50 ],
+                        type => 'Point',
+                    },
+                },
+            ],
+            designCode => 'designs_customerContact_630e8c4b46f558015aa248b0',
+            parents    => {},
+        }, 'correct json sent';
+
+        ok $res->is_success, 'valid request'
+            or diag $res->content;
+
     };
 };
 
