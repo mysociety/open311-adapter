@@ -129,7 +129,10 @@ service_whitelist: {
     'Damaged nameplate':                   676130de730164f38ff18e9c,
     'Dangerous nameplate':                 676130ec97567c437eb41cb6,
     'Missing nameplate':                   676131051e4316383b70cfe7,
-    "Faded nameplate (can't read easily)": 676130de730164f38ff18e9c,
+    'Faded nameplate': {
+      alias: "Faded nameplate (can't read easily)",
+      alloy_code: 676130de730164f38ff18e9c,
+    },
   },
   'Fly-tipping': {
     'Regular flytipping': {

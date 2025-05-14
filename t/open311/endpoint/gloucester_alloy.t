@@ -94,7 +94,16 @@ $integration->mock('api_call', sub {
     return decode_json( encode_utf8($content) );
 });
 
-subtest 'check questions are set for given services' => sub {
+subtest 'check metadata set for given services' => sub {
+    subtest "Faded nameplate (can't read easily)" => sub {
+        my $res = $endpoint->run_test_request(
+            GET => '/services/Faded_nameplate_1.json' );
+        ok $res->is_success, 'json success';
+
+        my $content = decode_json( $res->content );
+        is @{ $content->{attributes} }, 9, 'has metadata attributes';
+    };
+
     subtest 'Dead animal that needs removing' => sub {
         my $res = $endpoint->run_test_request(
             GET => '/services/Dead_animal_that_needs_removing.json' );
