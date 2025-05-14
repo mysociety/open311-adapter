@@ -41,10 +41,10 @@ sub process_attributes {
 sub _munge_question_args {
     my ( $self, $args, $category_code ) = @_;
 
+    my @q_attributes;
+
     if ( ref($category_code) eq 'HASH' ) {
         my $questions = $category_code->{questions};
-
-        my @q_attributes;
 
         for my $q ( @$questions ) {
             my $code = $q->{code};
@@ -65,9 +65,9 @@ sub _munge_question_args {
                 }
             }
         }
-
-        return @q_attributes;
     }
+
+    return @q_attributes;
 }
 
 sub _populate_category_and_group_attr {
