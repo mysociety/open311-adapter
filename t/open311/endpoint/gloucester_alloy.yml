@@ -63,6 +63,7 @@ service_whitelist: {
             'Large wild animal (e.g. swan, badger)',
             'Other',
           ],
+          alloy_attribute: attributes_customerContactAnimalType_67617293b20d22b010bf32e6,
         },
       ],
       alloy_code: 61daed49fdc7a101544177de,
@@ -147,6 +148,18 @@ service_whitelist: {
   },
   'Watercourse': {
     'Items in watercourse': 61ba19cf7148450165fff478,
+  },
+}
+
+question_mapping: {
+  attributes_customerContactAnimalType_67617293b20d22b010bf32e6: {
+    'Cat':                                   5d8a4fdaca31500b4030ec96,
+    'Dog':                                   5d8a4ff1ca31500b4030ec9b,
+    'Other domestic (e.g. horse)':           5d8a5010ca31500b4030eca0,
+    'Livestock (e.g. cows)':                 5d8a5032ca31500b4030eca5,
+    'Small wild animal (e.g. birds, mice)':  5d8a504dca31500b4030ecaa,
+    'Large wild animal (e.g. swan, badger)': 5d8a50c4ca31500a9469ab9d,
+    'Other':                                 5d8a50dfca31500a9469aba2,
   },
 }
 

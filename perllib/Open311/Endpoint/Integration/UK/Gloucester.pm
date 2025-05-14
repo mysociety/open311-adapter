@@ -20,13 +20,15 @@ sub process_attributes {
         ? $self->config->{service_whitelist}{$group}{$service_code}
         : $self->config->{service_whitelist}{''}{$service_code};
 
-    # Appends to attribute[description] before attributes processed below
-    $self->_munge_question_args(
+    # Appends to attribute[description] before attributes processed below.
+    # May return question attributes to be added to $attributes list.
+    my @question_attributes = $self->_munge_question_args(
         $args,
         $category_code,
     );
 
     my $attributes = $self->SUPER::process_attributes($args);
+    push @$attributes, @question_attributes if @question_attributes;
 
     $self->_populate_category_and_group_attr(
         $attributes,
@@ -42,15 +44,29 @@ sub _munge_question_args {
     if ( ref($category_code) eq 'HASH' ) {
         my $questions = $category_code->{questions};
 
+        my @q_attributes;
+
         for my $q ( @$questions ) {
             my $code = $q->{code};
             my $q_text = $q->{description};
             my $answer = $args->{attributes}{$code};
 
-            $args->{attributes}{description} .= "\n\n$q_text\n$answer"
-                if $answer;
+            if ($answer) {
+                $args->{attributes}{description} .= "\n\n$q_text\n$answer";
 
+                if ( my $attr_code = $q->{alloy_attribute} ) {
+                    my $answer_code
+                        = $self->config->{question_mapping}{$attr_code}{$answer};
+
+                    push @q_attributes, {
+                        attributeCode => $attr_code,
+                        value         => [$answer_code],
+                    };
+                }
+            }
         }
+
+        return @q_attributes;
     }
 }
 

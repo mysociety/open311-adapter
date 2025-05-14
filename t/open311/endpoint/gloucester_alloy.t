@@ -184,6 +184,10 @@ subtest 'send new report to Alloy' => sub {
         is_deeply $sent, {
             attributes => [
                 {   attributeCode =>
+                        'attributes_customerContactAnimalType_67617293b20d22b010bf32e6',
+                    value => ['5d8a50dfca31500a9469aba2'],
+                },
+                {   attributeCode =>
                         'attributes_customerContactCRMReference_630e97373c0f4b0153a32650',
                     value => '123',
                 },
