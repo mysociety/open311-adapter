@@ -772,9 +772,9 @@ sub job_services {
             if $service_whitelist->{$code} ne 1;
         $name ||= $possible_services->{$code}{name};
 
-        $service_codes{$code} = {
+        $service_codes{"JOB_" . $code} = {
             service_name   => $name,
-            service_code   => $code,
+            service_code   => "JOB_" . $code,
             description    => $name,
             keywords       => [ qw/inactive/ ],
         };
@@ -914,7 +914,7 @@ sub get_service_requests {
                 next;
             }
 
-            my $service = $services{ $job->{jobType}{code} };
+            my $service = $services{ "JOB_" . $job->{jobType}{code} };
             unless ($service) {
                 # Should not happen given that we filter by job type in graphql
                 $self->logger->warn( "no service for job type code "

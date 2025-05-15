@@ -228,8 +228,8 @@ $open311->mock( perform_request_graphql => sub {
         return {
             data => {
                 jobTypes => [
-                    { code => 'TYPE_1', name => 'Type 1' },
-                    { code => 'TYPE_2', name => 'Type 2' },
+                    { code => 'TYPE1', name => 'Type 1' },
+                    { code => 'TYPE2', name => 'Type 2' },
                 ],
             },
         };
@@ -246,7 +246,7 @@ $open311->mock( perform_request_graphql => sub {
                             'POINT (-2.26317120000001 51.8458834999995)',
                         jobNumber => 'open_standard',
                         jobType   => {
-                            code => 'TYPE_1',
+                            code => 'TYPE1',
                             name => 'Type 1',
                         },
                         priority => {
@@ -268,7 +268,7 @@ $open311->mock( perform_request_graphql => sub {
                             'POINT (-2.26317120000001 51.8458834999995)',
                         jobNumber => 'closed_standard',
                         jobType   => {
-                            code => 'TYPE_2',
+                            code => 'TYPE2',
                             name => 'Type 2',
                         },
                         priority => {
@@ -322,7 +322,7 @@ $open311->mock( perform_request_graphql => sub {
                             'POINT (-2.26317120000001 51.8458834999995)',
                         jobNumber => 'no_status_log',
                         jobType   => {
-                            code => 'TYPE_1',
+                            code => 'TYPE1',
                             name => 'Type 1',
                         },
                         priority => {
@@ -339,7 +339,7 @@ $open311->mock( perform_request_graphql => sub {
                             'POINT (-2.26317120000001 51.8458834999995)',
                         jobNumber => 'eofy_priority',
                         jobType   => {
-                            code => 'TYPE_1',
+                            code => 'TYPE1',
                             name => 'Type 1',
                         },
                         priority => {
@@ -1078,7 +1078,7 @@ subtest "GET Service List - include ones for jobs" => sub {
                     group          => undef,
                     keywords       => 'inactive',
                     metadata       => 'true',
-                    service_code   => 'TYPE_1',
+                    service_code   => 'JOB_TYPE1',
                     service_name   => 'Type 1',
                     type           => 'realtime',
                 },
@@ -1086,7 +1086,7 @@ subtest "GET Service List - include ones for jobs" => sub {
                     group          => undef,
                     keywords       => 'inactive',
                     metadata       => 'true',
-                    service_code   => 'TYPE_2',
+                    service_code   => 'JOB_TYPE2',
                     service_name   => 'Type 2',
                     type           => 'realtime',
                 },
@@ -1106,7 +1106,7 @@ subtest 'GET jobs alongside enquiries' => sub {
         '.*no easting/northing for Enquiry 2004',
         '.*no easting/northing for Enquiry 2005',
         '.*no service for job type code UNHANDLED for job unhandled_type',
-        '.*no status logs for job type code TYPE_1 for job no_status_log',
+        '.*no status logs for job type code TYPE1 for job no_status_log',
     );
 
     my $regex = join '\n', @expected_warnings;
@@ -1148,7 +1148,7 @@ subtest 'GET jobs alongside enquiries' => sub {
                     long               => '-2.26317120000001',
                     media_url          => undef,
                     requested_datetime => '2022-12-01T00:00:00+00:00',
-                    service_code       => 'TYPE_1',
+                    service_code       => 'JOB_TYPE1',
                     service_name       => 'Type 1',
                     service_request_id => 'JOB_open_standard',
                     status             => 'open',
@@ -1162,7 +1162,7 @@ subtest 'GET jobs alongside enquiries' => sub {
                     long               => '-2.26317120000001',
                     media_url          => undef,
                     requested_datetime => '2022-12-01T00:00:00+00:00',
-                    service_code       => 'TYPE_2',
+                    service_code       => 'JOB_TYPE2',
                     service_name       => 'Type 2',
                     service_request_id => 'JOB_closed_standard',
                     status             => 'fixed',
