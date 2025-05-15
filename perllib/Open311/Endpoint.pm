@@ -10,7 +10,9 @@ use Encode qw(encode_utf8);
 use Web::Simple;
 
 use JSON::MaybeXS;
+use Path::Tiny;
 use XML::Simple;
+use YAML::XS qw(LoadFile Dump);
 
 use Open311::Endpoint::Result;
 use Open311::Endpoint::Service;
@@ -340,6 +342,10 @@ sub dispatch_request {
         my ($self, $service_request_id, $args) = @_;
         $self->call_api( GET_Service_Request => $service_request_id, $args );
     },
+
+    sub (GET + /config) { [ 302, [ Location => '/config/' ], [] ] },
+    sub (GET + /config/) { format_html($_[0]->GET_config_list()) },
+    sub (GET + /config/*.*) { format_html($_[0]->GET_config_entry($_[1])) },
 }
 
 sub GET_Service_List_input_schema {
@@ -733,6 +739,66 @@ sub GET_Service_Request {
     $self->format_service_requests($service_request);
 }
 
+sub _nice_jurisdiction_id {
+    my $id = shift;
+    $id =~ s/_/ /g;
+    $id =~ s/([\w.]+)/\u$1/g;
+    return $id;
+}
+
+sub _jurisdiction_link {
+    my ($id, $pretty, $files) = @_;
+    if ($files->{"council-$id.yml"}) {
+        return "<a href='/config/$id'>$pretty</a>\n";
+    } else {
+        return "<s>$pretty</s>\n";
+    }
+}
+
+sub GET_config_list {
+    my $self = shift;
+
+    my $path = path(__FILE__)->parent(3)->realpath->child('conf');
+    my %files = map { $_->basename => 1 } $path->children( qr/^council-.*.yml$/ );
+
+    my $html = "<ul>\n";
+    foreach ($self->plugins) {
+        my $id = $_->jurisdiction_id;
+        my $pretty = _nice_jurisdiction_id($id);
+        $html .= "<li id='$id'>";
+        if ($_->isa('Open311::Endpoint::Integration::Multi')) {
+            $html .= $pretty;
+            $html .= "<ul>\n";
+            foreach ($_->plugins) {
+                my $id = $_->jurisdiction_id;
+                my $pretty = _nice_jurisdiction_id($id);
+                $pretty =~ s/^[^ ]* //;
+                $html .= '<li>' . _jurisdiction_link($id, $pretty, \%files);
+            }
+            $html .= "</ul>\n";
+        } else {
+            $html .= _jurisdiction_link($id, $pretty, \%files);
+        }
+    }
+    $html .= "</ul>\n";
+    return $html;
+}
+
+sub GET_config_entry {
+    my ($self, $jurisdiction) = @_;
+
+    my $path = path(__FILE__)->parent(3)->realpath->child('conf');
+    $path = $path->child('council-' . $jurisdiction. '.yml');
+    return "Config not found" if !$path->is_file;
+
+    my $conf = LoadFile($path);
+    %$conf = map {
+        $_ => (/secret|password|(?<!data_)key|token|credentials/) ? '***' : $conf->{$_}
+    } keys %$conf;
+
+    return "<h2>$jurisdiction</h2>\n" . '<pre>' . Dump($conf) . '</pre>';
+}
+
 sub format_service_requests {
     my ($self, @service_requests) = @_;
     return {
@@ -919,6 +985,23 @@ sub format_response {
             ]
         }
     }
+}
+
+sub format_html {
+    my ($output) = @_;
+    $output = <<EOF;
+<!DOCTYPE html><html><head><title>open311-adapter configuration</title>
+<style>
+body { font-family: system-ui; }
+pre { line-height: 1.5; }
+body > ul > li { margin-bottom: 0.5em; }
+</style>
+</head><body>
+<h1>open311-adapter</h1>
+$output
+</body></html>
+EOF
+    [ 200, [ 'Content-Type' => 'text/html' ], [ $output ] ];
 }
 
 =head1 AUTHOR and LICENSE
