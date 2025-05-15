@@ -95,6 +95,34 @@ has job_service_whitelist => (
     }
 );
 
+=head2 handle_defects
+
+Whether cobrand fetches defects from Confirm alongside enquiries. This is
+based on whether the cobrand has provided a list of services for defects in its config.
+
+=cut
+
+has handle_defects => (
+    is => 'lazy',
+    default => sub {
+        return $_[0]->get_integration->config->{defect_service_whitelist} ? 1 : 0;
+    }
+);
+
+=head2 defect_service_whitelist
+
+Controls the mapping of Confirm defect service/subject codes to Open311 services
+(as opposed to service_whitelist, which handles enquiry services)
+
+=cut
+
+has defect_service_whitelist => (
+    is => 'ro',
+    default => sub {
+        return {};
+    }
+);
+
 =head2 wrapped_services
 
 Some Confirm installations are configured in a manner that encodes metadata
@@ -659,6 +687,8 @@ sub services {
 
     push @services, $self->job_services;
 
+    push @services, $self->defect_services;
+
     return @services;
 }
 
@@ -775,6 +805,51 @@ sub job_services {
         $service_codes{"JOB_" . $code} = {
             service_name   => $name,
             service_code   => "JOB_" . $code,
+            description    => $name,
+            keywords       => [ qw/inactive/ ],
+        };
+    }
+
+    for my $code (sort keys %service_codes) {
+        my %service = %{ $service_codes{$code} };
+        my $o311_service = $self->service_class->new(%service);
+        push @services, $o311_service;
+    }
+
+    return @services;
+}
+
+sub defect_services {  # XXX factor together with jobs?
+    my $self = shift;
+
+    return () unless $self->handle_defects;
+
+    my $integ = $self->get_integration;
+    my $possible_services = $integ->GetDefectLookups;
+
+    $possible_services = {
+        map { $_->{code} => $_ } @$possible_services
+    };
+
+    my @services;
+    my %service_codes;
+
+    my $service_whitelist = $self->defect_service_whitelist;
+
+    for my $code (keys %{ $service_whitelist }) {
+        if (!$possible_services->{$code}) {
+            $self->logger->error("Defect type $code doesn't exist in Confirm.");
+            next;
+        }
+
+        my $name;
+        $name = $service_whitelist->{$code}
+            if $service_whitelist->{$code} ne 1;
+        $name ||= $possible_services->{$code}{name};
+
+        $service_codes{"DEFECT_" . $code} = {
+            service_name   => $name,
+            service_code   => "DEFECT_" . $code,
             description    => $name,
             keywords       => [ qw/inactive/ ],
         };

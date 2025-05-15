@@ -233,6 +233,15 @@ $open311->mock( perform_request_graphql => sub {
                 ],
             },
         };
+    } elsif ( $args{type} eq 'defect_types' ) {
+        return {
+            data => {
+                defectTypes => [
+                    { code => 'SLDA', name => 'Defective Street Light' },
+                    { code => 'POTH', name => 'Pothole' },
+                ],
+            },
+        };
     } elsif ( $args{type} eq 'jobs' ) {
         return {
             data => {
@@ -1050,7 +1059,7 @@ XML
 
 $endpoint = Open311::Endpoint::Integration::UK::DummyJobs->new;
 
-subtest "GET Service List - include ones for jobs" => sub {
+subtest "GET Service List - include ones for jobs/defects" => sub {
     local $ENV{TEST_LOGGER} = 'warn';
 
     my $res;
@@ -1090,6 +1099,22 @@ subtest "GET Service List - include ones for jobs" => sub {
                     service_name   => 'Type 2',
                     type           => 'realtime',
                 },
+                {   description    => 'Pothole Defect',
+                    group          => undef,
+                    keywords       => 'inactive',
+                    metadata       => 'true',
+                    service_code   => 'DEFECT_POTH',
+                    service_name   => 'Pothole Defect',
+                    type           => 'realtime',
+                },
+                {   description    => 'Defective Street Light',
+                    group          => undef,
+                    keywords       => 'inactive',
+                    metadata       => 'true',
+                    service_code   => 'DEFECT_SLDA',
+                    service_name   => 'Defective Street Light',
+                    type           => 'realtime',
+                },
             ]
         }
     };
@@ -1103,6 +1128,7 @@ subtest 'GET jobs alongside enquiries' => sub {
 
     my @expected_warnings = (
         '.*Job type NOT doesn\'t exist in Confirm.',
+        '.*Defect type NOT doesn\'t exist in Confirm.',
         '.*no easting/northing for Enquiry 2004',
         '.*no easting/northing for Enquiry 2005',
         '.*no service for job type code UNHANDLED for job unhandled_type',
