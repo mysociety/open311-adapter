@@ -228,8 +228,17 @@ $open311->mock( perform_request_graphql => sub {
         return {
             data => {
                 jobTypes => [
-                    { code => 'TYPE_1', name => 'Type 1' },
-                    { code => 'TYPE_2', name => 'Type 2' },
+                    { code => 'TYPE1', name => 'Type 1' },
+                    { code => 'TYPE2', name => 'Type 2' },
+                ],
+            },
+        };
+    } elsif ( $args{type} eq 'defect_types' ) {
+        return {
+            data => {
+                defectTypes => [
+                    { code => 'SLDA', name => 'Defective Street Light' },
+                    { code => 'POTH', name => 'Pothole' },
                 ],
             },
         };
@@ -246,7 +255,7 @@ $open311->mock( perform_request_graphql => sub {
                             'POINT (-2.26317120000001 51.8458834999995)',
                         jobNumber => 'open_standard',
                         jobType   => {
-                            code => 'TYPE_1',
+                            code => 'TYPE1',
                             name => 'Type 1',
                         },
                         priority => {
@@ -268,7 +277,7 @@ $open311->mock( perform_request_graphql => sub {
                             'POINT (-2.26317120000001 51.8458834999995)',
                         jobNumber => 'closed_standard',
                         jobType   => {
-                            code => 'TYPE_2',
+                            code => 'TYPE2',
                             name => 'Type 2',
                         },
                         priority => {
@@ -322,7 +331,7 @@ $open311->mock( perform_request_graphql => sub {
                             'POINT (-2.26317120000001 51.8458834999995)',
                         jobNumber => 'no_status_log',
                         jobType   => {
-                            code => 'TYPE_1',
+                            code => 'TYPE1',
                             name => 'Type 1',
                         },
                         priority => {
@@ -339,7 +348,7 @@ $open311->mock( perform_request_graphql => sub {
                             'POINT (-2.26317120000001 51.8458834999995)',
                         jobNumber => 'eofy_priority',
                         jobType   => {
-                            code => 'TYPE_1',
+                            code => 'TYPE1',
                             name => 'Type 1',
                         },
                         priority => {
@@ -1050,7 +1059,7 @@ XML
 
 $endpoint = Open311::Endpoint::Integration::UK::DummyJobs->new;
 
-subtest "GET Service List - include ones for jobs" => sub {
+subtest "GET Service List - include ones for jobs/defects" => sub {
     local $ENV{TEST_LOGGER} = 'warn';
 
     my $res;
@@ -1078,7 +1087,7 @@ subtest "GET Service List - include ones for jobs" => sub {
                     group          => undef,
                     keywords       => 'inactive',
                     metadata       => 'true',
-                    service_code   => 'TYPE_1',
+                    service_code   => 'TYPE1',
                     service_name   => 'Type 1',
                     type           => 'realtime',
                 },
@@ -1086,8 +1095,24 @@ subtest "GET Service List - include ones for jobs" => sub {
                     group          => undef,
                     keywords       => 'inactive',
                     metadata       => 'true',
-                    service_code   => 'TYPE_2',
+                    service_code   => 'TYPE2',
                     service_name   => 'Type 2',
+                    type           => 'realtime',
+                },
+                {   description    => 'Pothole',
+                    groups         => { group => 'Roads & Pavements' },
+                    keywords       => 'inactive',
+                    metadata       => 'true',
+                    service_code   => 'DEFECT_POTH',
+                    service_name   => 'Pothole',
+                    type           => 'realtime',
+                },
+                {   description    => 'Defective Street Light',
+                    groups         => { group => 'Street Lighting' },
+                    keywords       => 'inactive',
+                    metadata       => 'true',
+                    service_code   => 'DEFECT_SLDA',
+                    service_name   => 'Defective Street Light',
                     type           => 'realtime',
                 },
             ]
@@ -1103,10 +1128,11 @@ subtest 'GET jobs alongside enquiries' => sub {
 
     my @expected_warnings = (
         '.*Job type NOT doesn\'t exist in Confirm.',
+        '.*Defect type NOT doesn\'t exist in Confirm.',
         '.*no easting/northing for Enquiry 2004',
         '.*no easting/northing for Enquiry 2005',
         '.*no service for job type code UNHANDLED for job unhandled_type',
-        '.*no status logs for job type code TYPE_1 for job no_status_log',
+        '.*no status logs for job type code TYPE1 for job no_status_log',
     );
 
     my $regex = join '\n', @expected_warnings;
@@ -1148,7 +1174,7 @@ subtest 'GET jobs alongside enquiries' => sub {
                     long               => '-2.26317120000001',
                     media_url          => undef,
                     requested_datetime => '2022-12-01T00:00:00+00:00',
-                    service_code       => 'TYPE_1',
+                    service_code       => 'TYPE1',
                     service_name       => 'Type 1',
                     service_request_id => 'JOB_open_standard',
                     status             => 'open',
@@ -1162,7 +1188,7 @@ subtest 'GET jobs alongside enquiries' => sub {
                     long               => '-2.26317120000001',
                     media_url          => undef,
                     requested_datetime => '2022-12-01T00:00:00+00:00',
-                    service_code       => 'TYPE_2',
+                    service_code       => 'TYPE2',
                     service_name       => 'Type 2',
                     service_request_id => 'JOB_closed_standard',
                     status             => 'fixed',

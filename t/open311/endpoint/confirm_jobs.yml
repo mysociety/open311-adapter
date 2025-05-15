@@ -16,9 +16,19 @@ request_ignore_statuses: [ 'FOR' ]
 cutoff_enquiry_date: 2018-04-12T12:00:00
 
 job_service_whitelist:
-  TYPE_1: 1
-  TYPE_2: "Type 2"
+  TYPE1: 1
+  TYPE2: "Type 2"
   NOT: "Doesn't exist in Confirm"
+defect_service_mapping:
+  SLDA:
+    group: Street Lighting
+    category: Defective Street Light
+  POTH:
+    group: Roads & Pavements
+    category: Pothole
+  NOT:
+    group: Invalid
+    category: "Doesn't exist in Confirm"
 job_reverse_status_mapping:
   OPEN: open
   SHUT: closed

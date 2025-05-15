@@ -333,6 +333,12 @@ sub perform_request_graphql {
         $query = $self->jobs_graphql_query(%args);
     } elsif ( $args{type} eq 'job_status_logs' ) {
         $query = $self->job_status_logs_graphql_query(%args);
+    } elsif ( $args{type} eq 'defect_types' ) {
+        $query = $self->defect_types_graphql_query();
+    } elsif ( $args{type} eq 'defects' ) {
+        $query = $self->defects_graphql_query(%args);
+    } elsif ( $args{type} eq 'defect_status_logs' ) {
+        $query = $self->defect_status_logs_graphql_query(%args);
     }
 
     my $body = {
@@ -496,6 +502,134 @@ sub job_types_graphql_query {
 GRAPHQL
 }
 
+sub defects_graphql_query { # XXX factor together with jobs?
+    my ( $self, %args ) = @_;
+
+    my @defect_type_codes
+        = keys %{ $self->config->{defect_service_mapping} // () };
+    my (
+        $start_date,
+        $end_date,
+        $defect_type_codes_str,
+    ) = (
+        $args{start_date},
+        $args{end_date},
+        join( ',', @defect_type_codes ),
+    );
+
+    return <<"GRAPHQL"
+{
+  defects(
+        filter: {
+            loggedDate: {
+                greaterThanEquals: "$start_date"
+                lessThanEquals: "$end_date"
+            }
+        }
+  ) {
+    defectNumber
+    easting
+    northing
+    loggedDate
+    targetDate
+    defectType(
+        filter: {
+            code: {
+                inList: [ $defect_type_codes_str ]
+            }
+        }
+    ){
+        code
+    }
+    job {
+      jobNumber
+      currentStatusLog {
+        loggedDate
+        statusCode
+      }
+    }
+    documents {
+      url
+    }
+    description
+  }
+}
+GRAPHQL
+}
+
+=head2 defect_status_logs_graphql_query
+
+Returns the GraphQL query used to fetch updates on defects.
+NB this is Aberdeenshire-specific at the moment, as it actually
+returns a query that fetches updates made to *jobs* that have a defect
+of a certain type attached to them.
+
+=cut
+
+sub defect_status_logs_graphql_query {
+    my ( $self, %args ) = @_;
+
+    my @defect_type_codes
+        = keys %{ $self->config->{defect_service_mapping} // () };
+
+    my @status_codes
+        = keys %{ $self->config->{job_reverse_status_mapping} // () };
+
+    my (
+        $start_date,
+        $end_date,
+        $defect_type_codes_str,
+        $status_codes_str,
+    ) = (
+        $args{start_date},
+        $args{end_date},
+        join( ',', @defect_type_codes ),
+        join( ',', @status_codes ),
+    );
+
+    return <<GRAPHQL;
+{
+    jobStatusLogs(
+        filter: {
+            loggedDate: {
+                greaterThanEquals: "$start_date"
+                lessThanEquals: "$end_date"
+            }
+            statusCode: {
+                inList: [ $status_codes_str ]
+            }
+        }
+    ) {
+        loggedDate
+        statusCode
+        key
+
+        job {
+            defects(filter: {
+                defectTypeCode: {
+                    inList: [ $defect_type_codes_str ]
+                }
+            }) {
+                defectNumber
+                targetDate
+            }
+        }
+    }
+}
+GRAPHQL
+}
+
+sub defect_types_graphql_query { # XXX factor together with jobs?
+    return <<'GRAPHQL'
+{
+    defectTypes{
+        code
+        name
+    }
+}
+GRAPHQL
+}
+
 sub GetJobStatusLogs {
     my ( $self, %args ) = @_;
 
@@ -540,6 +674,37 @@ sub GetJobLookups {
     }
 
     return $lookups->{data}{jobTypes} // [];
+}
+
+sub GetDefects {
+    my ($self, %args) = @_;
+
+    my $content = $self->perform_request_graphql( type => 'defects', %args );
+
+    return $content->{data}{defects} || [];
+}
+
+sub GetDefectStatusLogs {
+    my ( $self, %args ) = @_;
+
+    my $content
+        = $self->perform_request_graphql( type => 'defect_status_logs', %args );
+
+    return $content->{data}{jobStatusLogs} // [];
+}
+
+
+sub GetDefectLookups {  # XXX factor together with jobs?
+    my $self = shift;
+
+    my $lookups = $self->memcache->get('GetDefectLookups');
+    unless ($lookups) {
+        $lookups = $self->perform_request_graphql(type => 'defect_types');
+
+        $self->memcache->set('GetDefectLookups', $lookups, 1800);
+    }
+
+    return $lookups->{data}{defectTypes} // [];
 }
 
 sub GetEnquiries {
