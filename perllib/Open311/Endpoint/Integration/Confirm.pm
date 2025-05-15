@@ -710,8 +710,7 @@ sub _services {
     for my $group (sort keys %$service_whitelist) {
         my $whitelist = $fetch_all_services ? \%services : $self->service_whitelist->{$group};
         for my $code (keys %{ $whitelist }) {
-            my ($serv, $subj, $extra) = split /_/, $code;
-            my $confirm_code = join("_", $serv, $subj);
+            my $confirm_code = _normalise_service_code($code);
             my $subject = $services{$confirm_code}->{subject};
             if (!$subject) {
                 $self->logger->error("$confirm_code doesn't exist in Confirm.");
@@ -733,8 +732,7 @@ sub _services {
         }
     }
     for my $code (sort keys %service_codes) {
-        my ($serv, $subj, $extra) = split /_/, $code;
-        my $confirm_code = join("_", $serv, $subj);
+        my $confirm_code = _normalise_service_code($code);
         my %service = %{ $service_codes{$code} };
         my $o311_service = $self->service_class->new(%service);
         for (@{$services{$confirm_code}->{attribs}}) {
@@ -814,8 +812,7 @@ sub get_service_requests {
     # we build a list of services to match against by stripping any _1/etc
     # suffixes. As a result the first matching service will be used.
     my %services = map {
-        (my $code = $_->{service_code}) =~ s/^([^_]*_[^_]*)_.*$/$1/;
-        $code => $_
+        _normalise_service_code($_->{service_code}) => $_
     } reverse @services;
     my %private_services = map { $_ => 1 } @{$self->private_services};
 
@@ -1122,5 +1119,10 @@ sub get_completion_photo {
     return [ 200, [ 'Content-type', $content_type ], [ $content ] ];
 }
 
+sub _normalise_service_code {
+    my $code = shift;
+    my ($serv, $subj, $extra) = split /_/, $code;
+    return join("_", $serv, $subj);
+}
 
 1;
