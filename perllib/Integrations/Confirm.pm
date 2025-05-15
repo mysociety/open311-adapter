@@ -333,6 +333,8 @@ sub perform_request_graphql {
         $query = $self->jobs_graphql_query(%args);
     } elsif ( $args{type} eq 'job_status_logs' ) {
         $query = $self->job_status_logs_graphql_query(%args);
+    } elsif ( $args{type} eq 'defect_types' ) {
+        $query = $self->defect_types_graphql_query();
     }
 
     my $body = {
@@ -496,6 +498,17 @@ sub job_types_graphql_query {
 GRAPHQL
 }
 
+sub defect_types_graphql_query { # XXX factor together with jobs?
+    return <<'GRAPHQL'
+{
+    defectTypes{
+        code
+        name
+    }
+}
+GRAPHQL
+}
+
 sub GetJobStatusLogs {
     my ( $self, %args ) = @_;
 
@@ -540,6 +553,19 @@ sub GetJobLookups {
     }
 
     return $lookups->{data}{jobTypes} // [];
+}
+
+sub GetDefectLookups {  # XXX factor together with jobs?
+    my $self = shift;
+
+    my $lookups = $self->memcache->get('GetDefectLookups');
+    unless ($lookups) {
+        $lookups = $self->perform_request_graphql(type => 'defect_types');
+
+        $self->memcache->set('GetDefectLookups', $lookups, 1800);
+    }
+
+    return $lookups->{data}{defectTypes} // [];
 }
 
 sub GetEnquiries {
