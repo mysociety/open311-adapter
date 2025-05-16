@@ -77,7 +77,9 @@ based on whether the cobrand has provided a list of services for jobs in its con
 has handle_jobs => (
     is => 'lazy',
     default => sub {
-        return $_[0]->get_integration->config->{job_service_whitelist} ? 1 : 0;
+        my $self = shift;
+        my $integ = $self->get_integration;
+        return ($integ->graphql_url && $integ->config->{job_service_whitelist}) ? 1 : 0;
     }
 );
 
