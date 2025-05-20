@@ -335,6 +335,8 @@ sub perform_request_graphql {
         $query = $self->job_status_logs_graphql_query(%args);
     } elsif ( $args{type} eq 'defect_types' ) {
         $query = $self->defect_types_graphql_query();
+    } elsif ( $args{type} eq 'defects' ) {
+        $query = $self->defects_graphql_query(%args);
     }
 
     my $body = {
@@ -498,6 +500,61 @@ sub job_types_graphql_query {
 GRAPHQL
 }
 
+sub defects_graphql_query { # XXX factor together with jobs?
+    my ( $self, %args ) = @_;
+
+    my @defect_type_codes
+        = keys %{ $self->config->{defect_service_whitelist} // () };
+    my (
+        $start_date,
+        $end_date,
+        $defect_type_codes_str,
+        $status_codes_str,
+    ) = (
+        $args{start_date},
+        $args{end_date},
+        join( ',', @defect_type_codes ),
+    );
+
+    return <<"GRAPHQL"
+{
+  defects(
+        filter: {
+            loggedDate: {
+                greaterThanEquals: "$start_date"
+                lessThanEquals: "$end_date"
+            }
+            jobNumber: {
+                hasValue: false
+            }
+        }
+  ) {
+    defectNumber
+    defectStatus
+    defectTypeCode
+    easting
+    northing
+    loggedDate
+    targetDate
+    defectType(
+        filter: {
+            code: {
+                inList: [ $defect_type_codes_str ]
+            }
+        }
+    ){
+        code
+        name
+    }
+    documents {
+      url
+    }
+    description
+  }
+}
+GRAPHQL
+}
+
 sub defect_types_graphql_query { # XXX factor together with jobs?
     return <<'GRAPHQL'
 {
@@ -554,6 +611,15 @@ sub GetJobLookups {
 
     return $lookups->{data}{jobTypes} // [];
 }
+
+sub GetDefects {
+    my ($self, %args) = @_;
+
+    my $content = $self->perform_request_graphql( type => 'defects', %args );
+
+    return $content->{data}{defects} || [];
+}
+
 
 sub GetDefectLookups {  # XXX factor together with jobs?
     my $self = shift;
