@@ -90,7 +90,7 @@ sub _update_status {
             'investigating'
         } elsif ($action_due =~ /^PT[CS]|TPHR|REIN$/) {
             'action_scheduled'
-        } elsif ($action_due =~ /^(ROD|MAJ|SNPR)$/ || $event_type eq 'MAJ') {
+        } elsif ($action_due =~ /^(ROD|MAJ|SNPR)$/ || $event_type =~ /^(MAJ|SNPR)$/) {
             'closed'
         } elsif ($row->{Stage} == 9 || $row->{Stage} == 8) {
             undef
