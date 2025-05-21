@@ -95,6 +95,34 @@ has job_service_whitelist => (
     }
 );
 
+=head2 handle_defects
+
+Whether cobrand fetches defects from Confirm alongside enquiries. This is
+based on whether the cobrand has provided a list of services for defects in its config.
+
+=cut
+
+has handle_defects => (
+    is => 'lazy',
+    default => sub {
+        return $_[0]->get_integration->config->{defect_service_whitelist} ? 1 : 0;
+    }
+);
+
+=head2 defect_service_whitelist
+
+Controls the mapping of Confirm defect service/subject codes to Open311 services
+(as opposed to service_whitelist, which handles enquiry services)
+
+=cut
+
+has defect_service_whitelist => (
+    is => 'ro',
+    default => sub {
+        return {};
+    }
+);
+
 =head2 wrapped_services
 
 Some Confirm installations are configured in a manner that encodes metadata
@@ -659,6 +687,8 @@ sub services {
 
     push @services, $self->job_services;
 
+    push @services, $self->defect_services;
+
     return @services;
 }
 
@@ -772,9 +802,54 @@ sub job_services {
             if $service_whitelist->{$code} ne 1;
         $name ||= $possible_services->{$code}{name};
 
-        $service_codes{$code} = {
+        $service_codes{"JOB_" . $code} = {
             service_name   => $name,
-            service_code   => $code,
+            service_code   => "JOB_" . $code,
+            description    => $name,
+            keywords       => [ qw/inactive/ ],
+        };
+    }
+
+    for my $code (sort keys %service_codes) {
+        my %service = %{ $service_codes{$code} };
+        my $o311_service = $self->service_class->new(%service);
+        push @services, $o311_service;
+    }
+
+    return @services;
+}
+
+sub defect_services {  # XXX factor together with jobs?
+    my $self = shift;
+
+    return () unless $self->handle_defects;
+
+    my $integ = $self->get_integration;
+    my $possible_services = $integ->GetDefectLookups;
+
+    $possible_services = {
+        map { $_->{code} => $_ } @$possible_services
+    };
+
+    my @services;
+    my %service_codes;
+
+    my $service_whitelist = $self->defect_service_whitelist;
+
+    for my $code (keys %{ $service_whitelist }) {
+        if (!$possible_services->{$code}) {
+            $self->logger->error("Defect type $code doesn't exist in Confirm.");
+            next;
+        }
+
+        my $name;
+        $name = $service_whitelist->{$code}
+            if $service_whitelist->{$code} ne 1;
+        $name ||= $possible_services->{$code}{name};
+
+        $service_codes{"DEFECT_" . $code} = {
+            service_name   => $name,
+            service_code   => "DEFECT_" . $code,
             description    => $name,
             keywords       => [ qw/inactive/ ],
         };
@@ -889,90 +964,167 @@ sub get_service_requests {
         push @requests, $request;
     }
 
-    # Jobs
-
     if ($self->handle_jobs) {
-        my $jobs = $integ->GetJobs(
-            start_date => $args->{start_date},
-            end_date   => $args->{end_date},
-        );
+        $self->_get_service_requests_for_jobs($integ, \%services, $args, \@requests);
+    }
 
-        for my $job (@$jobs) {
-            my $job_id = $job->{jobNumber};
-
-            unless ( $job->{geometry} ) {
-                $self->logger->warn("geometry data missing for job $job_id");
-                next;
-            }
-
-            # Of form e.g. 'POINT (-2.07951462 51.88413492)'
-            my ($geo) = $job->{geometry} =~ s/POINT \((.+)\)/$1/r;
-            my ( $lon, $lat ) = split / /, $geo;
-
-            unless ( $lon && $lat ) {
-                $self->logger->warn("no lat/lon for job $job_id");
-                next;
-            }
-
-            my $service = $services{ $job->{jobType}{code} };
-            unless ($service) {
-                # Should not happen given that we filter by job type in graphql
-                $self->logger->warn( "no service for job type code "
-                        . $job->{jobType}{code}
-                        . " for job $job_id" );
-                next;
-            }
-
-            my $last_status_log = $job->{statusLogs}[-1];
-            unless ($last_status_log) {
-                $self->logger->warn( "no status logs for job type code "
-                        . $job->{jobType}{code}
-                        . " for job $job_id" );
-                next;
-            }
-
-            my $status = $self->job_reverse_status_mapping
-                ->{ $last_status_log->{statusCode} };
-            unless ($status) {
-                # This shouldn't happen given that we filter by status code
-                # in graphql. But just in case, default to open.
-                $self->logger->warn( "no reverse mapping for job status code "
-                        . $last_status_log->{statusCode}
-                        . " for job $job_id" );
-                $status = 'open';
-            }
-
-            my $createdtime
-                = $self->date_parser->parse_datetime( $job->{entryDate} )
-                ->truncate( to => 'second' );
-            $createdtime->set_time_zone( $integ->server_timezone );
-            next
-                if $self->cutoff_enquiry_date
-                && $createdtime < $self->cutoff_enquiry_date;
-
-            my $updatedtime = $self->date_parser->parse_datetime( $last_status_log->{loggedDate} )
-                ->truncate( to => 'second' );
-            $updatedtime->set_time_zone( $integ->server_timezone );
-
-            my %args = (
-                service => $service,
-                service_request_id => 'JOB_' . $job_id,
-                description => $job->{description},
-                requested_datetime => $createdtime,
-                updated_datetime => $updatedtime,
-                # NOTE These are NOT EPSG:27700 easting/northing, unlike
-                # enquiries above
-                latlong => [ $lat, $lon ],
-                status => $status,
-            );
-
-            my $request = $self->new_request( %args );
-
-            push @requests, $request;
-        }
+    if ($self->handle_defects) {
+        $self->_get_service_requests_for_defects($integ, \%services, $args, \@requests);
     }
 
     return @requests;
+}
+
+=head2 _get_service_requests_for_jobs
+
+Fetches any jobs from Confirm (if feature is enabled) for the given timespan,
+and appends them to the $requests array as Open311 ServiceRequests.
+
+=cut
+
+sub _get_service_requests_for_jobs {
+    my ($self, $integ, $services, $args, $requests) = @_;
+
+    return unless $self->handle_jobs;
+
+    my $jobs = $integ->GetJobs(
+        start_date => $args->{start_date},
+        end_date   => $args->{end_date},
+    );
+
+    for my $job (@$jobs) {
+        my $job_id = $job->{jobNumber};
+
+        unless ( $job->{geometry} ) {
+            $self->logger->warn("geometry data missing for job $job_id");
+            next;
+        }
+
+        # Of form e.g. 'POINT (-2.07951462 51.88413492)'
+        my ($geo) = $job->{geometry} =~ s/POINT \((.+)\)/$1/r;
+        my ( $lon, $lat ) = split / /, $geo;
+
+        unless ( $lon && $lat ) {
+            $self->logger->warn("no lat/lon for job $job_id");
+            next;
+        }
+
+        my $service = $services->{ "JOB_" . $job->{jobType}{code} };
+        unless ($service) {
+            # Should not happen given that we filter by job type in graphql
+            $self->logger->warn( "no service for job type code "
+                    . $job->{jobType}{code}
+                    . " for job $job_id" );
+            next;
+        }
+
+        my $last_status_log = $job->{statusLogs}[-1];
+        unless ($last_status_log) {
+            $self->logger->warn( "no status logs for job type code "
+                    . $job->{jobType}{code}
+                    . " for job $job_id" );
+            next;
+        }
+
+        my $status = $self->job_reverse_status_mapping
+            ->{ $last_status_log->{statusCode} };
+        unless ($status) {
+            # This shouldn't happen given that we filter by status code
+            # in graphql. But just in case, default to open.
+            $self->logger->warn( "no reverse mapping for job status code "
+                    . $last_status_log->{statusCode}
+                    . " for job $job_id" );
+            $status = 'open';
+        }
+
+        my $createdtime
+            = $self->date_parser->parse_datetime( $job->{entryDate} )
+            ->truncate( to => 'second' );
+        $createdtime->set_time_zone( $integ->server_timezone );
+        next
+            if $self->cutoff_enquiry_date
+            && $createdtime < $self->cutoff_enquiry_date;
+
+        my $updatedtime = $self->date_parser->parse_datetime( $last_status_log->{loggedDate} )
+            ->truncate( to => 'second' );
+        $updatedtime->set_time_zone( $integ->server_timezone );
+
+        my %args = (
+            service => $service,
+            service_request_id => 'JOB_' . $job_id,
+            description => $job->{description},
+            requested_datetime => $createdtime,
+            updated_datetime => $updatedtime,
+            # NOTE These are NOT EPSG:27700 easting/northing, unlike
+            # enquiries above
+            latlong => [ $lat, $lon ],
+            status => $status,
+        );
+
+        my $request = $self->new_request( %args );
+
+        push @$requests, $request;
+    }
+}
+
+=head2 _get_service_requests_for_defects
+
+Fetches any defects from Confirm (if feature is enabled) for the given timespan,
+and appends them to the $requests array as Open311 ServiceRequests.
+
+=cut
+
+sub _get_service_requests_for_defects {
+    my ($self, $integ, $services, $args, $requests) = @_;
+
+    return unless $self->handle_defects;
+
+    my $defects = $integ->GetDefects(
+        start_date => $args->{start_date},
+        end_date   => $args->{end_date},
+    );
+
+    for my $defect (@$defects) {
+        my $defect_id = $defect->{defectNumber};
+
+        unless ( $defect->{easting} && $defect->{northing} ) {
+            $self->logger->warn("easting/northing data missing for defect $defect_id");
+            next;
+        }
+
+        my $service = $services->{ "DEFECT_" . $defect->{defectTypeCode} };
+        unless ($service) {
+            # Should not happen given that we filter by defect type in graphql
+            $self->logger->warn( "no service for defect type code "
+                    . $defect->{defectTypeCode}
+                    . " for defect $defect_id" );
+            next;
+        }
+
+        my $createdtime
+            = $self->date_parser->parse_datetime( $defect->{loggedDate} )
+            ->truncate( to => 'second' );
+        $createdtime->set_time_zone( $integ->server_timezone );
+        next
+            if $self->cutoff_enquiry_date
+            && $createdtime < $self->cutoff_enquiry_date;
+
+        my %args = (
+            service => $service,
+            service_request_id => 'DEFECT_' . $defect_id,
+            description => $defect->{description},
+            requested_datetime => $createdtime,
+            updated_datetime => $createdtime, # XXX can we determine last updated time?
+            # NOTE These are NOT EPSG:27700 easting/northing, unlike
+            # enquiries above
+            latlong => [ $defect->{northing}, $defect->{easting} ],
+            status => "open", # XXX how to map?
+        );
+
+        my $request = $self->new_request( %args );
+
+        push @$requests, $request;
+    }
 }
 
 =head2 _find_wrapping_service
