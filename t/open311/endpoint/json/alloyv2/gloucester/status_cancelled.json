@@ -1,0 +1,22 @@
+{
+   "item": {
+      "attributes": [
+         {
+            "attributeCode": "attributes_defectStatusesStatus",
+            "value": "Cancelled"
+         },
+         {
+            "attributeCode": "attributes_defectStatusesCode",
+            "value": "Can"
+         },
+         {
+            "attributeCode": "attributes_itemsTitle",
+            "value": "Cancelled"
+         },
+         {
+            "attributeCode": "attributes_itemsSubtitle",
+            "value": "Defect Status"
+         }
+      ]
+   }
+}
