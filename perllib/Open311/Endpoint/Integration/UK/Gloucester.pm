@@ -88,6 +88,10 @@ sub _populate_category_and_group_attr {
 
     my $group_code
         = $self->config->{subcategory_id_to_category_id}{$category_code};
+    die
+        "No attributes_customerContactCategory code found for attributes_customerContactSubCategory $category_code"
+        unless $group_code;
+
     push @$attr, {
         attributeCode => $mapping->{category},
         value => [$group_code],
@@ -96,6 +100,10 @@ sub _populate_category_and_group_attr {
     my $srv_area_code
         = $self->config->{category_id_to_service_area_id}{$group_code}
         || $self->config->{category_id_to_service_area_id}{$category_code};
+    die
+        "No attributes_customerContactServiceArea code found for attributes_customerContactCategory $group_code or attributes_customerContactSubCategory $category_code"
+        unless $srv_area_code;
+
     push @$attr, {
         attributeCode => $mapping->{service_area},
         value => [$srv_area_code],
