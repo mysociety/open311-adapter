@@ -20,16 +20,15 @@ category_attribute_mapping: {
   service_area: 'attributes_customerContactServiceArea_630e905e1aff30015017e892',
 }
 
-# Defect updates
+# Inspection updates
 
-defect_resource_name: 'designs_customerContact_630e8c4b46f558015aa248b0'
-
-defect_attribute_mapping: {
+inspection_attribute_mapping: {
   status: 'attributes_defectsStatus',
   updates: 'attributes_customerContactAdditionalComments_67d91d7ea058928de1c00876',
+  external_status_code: 'attributes_defectStatusesStatus',
 }
 
-defect_status_mapping: {
+inspection_status_mapping: {
   5c8bdfb28ae862230019dc1e: open, # Reported
   63806a7105cb25039365ec1d: closed, # Cancelled
   5c8bdfc88ae862230019dc22: fixed, # Remedied
@@ -44,6 +43,9 @@ defect_status_mapping: {
   65eaf5e19566fecca0a44166: internal_referral, # Out for Tender
   65f38e92a06877457bdfd93e: internal_referral, # Awaiting Parts
 }
+
+# Disable defect updates for Gloucester
+defect_resource_name: []
 
 # Service/category mapping
 

@@ -2,6 +2,7 @@ package Open311::Endpoint::Integration::UK::Gloucester;
 
 use Moo;
 extends 'Open311::Endpoint::Integration::AlloyV2';
+with 'Role::Memcached';
 
 around BUILDARGS => sub {
     my ( $orig, $class, %args ) = @_;
@@ -108,6 +109,42 @@ sub _populate_category_and_group_attr {
         attributeCode => $mapping->{service_area},
         value => [$srv_area_code],
     } if $srv_area_code;
+}
+
+=head2 _get_inspection_status
+
+Determines the inspection status and external status code for a report.
+
+1. Maps the internal status code to a human-readable status using the parent class method
+2. If an external status code mapping is configured, fetches the status object itself
+   from Alloy (e.g., the "cancelled" status object) and extracts the external status
+   code from that status object's attributes, with 24-hour memcache to avoid repeated API requests
+3. Returns both the mapped status and external status code
+
+=cut
+
+sub _get_inspection_status {
+    my ($self, $attributes, $mapping) = @_;
+
+    my $status = 'open';
+    my $ext_code;
+    if ($attributes->{$mapping->{status}}) {
+        my $status_code = $attributes->{$mapping->{status}}->[0];
+        $status = $self->inspection_status($status_code);
+
+        if ($mapping->{external_status_code}) {
+            my $cache_key = "alloy-item-$status_code";
+            $ext_code = $self->memcache->get($cache_key);
+            unless ($ext_code) {
+                my $status_obj = $self->alloy->api_call(call => "item/$status_code");
+                $status_obj = $status_obj->{item};
+                my $status_attributes = $self->alloy->attributes_to_hash($status_obj);
+                $ext_code = $status_attributes->{$mapping->{external_status_code}};
+                $self->memcache->set($cache_key, $ext_code, 24 * 60 * 60); # 24 hours
+            }
+        }
+    }
+    return ($status, $ext_code);
 }
 
 1;

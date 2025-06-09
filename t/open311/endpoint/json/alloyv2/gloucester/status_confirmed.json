@@ -1,0 +1,22 @@
+{
+   "item": {
+      "attributes": [
+         {
+            "attributeCode": "attributes_defectStatusesStatus",
+            "value": "Confirmed"
+         },
+         {
+            "attributeCode": "attributes_defectStatusesCode",
+            "value": "3"
+         },
+         {
+            "attributeCode": "attributes_itemsTitle",
+            "value": "Confirmed"
+         },
+         {
+            "attributeCode": "attributes_itemsSubtitle",
+            "value": "Defect Status"
+         }
+      ]
+   }
+}

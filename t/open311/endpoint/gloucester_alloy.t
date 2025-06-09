@@ -71,6 +71,14 @@ $integration->mock('api_call', sub {
             $content = path(__FILE__)->sibling(
                 'json/alloyv2/gloucester/create_report_response.json')->slurp;
 
+        } elsif ( $call =~ 'item/5c8bdfb98ae862230019dc20' ) {
+            # Looking up status object for "Confirmed" status
+            $content = path(__FILE__)->sibling("json/alloyv2/gloucester/status_confirmed.json")->slurp;
+
+        } elsif ( $call =~ 'item/63806a7105cb25039365ec1d' ) {
+            # Looking up status object for "Cancelled" status
+            $content = path(__FILE__)->sibling("json/alloyv2/gloucester/status_cancelled.json")->slurp;
+
         } elsif ( $call =~ 'item/.*/parents' ) {
             # Looking up defect parents - returning no parents
             $content = path(__FILE__)->sibling("json/alloyv2/gloucester/empty_response.json")->slurp;
@@ -82,6 +90,8 @@ $integration->mock('api_call', sub {
                 = path(__FILE__)
                 ->sibling("json/alloyv2/gloucester/item_log_${id}.json")->slurp;
 
+        } else {
+            die "No handler found for API call $call";
         }
 
     }
@@ -436,6 +446,7 @@ subtest 'fetch updates from Alloy' => sub {
     is_deeply decode_json( $res->content ), [
         {   description => '',
             media_url => '',
+            external_status_code => 'Confirmed',
             extras => {
                 latest_data_only => 1
             },
@@ -446,6 +457,7 @@ subtest 'fetch updates from Alloy' => sub {
         },
         {   description => '',
             media_url => '',
+            external_status_code => 'Cancelled',
             extras => {
                 latest_data_only => 1
             },
