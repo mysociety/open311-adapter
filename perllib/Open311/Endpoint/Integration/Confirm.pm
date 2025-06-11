@@ -852,6 +852,7 @@ sub defect_services {  # XXX factor together with jobs?
             service_code   => "DEFECT_" . $code,
             description    => $name,
             keywords       => [ qw/inactive/ ],
+            groups         => ["Defects"], # XXX need a way to remap to enquiry-driven services (i.e. so defects can appear in existing categories)
         };
     }
 
