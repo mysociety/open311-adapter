@@ -337,6 +337,8 @@ sub perform_request_graphql {
         $query = $self->defect_types_graphql_query();
     } elsif ( $args{type} eq 'defects' ) {
         $query = $self->defects_graphql_query(%args);
+    } elsif ( $args{type} eq 'defect_status_logs' ) {
+        $query = $self->defect_status_logs_graphql_query(%args);
     }
 
     my $body = {
@@ -509,7 +511,6 @@ sub defects_graphql_query { # XXX factor together with jobs?
         $start_date,
         $end_date,
         $defect_type_codes_str,
-        $status_codes_str,
     ) = (
         $args{start_date},
         $args{end_date},
@@ -524,14 +525,9 @@ sub defects_graphql_query { # XXX factor together with jobs?
                 greaterThanEquals: "$start_date"
                 lessThanEquals: "$end_date"
             }
-            jobNumber: {
-                hasValue: false
-            }
         }
   ) {
     defectNumber
-    defectStatus
-    defectTypeCode
     easting
     northing
     loggedDate
@@ -544,13 +540,81 @@ sub defects_graphql_query { # XXX factor together with jobs?
         }
     ){
         code
-        name
+    }
+    job {
+      jobNumber
+      currentStatusLog {
+        loggedDate
+        statusCode
+      }
     }
     documents {
       url
     }
     description
   }
+}
+GRAPHQL
+}
+
+=head2 defect_status_logs_graphql_query
+
+Returns the GraphQL query used to fetch updates on defects.
+NB this is Aberdeenshire-specific at the moment, as it actually
+returns a query that fetches updates made to *jobs* that have a defect
+of a certain type attached to them.
+
+=cut
+
+sub defect_status_logs_graphql_query {
+    my ( $self, %args ) = @_;
+
+    my @defect_type_codes
+        = keys %{ $self->config->{defect_service_whitelist} // () };
+
+    my @status_codes
+        = keys %{ $self->config->{job_reverse_status_mapping} // () };
+
+    my (
+        $start_date,
+        $end_date,
+        $defect_type_codes_str,
+        $status_codes_str,
+    ) = (
+        $args{start_date},
+        $args{end_date},
+        join( ',', @defect_type_codes ),
+        join( ',', @status_codes ),
+    );
+
+    return <<GRAPHQL;
+{
+    jobStatusLogs(
+        filter: {
+            loggedDate: {
+                greaterThanEquals: "$start_date"
+                lessThanEquals: "$end_date"
+            }
+            statusCode: {
+                inList: [ $status_codes_str ]
+            }
+        }
+    ) {
+        loggedDate
+        statusCode
+        key
+
+        job {
+            defects(filter: {
+                defectTypeCode: {
+                    inList: [ $defect_type_codes_str ]
+                }
+            }) {
+                defectNumber
+                targetDate
+            }
+        }
+    }
 }
 GRAPHQL
 }
@@ -620,6 +684,15 @@ sub GetDefects {
     return $content->{data}{defects} || [];
 }
 
+sub GetDefectStatusLogs {
+    my ( $self, %args ) = @_;
+
+    my $content
+        = $self->perform_request_graphql( type => 'defect_status_logs', %args );
+
+    return $content->{data}{jobStatusLogs} // [];
+}
+
 
 sub GetDefectLookups {  # XXX factor together with jobs?
     my $self = shift;
@@ -653,7 +726,7 @@ sub GetEnquiries {
     my @enquiries = ();
     my $batch_size = 10;
     while ( my @batch = splice @operations, 0, $batch_size ) {
-        my $responses = $self->perform_request(@batch)->{OperationResponse};
+        my $responses = $self->perform_request(@batch, { return_on_fault => 1 })->{OperationResponse};
         $responses = [ $responses ] if (ref($responses) eq 'HASH'); # in case only one response came back
         push @enquiries, map { $_->{GetEnquiryResponse}->{Enquiry} } @$responses;
     }

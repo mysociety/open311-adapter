@@ -619,42 +619,95 @@ sub get_service_request_updates {
     }
 
     if ( $self->handle_jobs ) {
-        my $status_logs = $integ->GetJobStatusLogs(
-            start_date => $args->{start_date},
-            end_date   => $args->{end_date},
-        );
-
-        for my $log ( @{$status_logs} ) {
-            my $status
-                = $self->job_reverse_status_mapping->{ $log->{statusCode} };
-
-            if (!$status) {
-                # This shouldn't happen given that we filter by status code
-                # in graphql. But just in case, default to open.
-                $self->logger->warn(
-                    "Missing reverse job status mapping for statusCode $log->{statusCode} (jobNumber $log->{jobNumber})"
-                );
-                $status = "open";
-            }
-
-            my $dt
-                = $self->date_parser->parse_datetime( $log->{loggedDate} )
-                ->truncate( to => 'second' );
-            $dt->set_time_zone( $integ->server_timezone );
-
-            push @updates,
-                Open311::Endpoint::Service::Request::Update::mySociety->new(
-                status               => $status,
-                update_id            => 'JOB_' . $log->{key},
-                service_request_id   => 'JOB_' . $log->{jobNumber},
-                updated_datetime     => $dt,
-                external_status_code => $log->{statusCode},
-                description          => '',
-            );
-        }
+        $self->_get_service_request_updates_for_jobs($integ, $args, \@updates);
+    }
+    if ( $self->handle_defects ) {
+        $self->_get_service_request_updates_for_defects($integ, $args, \@updates);
     }
 
     return @updates;
+}
+
+sub _get_service_request_updates_for_jobs {
+    my ($self, $integ, $args, $updates) = @_;
+
+    return unless $self->handle_jobs;
+
+    my $status_logs = $integ->GetJobStatusLogs(
+        start_date => $args->{start_date},
+        end_date   => $args->{end_date},
+    );
+
+    for my $log ( @{$status_logs} ) {
+        my $status
+            = $self->job_reverse_status_mapping->{ $log->{statusCode} };
+
+        if (!$status) {
+            # This shouldn't happen given that we filter by status code
+            # in graphql. But just in case, default to open.
+            $self->logger->warn(
+                "Missing reverse job status mapping for statusCode $log->{statusCode} (jobNumber $log->{jobNumber})"
+            );
+            $status = "open";
+        }
+
+        my $dt
+            = $self->date_parser->parse_datetime( $log->{loggedDate} )
+            ->truncate( to => 'second' );
+        $dt->set_time_zone( $integ->server_timezone );
+
+        push @$updates,
+            Open311::Endpoint::Service::Request::Update::mySociety->new(
+            status               => $status,
+            update_id            => 'JOB_' . $log->{key},
+            service_request_id   => 'JOB_' . $log->{jobNumber},
+            updated_datetime     => $dt,
+            external_status_code => $log->{statusCode},
+            description          => '',
+        );
+    }
+}
+
+sub _get_service_request_updates_for_defects {
+    my ($self, $integ, $args, $updates) = @_;
+
+    return unless $self->handle_defects;
+
+    my $status_logs = $integ->GetDefectStatusLogs(
+        start_date => $args->{start_date},
+        end_date   => $args->{end_date},
+    );
+
+    for my $log ( @{$status_logs} ) {
+        my $status
+            = $self->job_reverse_status_mapping->{ $log->{statusCode} };
+
+        if (!$status) {
+            # This shouldn't happen given that we filter by status code
+            # in graphql. If it does, just ignore this update.
+            $self->logger->warn(
+                "Missing reverse job status mapping for statusCode $log->{statusCode} (jobNumber $log->{jobNumber})"
+            );
+            next;
+        }
+
+        my $dt
+            = $self->date_parser->parse_datetime( $log->{loggedDate} )
+            ->truncate( to => 'second' );
+        $dt->set_time_zone( $integ->server_timezone );
+
+        for my $defect ( @{$log->{job}->{defects}} ) {
+            push @$updates,
+                Open311::Endpoint::Service::Request::Update::mySociety->new(
+                status               => $status,
+                update_id            => 'DEFECT_' . $defect->{defectNumber} . "_" . $log->{key},
+                service_request_id   => 'DEFECT_' . $defect->{defectNumber},
+                updated_datetime     => $dt,
+                external_status_code => $log->{statusCode},
+                description          => $defect->{targetDate} || '',
+            );
+        }
+    }
 }
 
 sub photo_filter {
@@ -852,6 +905,7 @@ sub defect_services {  # XXX factor together with jobs?
             service_code   => "DEFECT_" . $code,
             description    => $name,
             keywords       => [ qw/inactive/ ],
+            groups         => ["Defects"], # XXX need a way to remap to enquiry-driven services (i.e. so defects can appear in existing categories)
         };
     }
 
@@ -1072,6 +1126,8 @@ sub _get_service_requests_for_jobs {
 Fetches any defects from Confirm (if feature is enabled) for the given timespan,
 and appends them to the $requests array as Open311 ServiceRequests.
 
+NB this has some quite Aberdeenshire-specific behaviour baked in.
+
 =cut
 
 sub _get_service_requests_for_defects {
@@ -1092,11 +1148,11 @@ sub _get_service_requests_for_defects {
             next;
         }
 
-        my $service = $services->{ "DEFECT_" . $defect->{defectTypeCode} };
+        my $service = $services->{ "DEFECT_" . $defect->{defectType}->{code} };
         unless ($service) {
             # Should not happen given that we filter by defect type in graphql
             $self->logger->warn( "no service for defect type code "
-                    . $defect->{defectTypeCode}
+                    . $defect->{defectType}->{code}
                     . " for defect $defect_id" );
             next;
         }
@@ -1109,16 +1165,39 @@ sub _get_service_requests_for_defects {
             if $self->cutoff_enquiry_date
             && $createdtime < $self->cutoff_enquiry_date;
 
+
+        my $status = "planned"; # XXX Aberdeenshire
+        my $updatedtime = $createdtime;
+
+        # if there's a job then we take the status & update time from that
+        if ($defect->{job} && $defect->{job}->{currentStatusLog}) {
+            my $log = $defect->{job}->{currentStatusLog};
+            $status = $self->job_reverse_status_mapping->{ $log->{statusCode} };
+
+            if (!$status) {
+                $self->logger->warn(
+                    "Missing reverse job status mapping for statusCode $log->{statusCode} (defectNumber $defect_id})"
+                );
+                next; # don't import defects we don't know the status of
+            }
+
+            $updatedtime
+                = $self->date_parser->parse_datetime( $log->{loggedDate} )
+                ->truncate( to => 'second' );
+            $updatedtime->set_time_zone( $integ->server_timezone );
+        }
+
+
         my %args = (
             service => $service,
             service_request_id => 'DEFECT_' . $defect_id,
             description => $defect->{description},
             requested_datetime => $createdtime,
-            updated_datetime => $createdtime, # XXX can we determine last updated time?
+            updated_datetime => $updatedtime,
             # NOTE These are NOT EPSG:27700 easting/northing, unlike
             # enquiries above
             latlong => [ $defect->{northing}, $defect->{easting} ],
-            status => "open", # XXX how to map?
+            status => $status,
         );
 
         my $request = $self->new_request( %args );
