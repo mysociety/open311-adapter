@@ -653,7 +653,7 @@ sub GetEnquiries {
     my @enquiries = ();
     my $batch_size = 10;
     while ( my @batch = splice @operations, 0, $batch_size ) {
-        my $responses = $self->perform_request(@batch)->{OperationResponse};
+        my $responses = $self->perform_request(@batch, { return_on_fault => 1 })->{OperationResponse};
         $responses = [ $responses ] if (ref($responses) eq 'HASH'); # in case only one response came back
         push @enquiries, map { $_->{GetEnquiryResponse}->{Enquiry} } @$responses;
     }
