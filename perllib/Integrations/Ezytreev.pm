@@ -56,10 +56,15 @@ sub upload_enquiry_document {
 }
 
 sub get_enquiry_changes {
-    my ($self, $crm_xref) = @_;
-    my $url = $self->config->{endpoint_url} . "GetEnquiryChanges?crmXRef=" . $crm_xref;
-    my $request = GET $url, Accept => 'application/json';
+    my ($self, $start, $end) = @_;
 
+    # The endpoint takes dates only.
+    # Results are always from the start of the start date to the end of the end date.
+    my $start_date = $start->ymd;
+    my $end_date = $end->ymd;
+
+    my $url = $self->config->{endpoint_url} . "Enquiries/Changes/$start_date/$end_date";
+    my $request = GET $url, Accept => 'application/json';
     return $self->ua->request($request);
 }
 

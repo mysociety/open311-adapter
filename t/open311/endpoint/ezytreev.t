@@ -16,7 +16,7 @@ $lwp->mock(request => sub {
     my ($ua, $req) = @_;
     if ($req->uri =~ /UpdateEnquiry/) {
         return HTTP::Response->new(200, 'OK', [], '1001');
-    } elsif($req->uri =~ /GetEnquiryChanges/) {
+    } elsif($req->uri =~ /Enquiries\/Changes\/2020-01-01\/2020-01-30/) {
         return HTTP::Response->new(200, 'OK', [], encode_json(
             [
                 {
@@ -298,7 +298,7 @@ subtest "POST service request OK" => sub {
 
 subtest 'GET service request updates OK' => sub {
     my $res = $endpoint->run_test_request(
-        GET => '/servicerequestupdates.json'
+        GET => '/servicerequestupdates.json?start_date=2020-01-01T11:11:11Z&end_date=2020-01-30T22:22:22Z'
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
