@@ -56,10 +56,9 @@ sub upload_enquiry_document {
 }
 
 sub get_enquiry_changes {
-    my ($self, $crm_xref) = @_;
-    my $url = $self->config->{endpoint_url} . "GetEnquiryChanges?crmXRef=" . $crm_xref;
+    my ($self, $start_date, $end_date) = @_;
+    my $url = $self->config->{endpoint_url} . "Enquiries/Changes/$start_date/$end_date";
     my $request = GET $url, Accept => 'application/json';
-
     return $self->ua->request($request);
 }
 
