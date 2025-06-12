@@ -105,18 +105,18 @@ based on whether the cobrand has provided a list of services for defects in its 
 has handle_defects => (
     is => 'lazy',
     default => sub {
-        return $_[0]->get_integration->config->{defect_service_whitelist} ? 1 : 0;
+        return $_[0]->get_integration->config->{defect_service_mapping} ? 1 : 0;
     }
 );
 
-=head2 defect_service_whitelist
+=head2 defect_service_mapping
 
 Controls the mapping of Confirm defect service/subject codes to Open311 services
 (as opposed to service_whitelist, which handles enquiry services)
 
 =cut
 
-has defect_service_whitelist => (
+has defect_service_mapping => (
     is => 'ro',
     default => sub {
         return {};
@@ -887,7 +887,7 @@ sub defect_services {  # XXX factor together with jobs?
     my @services;
     my %service_codes;
 
-    my $service_whitelist = $self->defect_service_whitelist;
+    my $service_whitelist = $self->defect_service_mapping;
 
     for my $code (keys %{ $service_whitelist }) {
         if (!$possible_services->{$code}) {
@@ -895,17 +895,24 @@ sub defect_services {  # XXX factor together with jobs?
             next;
         }
 
-        my $name;
-        $name = $service_whitelist->{$code}
-            if $service_whitelist->{$code} ne 1;
-        $name ||= $possible_services->{$code}{name};
+        # The values in defect_service_mapping are hashrefs and the contents
+        # determine if/how we create services.
+        # service_alias: this key indicates fetched defects will appear in an
+        #                existing service from service_whitelist, so don't create
+        #                a new service now.
+        # defect_alias: this key means fetched defects will have their code remapped
+        #               to another defect type (e.g. you want multiple defect types to
+        #               appear under a single category on FMS), don't create a service now.
+        # group/category: create a service for this defect type with the given group & name.
+        my $cfg = $service_whitelist->{$code};
+        next unless $cfg->{group} && $cfg->{category};
 
         $service_codes{"DEFECT_" . $code} = {
-            service_name   => $name,
+            service_name   => $cfg->{category},
             service_code   => "DEFECT_" . $code,
-            description    => $name,
+            description    => $cfg->{category},
             keywords       => [ qw/inactive/ ],
-            groups         => ["Defects"], # XXX need a way to remap to enquiry-driven services (i.e. so defects can appear in existing categories)
+            groups         => [ $cfg->{group} ],
         };
     }
 
@@ -1148,7 +1155,7 @@ sub _get_service_requests_for_defects {
             next;
         }
 
-        my $service = $services->{ "DEFECT_" . $defect->{defectType}->{code} };
+        my $service = $self->_find_defect_service($defect->{defectType}->{code}, $services);
         unless ($service) {
             # Should not happen given that we filter by defect type in graphql
             $self->logger->warn( "no service for defect type code "
@@ -1203,6 +1210,43 @@ sub _get_service_requests_for_defects {
         my $request = $self->new_request( %args );
 
         push @$requests, $request;
+    }
+}
+
+=head2 _find_defect_service
+
+For incoming defects we may wish to send them to FMS to appear in an existing
+category that's used for new enquiries. We may also want to remap the defect type
+code to another so multiple defect types appear under one category on FMS.
+
+This function parses the defect_service_mapping config and returns
+the correct Service to be applied to the ServiceRequest that's created.
+
+=cut
+
+sub _find_defect_service {
+    my ($self, $code, $services) = @_;
+
+    my $service_whitelist = $self->defect_service_mapping;
+    my $cfg = $service_whitelist->{$code};
+
+    return unless $cfg;
+
+    # The values in defect_service_mapping are hashrefs and the contents
+    # determine what service to use for this defect.
+    # service_alias: this key indicates fetched defects will appear in an
+    #                existing service from service_whitelist, so look that up.
+    # defect_alias: this key means fetched defects will have their code remapped
+    #               to another defect type (e.g. you want multiple defect types to
+    #               appear under a single category on FMS), so find that.
+    # group/category: means there is a specific service for this defect type
+
+    if ( $cfg->{group} && $cfg->{category} ) {
+        return $services->{ "DEFECT_$code" };
+    } elsif ( my $enq_code = $cfg->{service_alias} ) {
+        return $services->{$enq_code}; # NB $services here has the normalised codes, so be sure to strip _1/_2 suffixes from config
+    } elsif ( my $def_code = $cfg->{defect_alias} ) {
+        return $self->_find_defect_service($def_code, $services);
     }
 }
 
