@@ -19,10 +19,16 @@ job_service_whitelist:
   TYPE1: 1
   TYPE2: "Type 2"
   NOT: "Doesn't exist in Confirm"
-defect_service_whitelist:
-  SLDA: 1
-  POTH: "Pothole Defect"
-  NOT: "Doesn't exist in Confirm"
+defect_service_mapping:
+  SLDA:
+    group: Street Lighting
+    category: Defective Street Light
+  POTH:
+    group: Roads & Pavements
+    category: Pothole
+  NOT:
+    group: Invalid
+    category: "Doesn't exist in Confirm"
 job_reverse_status_mapping:
   OPEN: open
   SHUT: closed

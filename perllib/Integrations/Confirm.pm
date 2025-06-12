@@ -506,7 +506,7 @@ sub defects_graphql_query { # XXX factor together with jobs?
     my ( $self, %args ) = @_;
 
     my @defect_type_codes
-        = keys %{ $self->config->{defect_service_whitelist} // () };
+        = keys %{ $self->config->{defect_service_mapping} // () };
     my (
         $start_date,
         $end_date,
@@ -570,7 +570,7 @@ sub defect_status_logs_graphql_query {
     my ( $self, %args ) = @_;
 
     my @defect_type_codes
-        = keys %{ $self->config->{defect_service_whitelist} // () };
+        = keys %{ $self->config->{defect_service_mapping} // () };
 
     my @status_codes
         = keys %{ $self->config->{job_reverse_status_mapping} // () };
