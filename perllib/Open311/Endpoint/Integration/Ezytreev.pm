@@ -147,10 +147,9 @@ sub post_service_request {
 }
 
 sub get_service_request_updates {
-    my ($self, $service, $args) = @_;
+    my ($self, $args) = @_;
 
-    my $crm_xref = "fms:" . $args->{service_request_id_ext};
-    my $response = $self->ezytreev->get_enquiry_changes($crm_xref);
+    my $response = $self->ezytreev->get_enquiry_changes($args->{start_date}, $args->{end_date});
     die "Failed to get report updates from ezytreev" unless $response->is_success;
 
     my @updates;
