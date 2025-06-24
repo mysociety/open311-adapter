@@ -808,10 +808,11 @@ sub _get_service_request_updates_for_defects {
                 service_request_id   => 'DEFECT_' . $defect->{defectNumber},
                 updated_datetime     => $dt,
                 external_status_code => $log->{statusCode},
-                description          => $defect->{targetDate} || '',
-                $supersedes_value  ? ( extras => {
-                    supersedes => $supersedes_value,
-                } ) : (),
+                description          => '',
+                extras => {
+                    targetDate => $defect->{targetDate} || '',
+                    $supersedes_value  ? ( supersedes => $supersedes_value ) : (),
+                },
                 @media_urls ? ( media_url => \@media_urls ) : (),
             );
         }
