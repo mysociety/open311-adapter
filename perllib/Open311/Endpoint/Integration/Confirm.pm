@@ -770,7 +770,10 @@ sub _get_service_request_updates_for_defects {
                 service_request_id   => 'DEFECT_' . $defect->{defectNumber},
                 updated_datetime     => $dt,
                 external_status_code => $log->{statusCode},
-                description          => $defect->{targetDate} || '',
+                description          => '',
+                extras => {
+                    targetDate => $defect->{targetDate} || '',
+                },
             );
         }
     }
