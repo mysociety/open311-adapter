@@ -704,7 +704,10 @@ sub _get_service_request_updates_for_defects {
                 service_request_id   => 'DEFECT_' . $defect->{defectNumber},
                 updated_datetime     => $dt,
                 external_status_code => $log->{statusCode},
-                description          => $defect->{targetDate} || '',
+                description          => '',
+                extras => {
+                    targetDate => $defect->{targetDate} || '',
+                },
             );
         }
     }
@@ -855,9 +858,9 @@ sub job_services {
             if $service_whitelist->{$code} ne 1;
         $name ||= $possible_services->{$code}{name};
 
-        $service_codes{"JOB_" . $code} = {
+        $service_codes{$code} = {
             service_name   => $name,
-            service_code   => "JOB_" . $code,
+            service_code   => $code,
             description    => $name,
             keywords       => [ qw/inactive/ ],
         };
@@ -1070,7 +1073,7 @@ sub _get_service_requests_for_jobs {
             next;
         }
 
-        my $service = $services->{ "JOB_" . $job->{jobType}{code} };
+        my $service = $services->{ $job->{jobType}{code} };
         unless ($service) {
             # Should not happen given that we filter by job type in graphql
             $self->logger->warn( "no service for job type code "
@@ -1397,6 +1400,7 @@ sub get_completion_photo {
 sub _normalise_service_code {
     my $code = shift;
     my ($serv, $subj, $extra) = split /_/, $code;
+    return $code unless defined $subj; # In case it's e.g. a job code with no _
     return join("_", $serv, $subj);
 }
 
