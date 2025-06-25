@@ -9,6 +9,10 @@ created_datetime_attribute_id: 'attributes_defectsReportedDate'
 resource_attachment_attribute_id: 'attributes_filesAttachableAttachments'
 geometry_attribute: 'attributes_itemsGeometry'
 
+resource_attribute_defaults: {
+  'attributes_customerContactPriorities_630e8d78afc533014f6cce97': ['67d12b067e3fda851c204b2f'],
+}
+
 request_to_resource_attribute_mapping: {
   fixmystreet_id: 'attributes_customerContactCRMReference_630e97373c0f4b0153a32650',
   description: 'attributes_customerContactCustomerComments_630e97d11aff300150181403',
@@ -18,6 +22,7 @@ category_attribute_mapping: {
   subcategory: 'attributes_customerContactSubCategory_630e951646f558015aa26b41',
   category: 'attributes_customerContactCategory_630e927746f558015aa26062',
   service_area: 'attributes_customerContactServiceArea_630e905e1aff30015017e892',
+  priority: 'attributes_customerContactPriorities_630e8d78afc533014f6cce97',
 }
 
 # Inspection updates
@@ -165,6 +170,11 @@ question_mapping: {
     'Small wild animal (e.g. birds, mice)':  5d8a504dca31500b4030ecaa,
     'Large wild animal (e.g. swan, badger)': 5d8a50c4ca31500a9469ab9d,
     'Other':                                 5d8a50dfca31500a9469aba2,
+  },
+
+  'priority': {
+    'Dead animal that needs removing': '61827451d1b798015bba7e4c',
+    'Overflowing litter bin': '61827451d1b798015bba7e4c',
   },
 }
 
