@@ -31,6 +31,8 @@ sub process_attributes {
     my $attributes = $self->SUPER::process_attributes($args);
     push @$attributes, @question_attributes if @question_attributes;
 
+    $self->_populate_priority_and_target_date($attributes, $service_code);
+
     $self->_populate_category_and_group_attr(
         $attributes,
         $category_code,
@@ -69,6 +71,23 @@ sub _munge_question_args {
     }
 
     return @q_attributes;
+}
+
+sub _populate_priority_and_target_date {
+    my ($self, $attr, $category) = @_;
+    my $mapping = $self->config->{category_attribute_mapping};
+
+    # Priority
+    my $priority_value = $self->config->{question_mapping}{priority}{$category};
+    if ($priority_value) {
+        # It has a default, so change that
+        foreach (@$attr) {
+            if ($_->{attributeCode} eq $mapping->{priority}) {
+                $_->{value} = [$priority_value];
+                last;
+            }
+        }
+    }
 }
 
 sub _populate_category_and_group_attr {

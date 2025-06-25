@@ -221,6 +221,10 @@ subtest 'send new report to Alloy' => sub {
 Type of animal?
 Other',
                 },
+                { attributeCode =>
+                        'attributes_customerContactPriorities_630e8d78afc533014f6cce97',
+                    value => ['61827451d1b798015bba7e4c']
+                },
                 {   attributeCode =>
                         'attributes_customerContactServiceArea_630e905e1aff30015017e892',
                     value => ['630e8f0b3c0f4b0153a2ff36'],
@@ -286,6 +290,10 @@ Other',
 Did you witness the dog fouling?
 Yes',
                 },
+                { attributeCode =>
+                        'attributes_customerContactPriorities_630e8d78afc533014f6cce97',
+                    value => ['67d12b067e3fda851c204b2f']
+                },
                 {   attributeCode =>
                         'attributes_customerContactServiceArea_630e905e1aff30015017e892',
                     value => ['630e8f0b3c0f4b0153a2ff36'],
@@ -347,6 +355,10 @@ Yes',
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
                     value => 'description',
                 },
+                { attributeCode =>
+                        'attributes_customerContactPriorities_630e8d78afc533014f6cce97',
+                    value => ['67d12b067e3fda851c204b2f']
+                },
                 {   attributeCode =>
                         'attributes_customerContactServiceArea_630e905e1aff30015017e892',
                     value => ['630e8f183c0f4b0153a2ff5c'],
@@ -403,6 +415,10 @@ Yes',
                 {   attributeCode =>
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
                     value => 'description',
+                },
+                { attributeCode =>
+                        'attributes_customerContactPriorities_630e8d78afc533014f6cce97',
+                    value => ['61827451d1b798015bba7e4c']
                 },
                 {   attributeCode =>
                         'attributes_customerContactServiceArea_630e905e1aff30015017e892',
