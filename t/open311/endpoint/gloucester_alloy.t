@@ -16,6 +16,8 @@ around BUILDARGS => sub {
 };
 has integration_class => (is => 'ro', default => 'Integrations::AlloyV2::Dummy');
 
+has '+testing' => ( default => 1 );
+
 package main;
 
 use strict;
@@ -34,6 +36,12 @@ BEGIN { $ENV{TEST_MODE} = 1; }
 my (@sent);
 
 my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
+
+my $lwp = Test::MockModule->new('LWP::UserAgent');
+$lwp->mock('get', sub {
+    my ($self, $url) = @_;
+    return HTTP::Response->new(200, 'OK', [], '{}');
+});
 
 my $integration = Test::MockModule->new('Integrations::AlloyV2');
 $integration->mock('api_call', sub {
@@ -234,6 +242,10 @@ Other',
                     value => ['61daed49fdc7a101544177de'],
                 },
                 {   attributeCode =>
+                        'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
+                    value => '2025-04-02',
+                },
+                {   attributeCode =>
                         'attributes_defectsReportedDate',
                     value => '2025-04-01T12:00:00Z',
                 },
@@ -303,6 +315,10 @@ Yes',
                     value => ['61ba198c7148450165fff23f'],
                 },
                 {   attributeCode =>
+                        'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
+                    value => '2025-06-24',
+                },
+                {   attributeCode =>
                         'attributes_defectsReportedDate',
                     value => '2025-04-01T12:00:00Z',
                 },
@@ -368,6 +384,10 @@ Yes',
                     value => ['61b9e1ccfb9e760158036bc1'],
                 },
                 {   attributeCode =>
+                        'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
+                    value => '2025-04-29',
+                },
+                {   attributeCode =>
                         'attributes_defectsReportedDate',
                     value => '2025-04-01T12:00:00Z',
                 },
@@ -427,6 +447,10 @@ Yes',
                 {   attributeCode =>
                         'attributes_customerContactSubCategory_630e951646f558015aa26b41',
                     value => ['61b9e1127148450165fd145f'],
+                },
+                {   attributeCode =>
+                        'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
+                    value => '2025-04-29',
                 },
                 {   attributeCode =>
                         'attributes_defectsReportedDate',

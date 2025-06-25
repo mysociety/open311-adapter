@@ -4,11 +4,18 @@ use Moo;
 extends 'Open311::Endpoint::Integration::AlloyV2';
 with 'Role::Memcached';
 
+use Encode;
+use JSON::MaybeXS;
+use Path::Tiny;
+use FixMyStreet::WorkingDays;
+
 around BUILDARGS => sub {
     my ( $orig, $class, %args ) = @_;
     $args{jurisdiction_id} = 'gloucester_alloy';
     return $class->$orig(%args);
 };
+
+has testing => ( is => 'ro', default => 0 );
 
 sub process_attributes {
     my ($self, $args) = @_;
@@ -88,6 +95,19 @@ sub _populate_priority_and_target_date {
             }
         }
     }
+
+    # Target date
+    my $sla = $self->config->{question_mapping}{target_date_sla}{$category};
+    die "No target date entry found for $category" unless $sla;
+    my $date;
+    my $now = DateTime->now(time_zone => "Europe/London");
+    if ($sla->{days}) {
+        my $wd = FixMyStreet::WorkingDays->new(public_holidays => $self->public_holidays());
+        $date = $wd->add_days($now, $sla->{days})->date;
+    } elsif ($sla->{weeks}) {
+        $date = $now->add(weeks => $sla->{weeks})->date;
+    }
+    push @$attr, { attributeCode => $mapping->{target_date}, value => $date };
 }
 
 sub _populate_category_and_group_attr {
@@ -164,6 +184,45 @@ sub _get_inspection_status {
         }
     }
     return ($status, $ext_code);
+}
+
+# Bank Holidays (similar to FMS UK code)
+
+sub public_holidays {
+    my $self = shift;
+    my $nation = 'england-and-wales';
+    my $json = $self->_get_bank_holiday_json();
+    return [ map { $_->{date} } @{$json->{$nation}{events}} ];
+}
+
+sub _get_bank_holiday_json {
+    my $self = shift;
+    my $file = 'bank-holidays.json';
+    my $cache_file = path(__FILE__)->parent(7)->realpath->child("data/$file");
+    my $js;
+    # uncoverable branch true
+    if (-s $cache_file && -M $cache_file <= 7 && !$self->testing) {
+        # uncoverable statement
+        $js = $cache_file->slurp_utf8;
+    } else {
+        $js = _fetch_url("https://www.gov.uk/$file");
+        # uncoverable branch false
+        $js = decode_utf8($js) if !utf8::is_utf8($js);
+        # uncoverable branch true
+        if ($js && !$self->testing) {
+            # uncoverable statement
+            $cache_file->spew_utf8($js);
+        }
+    }
+    $js = JSON->new->decode($js) if $js;
+    return $js;
+}
+
+sub _fetch_url {
+    my $url = shift;
+    my $ua = LWP::UserAgent->new;
+    $ua->timeout(5);
+    $ua->get($url)->content;
 }
 
 1;

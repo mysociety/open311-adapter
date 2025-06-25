@@ -23,6 +23,7 @@ category_attribute_mapping: {
   category: 'attributes_customerContactCategory_630e927746f558015aa26062',
   service_area: 'attributes_customerContactServiceArea_630e905e1aff30015017e892',
   priority: 'attributes_customerContactPriorities_630e8d78afc533014f6cce97',
+  target_date: 'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
 }
 
 # Inspection updates
@@ -175,6 +176,13 @@ question_mapping: {
   'priority': {
     'Dead animal that needs removing': '61827451d1b798015bba7e4c',
     'Overflowing litter bin': '61827451d1b798015bba7e4c',
+  },
+
+  'target_date_sla': {
+    'Dead animal that needs removing': { "days": 1 },
+    'Damaged dog bin': { "days": 20 },
+    'Overflowing litter bin': { "days": 20 },
+    'Dog fouling': { "weeks": 12 },
   },
 }
 
