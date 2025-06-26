@@ -1194,11 +1194,12 @@ sub _get_service_requests_for_defects {
             $updatedtime->set_time_zone( $integ->server_timezone );
         }
 
+        my $description = $self->_description_for_defect($defect, $service);
 
         my %args = (
             service => $service,
             service_request_id => 'DEFECT_' . $defect_id,
-            description => $defect->{description},
+            description => $description,
             requested_datetime => $createdtime,
             updated_datetime => $updatedtime,
             # NOTE These are NOT EPSG:27700 easting/northing, unlike
@@ -1211,6 +1212,12 @@ sub _get_service_requests_for_defects {
 
         push @$requests, $request;
     }
+}
+
+sub _description_for_defect {
+    my ($self, $defect, $service) = @_;
+
+    return $defect->{description} || '';
 }
 
 =head2 _find_defect_service
