@@ -9,4 +9,10 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
+sub _description_for_defect {
+    my ($self, $defect, $service) = @_;
+
+    return 'Defect type: ' . $service->service_name;
+}
+
 1;
