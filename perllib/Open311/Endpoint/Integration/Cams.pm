@@ -367,6 +367,18 @@ sub get_service_request_updates {
     return @updates;
 }
 
+=head2 post_service_request_update
+
+CAMS Desktop is not going to receive any updates from FMS.
+
+=cut
+
+sub post_service_request_update {
+    my ($self, $args) = @_;
+
+    return;
+}
+
 =head2 _add_service_request_images
 
 Images for a service request are uploaded separately using the UID
