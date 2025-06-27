@@ -12,14 +12,17 @@ around BUILDARGS => sub {
 sub _worksheet_message {
     my ($self, $args) = @_;
 
-    my $msg = "Assisted collection? $args->{attributes}->{assisted_yn}\n\n"
-        . "Location of containers: $args->{attributes}->{location_of_containers}\n";
+    my @messages;
+    foreach (
+        { key => 'assisted_yn', label => 'Assisted collection?' },
+        { key => 'location_of_containers', label => 'Location of containers:' },
+        { key => 'location_of_letterbox', label => 'Location of letterbox:' },
+    ) {
+        push @messages, "$_->{label} $args->{attributes}->{$_->{key}}"
+            if $args->{attributes}->{$_->{key}};
+    }
 
-    $msg
-        .= "\nLocation of letterbox: $args->{attributes}->{location_of_letterbox}\n"
-        if $args->{attributes}->{location_of_letterbox};
-
-    return $msg;
+    return join("\n\n", @messages);
 }
 
 __PACKAGE__->run_if_script;
