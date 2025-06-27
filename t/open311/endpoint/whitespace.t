@@ -56,7 +56,7 @@ $soap_lite->mock(call => sub {
         is $service_property_inputs{'79'}, 'No', 'AssistedYn correct';
         is $service_property_inputs{'80'}, 'Front of property', 'LocationOfContainers correct';
 
-        my %service_item_inputs = map { $_->name => $_->value } ${${$params{ServiceItemInputs}}->value->value}->value->value;
+        my %service_item_inputs = map { $_->name => $_->value } ${${$params{ServiceItemInputs}}->value->value->value}->value;
         is $service_item_inputs{'ServiceItemId'}, '22', 'ServiceItemId correct';
         is $service_item_inputs{'ServiceItemQuantity'}, 1, 'ServiceItemQuantity correct';
         is $service_item_inputs{'ServiceItemName'}, '', 'ServiceItemName correct';
