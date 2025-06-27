@@ -1,0 +1,21 @@
+service_list:
+  Public Rights of Way:
+    '9':
+      service_name:
+        - 'Alignment/Path Off Line'
+    'I274':
+      service_name:
+        - 'Bridge/Damaged'
+        - 'Damaged Bridge'
+    'I273':
+      service_name:
+        - 'Bridge/Missing'
+
+service_extra_data:
+  - code: AdminArea
+    description: Admin Area
+  - code: LinkCode
+    description: Link Code
+  - code: LinkType
+    description: Link Type
+

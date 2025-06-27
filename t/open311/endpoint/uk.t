@@ -73,6 +73,7 @@ test_multi(1, 'Open311::Endpoint::Integration::UK::Hackney',
 test_multi(1, 'Open311::Endpoint::Integration::UK::Buckinghamshire',
     'Open311::Endpoint::Integration::UK::Buckinghamshire::Alloy' => 'buckinghamshire_alloy',
     'Open311::Endpoint::Integration::UK::Buckinghamshire::Abavus' => 'buckinghamshire_abavus',
+    'Open311::Endpoint::Integration::UK::Buckinghamshire::Cams' => 'buckinghamshire_cams',
 );
 
 test_multi(1, 'Open311::Endpoint::Integration::UK::CentralBedfordshire',
