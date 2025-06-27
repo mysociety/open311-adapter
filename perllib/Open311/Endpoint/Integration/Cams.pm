@@ -21,6 +21,7 @@ with 'Open311::Endpoint::Role::ConfigFile';
 
 use Data::UUID;
 use Integrations::Rest;
+use MIME::Base64 qw(encode_base64);
 
 =head2 jurisdiction_id
 
@@ -285,10 +286,64 @@ sub post_service_request {
     );
 
     if ($response) {
+        $self->_add_service_request_images($uuid, $args->{media_url}) if $args->{media_url}->[0] && $args->{media_url}->[0];
         return $self->new_request(
             service_request_id => $response
         )
     }
+}
+
+=head2 _add_service_request_images
+
+Images for a service request are uploaded separately using the UID
+generated to submit the service request in the path.
+
+=cut
+
+sub _add_service_request_images {
+    my ($self, $uuid, $media_urls) = @_;
+
+    my $image_counter = 1;
+    my @attachments = map { $_->content } $self->_get_attachments($media_urls);
+
+    $self->do_login;
+
+    for my $image (@attachments) {
+        my $response = $self->cams->api_call(
+            call => $self->api_calls->{'upload_files'} . $uuid,
+            headers => { '.aspxauth' => $self->access_token },
+            body => { image => $image },
+        );
+    }
+
+    return;
+}
+
+=head2 _get_attachments
+
+Fetch attachements from FMS for a report. Will only work for
+public reports.
+
+Straight copy from ATAK - may need to start a utils role.
+
+=cut
+
+sub _get_attachments {
+    my ($self, $urls) = @_;
+
+    my @photos = ();
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+    for (@$urls) {
+        my $response = $ua->get($_);
+        if ($response->is_success) {
+            push @photos, $response;
+        } else {
+            $self->logger->error("[CAMS] Unable to download attachment: " . $_);
+            $self->logger->debug("[CAMS] Photo response status: " . $response->status_line);
+            $self->logger->debug("[CAMS] Photo response content: " . $response->decoded_content);
+        }
+    }
+    return @photos;
 }
 
 1;
