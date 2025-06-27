@@ -6,6 +6,7 @@ api_url: https://dummy/api/
 api_calls:
   login: 'usersaccess/dologin'
   insert: 'Users/Insert/'
+  upload_files : 'Users/WebHolding/'
 
 service_list:
   Public Rights of Way:

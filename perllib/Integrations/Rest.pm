@@ -48,6 +48,8 @@ sub api_call {
     my $call = $args{call};
     my $body = $args{body};
     my $headers = $args{headers};
+    my $content_type = $args{content_type};
+
     $self->logger->debug($call);
 
     my $ua = LWP::UserAgent->new(
@@ -66,9 +68,15 @@ sub api_call {
     }
 
     if ($body) {
-        $request->content_type('application/json; charset=UTF-8');
-        $request->content(encode_json($body));
-        $self->logger->debug(encode_json($body));
+        if (ref $body eq 'HASH' || ref $body eq 'ARRAY') {
+            $request->content_type('application/json; charset=UTF-8');
+            $body = encode_json($body);
+        } else {
+            $request->content_type($content_type);
+        }
+
+        $request->content($body);
+        $self->logger->debug($body);
     }
 
     my $response = $ua->request($request);
