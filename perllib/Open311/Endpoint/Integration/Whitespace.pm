@@ -78,8 +78,6 @@ sub post_service_request {
 
     my $integration = $self->get_integration;
 
-    $args->{attributes}{location_of_containers} //= '';
-    $args->{attributes}{location_of_letterbox} //= '';
     $args->{attributes}{quantity} ||= 1;
 
     my $worksheet_id = $integration->CreateWorksheet({
