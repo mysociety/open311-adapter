@@ -1,0 +1,58 @@
+{
+    "Table": [
+        {
+            "recordGUID": "2fc57cbe-4c4b-11f0-849e-A12345",
+            "insertedBy": "49357362-ee2d-4d56-b974-22ad8d3caef6",
+            "MaintCode": false,
+            "StatusDesc": "Officer Progressing Issue",
+            "LastUpdatedDate": "2025-06-18T14:50:25",
+            "webTrackingNo": "1",
+            "insertedTime": "2025-06-18T14:50:25.777"
+        },
+        {
+            "recordGUID": "2fc57cbe-4c4b-11f0-849e-B12345",
+            "insertedBy": "49357362-ee2d-4d56-b974-22ad8d3caef6",
+            "MaintCode": false,
+            "StatusDesc": "No Action Required",
+            "LastUpdatedDate": "2025-06-18T14:45:25.110",
+            "webTrackingNo": "2",
+            "insertedTime": "2025-06-18T14:50:25.777"
+        },
+        {
+            "recordGUID": "2fc57cbe-4c4b-11f0-849e-C12345",
+            "insertedBy": "49357362-ee2d-4d56-b974-22ad8d3caef6",
+            "MaintCode": false,
+            "StatusDesc": "Officer Progressing Issue",
+            "LastUpdatedDate": "2025-06-17T10:45:25.777",
+            "webTrackingNo": "3",
+            "insertedTime": "2025-06-18T14:50:25.777"
+        },
+        {
+            "recordGUID": "2fc57cbe-4c4b-11f0-849e-D12345",
+            "insertedBy": "49357362-ee2d-4d56-b974-22ad8d3caef6",
+            "MaintCode": false,
+            "StatusDesc": "Officer Progressing Issue",
+            "LastUpdatedDate": "2025-06-16T14:50:25.777",
+            "webTrackingNo": "4",
+            "insertedTime": "2025-06-18T14:50:25.777"
+        },
+        {
+            "recordGUID": "2fc57cbe-4c4b-11f0-849e-E12345",
+            "insertedBy": "49357362-ee2d-4d56-b974-22ad8d3caef6",
+            "MaintCode": false,
+            "StatusDesc": "Alert",
+            "LastUpdatedDate": "2025-06-16T10:15:25.777",
+            "webTrackingNo": "5",
+            "insertedTime": "2025-06-18T14:50:25.777"
+        },
+        {
+            "recordGUID": "2fc57cbe-4c4b-11f0-849e-F12345",
+            "insertedBy": "49357362-ee2d-4d56-b974-22ad8d3caef6",
+            "MaintCode": false,
+            "StatusDesc": "Officer Progressing Issue",
+            "LastUpdatedDate": "2025-06-15T14:50:25.777",
+            "webTrackingNo": "6",
+            "insertedTime": "2025-06-18T14:50:25.777"
+        }
+    ]
+}
