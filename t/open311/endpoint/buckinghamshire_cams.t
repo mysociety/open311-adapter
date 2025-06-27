@@ -11,9 +11,13 @@ my $lwp = Test::MockModule->new('LWP::UserAgent');
 
 $lwp->mock(request => sub {
     my ($ua, $req) = @_;
+
     if ($req->uri =~ /login/) {
         ok $req->uri =~ /dummy\/api/, 'api url read from config';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'userId' => 'User-12345', 'access_token' => 'OpenSesame' }));
+    } elsif ($req->uri =~ /usp_FMS_GetUpdates/) {
+        ok $req->header('.aspxauth') eq 'OpenSesame', 'Authorisation header set';
+        return HTTP::Response->new(200, 'OK', [], path(__FILE__)->sibling("/json/cams/updates.json")->slurp);
     } elsif ($req->uri =~ /Insert/) {
         ok $req->header('.aspxauth') eq 'OpenSesame', 'Authorisation header set';
         is_deeply decode_json($req->content), decode_json(path(__FILE__)->sibling("/json/cams/report.json")->slurp), 'Report details filled';
@@ -35,8 +39,10 @@ $lwp->mock(request => sub {
 sub _build_config_file { path(__FILE__)->sibling("buckinghamshire_cams.yml")->stringify };
 
 package Open311::Endpoint::Integration::Cams::Dummy;
-
+use Path::Tiny;
 use Moo;
+use HTTP::Response;
+use HTTP::Headers;
 
 extends 'Open311::Endpoint::Integration::Cams';
 
@@ -50,9 +56,12 @@ package main;
 use strict; use warnings;
 
 use utf8;
+
 use Test::More;
+use Test::MockTime ':all';
 use Path::Tiny;
 use Open311::Endpoint::Service::UKCouncil;
+use JSON::MaybeXS qw(encode_json decode_json);
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
@@ -92,6 +101,32 @@ subtest "Check services structure" => sub {
             ok $attribute->code eq shift @hidden_fields;
         };
     };
+};
+
+subtest 'check fetch updates' => sub {
+    set_fixed_time('2025-06-18T14:50:25');
+    my $res = $bucks_endpoint->run_test_request(
+      GET => '/servicerequestupdates.json',
+    );
+
+    ok $res->is_success, "Fetching updates ok";
+    my $response = decode_json($res->content);
+    ok @{ $response } == 2, "Two updates fetched in default 10 minute window";
+
+    $res = $bucks_endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?start_date=2025-06-17T10:40:00Z',
+    );
+
+    ok $res->is_success, "Fetching updates ok";
+    $response = decode_json($res->content);
+    ok @{ decode_json($res->content) } == 3, "Three updates fetched when start date supplied";
+
+    $res = $bucks_endpoint->run_test_request(
+      GET => '/servicerequestupdates.json?start_date=2025-06-15T14:50:25Z',
+    );
+
+    $response = decode_json($res->content);
+    ok @{ decode_json($res->content) } == 5, "Five updates fetched when one update without matching status";
 };
 
 subtest "POST report" => sub {

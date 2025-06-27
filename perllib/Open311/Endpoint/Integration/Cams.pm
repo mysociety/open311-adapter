@@ -17,6 +17,7 @@ package Open311::Endpoint::Integration::Cams;
 use Moo;
 
 extends 'Open311::Endpoint';
+with 'Open311::Endpoint::Role::mySociety';
 with 'Open311::Endpoint::Role::ConfigFile';
 
 use Data::UUID;
@@ -113,6 +114,16 @@ have hidden fields for data from the PROW assets layer
 =cut
 
 has service_extra_data => (
+    is => 'ro',
+);
+
+=head2 reverse_status_mapping
+
+Table of statuses sent by CAMS Desktop and how they map to FMS statuses
+
+=cut
+
+has reverse_status_mapping => (
     is => 'ro',
 );
 
@@ -291,6 +302,69 @@ sub post_service_request {
             service_request_id => $response
         )
     }
+}
+
+=head2 get_service_request_updates
+
+Currently using a call that gives us 30 days of updates, we filter down to the updates in the last 10 minutes,
+by default. But honours the start_date if supplied.
+
+The end date is mandated to 'now' as we don't use the end date in our calls.
+
+There is no id for a CAMS Desktop update as it is only a notifiction of change, not an actual update so we generate
+a uniqe ID to satify FMS
+
+=cut
+
+sub get_service_request_updates {
+    my ($self, $args) = @_;
+
+    $self->do_login;
+
+    my $response = $self->cams->api_call(
+        call => $self->api_calls->{get_updates},
+        headers => { '.aspxauth' => $self->access_token }
+    );
+
+    my $w3c = DateTime::Format::W3CDTF->new();
+    $args->{start_date} = $args->{start_date} ? $w3c->parse_datetime($args->{start_date}) : $w3c->parse_datetime(DateTime->now()) - DateTime::Duration->new( minutes => 10 );
+    $args->{end_date} = $w3c->parse_datetime(DateTime->now());
+
+    my @updates;
+    if ($response) {
+        my $start_time = $args->{start_date};
+        my $end_time = $args->{end_date};
+        my $recent_updates = $response->{'Table'};
+        for my $date (@$recent_updates) {
+            $date->{'LastUpdatedDate'} =~ s/\.\d+$/Z/;
+            $date->{'LastUpdatedDate'} = $w3c->parse_datetime($date->{'LastUpdatedDate'});
+        }
+
+        @$recent_updates = grep {
+            $_->{'LastUpdatedDate'} >= $start_time
+            && $_->{'LastUpdatedDate'} <= $end_time
+        } @$recent_updates;
+
+        my $ug; my $uuid;
+        for my $update (@$recent_updates) {
+            $ug = Data::UUID->new;
+            $uuid = $ug->to_string($ug->create());
+            my $status = $self->reverse_status_mapping->{ $update->{'StatusDesc'} };
+            next unless $status;
+            my %update_args = (
+                status => $status,
+                external_status_code => $update->{'StatusDesc'},
+                description => '',
+                service_request_id => $update->{'webTrackingNo'},
+                update_id => $uuid,
+                updated_datetime => $update->{'LastUpdatedDate'},
+            );
+
+            push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %update_args );
+        }
+    }
+
+    return @updates;
 }
 
 =head2 _add_service_request_images
