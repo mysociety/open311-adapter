@@ -269,6 +269,37 @@ subtest "Whitespace worksheets use Bexley's custom message" => sub {
         } ], 'correct json returned';
 };
 
+subtest "Bulky specific Whitespace worksheet message" => sub {
+    my $ws = Test::MockModule->new('Integrations::Whitespace');
+    $ws->mock(CreateWorksheet => sub {
+        my ($self, $args) = @_;
+        is $args->{quantity}, 1;
+        is $args->{worksheet_message}, "State pension? No\n\nPhysical disability? No";
+        return 1001;
+    });
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'Whitespace-WS1',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 10008,
+        'attribute[fixmystreet_id]' => 2000234,
+        'attribute[pension]' => 'No',
+        'attribute[disability]' => 'No',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => "Whitespace-1001"
+        } ], 'correct json returned';
+};
+
 subtest "Whitespace worksheet, no location, with quantity" => sub {
     my $ws = Test::MockModule->new('Integrations::Whitespace');
     $ws->mock(CreateWorksheet => sub {

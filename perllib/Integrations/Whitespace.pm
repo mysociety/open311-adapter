@@ -108,20 +108,31 @@ sub CreateWorksheet {
         : $service_params->{service_id};
 
     my @service_inputs;
-    push @service_inputs,
-        service_input($service_params->{service_item_id}, $params->{quantity});
+    if ($params->{service_code} eq 'bulky_collection') {
+        push @service_inputs, service_input(144, 1); # Signifier of a bulky collection
+        foreach (@{$params->{bulky_items}}) {
+            push @service_inputs, service_input($_, 1);
+        }
+    } else {
+        push @service_inputs,
+            service_input($service_params->{service_item_id}, $params->{quantity});
+    }
 
     my $worksheet = ixhash(
         Uprn => $params->{uprn},
         ServiceId => $service_id,
         WorksheetReference => $params->{worksheet_reference},
         WorksheetMessage => $params->{worksheet_message},
+        $params->{collection_date} ? (WorksheetDueDate => $params->{collection_date}) : (),
         ServiceItemInputs => \@service_inputs,
         ServicePropertyInputs => [
             property_input(79, $params->{assisted_yn}),
             property_input(80, $params->{location_of_containers}),
             property_input(82, $params->{location_of_letterbox}),
+            property_input(65, $params->{bulky_parking}),
+            property_input(66, $params->{bulky_location}),
         ],
+        $params->{round_instance_id} ? (AdHocRoundInstanceId =>  $params->{round_instance_id}) : (),
     );
 
     my $res = $self->call('CreateWorksheet', worksheetInput => $worksheet);

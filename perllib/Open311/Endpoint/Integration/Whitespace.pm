@@ -65,7 +65,7 @@ sub services {
             $service->{group} ? (group => $service->{group}) : (),
             $service->{groups} ? (groups => $service->{groups}) : (),
         );
-    } keys %$services;
+    } sort keys %$services;
 
     return @services;
 }
@@ -80,16 +80,30 @@ sub post_service_request {
 
     $args->{attributes}{quantity} ||= 1;
 
+    my $service_item_name = $args->{attributes}->{service_item_name};
+    $service_item_name = 'bulky' if $args->{service_code} eq 'bulky_collection';
+
     my $worksheet_id = $integration->CreateWorksheet({
         service_code => $args->{service_code},
         uprn => $args->{attributes}->{uprn},
-        service_item_name => $args->{attributes}->{service_item_name},
+        service_item_name => $service_item_name,
         worksheet_reference => $args->{attributes}->{fixmystreet_id},
         worksheet_message => $self->_worksheet_message($args),
+
+        # Report/request
         assisted_yn => $args->{attributes}->{assisted_yn},
         location_of_containers => $args->{attributes}->{location_of_containers},
+
+        # Request
         location_of_letterbox => $args->{attributes}->{location_of_letterbox},
         quantity => $args->{attributes}->{quantity},
+
+        # Bulky
+        bulky_parking => $args->{attributes}->{bulky_parking},
+        bulky_location => $args->{attributes}->{bulky_location},
+        round_instance_id => $args->{attributes}->{round_instance_id},
+        collection_date => $args->{attributes}->{collection_date},
+        bulky_items => [ split /::/, $args->{attributes}->{bulky_items} || '' ],
     });
 
     my $request = $self->new_request(
