@@ -6,8 +6,14 @@ category_mapping:
   missed_collection:
     name: Report missed collection
     group: Waste
+  bulky_collection:
+    name: Bulky collection
+    group: Waste
 
 service_mapping:
   RES-180:
     service_id: 289
     service_item_id: 22
+
+  bulky:
+    service_id: 78

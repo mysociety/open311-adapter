@@ -17,6 +17,8 @@ sub _worksheet_message {
         { key => 'assisted_yn', label => 'Assisted collection?' },
         { key => 'location_of_containers', label => 'Location of containers:' },
         { key => 'location_of_letterbox', label => 'Location of letterbox:' },
+        { key => 'pension', label => 'State pension?' },
+        { key => 'disability', label => 'Physical disability?' },
     ) {
         push @messages, "$_->{label} $args->{attributes}->{$_->{key}}"
             if $args->{attributes}->{$_->{key}};
