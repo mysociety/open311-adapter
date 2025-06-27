@@ -19,6 +19,7 @@ use Moo;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::ConfigFile';
 
+use Data::UUID;
 use Integrations::Rest;
 
 =head2 jurisdiction_id
@@ -61,6 +62,36 @@ has cams => (
     ) }
 );
 
+=head2 username and password
+
+Login username and password required to get an access token
+
+=cut
+
+has username => (
+    is => 'ro',
+);
+
+has password => (
+    is => 'ro',
+);
+
+=head2 userId and access_token
+
+Some API calls must pass a token in the .aspxauth header and the userid in the endpoint.
+
+This is set by sending login credentials to the login endpoint and retrieving the userid and access_token
+
+=cut
+
+has access_token => (
+    is => 'rw',
+);
+
+has userId => (
+    is => 'rw',
+);
+
 =head2 service_list
 
 This is a mapping of CAMS services to use for categories populating FMS. CAMS Desktop does
@@ -95,6 +126,16 @@ UKCouncil class as need the Easting and Northing
 has service_class  => (
     is => 'ro',
     default => 'Open311::Endpoint::Service::UKCouncil'
+);
+
+=head2 api_calls
+
+Mapping of keys to api call strings
+
+=cut
+
+has api_calls => (
+    is => 'ro',
 );
 
 =head2 get_integration
@@ -147,6 +188,84 @@ sub services {
     }
 
     return @services;
+}
+
+=head2 do_login
+
+Prior to calls requiring authorisation we need to log in and set the userId and access_token
+
+=cut
+
+sub do_login {
+    my $self = shift;
+
+    my $user_details = $self->cams->api_call(
+        (
+            call => $self->api_calls->{login},
+            method => 'POST',
+            headers => {
+                content_length => '0',
+                username => $self->username,
+                password => $self->password,
+            }
+        )
+    );
+
+    $self->access_token($user_details->{access_token});
+    $self->userId($user_details->{userId});
+};
+
+=head2 post_service_request
+
+Authorise with the login so we can send an authorisation token and
+create and post the json fields
+
+=cut
+
+sub post_service_request {
+    my ($self, $service, $args) = @_;
+
+    $self->do_login;
+
+    my $TypeDescr;
+    for my $category (keys %{ $self->service_list }) {
+        for my $id (keys %{ $self->service_list->{$category}}) {
+            if ($id eq $args->{service_code}) {
+                $TypeDescr = $self->service_list->{$category}->{$id}->{service_name}[0];
+                last;
+            }
+        }
+    }
+
+    my $serviceRequest = {
+        'Info' => {
+            TypeDescr => $TypeDescr,
+            StatusDescr => 'Unresolved',
+        },
+        'Maint' => {
+            Location => $args->{attributes}->{title},
+            Problem => $args->{attributes}->{description},
+            Easting => $args->{attributes}->{easting},
+            Northing => $args->{attributes}->{northing},
+            AdminArea => $args->{attributes}->{AdminArea},
+            LinkCode => $args->{attributes}->{LinkCode},
+            LinkType => $args->{attributes}->{LinkType},
+        }
+    };
+
+    my $ug = Data::UUID->new;
+    my $uuid = $ug->to_string($ug->create());
+    my $response = $self->cams->api_call(
+        call => $self->api_calls->{insert} . $uuid,
+        body => $serviceRequest,
+        headers => { '.aspxauth' => $self->access_token }
+    );
+
+    if ($response) {
+        return $self->new_request(
+            service_request_id => $response
+        )
+    }
 }
 
 1;

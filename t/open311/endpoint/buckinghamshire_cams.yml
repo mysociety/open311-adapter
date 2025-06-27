@@ -1,3 +1,12 @@
+username: User1
+password: password123
+
+api_url: https://dummy/api/
+
+api_calls:
+  login: 'usersaccess/dologin'
+  insert: 'Users/Insert/'
+
 service_list:
   Public Rights of Way:
     '9':
@@ -18,4 +27,3 @@ service_extra_data:
     description: Link Code
   - code: LinkType
     description: Link Type
-
