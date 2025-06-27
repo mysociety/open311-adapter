@@ -1,6 +1,7 @@
 package Integrations::Rest;
 
 use Moo;
+use HTTP::Request::Common;
 use LWP::UserAgent;
 use JSON::MaybeXS;
 
@@ -47,7 +48,12 @@ has json => (
 
 api calls are either GET or POSTING JSON data.
 
-Expects { call => ** string uri **, $body => ** hashref of data ** headers => ** hashref of headers ** }
+Expects {
+    call => ** string uri **,
+    headers => ** hashref of headers **
+    body => ** hashref of data to be JSON-encoded, or **
+    form => ** hashref or arrayref of form data **
+}
 
 JSON is expected in a successful response, but allow_nonref can be set in initialisation.
 
@@ -58,7 +64,9 @@ sub api_call {
 
     my $call = $args{call};
     my $body = $args{body};
+    my $form = $args{form};
     my $headers = $args{headers};
+
     $self->logger->debug($call);
 
     my $ua = LWP::UserAgent->new(
@@ -67,7 +75,9 @@ sub api_call {
     );
 
     my $method = $args{method};
-    $method = $body ? 'POST' : 'GET' unless $method;
+    $method = ($body || $form) ? 'POST' : 'GET' unless $method;
+    $method = HTTP::Request::Common->can($method);
+
     my $uri = URI->new( $self->config->{api_url} . $call );
     $uri->query_form(%{ $args{params} });
 
@@ -86,6 +96,7 @@ sub api_call {
         }
     }
 
+    my $request = $method->($uri, $form ? ($form) : (), %$headers);
     my $response = $ua->request($request);
     if ($response->is_success) {
         $self->logger->debug($response->content);
