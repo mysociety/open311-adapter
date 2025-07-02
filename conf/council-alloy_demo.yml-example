@@ -1,0 +1,27 @@
+{
+  "api_key": "",
+  "api_url": "",
+  "rfs_design": '',
+  "resource_attachment_attribute_id": "",
+
+  "parent_attribute_name": "",
+
+  "service_whitelist": {
+  },
+
+  "resource_attribute_defaults": {
+  },
+
+  "request_to_resource_attribute_mapping": {
+  },
+
+  "created_datetime_attribute_id": '',
+
+  "inspection_attribute_mapping": {
+  },
+
+  "inspection_status_mapping": {
+  },
+
+  "defect_resource_name": []
+}

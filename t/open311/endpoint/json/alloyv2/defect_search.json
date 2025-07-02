@@ -7,18 +7,18 @@
           "joinQueries": [
               {
                   "item": {
-                      "itemId": "3027032"
+                      "itemId": "3027032",
+                      "attributes": [
+                          {
+                              "attributeCode": "inspection_only_attribute",
+                              "value": "doesn't matter"
+                          }
+                      ]
                   },
-                  "attributes": [
-                      {
-                          "attributeCode": "inspection_only_attribute",
-                          "value": "doesn't matter"
-                      }
+                  "joinAttributes": [
+                    "root.defect_to_inspection_link_attribute.inspection_only_attribute"
                   ]
               }
-          ],
-          "joinAttributes": [
-            "root.defect_to_inspection_link_attribute.inspection_only_attribute"
           ]
       },
       {
@@ -26,18 +26,18 @@
           "joinQueries": [
               {
                   "item": {
-                      "itemId": "irrelevant"
+                      "itemId": "irrelevant",
+                      "attributes": [
+                          {
+                              "attributeCode": "inspection_only_attribute",
+                              "value": "doesn't matter"
+                          }
+                      ]
                   },
-                  "attributes": [
-                      {
-                          "attributeCode": "inspection_only_attribute",
-                          "value": "doesn't matter"
-                      }
+                  "joinAttributes": [
+                    "root.defect_to_inspection_link_attribute.inspection_only_attribute"
                   ]
               }
-          ],
-          "joinAttributes": [
-            "root.defect_to_inspection_link_attribute.inspection_only_attribute"
           ]
       }
   ],
