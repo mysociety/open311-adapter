@@ -100,13 +100,16 @@ sub _populate_priority_and_target_date {
     my $sla = $self->config->{question_mapping}{target_date_sla}{$category};
     die "No target date entry found for $category" unless $sla;
     my $date;
-    my $now = DateTime->now(time_zone => "Europe/London");
+    my $formatter = DateTime::Format::W3CDTF->new(strict => 1);
+    my $now = DateTime->now(time_zone => "Europe/London", formatter => $formatter);
     if ($sla->{days}) {
         my $wd = FixMyStreet::WorkingDays->new(public_holidays => $self->public_holidays());
-        $date = $wd->add_days($now, $sla->{days})->date;
+        $date = $wd->add_days($now, $sla->{days});
     } elsif ($sla->{weeks}) {
-        $date = $now->add(weeks => $sla->{weeks})->date;
+        $date = $now->add(weeks => $sla->{weeks});
     }
+    $date->set(hour => 23, minute => 59, second => 59)->set_time_zone('UTC');
+
     push @$attr, { attributeCode => $mapping->{target_date}, value => $date };
 }
 
