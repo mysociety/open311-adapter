@@ -243,7 +243,7 @@ Other',
                 },
                 {   attributeCode =>
                         'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
-                    value => '2025-04-02',
+                    value => '2025-04-02T22:59:59Z',
                 },
                 {   attributeCode =>
                         'attributes_defectsReportedDate',
@@ -316,7 +316,7 @@ Yes',
                 },
                 {   attributeCode =>
                         'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
-                    value => '2025-06-24',
+                    value => '2025-06-24T22:59:59Z',
                 },
                 {   attributeCode =>
                         'attributes_defectsReportedDate',
@@ -385,7 +385,7 @@ Yes',
                 },
                 {   attributeCode =>
                         'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
-                    value => '2025-04-29',
+                    value => '2025-04-29T22:59:59Z',
                 },
                 {   attributeCode =>
                         'attributes_defectsReportedDate',
@@ -450,7 +450,7 @@ Yes',
                 },
                 {   attributeCode =>
                         'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
-                    value => '2025-04-29',
+                    value => '2025-04-29T22:59:59Z',
                 },
                 {   attributeCode =>
                         'attributes_defectsReportedDate',
