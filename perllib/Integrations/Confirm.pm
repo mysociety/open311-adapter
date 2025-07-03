@@ -521,7 +521,7 @@ sub defects_graphql_query { # XXX factor together with jobs?
 {
   defects(
         filter: {
-            jobNumber: { hasValue: false }
+            jobNumber: { hasValue: true }
             loggedDate: {
                 greaterThanEquals: "$start_date"
                 lessThanEquals: "$end_date"
@@ -538,6 +538,16 @@ sub defects_graphql_query { # XXX factor together with jobs?
     northing
     loggedDate
     targetDate
+    job (
+        filter: {actualCompletionDate: {hasValue:false}}
+    ){
+      jobNumber
+      actualCompletionDate
+      currentStatusLog {
+        loggedDate
+        statusCode
+      }
+    }
     description
   }
 }
