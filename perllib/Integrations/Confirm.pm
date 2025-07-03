@@ -711,7 +711,7 @@ sub GetEnquiries {
     my $self = shift;
 
     # avoid errors if called with no enquiries to fetch
-    return () unless @_;
+    return (); # unless @_;
 
     my @operations = map {
         \SOAP::Data->name('GetEnquiry' => \SOAP::Data->value(
@@ -935,6 +935,8 @@ sub operation_for_update {
 
 sub GetEnquiryStatusChanges {
     my ($self, $start, $end) = @_;
+
+    return [];
 
     # The Confirm server seems to ignore timezone hints in the datetime
     # string, so we need to convert whatever $start/$end we've been given
