@@ -523,37 +523,24 @@ sub defects_graphql_query { # XXX factor together with jobs?
 {
   defects(
         filter: {
+            jobNumber: { hasValue: false }
             loggedDate: {
                 greaterThanEquals: "$start_date"
                 lessThanEquals: "$end_date"
             }
             defectStatus: { equals: "N" }
+            defectTypeCode: {
+                inList: [$defect_type_codes_str]
+            }
         }
   ) {
+    jobNumber
+    defectTypeCode
     defectNumber
     easting
     northing
     loggedDate
     targetDate
-    defectType(
-        filter: {
-            code: {
-                inList: [ $defect_type_codes_str ]
-            }
-        }
-    ){
-        code
-    }
-    job {
-      jobNumber
-      currentStatusLog {
-        loggedDate
-        statusCode
-      }
-    }
-    documents {
-      url
-    }
     description
   }
 }

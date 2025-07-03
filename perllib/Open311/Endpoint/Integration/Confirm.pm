@@ -1159,11 +1159,11 @@ sub _get_service_requests_for_defects {
             next;
         }
 
-        my $service = $self->_find_defect_service($defect->{defectType}->{code}, $services);
+        my $service = $self->_find_defect_service($defect->{defectTypeCode}, $services);
         unless ($service) {
             # Should not happen given that we filter by defect type in graphql
             $self->logger->warn( "no service for defect type code "
-                    . $defect->{defectType}->{code}
+                    . $defect->{defectTypeCode}
                     . " for defect $defect_id" );
             next;
         }
