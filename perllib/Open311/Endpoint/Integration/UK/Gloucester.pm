@@ -110,7 +110,7 @@ sub _populate_priority_and_target_date {
     }
     $date->set(hour => 23, minute => 59, second => 59)->set_time_zone('UTC');
 
-    push @$attr, { attributeCode => $mapping->{target_date}, value => $date };
+    push @$attr, { attributeCode => $mapping->{target_date}, value => "$date" };
 }
 
 sub _populate_category_and_group_attr {
