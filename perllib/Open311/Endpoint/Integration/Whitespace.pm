@@ -16,6 +16,7 @@ use v5.14;
 use Moo;
 use Integrations::Whitespace;
 use Open311::Endpoint::Service::UKCouncil::Whitespace;
+use Open311::Endpoint::Service::Request::Update::mySociety;
 use JSON::MaybeXS;
 
 extends 'Open311::Endpoint';
@@ -111,6 +112,21 @@ sub post_service_request {
     );
 
     return $request;
+}
+
+sub post_service_request_update {
+    my ($self, $args) = @_;
+
+    if ($args->{description} =~ m/^Booking cancelled/) {
+        $self->get_integration->CancelWorksheet({
+            worksheet_id => $args->{service_request_id}
+        });
+    }
+    my $update_id = 'BLANK';
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        status => lc $args->{status},
+        update_id => $update_id,
+    );
 }
 
 sub _worksheet_message {

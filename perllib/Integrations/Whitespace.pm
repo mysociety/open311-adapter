@@ -169,6 +169,24 @@ sub property_input {
     }) : ();
 }
 
+sub CancelWorksheet {
+    my ($self, $params) = @_;
+
+    my $worksheet = ixhash(
+        WorksheetId => $params->{worksheet_id},
+    );
+
+    my $res = $self->call('CancelWorksheet', cancelWorksheetInput => $worksheet);
+    $self->logger->debug("CancelWorksheet response: " . encode_json($res));
+
+    if ($res->{ErrorCode}) {
+        $self->logger->error("Error cancelling worksheet in Whitespace: $res->{ErrorDescription}");
+        die "Error cancelling worksheet in Whitespace: $res->{ErrorDescription}";
+    }
+
+    $self->logger->info("Cancelled worksheet $params->{worksheet_id} in Whitespace");
+}
+
 sub GetServices {
     my ($self, $service_id) = @_;
 
