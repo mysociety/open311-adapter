@@ -82,6 +82,14 @@ $soap_lite->mock(call => sub {
             method => 'CreateWorksheet',
             result => { ErrorCode => "0", ErrorDescription => 'Success', WorksheetResponse => { anyType => ["242259", ""] } },
         );
+    } elsif ($method eq 'CancelWorksheet') {
+        my $args = $args[0];
+        my %params = map { $_->name => $_->value } ${$args->value}->value;
+        is $params{WorksheetId}, '362881';
+        return SOAP::Result->new(
+            method => 'CancelWorksheet',
+            result => { ErrorCode => "0", ErrorDescription => 'Success' },
+        );
     } else {
         die "Unknown method $method";
     }
@@ -190,6 +198,44 @@ subtest "POST bulky collection OK" => sub {
     is_deeply decode_json($res->content),
         [ {
             "service_request_id" => '242259',
+        } ], 'correct json returned';
+};
+
+subtest "POST bulky collection cancellation OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        description => 'Booking cancelled by customer',
+        service_request_id => '362881',
+        status => 'CANCELLED',
+        update_id => '12345',
+        updated_datetime => '2025-07-04T01:23:45Z',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => 'BLANK',
+        } ], 'correct json returned';
+};
+
+subtest "POST any other update" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        description => '',
+        service_request_id => '362882',
+        status => 'CLOSED',
+        update_id => '12346',
+        updated_datetime => '2025-07-04T01:23:45Z',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => 'BLANK',
         } ], 'correct json returned';
 };
 
