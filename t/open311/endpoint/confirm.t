@@ -389,6 +389,46 @@ $open311->mock( perform_request_graphql => sub {
                 ],
             },
         };
+    } elsif ( $args{query} && $args{query} =~ /enquiryStatusLogs/ ) {
+        return {
+            data => {
+                enquiryStatusLogs => [
+                    {
+                        enquiryNumber => '3001',
+                        enquiryStatusCode => 'INP',
+                        logNumber => '3',
+                        loggedDate => '2018-03-01T12:00:00+00:00',
+                        notes => '',
+                        centralEnquiry => {
+                            subjectCode => 'ABC',
+                            serviceCode => 'DEF'
+                        }
+                    },
+                    {
+                        enquiryNumber => '3002',
+                        enquiryStatusCode => 'INP',
+                        logNumber => '1',
+                        loggedDate => '2018-03-01T13:00:00+00:00',
+                        notes => '',
+                        centralEnquiry => {
+                            subjectCode => 'ABC',
+                            serviceCode => 'DEF'
+                        }
+                    },
+                    {
+                        enquiryNumber => '3002',
+                        enquiryStatusCode => 'DUP',
+                        logNumber => '2',
+                        loggedDate => '2018-03-01T13:30:00+00:00',
+                        notes => '',
+                        centralEnquiry => {
+                            subjectCode => 'ABC',
+                            serviceCode => 'DEF'
+                        }
+                    }
+                ],
+            },
+        };
     }
 
     return {};
@@ -1208,7 +1248,7 @@ subtest 'GET jobs alongside enquiries' => sub {
     is_deeply $content, $expected, 'correct data fetched';
 };
 
-subtest 'GET updates - including for jobs' => sub {
+subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
     local $ENV{TEST_LOGGER} = 'warn';
 
     my @expected_warnings = (
@@ -1234,25 +1274,25 @@ subtest 'GET updates - including for jobs' => sub {
                 {   description          => undef,
                     external_status_code => 'INP',
                     media_url            => undef,
-                    service_request_id   => '2001',
+                    service_request_id   => '3001',
                     status               => 'in_progress',
-                    update_id            => '2001_3',
+                    update_id            => '3001_3',
                     updated_datetime     => '2018-03-01T12:00:00+00:00',
                 },
                 {   description          => undef,
                     external_status_code => 'INP',
                     media_url            => undef,
-                    service_request_id   => '2002',
+                    service_request_id   => '3002',
                     status               => 'in_progress',
-                    update_id            => '2002_1',
+                    update_id            => '3002_1',
                     updated_datetime     => '2018-03-01T13:00:00+00:00',
                 },
                 {   description          => undef,
                     external_status_code => 'DUP',
                     media_url            => undef,
-                    service_request_id   => '2002',
+                    service_request_id   => '3002',
                     status               => 'duplicate',
-                    update_id            => '2002_2',
+                    update_id            => '3002_2',
                     updated_datetime     => '2018-03-01T13:30:00+00:00',
                 },
 

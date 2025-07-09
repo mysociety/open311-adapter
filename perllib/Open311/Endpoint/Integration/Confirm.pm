@@ -109,6 +109,22 @@ has handle_defects => (
     }
 );
 
+=head2 use_graphql_for_enquiries
+
+Whether this integration fetches enquiries and enquiry updates using GraphQL.
+This is based on the presence of the graphql_url in the Confirm integration
+and graphql_key in config.
+
+=cut
+
+has use_graphql_for_enquiries => (
+    is => 'lazy',
+    default => sub {
+        my $integ = $_[0]->get_integration;
+        return ($integ->graphql_url && $integ->config->{graphql_key}) ? 1 : 0;
+    }
+);
+
 =head2 defect_service_mapping
 
 Controls the mapping of Confirm defect service/subject codes to Open311 services
@@ -563,38 +579,63 @@ sub get_service_request_updates {
     my ($self, $args) = @_;
 
     my $integ = $self->get_integration;
-    my $enquiries = $integ->GetEnquiryStatusChanges(
-        $args->{start_date},
-        $args->{end_date}
-    );
-
     my %completion_statuses = map { $_ => 1} @{ $integ->completion_statuses };
 
     my @updates = ();
 
-    for my $enquiry (@$enquiries) {
-        my $status_logs = $enquiry->{EnquiryStatusLog};
-        $status_logs = [ $status_logs ] if (ref($status_logs) eq 'HASH');
-        for my $status_log (@$status_logs) {
-            my $enquiry_id = $enquiry->{EnquiryNumber};
-            my $update_id = $enquiry_id . "_" . $status_log->{EnquiryLogNumber};
-            my $ts = $self->date_parser->parse_datetime($status_log->{LoggedTime})->truncate( to => 'second' );
+    if ($self->use_graphql_for_enquiries) {
+        my $w3c = DateTime::Format::W3CDTF->new;
+        my $start_time = $w3c->parse_datetime( $args->{start_date} );
+        $start_time->set_time_zone($integ->server_timezone);
+        my $start = $w3c->format_datetime($start_time);
+
+        my $end_time = $w3c->parse_datetime( $args->{end_date} );
+        $end_time->set_time_zone($integ->server_timezone);
+        my $end = $w3c->format_datetime($end_time);
+
+        my $query = <<GRAPHQL;
+{
+  enquiryStatusLogs(
+    filter: {
+      loggedDate: {
+        lessThanEquals: "$end"
+        greaterThanEquals: "$start"
+      }
+    }
+  ) {
+    enquiryNumber
+    enquiryStatusCode
+    logNumber
+    loggedDate
+    notes
+    centralEnquiry {
+      subjectCode
+      serviceCode
+    }
+  }
+}
+GRAPHQL
+        my $results =$integ->perform_request_graphql(query => $query)->{data}->{enquiryStatusLogs};
+        for my $status_log (@$results) {
+            my $enquiry_id = $status_log->{enquiryNumber};
+            my $update_id = $enquiry_id . "_" . $status_log->{logNumber};
+            my $ts = $self->date_parser->parse_datetime($status_log->{loggedDate})->truncate( to => 'second' );
             $ts->set_time_zone($integ->server_timezone);
             my $description = $self->publish_service_update_text ?
-                ($status_log->{StatusLogNotes} || "") :
+                ($status_log->{notes} || "") :
                 "";
-            my $status = $self->reverse_status_mapping->{$status_log->{EnquiryStatusCode}};
+            my $status = $self->reverse_status_mapping->{$status_log->{enquiryStatusCode}};
             next if $status && $status eq 'IGNORE';
             if (!$status) {
-                $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code $status_log->{EnquiryStatusCode} (EnquiryNumber $enquiry->{EnquiryNumber})");
+                $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code $status_log->{enquiryStatusCode} (EnquiryNumber $enquiry_id)");
                 $status = "open";
             }
 
             my $media_urls;
-            if ($completion_statuses{$status_log->{EnquiryStatusCode}}) {
+            if ($completion_statuses{$status_log->{enquiryStatusCode}}) {
                 # This enquiry has been marked as complete by this update;
                 # see if there's a photo.
-                $media_urls = $self->photo_urls_for_update($enquiry_id);
+                $media_urls = $self->photo_urls_for_update($enquiry_id); # XXX we should instead get this all in one GraphQL query, above
             }
 
             push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
@@ -603,9 +644,51 @@ sub get_service_request_updates {
                 service_request_id => $enquiry_id,
                 description => $description,
                 updated_datetime => $ts,
-                external_status_code => $status_log->{EnquiryStatusCode},
+                external_status_code => $status_log->{enquiryStatusCode},
                 $media_urls ? ( media_url => $media_urls ) : (),
             );
+        }
+    } else {
+        my $enquiries = $integ->GetEnquiryStatusChanges(
+            $args->{start_date},
+            $args->{end_date}
+        );
+
+        for my $enquiry (@$enquiries) {
+            my $status_logs = $enquiry->{EnquiryStatusLog};
+            $status_logs = [ $status_logs ] if (ref($status_logs) eq 'HASH');
+            for my $status_log (@$status_logs) {
+                my $enquiry_id = $enquiry->{EnquiryNumber};
+                my $update_id = $enquiry_id . "_" . $status_log->{EnquiryLogNumber};
+                my $ts = $self->date_parser->parse_datetime($status_log->{LoggedTime})->truncate( to => 'second' );
+                $ts->set_time_zone($integ->server_timezone);
+                my $description = $self->publish_service_update_text ?
+                    ($status_log->{StatusLogNotes} || "") :
+                    "";
+                my $status = $self->reverse_status_mapping->{$status_log->{EnquiryStatusCode}};
+                next if $status && $status eq 'IGNORE';
+                if (!$status) {
+                    $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code $status_log->{EnquiryStatusCode} (EnquiryNumber $enquiry->{EnquiryNumber})");
+                    $status = "open";
+                }
+
+                my $media_urls;
+                if ($completion_statuses{$status_log->{EnquiryStatusCode}}) {
+                    # This enquiry has been marked as complete by this update;
+                    # see if there's a photo.
+                    $media_urls = $self->photo_urls_for_update($enquiry_id);
+                }
+
+                push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
+                    status => $status,
+                    update_id => $update_id,
+                    service_request_id => $enquiry_id,
+                    description => $description,
+                    updated_datetime => $ts,
+                    external_status_code => $status_log->{EnquiryStatusCode},
+                    $media_urls ? ( media_url => $media_urls ) : (),
+                );
+            }
         }
     }
 
