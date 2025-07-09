@@ -1047,15 +1047,31 @@ sub get_service_requests {
         $end_time->set_time_zone($integ->server_timezone);
         my $end = $w3c->format_datetime($end_time);
 
-        my $query = <<GRAPHQL;
-{
-  centralEnquiries(
-    filter: {
+        my $filter_json = '';
+        if ($self->external_system_number) {
+            $filter_json = <<FILTER;
       loggedDate: {
         lessThanEquals: "$end"
         greaterThanEquals: "$start"
       }
-    }
+      externalSystemNumber: {
+        notEquals: "@{[$self->external_system_number]}"
+      }
+FILTER
+        } else {
+            $filter_json = <<FILTER;
+      loggedDate: {
+        lessThanEquals: "$end"
+        greaterThanEquals: "$start"
+      }
+FILTER
+        }
+
+        my $query = <<GRAPHQL;
+{
+  centralEnquiries(
+    filter: {
+$filter_json    }
   ) {
     serviceCode
     subjectCode
@@ -1069,6 +1085,7 @@ sub get_service_requests {
     contactName
     emailAddress
     address
+    externalSystemNumber
   }
 }
 GRAPHQL
