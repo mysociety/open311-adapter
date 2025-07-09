@@ -40,4 +40,18 @@ subtest "GraphQL errors are logged " => sub {
     } qr/.*Uh-oh spaghettio!.*/, 'Got expected warning log for errors.';
 };
 
+subtest "Custom GraphQL query can be passed in" => sub {
+    my $custom_query = 'query { customTest { id name } }';
+
+    my $sent_request;
+    $lwp->mock(request => sub {
+        is(decode_json($_[1]->content)->{query}, $custom_query, 'Custom GraphQL query was sent in request');
+        return HTTP::Response->new(200, 'OK', [], encode_json({
+            data => { customTest => [{ id => 1, name => 'test' }] }
+        }));
+    });
+
+    $integration->perform_request_graphql(query => $custom_query);
+};
+
 done_testing;
