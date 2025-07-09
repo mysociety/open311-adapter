@@ -1142,6 +1142,8 @@ sub _get_service_requests_for_defects {
 
     return unless $self->handle_defects;
 
+    my $superseded = $self->_superseded_defect_numbers($integ);
+
     my $defects = $integ->GetDefects(
         start_date => $args->{start_date},
         end_date   => $args->{end_date},
@@ -1149,6 +1151,8 @@ sub _get_service_requests_for_defects {
 
     for my $defect (@$defects) {
         my $defect_id = $defect->{defectNumber};
+
+        next if $superseded->{$defect_id};
 
         unless ( $defect->{easting} && $defect->{northing} ) {
             $self->logger->warn("easting/northing data missing for defect $defect_id");
@@ -1212,6 +1216,18 @@ sub _get_service_requests_for_defects {
 
         push @$requests, $request;
     }
+}
+
+sub _superseded_defect_numbers {
+    my ($self, $integ) = @_;
+
+    my $query = "{defects(filter: {supersedesDefectNumber: {hasValue:true}}){supersedesDefectNumber}}";
+    my $results = $integ->perform_request_graphql( query => $query, type => '' );
+    my $defects = $results->{data}->{defects};
+
+    my %superseded = map { $_->{supersedesDefectNumber} => 1 } @$defects;
+
+    return \%superseded;
 }
 
 sub _description_for_defect {
