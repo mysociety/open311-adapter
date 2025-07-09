@@ -326,6 +326,7 @@ sub perform_request_graphql {
     );
     $request->content_type('application/json; charset=UTF-8');
 
+    $args{type} //= '';
     my $query;
     if ( $args{type} eq 'job_types' ) {
         $query = $self->job_types_graphql_query();
@@ -339,6 +340,8 @@ sub perform_request_graphql {
         $query = $self->defects_graphql_query(%args);
     } elsif ( $args{type} eq 'defect_status_logs' ) {
         $query = $self->defect_status_logs_graphql_query(%args);
+    } elsif ( $args{query} ) {
+        $query = $args{query};
     }
 
     my $body = {
