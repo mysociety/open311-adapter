@@ -918,6 +918,13 @@ sub EnquiryUpdate {
         StatusLogNotes => substr($args->{description}, 0, 2000),
     );
 
+    # FMS might have sent through a category change with this update
+    if ( my $service_code = $args->{service_code} || '' ) {
+        my ($serv, $subj) = split /_/, $service_code;
+        $enq{ServiceCode} = $serv;
+        $enq{SubjectCode} = $subj;
+    }
+
     $enq{EnquiryStatusCode} = $args->{status_code} if $args->{status_code};
 
     my $response = $self->perform_request($self->operation_for_update(\%enq), { return_on_fault => 1});
