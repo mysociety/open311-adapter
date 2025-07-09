@@ -731,20 +731,25 @@ This is an update"
 subtest "create comment succeeds even when photo can't be downloaded from url" => sub {
     local $ENV{TEST_LOGGER} = 'warn';
 
-    my $res = $endpoint->run_test_request(
-        POST => '/servicerequestupdates.json',
-        jurisdiction_id => 'dummy',
-        api_key => 'test',
-        first_name => 'Bob',
-        last_name => 'Mould',
-        email => 'test@example.com',
-        description => 'This is an update',
-        service_request_id => 12345,
-        update_id => 999,
-        status => 'OPEN',
-        updated_datetime => '2019-04-17T14:39:00Z',
-        media_url => 'broken_url',
-    );
+    my $res;
+    stderr_like {
+        $res = $endpoint->run_test_request(
+            POST => '/servicerequestupdates.json',
+            jurisdiction_id => 'dummy',
+            api_key => 'test',
+            first_name => 'Bob',
+            last_name => 'Mould',
+            email => 'test@example.com',
+            description => 'This is an update',
+            service_request_id => 12345,
+            update_id => 999,
+            status => 'OPEN',
+            updated_datetime => '2019-04-17T14:39:00Z',
+            media_url => 'broken_url',
+        );
+    }
+    qr/Unable to download attachment broken_url/,
+    "Correct warning generated for broken URL";
 
     my $sent = pop @sent;
     ok $res->is_success, 'valid request'
