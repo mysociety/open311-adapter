@@ -593,6 +593,11 @@ sub get_service_request_updates {
     my @updates = ();
 
     if ($self->use_graphql_for_enquiries) {
+        my @services = $self->services;
+        my %services = map {
+            _normalise_service_code($_->{service_code}) => $_
+        } reverse @services;
+
         my $w3c = DateTime::Format::W3CDTF->new;
         my $start_time = $w3c->parse_datetime( $args->{start_date} );
         $start_time->set_time_zone($integ->server_timezone);
@@ -647,6 +652,16 @@ GRAPHQL
                 $media_urls = $self->photo_urls_for_update($enquiry_id); # XXX we should instead get this all in one GraphQL query, above
             }
 
+            # Find the corresponding Open311 service code for the enquiry's current Confirm service/subject codes.
+            my $extras;
+            my $service_code = $status_log->{centralEnquiry}->{serviceCode} . "_" . $status_log->{centralEnquiry}->{subjectCode};
+            if ( my $service = $services{$service_code} ) {
+                $extras = {
+                    category => $service->service_name,
+                    group => @{$service->groups} ? $service->groups->[0] : $service->group,
+                };
+            }
+
             push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
                 status => $status,
                 update_id => $update_id,
@@ -655,6 +670,7 @@ GRAPHQL
                 updated_datetime => $ts,
                 external_status_code => $status_log->{enquiryStatusCode},
                 $media_urls ? ( media_url => $media_urls ) : (),
+                $extras ? ( extras => $extras ) : (),
             );
         }
     } else {
