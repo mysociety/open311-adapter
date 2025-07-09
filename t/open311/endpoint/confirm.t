@@ -224,7 +224,7 @@ $open311->mock(perform_request => sub {
 $open311->mock( perform_request_graphql => sub {
     my ( $self, %args ) = @_;
 
-    if ( $args{type} eq 'job_types' ) {
+    if ( $args{type} && $args{type} eq 'job_types' ) {
         return {
             data => {
                 jobTypes => [
@@ -233,7 +233,7 @@ $open311->mock( perform_request_graphql => sub {
                 ],
             },
         };
-    } elsif ( $args{type} eq 'defect_types' ) {
+    } elsif ( $args{type} && $args{type} eq 'defect_types' ) {
         return {
             data => {
                 defectTypes => [
@@ -242,7 +242,7 @@ $open311->mock( perform_request_graphql => sub {
                 ],
             },
         };
-    } elsif ( $args{type} eq 'jobs' ) {
+    } elsif ( $args{type} && $args{type} eq 'jobs' ) {
         return {
             data => {
                 jobs => [
@@ -360,7 +360,7 @@ $open311->mock( perform_request_graphql => sub {
                 ],
             },
         };
-    } elsif ( $args{type} eq 'job_status_logs' ) {
+    } elsif ( $args{type} && $args{type} eq 'job_status_logs' ) {
         return {
             data => {
                 jobStatusLogs => [
@@ -422,6 +422,55 @@ $open311->mock( perform_request_graphql => sub {
                             serviceCode => 'DEF'
                         }
                     }
+                ],
+            },
+        };
+    } elsif ( $args{query} && $args{query} =~ /centralEnquiries/ ) {
+        return {
+            data => {
+                centralEnquiries => [
+                    {
+                        serviceCode => 'ABC',
+                        subjectCode => 'DEF',
+                        statusCode => 'INP',
+                        enquiryNumber => '2003',
+                        statusLoggedDate => '2018-04-17T12:34:56Z',
+                        loggedDate => '2018-04-17T12:34:56Z',
+                        description => 'this is a report from confirm',
+                        easting => '100',
+                        northing => '100',
+                        contactName => '',
+                        emailAddress => '',
+                        address => '',
+                    },
+                    {
+                        serviceCode => 'ABC',
+                        subjectCode => 'DEF',
+                        statusCode => 'INP',
+                        enquiryNumber => '2004',
+                        statusLoggedDate => '2018-04-17T12:34:57Z',
+                        loggedDate => '2018-04-17T12:34:57Z',
+                        description => 'this is a report from confirm with no easting/northing',
+                        easting => '',
+                        northing => '',
+                        contactName => '',
+                        emailAddress => '',
+                        address => '',
+                    },
+                    {
+                        serviceCode => 'ABC',
+                        subjectCode => 'DEF',
+                        statusCode => 'INP',
+                        enquiryNumber => '2005',
+                        statusLoggedDate => '2018-04-17T12:34:58Z',
+                        loggedDate => '2018-04-17T12:34:58Z',
+                        description => 'this is a report from confirm with a zero easting/northing',
+                        easting => '0',
+                        northing => '0',
+                        contactName => '',
+                        emailAddress => '',
+                        address => '',
+                    },
                 ],
             },
         };

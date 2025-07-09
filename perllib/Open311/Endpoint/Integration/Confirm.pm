@@ -1037,75 +1037,75 @@ sub get_service_requests {
 
     # Enquiries
 
-    my $updated_enquiries = $integ->GetEnquiryStatusChanges(
-        $args->{start_date},
-        $args->{end_date}
-    );
-    my @enquiry_ids = map {
-        $_->{EnquiryNumber}
-    } @$updated_enquiries;
+    if ($self->use_graphql_for_enquiries) {
+        my $w3c = DateTime::Format::W3CDTF->new;
+        my $start_time = $w3c->parse_datetime( $args->{start_date} );
+        $start_time->set_time_zone($integ->server_timezone);
+        my $start = $w3c->format_datetime($start_time);
 
-    my @enquiries = $integ->GetEnquiries(@enquiry_ids);
-    for my $enquiry ( @enquiries ) {
-        my $code = $enquiry->{ServiceCode} . "_" . $enquiry->{SubjectCode};
-        my $service = $services{$code};
-        my $status = $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}};
-        next if $status && $status eq 'IGNORE';
+        my $end_time = $w3c->parse_datetime( $args->{end_date} );
+        $end_time->set_time_zone($integ->server_timezone);
+        my $end = $w3c->format_datetime($end_time);
 
-        unless ($service || ($service = $self->_find_wrapping_service($code, \@services))) {
-            $self->logger->warn("no service for service code $code");
-            next;
+        my $query = <<GRAPHQL;
+{
+  centralEnquiries(
+    filter: {
+      loggedDate: {
+        lessThanEquals: "$end"
+        greaterThanEquals: "$start"
+      }
+    }
+  ) {
+    serviceCode
+    subjectCode
+    statusCode
+    enquiryNumber
+    statusLoggedDate
+    loggedDate
+    description
+    easting
+    northing
+    contactName
+    emailAddress
+    address
+  }
+}
+GRAPHQL
+        my $results =$integ->perform_request_graphql(query => $query)->{data}->{centralEnquiries};
+
+        for my $result ( @$results ) {
+            # remap from GraphQL key names
+            my $enquiry = {
+                ServiceCode => $result->{serviceCode},
+                SubjectCode => $result->{subjectCode},
+                EnquiryStatusCode => $result->{statusCode},
+                EnquiryNumber => $result->{enquiryNumber},
+                LoggedTime => $result->{statusLoggedDate},
+                EnquiryLogTime => $result->{loggedDate},
+                EnquiryDescription => $result->{description},
+                EnquiryX => $result->{easting},
+                EnquiryY => $result->{northing},
+                EnquiryLocation => $result->{address} || '',
+            };
+            my $request = $self->_parse_enquiry($enquiry, $integ, \%services, \%private_services);
+            push(@requests, $request) if $request;
         }
 
-        next if $self->request_ignore_statuses->{$enquiry->{EnquiryStatusCode}};
-
-        unless ($status) {
-            # Default to 'open' if the status doesn't appear in the reverse mapping,
-            # which is the same as we do for service request updates.
-            $self->logger->warn("no reverse mapping for status code $enquiry->{EnquiryStatusCode} (Enquiry $enquiry->{EnquiryNumber})");
-            $status = 'open';
-        }
-
-        unless ($enquiry->{EnquiryY} && $enquiry->{EnquiryX}) {
-            $self->logger->warn("no easting/northing for Enquiry $enquiry->{EnquiryNumber}");
-            next;
-        }
-
-        my $createdtime = $self->date_parser->parse_datetime($enquiry->{EnquiryLogTime})->truncate( to => 'second' );
-        $createdtime->set_time_zone($integ->server_timezone);
-        next if $self->cutoff_enquiry_date && $createdtime < $self->cutoff_enquiry_date;
-
-        my $updatedtime = $self->date_parser->parse_datetime($enquiry->{LoggedTime})->truncate( to => 'second' );
-        $updatedtime->set_time_zone($integ->server_timezone);
-
-        my %args = (
-            service => $service,
-            service_request_id => $enquiry->{EnquiryNumber},
-            description => $enquiry->{EnquiryDescription},
-            address => $enquiry->{EnquiryLocation} || '',
-            requested_datetime => $createdtime,
-            updated_datetime => $updatedtime,
-            # NB: these are EPSG:27700 easting/northing
-            latlong => [ $enquiry->{EnquiryY}, $enquiry->{EnquiryX} ],
-            status => $status,
+    } else {
+        my $updated_enquiries = $integ->GetEnquiryStatusChanges(
+            $args->{start_date},
+            $args->{end_date}
         );
+        my @enquiry_ids = map {
+            $_->{EnquiryNumber}
+        } @$updated_enquiries;
 
-        if ( $self->fetch_reports_private || $private_services{$code} ) {
-            $args{non_public} = 1;
+        my @enquiries = $integ->GetEnquiries(@enquiry_ids);
+        for my $enquiry ( @enquiries ) {
+            my $request = $self->_parse_enquiry($enquiry, $integ, \%services, \%private_services);
+            push(@requests, $request) if $request;
         }
-
-        if ( $self->include_private_customer_details ) {
-            my $json = $integ->get_enquiry_json($enquiry->{EnquiryNumber});
-            if (my $customers = ( $json->{customers} || [] )) {
-                my $customer = $customers->[0];
-                $args{contact_name}  = $customer->{contact}->{fullName} || '';
-                $args{contact_email} = $customer->{contact}->{email} || '';
-            }
-        }
-
-        my $request = $self->new_request( %args );
-
-        push @requests, $request;
     }
 
     if ($self->handle_jobs) {
@@ -1117,6 +1117,68 @@ sub get_service_requests {
     }
 
     return @requests;
+}
+
+sub _parse_enquiry {
+    my ($self, $enquiry, $integ, $services, $private_services) = @_;
+
+    my $code = $enquiry->{ServiceCode} . "_" . $enquiry->{SubjectCode};
+    my $service = $services->{$code};
+    my $status = $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}};
+    return if $status && $status eq 'IGNORE';
+
+    unless ($service || ($service = $self->_find_wrapping_service($code, $services))) {
+        $self->logger->warn("no service for service code $code");
+        return;
+    }
+
+    return if $self->request_ignore_statuses->{$enquiry->{EnquiryStatusCode}};
+
+    unless ($status) {
+        # Default to 'open' if the status doesn't appear in the reverse mapping,
+        # which is the same as we do for service request updates.
+        $self->logger->warn("no reverse mapping for status code $enquiry->{EnquiryStatusCode} (Enquiry $enquiry->{EnquiryNumber})");
+        $status = 'open';
+    }
+
+    unless ($enquiry->{EnquiryY} && $enquiry->{EnquiryX}) {
+        $self->logger->warn("no easting/northing for Enquiry $enquiry->{EnquiryNumber}");
+        return;
+    }
+
+    my $createdtime = $self->date_parser->parse_datetime($enquiry->{EnquiryLogTime})->truncate( to => 'second' );
+    $createdtime->set_time_zone($integ->server_timezone);
+    return if $self->cutoff_enquiry_date && $createdtime < $self->cutoff_enquiry_date;
+
+    my $updatedtime = $self->date_parser->parse_datetime($enquiry->{LoggedTime})->truncate( to => 'second' );
+    $updatedtime->set_time_zone($integ->server_timezone);
+
+    my %args = (
+        service => $service,
+        service_request_id => $enquiry->{EnquiryNumber},
+        description => $enquiry->{EnquiryDescription},
+        address => $enquiry->{EnquiryLocation} || '',
+        requested_datetime => $createdtime,
+        updated_datetime => $updatedtime,
+        # NB: these are EPSG:27700 easting/northing
+        latlong => [ $enquiry->{EnquiryY}, $enquiry->{EnquiryX} ],
+        status => $status,
+    );
+
+    if ( $self->fetch_reports_private || $private_services->{$code} ) {
+        $args{non_public} = 1;
+    }
+
+    if ( $self->include_private_customer_details ) {
+        my $json = $integ->get_enquiry_json($enquiry->{EnquiryNumber});
+        if (my $customers = ( $json->{customers} || [] )) {
+            my $customer = $customers->[0];
+            $args{contact_name}  = $customer->{contact}->{fullName} || '';
+            $args{contact_email} = $customer->{contact}->{email} || '';
+        }
+    }
+
+    return $self->new_request( %args );
 }
 
 =head2 _get_service_requests_for_jobs
@@ -1356,7 +1418,7 @@ sub _find_wrapping_service {
 
     return unless defined $self->wrapped_services;
 
-    for my $service (@$services) {
+    for my $service (values %$services) {
         return $service if $code eq $service->service_code;
         my @attributes = @{ $service->attributes };
         my ($wrapped_codes) = grep { $_->code eq '_wrapped_service_code' } @attributes;
