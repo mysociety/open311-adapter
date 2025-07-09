@@ -421,8 +421,8 @@ $open311->mock( perform_request_graphql => sub {
                         loggedDate => '2018-03-01T12:00:00+00:00',
                         notes => '',
                         centralEnquiry => {
-                            subjectCode => 'ABC',
-                            serviceCode => 'DEF'
+                            subjectCode => 'DEF',
+                            serviceCode => 'ABC'
                         }
                     },
                     {
@@ -432,8 +432,8 @@ $open311->mock( perform_request_graphql => sub {
                         loggedDate => '2018-03-01T13:00:00+00:00',
                         notes => '',
                         centralEnquiry => {
-                            subjectCode => 'ABC',
-                            serviceCode => 'DEF'
+                            subjectCode => 'DEF',
+                            serviceCode => 'ABC'
                         }
                     },
                     {
@@ -443,8 +443,19 @@ $open311->mock( perform_request_graphql => sub {
                         loggedDate => '2018-03-01T13:30:00+00:00',
                         notes => '',
                         centralEnquiry => {
-                            subjectCode => 'ABC',
-                            serviceCode => 'DEF'
+                            subjectCode => 'DEF',
+                            serviceCode => 'ABC'
+                        }
+                    },
+                    {
+                        enquiryNumber => '3003',
+                        enquiryStatusCode => 'DUP',
+                        logNumber => '2',
+                        loggedDate => '2018-03-01T13:30:00+00:00',
+                        notes => '',
+                        centralEnquiry => {
+                            subjectCode => 'UNKNOWN',
+                            serviceCode => 'UNKNOWN'
                         }
                     }
                 ],
@@ -1390,6 +1401,7 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'in_progress',
                     update_id            => '3001_3',
                     updated_datetime     => '2018-03-01T12:00:00+00:00',
+                    extras               => { category => 'Flooding', group => 'Flooding & Drainage' },
                 },
                 {   description          => undef,
                     external_status_code => 'INP',
@@ -1398,6 +1410,7 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'in_progress',
                     update_id            => '3002_1',
                     updated_datetime     => '2018-03-01T13:00:00+00:00',
+                    extras               => { category => 'Flooding', group => 'Flooding & Drainage' },
                 },
                 {   description          => undef,
                     external_status_code => 'DUP',
@@ -1405,6 +1418,15 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     service_request_id   => '3002',
                     status               => 'duplicate',
                     update_id            => '3002_2',
+                    updated_datetime     => '2018-03-01T13:30:00+00:00',
+                    extras               => { category => 'Flooding', group => 'Flooding & Drainage' },
+                },
+                {   description          => undef,
+                    external_status_code => 'DUP',
+                    media_url            => undef,
+                    service_request_id   => '3003',
+                    status               => 'duplicate',
+                    update_id            => '3003_2',
                     updated_datetime     => '2018-03-01T13:30:00+00:00',
                 },
 
