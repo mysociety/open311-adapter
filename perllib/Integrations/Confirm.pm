@@ -956,18 +956,6 @@ sub operation_for_update {
 sub GetEnquiryStatusChanges {
     my ($self, $start, $end) = @_;
 
-    # The Confirm server seems to ignore timezone hints in the datetime
-    # string, so we need to convert whatever $start/$end we've been given
-    # into (Confirm) local time.
-    my $w3c = DateTime::Format::W3CDTF->new;
-    my $start_time = $w3c->parse_datetime( $start );
-    $start_time->set_time_zone($self->server_timezone);
-    $start = $w3c->format_datetime($start_time);
-
-    my $end_time = $w3c->parse_datetime( $end );
-    $end_time->set_time_zone($self->server_timezone);
-    $end = $w3c->format_datetime($end_time);
-
     $start = SOAP::Utils::encode_data($start);
     $end = SOAP::Utils::encode_data($end);
 
