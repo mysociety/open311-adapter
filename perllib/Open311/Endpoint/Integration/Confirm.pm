@@ -393,11 +393,6 @@ has default_site_code => (
     default => ''
 );
 
-has external_system_number => (
-    is => 'ro',
-    default => ''
-);
-
 has omit_logged_time => (
     is => 'ro',
     default => 0
@@ -524,10 +519,6 @@ sub post_service_request {
     }
 
     $args = $self->process_service_request_args($args);
-
-    if ($self->external_system_number) {
-        $args->{external_system_number} = $self->external_system_number;
-    }
 
     if ($self->omit_logged_time) {
         $args->{omit_logged_time} = 1;
