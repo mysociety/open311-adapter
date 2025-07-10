@@ -249,20 +249,6 @@ has ignored_attribute_options => (
 );
 
 
-=head2 attribute_overrides
-
-Allows individual attributes' initialisers to be overridden.
-Useful for, e.g. making Confirm mandatory fields not required by Open311,
-setting the 'automated' field etc.
-
-=cut
-
-has attribute_overrides => (
-    is => 'ro',
-    default => sub { {} }
-);
-
-
 =head2 forward_status_mapping
 
 Maps Open311 service request status codes to Confirm enquiry status codes.
@@ -509,7 +495,7 @@ sub add_default_attribute_values {
     # a value for these fields, use the defaults.
     my @codes = map { $_->code } @{ $service->attributes };
     for my $code ( @codes ) {
-        my $cfg = $self->attribute_overrides->{$code};
+        my $cfg = $self->get_integration->attribute_overrides->{$code};
         if ($cfg->{default} && !length $args->{attributes}->{$code}) {
             $args->{attributes}->{$code} = $cfg->{default};
         }
@@ -578,6 +564,9 @@ sub post_service_request_update {
     if (my $status_code = $self->forward_status_mapping->{$args->{status}}) {
         $args->{status_code} = $status_code;
     }
+
+    # If service_code is provided, look up the service and pass it to the integration layer
+    $args->{_new_service} = $self->service($args->{service_code}) if $args->{service_code};
 
     my $response = $self->get_integration->EnquiryUpdate($args);
     my $enquiry = $response->{OperationResponse}->{EnquiryUpdateResponse}->{Enquiry};
@@ -1480,8 +1469,8 @@ sub _parse_attributes {
         # printf "\n\nXXXXXXXX $code\n\n\n" if $type eq 'singlevaluelist';
 
         my %optional = ();
-        if (defined $self->attribute_overrides->{$code}) {
-            %optional = %{ $self->attribute_overrides->{$code} };
+        if (defined $self->get_integration->attribute_overrides->{$code}) {
+            %optional = %{ $self->get_integration->attribute_overrides->{$code} };
             # 'default' isn't a valid param for Attribute so get rid of it.
             delete $optional{default} if $optional{default};
         }

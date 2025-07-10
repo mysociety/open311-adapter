@@ -201,6 +201,20 @@ has graphql_url => (
     }
 );
 
+=head2 attribute_overrides
+
+Allows individual attributes' initialisers to be overridden.
+Useful for, e.g. making Confirm mandatory fields not required by Open311,
+setting the 'automated' field etc.
+
+=cut
+
+has attribute_overrides => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{attribute_overrides} || {} }
+);
+
+
 has oauth_token => (
     is => 'lazy',
     default => sub {
@@ -766,6 +780,35 @@ sub GetEnquiryLookups {
     return $lookups;
 }
 
+sub _build_enquiry_attribute_elements {
+    my ($self, $service, $args, $service_types, $attributes_required) = @_;
+
+    my @elements;
+    my $tag_types = {
+        singlevaluelist => 'EnqAttribValueCode',
+        datetime => 'EnqAttribDateValue',
+    };
+
+    for my $code (map { $_->code } @{ $service->attributes }) {
+        next unless exists $args->{attributes}->{$code};
+        next if grep {$code eq $_} ('easting', 'northing', 'fixmystreet_id', 'closest_address');
+        my $value = substr($args->{attributes}->{$code}, 0, 2000);
+
+        # FMS will send a blank string if the user didn't make a selection in a
+        # non-required singlevaluelist. In that case sending the blank string
+        # to Confirm results in an error, so just skip over it.
+        next if (!$value && $service_types->{$code} eq 'singlevaluelist' && !$attributes_required->{$code});
+
+        my $tag = $tag_types->{$service_types->{$code}} || 'EnqAttribStringValue';
+        push @elements, SOAP::Data->name('EnquiryAttribute' => \SOAP::Data->value(
+            SOAP::Data->name('EnqAttribTypeCode' => SOAP::Utils::encode_data($code))->type(""),
+            SOAP::Data->name($tag => SOAP::Utils::encode_data($value))->type(""),
+        ));
+    }
+
+    return @elements;
+}
+
 sub NewEnquiry {
     my ($self, $service, $args) = @_;
 
@@ -825,27 +868,7 @@ sub NewEnquiry {
         SOAP::Data->name($_ => $value)->type("")
     } keys %enq;
 
-    my $tag_types = {
-        singlevaluelist => 'EnqAttribValueCode',
-        datetime => 'EnqAttribDateValue',
-    };
-
-    for my $code (map { $_->code } @{ $service->attributes }) {
-        next unless exists $args->{attributes}->{$code};
-        next if grep {$code eq $_} ('easting', 'northing', 'fixmystreet_id', 'closest_address');
-        my $value = substr($args->{attributes}->{$code}, 0, 2000);
-
-        # FMS will send a blank string if the user didn't make a selection in a
-        # non-required singlevaluelist. In that case sending the blank string
-        # to Confirm results in an error, so just skip over it.
-        next if (!$value && $service_types{$code} eq 'singlevaluelist' && !$attributes_required{$code});
-
-        my $tag = $tag_types->{$service_types{$code}} || 'EnqAttribStringValue';
-        push @elements, SOAP::Data->name('EnquiryAttribute' => \SOAP::Data->value(
-            SOAP::Data->name('EnqAttribTypeCode' => SOAP::Utils::encode_data($code))->type(""),
-            SOAP::Data->name($tag => SOAP::Utils::encode_data($value))->type(""),
-        ));
-    }
+    push @elements, $self->_build_enquiry_attribute_elements($service, $args, \%service_types, \%attributes_required);
 
     my @customer = (
         SOAP::Data->name('CustomerEmail' => SOAP::Utils::encode_data($args->{email}))->type(""),
@@ -918,16 +941,9 @@ sub EnquiryUpdate {
         StatusLogNotes => substr($args->{description}, 0, 2000),
     );
 
-    # FMS might have sent through a category change with this update
-    if ( my $service_code = $args->{service_code} || '' ) {
-        my ($serv, $subj) = split /_/, $service_code;
-        $enq{ServiceCode} = $serv;
-        $enq{SubjectCode} = $subj;
-    }
-
     $enq{EnquiryStatusCode} = $args->{status_code} if $args->{status_code};
 
-    my $response = $self->perform_request($self->operation_for_update(\%enq), { return_on_fault => 1});
+    my $response = $self->perform_request($self->operation_for_update(\%enq, $args->{_new_service}), { return_on_fault => 1});
 
     return $response unless $response->{Fault};
 
@@ -942,13 +958,45 @@ sub EnquiryUpdate {
 
     delete $enq{EnquiryStatusCode} if $enq{EnquiryStatusCode};
     delete $enq{LoggedTime} if $enq{LoggedTime};
-    return $self->perform_request($self->operation_for_update(\%enq));
+    return $self->perform_request($self->operation_for_update(\%enq, $args->{_new_service}));
 }
 
 sub operation_for_update {
-    my ($self, $enq) = @_;
+    my ($self, $enq, $new_service) = @_;
 
-    my @elements = map {
+    my @elements = ();
+
+    # If we're changing to a new service we'll need to set
+    # ServiceCode/SubjectCode, as well as handle any default values for
+    # attributes on the new service
+    if ($new_service) {
+        my ($serv, $subj) = split /_/, $new_service->service_code;
+        $enq->{ServiceCode} = $serv;
+        $enq->{SubjectCode} = $subj;
+
+        # Build args hash with default values from attribute_overrides
+        my $args = { attributes => {} };
+
+        # Apply attribute overrides with default values
+        my @codes = map { $_->code } @{ $new_service->attributes };
+        for my $code (@codes) {
+            my $cfg = $self->attribute_overrides->{$code};
+            if ($cfg && $cfg->{default}) {
+                $args->{attributes}->{$code} = $cfg->{default};
+            }
+        }
+
+        if (%{ $args->{attributes} }) {
+            my %service_types = map { $_->code => $_->datatype } @{ $new_service->attributes };
+            my %attributes_required = map { $_->code => $_->required } @{ $new_service->attributes };
+
+            push @elements, $self->_build_enquiry_attribute_elements(
+                $new_service, $args, \%service_types, \%attributes_required
+            );
+        }
+    }
+
+    push @elements, map {
         my $value = SOAP::Utils::encode_data($enq->{$_});
         SOAP::Data->name($_ => $value)->type("")
     } keys %$enq;

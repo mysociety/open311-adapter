@@ -239,8 +239,11 @@ $open311->mock(perform_request => sub {
         }
         if ($req{EnquiryNumber} eq '1003') {
             # Test category change functionality
-            is $req{ServiceCode}, 'XYZ', 'ServiceCode set correctly from service_code';
+            is $req{ServiceCode}, 'ABC', 'ServiceCode set correctly from service_code';
             is $req{SubjectCode}, 'GHI', 'SubjectCode set correctly from service_code';
+            # ensure default attributes are also sent when category has changed
+            my %attrib = map { $_->name => $_->value } ${$req{EnquiryAttribute}}->value;
+            is_deeply \%attrib, { EnqAttribTypeCode => 'DEPT', EnqAttribStringValue => '1M' };
             return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 1003, EnquiryLogNumber => 3 } } } };
         }
         return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 2001, EnquiryLogNumber => 2 } } } };
@@ -1159,7 +1162,7 @@ subtest 'POST update with category change' => sub {
         api_key => 'test',
         service_request_id => 1003,
         update_id => 124,
-        service_code => 'XYZ_GHI',
+        service_code => 'ABC_GHI',
         first_name => 'Bob',
         last_name => 'Mould',
         description => 'Category change update',
