@@ -154,6 +154,17 @@ has completion_statuses => (
     default => sub { $_[0]->config->{completion_statuses} || [] }
 );
 
+=head2 external_system_number
+
+A code to use to mark enquiries we submit as coming from us; with this set,
+we also send the FMS ID through as the external system reference.
+
+=cut
+
+has external_system_number => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{external_system_number} }
+);
 
 =head2 base_url
 
@@ -541,6 +552,11 @@ sub defects_graphql_query { # XXX factor together with jobs?
     ){
         code
     }
+    enquiries {
+        centralEnquiry {
+            externalSystemNumber
+        }
+    }
     job {
       jobNumber
       currentStatusLog {
@@ -792,8 +808,8 @@ sub NewEnquiry {
         $enq{CentralAssetId} = $args->{central_asset_id};
     }
 
-    if ($args->{external_system_number}) {
-        $enq{ExternalSystemNumber} = $args->{external_system_number};
+    if ($self->external_system_number) {
+        $enq{ExternalSystemNumber} = $self->external_system_number;
         $enq{ExternalSystemReference} = $args->{attributes}->{fixmystreet_id};
     }
     if (my $code = $self->service_enquiry_class_code($service_code)) {
