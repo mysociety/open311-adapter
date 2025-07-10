@@ -173,8 +173,16 @@ $open311->mock(perform_request => sub {
         return {
             OperationResponse => { GetEnquiryLookupsResponse => { TypeOfService => [
                 { ServiceCode => 'ABC', ServiceName => 'Graffiti', EnquirySubject => [ { SubjectCode => "DEF" } ] },
-                { ServiceCode => 'ABC', ServiceName => 'Graffiti', EnquirySubject => [ { SubjectCode => "GHI" } ] },
+                { ServiceCode => 'ABC', ServiceName => 'Pavement Flooding', EnquirySubject => [ { SubjectCode => "GHI", SubjectAttribute => { EnqAttribTypeCode => "DEPT" } } ] },
                 { ServiceCode => 'ABC', ServiceName => 'Graffiti', EnquirySubject => [ { SubjectCode => "JKL" } ] },
+            ],
+            EnquiryAttributeType => [
+            {
+                EnqAttribTypeCode => "DEPT",
+                EnqAttribTypeFlag => "T",
+                EnqAttribTypeName => "Depth of flooding",
+                MandatoryFlag => "false"
+            }
             ] } }
         };
     } elsif ( $op->name && $op->name eq 'GetEnquiry' ) {
@@ -204,6 +212,14 @@ $open311->mock(perform_request => sub {
         }
         if (defined $req{EnquiryReference} && $req{EnquiryReference} == 1003) {
             ok !defined $req{EnquiryAttribute}, 'extra "testing" attribute is ignored';
+        }
+        if (defined $req{EnquiryReference} && $req{EnquiryReference} == 1004) {
+            my %attrib = map { $_->name => $_->value } ${$req{EnquiryAttribute}}->value;
+            is_deeply \%attrib, { EnqAttribTypeCode => 'DEPT', EnqAttribStringValue => '1M' };
+        }
+        if (defined $req{EnquiryReference} && $req{EnquiryReference} == 1005) {
+            my %attrib = map { $_->name => $_->value } ${$req{EnquiryAttribute}}->value;
+            is_deeply \%attrib, { EnqAttribTypeCode => 'DEPT', EnqAttribStringValue => '0' };
         }
         if ($req{EnquiryDescription} eq 'Customer Ref report') {
             ok !defined $req{EnquiryReference}, 'EnquiryReference is skipped';
@@ -598,6 +614,17 @@ subtest "GET Service List" => sub {
     <service_name>Different type of flooding</service_name>
     <type>realtime</type>
   </service>
+  <service>
+    <description>Pavement Flooding</description>
+    <groups>
+      <group>Flooding</group>
+    </groups>
+    <keywords></keywords>
+    <metadata>true</metadata>
+    <service_code>ABC_GHI</service_code>
+    <service_name>Pavement Flooding</service_name>
+    <type>realtime</type>
+  </service>
 </services>
 XML
     is $res->content, $expected
@@ -717,6 +744,128 @@ subtest "GET Service List Description" => sub {
 XML
     is $res->content, $expected
         or diag $res->content;
+    $res = $endpoint->run_test_request( GET => '/services/ABC_GHI.xml' );
+    ok $res->is_success, 'xml success';
+    $expected = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_definition>
+  <attributes>
+    <attribute>
+      <automated>server_set</automated>
+      <code>easting</code>
+      <datatype>number</datatype>
+      <datatype_description></datatype_description>
+      <description>easting</description>
+      <order>1</order>
+      <required>true</required>
+      <variable>false</variable>
+    </attribute>
+    <attribute>
+      <automated>server_set</automated>
+      <code>northing</code>
+      <datatype>number</datatype>
+      <datatype_description></datatype_description>
+      <description>northing</description>
+      <order>2</order>
+      <required>true</required>
+      <variable>false</variable>
+    </attribute>
+    <attribute>
+      <automated>server_set</automated>
+      <code>fixmystreet_id</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>external system ID</description>
+      <order>3</order>
+      <required>true</required>
+      <variable>false</variable>
+    </attribute>
+    <attribute>
+      <automated>server_set</automated>
+      <code>report_url</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>Report URL</description>
+      <order>4</order>
+      <required>true</required>
+      <variable>true</variable>
+    </attribute>
+    <attribute>
+      <automated>server_set</automated>
+      <code>title</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>Title</description>
+      <order>5</order>
+      <required>true</required>
+      <variable>true</variable>
+    </attribute>
+    <attribute>
+      <automated>server_set</automated>
+      <code>description</code>
+      <datatype>text</datatype>
+      <datatype_description></datatype_description>
+      <description>Description</description>
+      <order>6</order>
+      <required>true</required>
+      <variable>true</variable>
+    </attribute>
+    <attribute>
+      <automated>hidden_field</automated>
+      <code>asset_details</code>
+      <datatype>text</datatype>
+      <datatype_description></datatype_description>
+      <description>Asset information</description>
+      <order>7</order>
+      <required>false</required>
+      <variable>true</variable>
+    </attribute>
+    <attribute>
+      <automated>hidden_field</automated>
+      <code>site_code</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>Site code</description>
+      <order>8</order>
+      <required>false</required>
+      <variable>true</variable>
+    </attribute>
+    <attribute>
+      <automated>hidden_field</automated>
+      <code>central_asset_id</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>Central Asset ID</description>
+      <order>9</order>
+      <required>false</required>
+      <variable>true</variable>
+    </attribute>
+    <attribute>
+      <automated>server_set</automated>
+      <code>closest_address</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>Closest address</description>
+      <order>10</order>
+      <required>false</required>
+      <variable>true</variable>
+    </attribute>
+    <attribute>
+      <automated>server_set</automated>
+      <code>DEPT</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>Depth of flooding</description>
+      <order>11</order>
+      <required>false</required>
+      <variable>true</variable>
+    </attribute>
+  </attributes>
+  <service_code>ABC_GHI</service_code>
+</service_definition>
+XML
+    is $res->content, $expected
+        or diag $res->content;
 };
 
 subtest "GET Service List" => sub {
@@ -825,6 +974,58 @@ subtest "POST OK with unrecognised attribute" => sub {
         'attribute[description]' => 'This is the details',
         'attribute[report_url]' => 'http://example.com/report/1003',
         'attribute[testing]' => 'This should be ignored',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => 2001
+        } ], 'correct json returned';
+};
+
+subtest "POST OK with empty attribute, default picked up from config" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'ABC_GHI',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        'attribute[easting]' => 100,
+        'attribute[northing]' => 100,
+        'attribute[fixmystreet_id]' => 1004,
+        'attribute[title]' => 'Title',
+        'attribute[description]' => 'This is the details',
+        'attribute[report_url]' => 'http://example.com/report/1004',
+        'attribute[DEPT]' => '',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => 2001
+        } ], 'correct json returned';
+};
+
+subtest "POST OK with attribute value takes precedence over default picked in config" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'ABC_GHI',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        'attribute[easting]' => 100,
+        'attribute[northing]' => 100,
+        'attribute[fixmystreet_id]' => 1005,
+        'attribute[title]' => 'Title',
+        'attribute[description]' => 'This is the details',
+        'attribute[report_url]' => 'http://example.com/report/1005',
+        'attribute[DEPT]' => '0',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
