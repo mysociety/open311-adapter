@@ -536,6 +536,7 @@ sub defects_graphql_query { # XXX factor together with jobs?
                 greaterThanEquals: "$start_date"
                 lessThanEquals: "$end_date"
             }
+            targetDate: { hasValue: true }
         }
   ) {
     defectNumber
