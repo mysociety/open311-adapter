@@ -551,6 +551,7 @@ FILTER
                 greaterThanEquals: "$start_date"
                 lessThanEquals: "$end_date"
             }
+            targetDate: { hasValue: true }
         }
   ) {
     defectNumber
