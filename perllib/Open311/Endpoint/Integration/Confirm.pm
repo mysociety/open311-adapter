@@ -507,6 +507,22 @@ sub process_service_request_args {
     return $args;
 }
 
+sub add_default_attribute_values {
+    my ($self, $args, $service) = @_;
+
+    # There might be default values for attributes in config. If FMS hasn't sent
+    # a value for these fields, use the defaults.
+    my @codes = map { $_->code } @{ $service->attributes };
+    for my $code ( @codes ) {
+        my $cfg = $self->attribute_overrides->{$code};
+        if ($cfg->{default} && !$args->{attributes}->{$code}) {
+            $args->{attributes}->{$code} = $cfg->{default};
+        }
+    }
+
+    return $args;
+}
+
 has '+request_class' => (
     is => 'ro',
     default => 'Open311::Endpoint::Service::Request::Confirm',
@@ -540,6 +556,7 @@ sub post_service_request {
     }
 
     $args = $self->process_service_request_args($args);
+    $args = $self->add_default_attribute_values($args, $service);
 
     if ($self->external_system_number) {
         $args->{external_system_number} = $self->external_system_number;
@@ -1496,6 +1513,8 @@ sub _parse_attributes {
         my %optional = ();
         if (defined $self->attribute_overrides->{$code}) {
             %optional = %{ $self->attribute_overrides->{$code} };
+            # 'default' isn't a valid param for Attribute so get rid of it.
+            delete $optional{default} if $optional{default};
         }
 
         $attributes{$code} = Open311::Endpoint::Service::Attribute->new(
