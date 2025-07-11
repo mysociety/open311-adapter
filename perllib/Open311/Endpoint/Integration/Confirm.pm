@@ -395,11 +395,6 @@ has default_site_code => (
     default => ''
 );
 
-has external_system_number => (
-    is => 'ro',
-    default => ''
-);
-
 has omit_logged_time => (
     is => 'ro',
     default => 0
@@ -543,10 +538,6 @@ sub post_service_request {
 
     $args = $self->process_service_request_args($args);
     $args = $self->add_default_attribute_values($args, $service);
-
-    if ($self->external_system_number) {
-        $args->{external_system_number} = $self->external_system_number;
-    }
 
     if ($self->omit_logged_time) {
         $args->{omit_logged_time} = 1;
@@ -1073,14 +1064,14 @@ sub get_service_requests {
         my $end = $w3c->format_datetime($end_time);
 
         my $filter_json = '';
-        if ($self->external_system_number) {
+        if ($integ->external_system_number) {
             $filter_json = <<FILTER;
       loggedDate: {
         lessThanEquals: "$end"
         greaterThanEquals: "$start"
       }
       externalSystemNumber: {
-        notEquals: "@{[$self->external_system_number]}"
+        notEquals: "@{[$integ->external_system_number]}"
       }
 FILTER
         } else {
