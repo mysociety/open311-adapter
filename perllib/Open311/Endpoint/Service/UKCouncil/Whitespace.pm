@@ -27,7 +27,7 @@ sub _build_attributes {
         ),
     );
 
-    if ($self->service_code eq 'bulky_collection') {
+    if ($self->service_name eq 'Bulky collection') {
         push @attributes,
             map {
                 Open311::Endpoint::Service::Attribute->new(
