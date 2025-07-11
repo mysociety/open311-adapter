@@ -45,25 +45,50 @@ $soap_lite->mock(call => sub {
 
     if ($method eq 'CreateWorksheet') {
         my $args = $args[0];
-
         my %params = map { $_->name => $_->value } ${$args->value}->value;
-        is $params{Uprn}, 1000001, 'Uprn correct';
-        is $params{ServiceId}, '289', 'ServiceId correct';
-        is $params{WorksheetReference}, 2000123, 'WorksheetReference correct';
-        is $params{WorksheetMessage}, 'This is the details', 'Description correct';
 
-        my %service_property_inputs = map { $_->value } map { ${$_->value}->value } ${$params{ServicePropertyInputs}}->value->value;
-        is $service_property_inputs{'79'}, 'No', 'AssistedYn correct';
-        is $service_property_inputs{'80'}, 'Front of property', 'LocationOfContainers correct';
+        if ($params{Uprn} eq 1000001) {
+            is $params{ServiceId}, '289', 'ServiceId correct';
+            is $params{WorksheetReference}, 2000123, 'WorksheetReference correct';
+            is $params{WorksheetMessage}, 'This is the details', 'Description correct';
 
-        my %service_item_inputs = map { $_->name => $_->value } ${${$params{ServiceItemInputs}}->value->value}->value->value;
-        is $service_item_inputs{'ServiceItemId'}, '22', 'ServiceItemId correct';
-        is $service_item_inputs{'ServiceItemQuantity'}, 1, 'ServiceItemQuantity correct';
-        is $service_item_inputs{'ServiceItemName'}, '', 'ServiceItemName correct';
+            my %service_property_inputs = map { $_->value } map { ${$_->value}->value } ${$params{ServicePropertyInputs}}->value->value;
+            is $service_property_inputs{'79'}, 'No', 'AssistedYn correct';
+            is $service_property_inputs{'80'}, 'Front of property', 'LocationOfContainers correct';
+
+            my %service_item_inputs = map { $_->name => $_->value } ${${$params{ServiceItemInputs}}->value->value->value}->value;
+            is $service_item_inputs{'ServiceItemId'}, '22', 'ServiceItemId correct';
+            is $service_item_inputs{'ServiceItemQuantity'}, 1, 'ServiceItemQuantity correct';
+            is $service_item_inputs{'ServiceItemName'}, '', 'ServiceItemName correct';
+        } elsif ($params{Uprn} eq 10001) {
+            is $params{ServiceId}, '78';
+            is $params{WorksheetReference}, 2000234;
+            is $params{AdHocRoundInstanceId}, 304;
+            is $params{WorksheetDueDate}, '2025-07-04';
+
+            my %service_property_inputs = map { $_->value } map { ${$_->value}->value } ${$params{ServicePropertyInputs}}->value->value;
+            is $service_property_inputs{65}, 'No';
+            is $service_property_inputs{66}, 'Side alleyway';
+
+            my %service_item_inputs = map { $_->[0]->value => $_->[2]->value } map { [ ${$_->value}->value ] } ${$params{ServiceItemInputs}}->value->value;
+            is $service_item_inputs{144}, 1, 'ServiceItemId correct';
+            is $service_item_inputs{83}, 1, 'ServiceItemQuantity correct';
+            is $service_item_inputs{5}, 1, 'ServiceItemName correct';
+        } else {
+            die "Unknown uprn $params{Uprn}";
+        }
 
         return SOAP::Result->new(
             method => 'CreateWorksheet',
             result => { ErrorCode => "0", ErrorDescription => 'Success', WorksheetResponse => { anyType => ["242259", ""] } },
+        );
+    } elsif ($method eq 'CancelWorksheet') {
+        my $args = $args[0];
+        my %params = map { $_->name => $_->value } ${$args->value}->value;
+        is $params{WorksheetId}, '362881';
+        return SOAP::Result->new(
+            method => 'CancelWorksheet',
+            result => { ErrorCode => "0", ErrorDescription => 'Success' },
         );
     } else {
         die "Unknown method $method";
@@ -84,13 +109,22 @@ subtest "GET services" => sub {
     is_deeply decode_json($res->content), [
         {
             group        => "Waste",
+            service_code => "bulky_collection",
+            description  => "Bulky collection",
+            keywords     => "waste_only",
+            type         => "realtime",
+            service_name => "Bulky collection",
+            metadata     => "true"
+        },
+        {
+            group        => "Waste",
             service_code => "missed_collection",
             description  => "Report missed collection",
             keywords     => "waste_only",
             type         => "realtime",
             service_name => "Report missed collection",
             metadata     => "true"
-        }
+        },
     ], 'correct json returned';
 };
 
@@ -105,8 +139,8 @@ subtest "GET service" => sub {
       "service_code" => "missed_collection",
       "attributes" => [
           { code => 'uprn', order => 1, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'UPRN reference' },
-          { code => 'service_item_name', order => 2, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Service item name' },
-          { code => 'fixmystreet_id', order => 3, required => 'true', variable => 'false', datatype => 'string', datatype_description => '', automated => 'server_set', description => 'external system ID' },
+          { code => 'fixmystreet_id', order => 2, required => 'true', variable => 'false', datatype => 'string', datatype_description => '', automated => 'server_set', description => 'external system ID' },
+          { code => 'service_item_name', order => 3, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Service item name' },
           { code => 'assisted_yn', order => 4, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Assisted collection (Yes/No)' },
           { code => 'location_of_containers', order => 5, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Location of containers' },
           { code => 'location_of_letterbox', order => 6, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Location of letterbox' },
@@ -137,6 +171,71 @@ subtest "POST missed collection OK" => sub {
     is_deeply decode_json($res->content),
         [ {
             "service_request_id" => '242259',
+        } ], 'correct json returned';
+};
+
+subtest "POST bulky collection OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'bulky_collection',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 10001,
+        'attribute[fixmystreet_id]' => 2000234,
+        'attribute[bulky_parking]' => 'No',
+        'attribute[bulky_location]' => 'Side alleyway',
+        'attribute[bulky_items]' => '83::5',
+        'attribute[collection_date]' => '2025-07-04',
+        'attribute[round_instance_id]' => '304',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '242259',
+        } ], 'correct json returned';
+};
+
+subtest "POST bulky collection cancellation OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        description => 'Booking cancelled by customer',
+        service_request_id => '362881',
+        status => 'CANCELLED',
+        update_id => '12345',
+        updated_datetime => '2025-07-04T01:23:45Z',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => 'BLANK',
+        } ], 'correct json returned';
+};
+
+subtest "POST any other update" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        description => '',
+        service_request_id => '362882',
+        status => 'CLOSED',
+        update_id => '12346',
+        updated_datetime => '2025-07-04T01:23:45Z',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => 'BLANK',
         } ], 'correct json returned';
 };
 
