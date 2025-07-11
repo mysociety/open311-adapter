@@ -1138,7 +1138,7 @@ sub _get_service_requests_for_defects {
         end_date   => $args->{end_date},
     );
 
-    for my $defect (@$defects) {
+    DEFECT: for my $defect (@$defects) {
         my $defect_id = $defect->{defectNumber};
 
         unless ( $defect->{easting} && $defect->{northing} ) {
@@ -1162,6 +1162,14 @@ sub _get_service_requests_for_defects {
         next
             if $self->cutoff_enquiry_date
             && $createdtime < $self->cutoff_enquiry_date;
+
+        # Skip this defect if any of the enquiries on it match our own
+        # externalSystemNumber
+        for my $enq (@{ $defect->{enquiries} }) {
+            my $cenq = $enq->{centralEnquiry} || {};
+            my $num = $cenq->{externalSystemNumber};
+            next DEFECT if $num && $num eq $integ->external_system_number;
+        }
 
 
         my $status = "planned"; # XXX Aberdeenshire

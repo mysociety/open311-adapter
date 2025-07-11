@@ -528,21 +528,6 @@ sub defects_graphql_query { # XXX factor together with jobs?
         join( ',', @defect_type_codes ),
     );
 
-    my $enq_filter = '';
-    if (my $num = $self->external_system_number) {
-        $enq_filter = <<FILTER;
-enquiries {
-    centralEnquiry(
-        filter: {
-            externalSystemNumber: { notEquals: "$num" }
-        }
-    ) {
-        externalSystemNumber
-    }
-}
-FILTER
-    }
-
     return <<"GRAPHQL"
 {
   defects(
@@ -568,7 +553,11 @@ FILTER
     ){
         code
     }
-    $enq_filter
+    enquiries {
+        centralEnquiry {
+            externalSystemNumber
+        }
+    }
     job {
       jobNumber
       currentStatusLog {
