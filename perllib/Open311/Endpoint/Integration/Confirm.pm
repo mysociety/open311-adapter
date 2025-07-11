@@ -109,6 +109,22 @@ has handle_defects => (
     }
 );
 
+=head2 use_graphql_for_enquiries
+
+Whether this integration fetches enquiries and enquiry updates using GraphQL.
+This is based on the presence of the graphql_url in the Confirm integration
+and graphql_key in config.
+
+=cut
+
+has use_graphql_for_enquiries => (
+    is => 'lazy',
+    default => sub {
+        my $integ = $_[0]->get_integration;
+        return ($integ->graphql_url && $integ->config->{graphql_key}) ? 1 : 0;
+    }
+);
+
 =head2 defect_service_mapping
 
 Controls the mapping of Confirm defect service/subject codes to Open311 services
@@ -230,20 +246,6 @@ This attribute should be an arrayref of Confirm attribute option codes to ignore
 has ignored_attribute_options => (
     is => 'ro',
     default => sub { [] }
-);
-
-
-=head2 attribute_overrides
-
-Allows individual attributes' initialisers to be overridden.
-Useful for, e.g. making Confirm mandatory fields not required by Open311,
-setting the 'automated' field etc.
-
-=cut
-
-has attribute_overrides => (
-    is => 'ro',
-    default => sub { {} }
 );
 
 
@@ -491,6 +493,22 @@ sub process_service_request_args {
     return $args;
 }
 
+sub add_default_attribute_values {
+    my ($self, $args, $service) = @_;
+
+    # There might be default values for attributes in config. If FMS hasn't sent
+    # a value for these fields, use the defaults.
+    my @codes = map { $_->code } @{ $service->attributes };
+    for my $code ( @codes ) {
+        my $cfg = $self->get_integration->attribute_overrides->{$code};
+        if ($cfg->{default} && !$args->{attributes}->{$code}) {
+            $args->{attributes}->{$code} = $cfg->{default};
+        }
+    }
+
+    return $args;
+}
+
 has '+request_class' => (
     is => 'ro',
     default => 'Open311::Endpoint::Service::Request::Confirm',
@@ -524,6 +542,7 @@ sub post_service_request {
     }
 
     $args = $self->process_service_request_args($args);
+    $args = $self->add_default_attribute_values($args, $service);
 
     if ($self->external_system_number) {
         $args->{external_system_number} = $self->external_system_number;
@@ -555,6 +574,9 @@ sub post_service_request_update {
         $args->{status_code} = $status_code;
     }
 
+    # If service_code is provided, look up the service and pass it to the integration layer
+    $args->{_new_service} = $self->service($args->{service_code}) if $args->{service_code};
+
     my $response = $self->get_integration->EnquiryUpdate($args);
     my $enquiry = $response->{OperationResponse}->{EnquiryUpdateResponse}->{Enquiry};
     my $update_id = $enquiry->{EnquiryNumber} .  "_" . $enquiry->{EnquiryLogNumber};
@@ -572,38 +594,78 @@ sub get_service_request_updates {
     my ($self, $args) = @_;
 
     my $integ = $self->get_integration;
-    my $enquiries = $integ->GetEnquiryStatusChanges(
-        $args->{start_date},
-        $args->{end_date}
-    );
-
     my %completion_statuses = map { $_ => 1} @{ $integ->completion_statuses };
 
     my @updates = ();
 
-    for my $enquiry (@$enquiries) {
-        my $status_logs = $enquiry->{EnquiryStatusLog};
-        $status_logs = [ $status_logs ] if (ref($status_logs) eq 'HASH');
-        for my $status_log (@$status_logs) {
-            my $enquiry_id = $enquiry->{EnquiryNumber};
-            my $update_id = $enquiry_id . "_" . $status_log->{EnquiryLogNumber};
-            my $ts = $self->date_parser->parse_datetime($status_log->{LoggedTime})->truncate( to => 'second' );
+    if ($self->use_graphql_for_enquiries) {
+        my @services = $self->services;
+        my %services = map {
+            _normalise_service_code($_->{service_code}) => $_
+        } reverse @services;
+
+        my $w3c = DateTime::Format::W3CDTF->new;
+        my $start_time = $w3c->parse_datetime( $args->{start_date} );
+        $start_time->set_time_zone($integ->server_timezone);
+        my $start = $w3c->format_datetime($start_time);
+
+        my $end_time = $w3c->parse_datetime( $args->{end_date} );
+        $end_time->set_time_zone($integ->server_timezone);
+        my $end = $w3c->format_datetime($end_time);
+
+        my $query = <<GRAPHQL;
+{
+  enquiryStatusLogs(
+    filter: {
+      loggedDate: {
+        lessThanEquals: "$end"
+        greaterThanEquals: "$start"
+      }
+    }
+  ) {
+    enquiryNumber
+    enquiryStatusCode
+    logNumber
+    loggedDate
+    notes
+    centralEnquiry {
+      subjectCode
+      serviceCode
+    }
+  }
+}
+GRAPHQL
+        my $results =$integ->perform_request_graphql(query => $query)->{data}->{enquiryStatusLogs};
+        for my $status_log (@$results) {
+            my $enquiry_id = $status_log->{enquiryNumber};
+            my $update_id = $enquiry_id . "_" . $status_log->{logNumber};
+            my $ts = $self->date_parser->parse_datetime($status_log->{loggedDate})->truncate( to => 'second' );
             $ts->set_time_zone($integ->server_timezone);
             my $description = $self->publish_service_update_text ?
-                ($status_log->{StatusLogNotes} || "") :
+                ($status_log->{notes} || "") :
                 "";
-            my $status = $self->reverse_status_mapping->{$status_log->{EnquiryStatusCode}};
+            my $status = $self->reverse_status_mapping->{$status_log->{enquiryStatusCode}};
             next if $status && $status eq 'IGNORE';
             if (!$status) {
-                $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code $status_log->{EnquiryStatusCode} (EnquiryNumber $enquiry->{EnquiryNumber})");
+                $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code $status_log->{enquiryStatusCode} (EnquiryNumber $enquiry_id)");
                 $status = "open";
             }
 
             my $media_urls;
-            if ($completion_statuses{$status_log->{EnquiryStatusCode}}) {
+            if ($completion_statuses{$status_log->{enquiryStatusCode}}) {
                 # This enquiry has been marked as complete by this update;
                 # see if there's a photo.
-                $media_urls = $self->photo_urls_for_update($enquiry_id);
+                $media_urls = $self->photo_urls_for_update($enquiry_id); # XXX we should instead get this all in one GraphQL query, above
+            }
+
+            # Find the corresponding Open311 service code for the enquiry's current Confirm service/subject codes.
+            my $extras;
+            my $service_code = $status_log->{centralEnquiry}->{serviceCode} . "_" . $status_log->{centralEnquiry}->{subjectCode};
+            if ( my $service = $services{$service_code} ) {
+                $extras = {
+                    category => $service->service_name,
+                    group => @{$service->groups} ? $service->groups->[0] : $service->group,
+                };
             }
 
             push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
@@ -612,9 +674,52 @@ sub get_service_request_updates {
                 service_request_id => $enquiry_id,
                 description => $description,
                 updated_datetime => $ts,
-                external_status_code => $status_log->{EnquiryStatusCode},
+                external_status_code => $status_log->{enquiryStatusCode},
                 $media_urls ? ( media_url => $media_urls ) : (),
+                $extras ? ( extras => $extras ) : (),
             );
+        }
+    } else {
+        my $enquiries = $integ->GetEnquiryStatusChanges(
+            $args->{start_date},
+            $args->{end_date}
+        );
+
+        for my $enquiry (@$enquiries) {
+            my $status_logs = $enquiry->{EnquiryStatusLog};
+            $status_logs = [ $status_logs ] if (ref($status_logs) eq 'HASH');
+            for my $status_log (@$status_logs) {
+                my $enquiry_id = $enquiry->{EnquiryNumber};
+                my $update_id = $enquiry_id . "_" . $status_log->{EnquiryLogNumber};
+                my $ts = $self->date_parser->parse_datetime($status_log->{LoggedTime})->truncate( to => 'second' );
+                $ts->set_time_zone($integ->server_timezone);
+                my $description = $self->publish_service_update_text ?
+                    ($status_log->{StatusLogNotes} || "") :
+                    "";
+                my $status = $self->reverse_status_mapping->{$status_log->{EnquiryStatusCode}};
+                next if $status && $status eq 'IGNORE';
+                if (!$status) {
+                    $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code $status_log->{EnquiryStatusCode} (EnquiryNumber $enquiry->{EnquiryNumber})");
+                    $status = "open";
+                }
+
+                my $media_urls;
+                if ($completion_statuses{$status_log->{EnquiryStatusCode}}) {
+                    # This enquiry has been marked as complete by this update;
+                    # see if there's a photo.
+                    $media_urls = $self->photo_urls_for_update($enquiry_id);
+                }
+
+                push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
+                    status => $status,
+                    update_id => $update_id,
+                    service_request_id => $enquiry_id,
+                    description => $description,
+                    updated_datetime => $ts,
+                    external_status_code => $status_log->{EnquiryStatusCode},
+                    $media_urls ? ( media_url => $media_urls ) : (),
+                );
+            }
         }
     }
 
@@ -957,75 +1062,92 @@ sub get_service_requests {
 
     # Enquiries
 
-    my $updated_enquiries = $integ->GetEnquiryStatusChanges(
-        $args->{start_date},
-        $args->{end_date}
-    );
-    my @enquiry_ids = map {
-        $_->{EnquiryNumber}
-    } @$updated_enquiries;
+    if ($self->use_graphql_for_enquiries) {
+        my $w3c = DateTime::Format::W3CDTF->new;
+        my $start_time = $w3c->parse_datetime( $args->{start_date} );
+        $start_time->set_time_zone($integ->server_timezone);
+        my $start = $w3c->format_datetime($start_time);
 
-    my @enquiries = $integ->GetEnquiries(@enquiry_ids);
-    for my $enquiry ( @enquiries ) {
-        my $code = $enquiry->{ServiceCode} . "_" . $enquiry->{SubjectCode};
-        my $service = $services{$code};
-        my $status = $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}};
-        next if $status && $status eq 'IGNORE';
+        my $end_time = $w3c->parse_datetime( $args->{end_date} );
+        $end_time->set_time_zone($integ->server_timezone);
+        my $end = $w3c->format_datetime($end_time);
 
-        unless ($service || ($service = $self->_find_wrapping_service($code, \@services))) {
-            $self->logger->warn("no service for service code $code");
-            next;
+        my $filter_json = '';
+        if ($self->external_system_number) {
+            $filter_json = <<FILTER;
+      loggedDate: {
+        lessThanEquals: "$end"
+        greaterThanEquals: "$start"
+      }
+      externalSystemNumber: {
+        notEquals: "@{[$self->external_system_number]}"
+      }
+FILTER
+        } else {
+            $filter_json = <<FILTER;
+      loggedDate: {
+        lessThanEquals: "$end"
+        greaterThanEquals: "$start"
+      }
+FILTER
         }
 
-        next if $self->request_ignore_statuses->{$enquiry->{EnquiryStatusCode}};
+        my $query = <<GRAPHQL;
+{
+  centralEnquiries(
+    filter: {
+$filter_json    }
+  ) {
+    serviceCode
+    subjectCode
+    statusCode
+    enquiryNumber
+    statusLoggedDate
+    loggedDate
+    description
+    easting
+    northing
+    contactName
+    emailAddress
+    address
+    externalSystemNumber
+  }
+}
+GRAPHQL
+        my $results =$integ->perform_request_graphql(query => $query)->{data}->{centralEnquiries};
 
-        unless ($status) {
-            # Default to 'open' if the status doesn't appear in the reverse mapping,
-            # which is the same as we do for service request updates.
-            $self->logger->warn("no reverse mapping for status code $enquiry->{EnquiryStatusCode} (Enquiry $enquiry->{EnquiryNumber})");
-            $status = 'open';
+        for my $result ( @$results ) {
+            # remap from GraphQL key names
+            my $enquiry = {
+                ServiceCode => $result->{serviceCode},
+                SubjectCode => $result->{subjectCode},
+                EnquiryStatusCode => $result->{statusCode},
+                EnquiryNumber => $result->{enquiryNumber},
+                LoggedTime => $result->{statusLoggedDate},
+                EnquiryLogTime => $result->{loggedDate},
+                EnquiryDescription => $result->{description},
+                EnquiryX => $result->{easting},
+                EnquiryY => $result->{northing},
+                EnquiryLocation => $result->{address} || '',
+            };
+            my $request = $self->_parse_enquiry($enquiry, $integ, \%services, \%private_services);
+            push(@requests, $request) if $request;
         }
 
-        unless ($enquiry->{EnquiryY} && $enquiry->{EnquiryX}) {
-            $self->logger->warn("no easting/northing for Enquiry $enquiry->{EnquiryNumber}");
-            next;
-        }
-
-        my $createdtime = $self->date_parser->parse_datetime($enquiry->{EnquiryLogTime})->truncate( to => 'second' );
-        $createdtime->set_time_zone($integ->server_timezone);
-        next if $self->cutoff_enquiry_date && $createdtime < $self->cutoff_enquiry_date;
-
-        my $updatedtime = $self->date_parser->parse_datetime($enquiry->{LoggedTime})->truncate( to => 'second' );
-        $updatedtime->set_time_zone($integ->server_timezone);
-
-        my %args = (
-            service => $service,
-            service_request_id => $enquiry->{EnquiryNumber},
-            description => $enquiry->{EnquiryDescription},
-            address => $enquiry->{EnquiryLocation} || '',
-            requested_datetime => $createdtime,
-            updated_datetime => $updatedtime,
-            # NB: these are EPSG:27700 easting/northing
-            latlong => [ $enquiry->{EnquiryY}, $enquiry->{EnquiryX} ],
-            status => $status,
+    } else {
+        my $updated_enquiries = $integ->GetEnquiryStatusChanges(
+            $args->{start_date},
+            $args->{end_date}
         );
+        my @enquiry_ids = map {
+            $_->{EnquiryNumber}
+        } @$updated_enquiries;
 
-        if ( $self->fetch_reports_private || $private_services{$code} ) {
-            $args{non_public} = 1;
+        my @enquiries = $integ->GetEnquiries(@enquiry_ids);
+        for my $enquiry ( @enquiries ) {
+            my $request = $self->_parse_enquiry($enquiry, $integ, \%services, \%private_services);
+            push(@requests, $request) if $request;
         }
-
-        if ( $self->include_private_customer_details ) {
-            my $json = $integ->get_enquiry_json($enquiry->{EnquiryNumber});
-            if (my $customers = ( $json->{customers} || [] )) {
-                my $customer = $customers->[0];
-                $args{contact_name}  = $customer->{contact}->{fullName} || '';
-                $args{contact_email} = $customer->{contact}->{email} || '';
-            }
-        }
-
-        my $request = $self->new_request( %args );
-
-        push @requests, $request;
     }
 
     if ($self->handle_jobs) {
@@ -1037,6 +1159,68 @@ sub get_service_requests {
     }
 
     return @requests;
+}
+
+sub _parse_enquiry {
+    my ($self, $enquiry, $integ, $services, $private_services) = @_;
+
+    my $code = $enquiry->{ServiceCode} . "_" . $enquiry->{SubjectCode};
+    my $service = $services->{$code};
+    my $status = $self->reverse_status_mapping->{$enquiry->{EnquiryStatusCode}};
+    return if $status && $status eq 'IGNORE';
+
+    unless ($service || ($service = $self->_find_wrapping_service($code, $services))) {
+        $self->logger->warn("no service for service code $code");
+        return;
+    }
+
+    return if $self->request_ignore_statuses->{$enquiry->{EnquiryStatusCode}};
+
+    unless ($status) {
+        # Default to 'open' if the status doesn't appear in the reverse mapping,
+        # which is the same as we do for service request updates.
+        $self->logger->warn("no reverse mapping for status code $enquiry->{EnquiryStatusCode} (Enquiry $enquiry->{EnquiryNumber})");
+        $status = 'open';
+    }
+
+    unless ($enquiry->{EnquiryY} && $enquiry->{EnquiryX}) {
+        $self->logger->warn("no easting/northing for Enquiry $enquiry->{EnquiryNumber}");
+        return;
+    }
+
+    my $createdtime = $self->date_parser->parse_datetime($enquiry->{EnquiryLogTime})->truncate( to => 'second' );
+    $createdtime->set_time_zone($integ->server_timezone);
+    return if $self->cutoff_enquiry_date && $createdtime < $self->cutoff_enquiry_date;
+
+    my $updatedtime = $self->date_parser->parse_datetime($enquiry->{LoggedTime})->truncate( to => 'second' );
+    $updatedtime->set_time_zone($integ->server_timezone);
+
+    my %args = (
+        service => $service,
+        service_request_id => $enquiry->{EnquiryNumber},
+        description => $enquiry->{EnquiryDescription},
+        address => $enquiry->{EnquiryLocation} || '',
+        requested_datetime => $createdtime,
+        updated_datetime => $updatedtime,
+        # NB: these are EPSG:27700 easting/northing
+        latlong => [ $enquiry->{EnquiryY}, $enquiry->{EnquiryX} ],
+        status => $status,
+    );
+
+    if ( $self->fetch_reports_private || $private_services->{$code} ) {
+        $args{non_public} = 1;
+    }
+
+    if ( $self->include_private_customer_details ) {
+        my $json = $integ->get_enquiry_json($enquiry->{EnquiryNumber});
+        if (my $customers = ( $json->{customers} || [] )) {
+            my $customer = $customers->[0];
+            $args{contact_name}  = $customer->{contact}->{fullName} || '';
+            $args{contact_email} = $customer->{contact}->{email} || '';
+        }
+    }
+
+    return $self->new_request( %args );
 }
 
 =head2 _get_service_requests_for_jobs
@@ -1276,7 +1460,7 @@ sub _find_wrapping_service {
 
     return unless defined $self->wrapped_services;
 
-    for my $service (@$services) {
+    for my $service (values %$services) {
         return $service if $code eq $service->service_code;
         my @attributes = @{ $service->attributes };
         my ($wrapped_codes) = grep { $_->code eq '_wrapped_service_code' } @attributes;
@@ -1319,8 +1503,10 @@ sub _parse_attributes {
         # printf "\n\nXXXXXXXX $code\n\n\n" if $type eq 'singlevaluelist';
 
         my %optional = ();
-        if (defined $self->attribute_overrides->{$code}) {
-            %optional = %{ $self->attribute_overrides->{$code} };
+        if (defined $self->get_integration->attribute_overrides->{$code}) {
+            %optional = %{ $self->get_integration->attribute_overrides->{$code} };
+            # 'default' isn't a valid param for Attribute so get rid of it.
+            delete $optional{default} if $optional{default};
         }
 
         $attributes{$code} = Open311::Endpoint::Service::Attribute->new(
