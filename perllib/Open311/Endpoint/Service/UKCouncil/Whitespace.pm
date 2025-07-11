@@ -18,19 +18,35 @@ sub _build_attributes {
             automated => 'hidden_field',
         ),
         Open311::Endpoint::Service::Attribute->new(
-            code => "service_item_name",
-            description => "Service item name",
-            datatype => "string",
-            required => 0,
-            automated => 'hidden_field',
-        ),
-        Open311::Endpoint::Service::Attribute->new(
             code => 'fixmystreet_id',
             variable => 0, # set by server
             datatype => 'string',
             required => 1,
             automated => 'server_set',
             description => 'external system ID',
+        ),
+    );
+
+    if ($self->service_name eq 'Bulky collection') {
+        push @attributes,
+            map {
+                Open311::Endpoint::Service::Attribute->new(
+                    code => $_,
+                    description => $_,
+                    datatype => "string",
+                    required => 0,
+                    automated => 'hidden_field',
+                ),
+            } qw(payment payment_method collection_date round_instance_id
+            bulky_items pension disability bulky_location bulky_parking);
+    } else {
+        push @attributes,
+        Open311::Endpoint::Service::Attribute->new(
+            code => "service_item_name",
+            description => "Service item name",
+            datatype => "string",
+            required => 0,
+            automated => 'hidden_field',
         ),
         Open311::Endpoint::Service::Attribute->new(
             code => 'assisted_yn',
@@ -59,8 +75,8 @@ sub _build_attributes {
             datatype => 'string',
             required => 0,
             automated => 'hidden_field',
-        ),
-    );
+        );
+    }
 
     return \@attributes;
 }
