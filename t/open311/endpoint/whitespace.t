@@ -139,8 +139,8 @@ subtest "GET service" => sub {
       "service_code" => "missed_collection",
       "attributes" => [
           { code => 'uprn', order => 1, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'UPRN reference' },
-          { code => 'service_item_name', order => 2, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Service item name' },
-          { code => 'fixmystreet_id', order => 3, required => 'true', variable => 'false', datatype => 'string', datatype_description => '', automated => 'server_set', description => 'external system ID' },
+          { code => 'fixmystreet_id', order => 2, required => 'true', variable => 'false', datatype => 'string', datatype_description => '', automated => 'server_set', description => 'external system ID' },
+          { code => 'service_item_name', order => 3, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Service item name' },
           { code => 'assisted_yn', order => 4, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Assisted collection (Yes/No)' },
           { code => 'location_of_containers', order => 5, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Location of containers' },
           { code => 'location_of_letterbox', order => 6, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'Location of letterbox' },
