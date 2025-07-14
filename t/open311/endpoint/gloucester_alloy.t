@@ -224,10 +224,7 @@ subtest 'send new report to Alloy' => sub {
                 },
                 {   attributeCode =>
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
-                    value => 'description
-
-Type of animal?
-Other',
+                    value => "title\n\ndescription\n\nType of animal?\nOther",
                 },
                 { attributeCode =>
                         'attributes_customerContactPriorities_630e8d78afc533014f6cce97',
@@ -297,10 +294,7 @@ Other',
                 },
                 {   attributeCode =>
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
-                    value => 'description
-
-Did you witness the dog fouling?
-Yes',
+                    value => "title\n\ndescription\n\nDid you witness the dog fouling?\nYes",
                 },
                 { attributeCode =>
                         'attributes_customerContactPriorities_630e8d78afc533014f6cce97',
@@ -369,7 +363,7 @@ Yes',
                 },
                 {   attributeCode =>
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
-                    value => 'description',
+                    value => "title\n\ndescription",
                 },
                 { attributeCode =>
                         'attributes_customerContactPriorities_630e8d78afc533014f6cce97',
@@ -434,7 +428,7 @@ Yes',
                 },
                 {   attributeCode =>
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
-                    value => 'description',
+                    value => "title\n\ndescription",
                 },
                 { attributeCode =>
                         'attributes_customerContactPriorities_630e8d78afc533014f6cce97',

@@ -53,6 +53,9 @@ sub _munge_question_args {
 
     my @q_attributes;
 
+    my $text = $args->{attributes}{title} . "\n\n" . $args->{attributes}{description};
+    $args->{attributes}{description} = $text;
+
     if ( ref($category_code) eq 'HASH' ) {
         my $questions = $category_code->{questions};
 
