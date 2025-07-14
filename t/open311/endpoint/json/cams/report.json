@@ -1,0 +1,21 @@
+{
+    "Info": {
+        "StatusDescr": "Unresolved",
+        "TypeDescr": "Bridge/Damaged"
+    },
+    "Maint": {
+        "Easting": "1",
+        "LinkType": "2",
+        "AdminArea": "081",
+        "Location": "Bridge damaged",
+        "Problem": "Handrail has come off",
+        "Northing": "2",
+        "LinkCode": "TLE/43418"
+    },
+    "Contact": {
+        "FirstName": "Bob",
+        "LastName": "Mould",
+        "Email": "test@example.com",
+        "Phone": ""
+    }
+}
