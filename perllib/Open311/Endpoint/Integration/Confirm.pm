@@ -393,11 +393,6 @@ has default_site_code => (
     default => ''
 );
 
-has external_system_number => (
-    is => 'ro',
-    default => ''
-);
-
 has omit_logged_time => (
     is => 'ro',
     default => 0
@@ -524,10 +519,6 @@ sub post_service_request {
     }
 
     $args = $self->process_service_request_args($args);
-
-    if ($self->external_system_number) {
-        $args->{external_system_number} = $self->external_system_number;
-    }
 
     if ($self->omit_logged_time) {
         $args->{omit_logged_time} = 1;
@@ -1147,7 +1138,7 @@ sub _get_service_requests_for_defects {
         end_date   => $args->{end_date},
     );
 
-    for my $defect (@$defects) {
+    DEFECT: for my $defect (@$defects) {
         my $defect_id = $defect->{defectNumber};
 
         unless ( $defect->{easting} && $defect->{northing} ) {
@@ -1171,6 +1162,14 @@ sub _get_service_requests_for_defects {
         next
             if $self->cutoff_enquiry_date
             && $createdtime < $self->cutoff_enquiry_date;
+
+        # Skip this defect if any of the enquiries on it match our own
+        # externalSystemNumber
+        for my $enq (@{ $defect->{enquiries} }) {
+            my $cenq = $enq->{centralEnquiry} || {};
+            my $num = $cenq->{externalSystemNumber};
+            next DEFECT if $num && $num eq $integ->external_system_number;
+        }
 
 
         my $status = "planned"; # XXX Aberdeenshire
