@@ -631,6 +631,11 @@ sub get_service_request_updates {
     centralEnquiry {
       subjectCode
       serviceCode
+      enquiryLink {
+        defect {
+          targetDate
+        }
+      }
     }
   }
 }
@@ -659,13 +664,17 @@ GRAPHQL
             }
 
             # Find the corresponding Open311 service code for the enquiry's current Confirm service/subject codes.
-            my $extras;
+            my $extras = {};
             my $service_code = $status_log->{centralEnquiry}->{serviceCode} . "_" . $status_log->{centralEnquiry}->{subjectCode};
             if ( my $service = $services{$service_code} ) {
                 $extras = {
                     category => $service->service_name,
                     group => @{$service->groups} ? $service->groups->[0] : $service->group,
                 };
+            }
+            # If there is an attached defect with a targetDate set, include that in extras too
+            if ( $status_log->{centralEnquiry}->{enquiryLink} && $status_log->{centralEnquiry}->{enquiryLink}->{defect} && $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{targetDate} ) {
+                $extras->{targetDate} = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{targetDate};
             }
 
             push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
