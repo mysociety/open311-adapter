@@ -640,6 +640,11 @@ sub get_service_request_updates {
     centralEnquiry {
       subjectCode
       serviceCode
+      enquiryLink {
+        defect {
+          targetDate
+        }
+      }
     }
   }
 }
@@ -657,7 +662,7 @@ GRAPHQL
             # The enquiry's service/subject codes may have changed with this
             # update, so find the corresponding Open311 service code to allow
             # FMS to handle this.
-            my $extras;
+            my $extras = {};
             my $service_code = $status_log->{centralEnquiry}->{serviceCode} . "_" . $status_log->{centralEnquiry}->{subjectCode};
             if ( my $service = $services{$service_code} ) {
                 $extras = {
@@ -665,8 +670,13 @@ GRAPHQL
                     group => @{$service->groups} ? $service->groups->[0] : $service->group,
                 };
             }
-            my $enquiry_id = $status_log->{enquiryNumber};
 
+            # If there is an attached defect with a targetDate set, include that in extras too
+            if ( $status_log->{centralEnquiry}->{enquiryLink} && $status_log->{centralEnquiry}->{enquiryLink}->{defect} && $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{targetDate} ) {
+                $extras->{targetDate} = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{targetDate};
+            }
+
+            my $enquiry_id = $status_log->{enquiryNumber};
             my $update = $self->_parse_enquiry_status_log($log, $enquiry_id, $integ, $extras);
             push(@updates, $update) if $update;
         }
