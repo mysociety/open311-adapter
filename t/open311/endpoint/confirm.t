@@ -438,7 +438,44 @@ $open311->mock( perform_request_graphql => sub {
                 ],
             },
         };
-    } elsif ( $args{query} =~ /enquiryStatusLogs/ ) {
+    } elsif ( $args{type} && $args{type} eq 'defect_status_logs' ) {
+        return {
+            data => {
+                jobStatusLogs => [
+                    {
+                        statusCode => 'OPEN',
+                        loggedDate => '2018-03-01T12:00:00Z',
+                        key => 'defect_log_1',
+                        job => {
+                            defects => [
+                                {
+                                    defectNumber => '1001',
+                                    targetDate => '2018-04-01T00:00:00Z',
+                                },
+                                {
+                                    defectNumber => '1002',
+                                    targetDate => '',
+                                },
+                            ]
+                        }
+                    },
+                    {
+                        statusCode => 'FIXED',
+                        loggedDate => '2018-03-01T15:00:00Z',
+                        key => 'defect_log_2',
+                        job => {
+                            defects => [
+                                {
+                                    defectNumber => '1003',
+                                    targetDate => '2018-03-15T00:00:00Z',
+                                },
+                            ]
+                        }
+                    }
+                ]
+            }
+        };
+    } elsif ( $args{query} && $args{query} =~ /enquiryStatusLogs/ ) {
         return {
             data => {
                 enquiryStatusLogs => [
@@ -484,6 +521,38 @@ $open311->mock( perform_request_graphql => sub {
                         centralEnquiry => {
                             subjectCode => 'UNKNOWN',
                             serviceCode => 'UNKNOWN'
+                        }
+                    },
+                    {
+                        enquiryNumber => '3004',
+                        enquiryStatusCode => 'INP',
+                        logNumber => '1',
+                        loggedDate => '2018-03-01T14:00:00+00:00',
+                        notes => '',
+                        centralEnquiry => {
+                            subjectCode => 'DEF',
+                            serviceCode => 'ABC',
+                            enquiryLink => {
+                                defect => {
+                                    targetDate => '2018-04-01T12:00:00+00:00'
+                                }
+                            }
+                        }
+                    },
+                    {
+                        enquiryNumber => '3005',
+                        enquiryStatusCode => 'INP',
+                        logNumber => '1',
+                        loggedDate => '2018-03-01T15:00:00+00:00',
+                        notes => '',
+                        centralEnquiry => {
+                            subjectCode => 'DEF',
+                            serviceCode => 'ABC',
+                            enquiryLink => {
+                                defect => {
+                                    targetDate => undef
+                                }
+                            }
                         }
                     }
                 ],
@@ -1690,6 +1759,24 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     update_id            => '3003_2',
                     updated_datetime     => '2018-03-01T13:30:00+00:00',
                 },
+                {   description          => undef,
+                    external_status_code => 'INP',
+                    media_url            => undef,
+                    service_request_id   => '3004',
+                    status               => 'in_progress',
+                    update_id            => '3004_1',
+                    updated_datetime     => '2018-03-01T14:00:00+00:00',
+                    extras               => { category => 'Flooding', group => 'Flooding & Drainage', targetDate => '2018-04-01T12:00:00+00:00' },
+                },
+                {   description          => undef,
+                    external_status_code => 'INP',
+                    media_url            => undef,
+                    service_request_id   => '3005',
+                    status               => 'in_progress',
+                    update_id            => '3005_1',
+                    updated_datetime     => '2018-03-01T15:00:00+00:00',
+                    extras               => { category => 'Flooding', group => 'Flooding & Drainage' },
+                },
 
                 # Jobs
                 {   description          => undef,
@@ -1715,6 +1802,35 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'open',
                     update_id            => 'JOB_open_standardx3',
                     updated_datetime     => '2023-12-01T02:00:00+00:00',
+                },
+
+                # Defect updates
+                {   description          => undef,
+                    external_status_code => 'OPEN',
+                    media_url            => undef,
+                    service_request_id   => 'DEFECT_1001',
+                    status               => 'open',
+                    update_id            => 'DEFECT_1001_defect_log_1',
+                    updated_datetime     => '2018-03-01T12:00:00+00:00',
+                    extras               => { targetDate => '2018-04-01T00:00:00Z' },
+                },
+                {   description          => undef,
+                    external_status_code => 'OPEN',
+                    media_url            => undef,
+                    service_request_id   => 'DEFECT_1002',
+                    status               => 'open',
+                    update_id            => 'DEFECT_1002_defect_log_1',
+                    updated_datetime     => '2018-03-01T12:00:00+00:00',
+                    extras               => { targetDate => undef },
+                },
+                {   description          => undef,
+                    external_status_code => 'FIXED',
+                    media_url            => undef,
+                    service_request_id   => 'DEFECT_1003',
+                    status               => 'fixed',
+                    update_id            => 'DEFECT_1003_defect_log_2',
+                    updated_datetime     => '2018-03-01T15:00:00+00:00',
+                    extras               => { targetDate => '2018-03-15T00:00:00Z' },
                 },
             ],
         },
