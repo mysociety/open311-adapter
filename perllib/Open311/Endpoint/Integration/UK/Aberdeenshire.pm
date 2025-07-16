@@ -13,8 +13,6 @@ around BUILDARGS => sub {
 sub _description_for_defect {
     my ($self, $defect, $service) = @_;
 
-    my $desc = 'Defect type: ' . $service->service_name;
-
     my $attribs = $self->_defect_attributes_description($defect);
 
     my $target = '';
