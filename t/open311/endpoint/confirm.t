@@ -267,7 +267,10 @@ $open311->mock(perform_request => sub {
 $open311->mock( perform_request_graphql => sub {
     my ( $self, %args ) = @_;
 
-    if ( $args{type} && $args{type} eq 'job_types' ) {
+    $args{type} ||= '';
+    $args{query} ||= '';
+
+    if ( $args{type} eq 'job_types' ) {
         return {
             data => {
                 jobTypes => [
@@ -276,7 +279,7 @@ $open311->mock( perform_request_graphql => sub {
                 ],
             },
         };
-    } elsif ( $args{type} && $args{type} eq 'defect_types' ) {
+    } elsif ( $args{type} eq 'defect_types' ) {
         return {
             data => {
                 defectTypes => [
@@ -285,7 +288,7 @@ $open311->mock( perform_request_graphql => sub {
                 ],
             },
         };
-    } elsif ( $args{type} && $args{type} eq 'jobs' ) {
+    } elsif ( $args{type} eq 'jobs' ) {
         return {
             data => {
                 jobs => [
@@ -403,7 +406,7 @@ $open311->mock( perform_request_graphql => sub {
                 ],
             },
         };
-    } elsif ( $args{type} && $args{type} eq 'job_status_logs' ) {
+    } elsif ( $args{type} eq 'job_status_logs' ) {
         return {
             data => {
                 jobStatusLogs => [
@@ -428,7 +431,7 @@ $open311->mock( perform_request_graphql => sub {
                 ],
             },
         };
-    } elsif ( $args{query} && $args{query} =~ /enquiryStatusLogs/ ) {
+    } elsif ( $args{query} =~ /enquiryStatusLogs/ ) {
         return {
             data => {
                 enquiryStatusLogs => [
@@ -479,7 +482,7 @@ $open311->mock( perform_request_graphql => sub {
                 ],
             },
         };
-    } elsif ( $args{query} && $args{query} =~ /centralEnquiries/ ) {
+    } elsif ( $args{query} =~ /centralEnquiries/ ) {
         if ( $args{query} =~ /externalSystemNumber.*notEquals.*"FMS123"/s ) {
             return {
                 data => {
