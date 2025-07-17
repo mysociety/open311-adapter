@@ -1057,18 +1057,17 @@ sub get_service_requests {
     } reverse @services;
     my %private_services = map { $_ => 1 } @{$self->private_services};
 
+    my $w3c = DateTime::Format::W3CDTF->new;
+    my $start_time = $w3c->parse_datetime( $args->{start_date} );
+    $start_time->set_time_zone($integ->server_timezone);
+    my $start = $w3c->format_datetime($start_time);
+
+    my $end_time = $w3c->parse_datetime( $args->{end_date} );
+    $end_time->set_time_zone($integ->server_timezone);
+    my $end = $w3c->format_datetime($end_time);
+
     # Enquiries
-
     if ($self->use_graphql_for_enquiries) {
-        my $w3c = DateTime::Format::W3CDTF->new;
-        my $start_time = $w3c->parse_datetime( $args->{start_date} );
-        $start_time->set_time_zone($integ->server_timezone);
-        my $start = $w3c->format_datetime($start_time);
-
-        my $end_time = $w3c->parse_datetime( $args->{end_date} );
-        $end_time->set_time_zone($integ->server_timezone);
-        my $end = $w3c->format_datetime($end_time);
-
         my $filter_json = '';
         if ($self->external_system_number) {
             $filter_json = <<FILTER;
@@ -1132,10 +1131,7 @@ GRAPHQL
         }
 
     } else {
-        my $updated_enquiries = $integ->GetEnquiryStatusChanges(
-            $args->{start_date},
-            $args->{end_date}
-        );
+        my $updated_enquiries = $integ->GetEnquiryStatusChanges($start, $end);
         my @enquiry_ids = map {
             $_->{EnquiryNumber}
         } @$updated_enquiries;
