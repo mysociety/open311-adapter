@@ -1,4 +1,4 @@
-endpoint_url: "http://example.org/endpoint"
+endpoint_url: "http://confirm/endpoint"
 username: "username"
 password: "pw"
 tenant_id: "123"
@@ -10,6 +10,7 @@ service_whitelist:
     ABC_DEF_1: Different type of flooding
   Flooding:
     ABC_DEF: Flooding
+    ABC_GHI: Pavement Flooding
 reverse_status_mapping:
   DUP: duplicate
   INP: in_progress
@@ -21,7 +22,12 @@ completion_statuses:
   - FIX
 service_enquiry_class_code:
   ABC: TEST
-base_url: http://example.com/
-web_url: http://example.org/web/api
+base_url: http://confirm/
+web_url: http://confirm/web/api
 cutoff_enquiry_date: 2018-04-12T12:00:00
 include_private_customer_details: 1
+attribute_overrides:
+  DEPT:
+    automated: server_set
+    required: 0
+    default: "1M"

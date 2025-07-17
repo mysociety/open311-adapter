@@ -144,6 +144,7 @@ sub attributes_to_hash {
 
     my $attributes = {};
     for my $att ( @{ $item->{attributes} } ) {
+        next unless defined $att->{attributeCode};
         $attributes->{$att->{attributeCode}} = $att->{value};
     }
 
