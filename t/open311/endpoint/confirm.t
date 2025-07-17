@@ -984,7 +984,7 @@ subtest "POST OK" => sub {
         'attribute[fixmystreet_id]' => 1001,
         'attribute[title]' => 'Title',
         'attribute[description]' => 'This is the details',
-        'attribute[report_url]' => 'http://example.com/report/1001',
+        'attribute[report_url]' => 'http://fixmystreet/report/1001',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -1012,7 +1012,7 @@ subtest "POST OK with logged time omitted" => sub {
         'attribute[fixmystreet_id]' => 1002,
         'attribute[title]' => 'Title',
         'attribute[description]' => 'This is the details',
-        'attribute[report_url]' => 'http://example.com/report/1001',
+        'attribute[report_url]' => 'http://fixmystreet/report/1001',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -1037,7 +1037,7 @@ subtest "POST OK with unrecognised attribute" => sub {
         'attribute[fixmystreet_id]' => 1003,
         'attribute[title]' => 'Title',
         'attribute[description]' => 'This is the details',
-        'attribute[report_url]' => 'http://example.com/report/1003',
+        'attribute[report_url]' => 'http://fixmystreet/report/1003',
         'attribute[testing]' => 'This should be ignored',
     );
     ok $res->is_success, 'valid request'
@@ -1063,7 +1063,7 @@ subtest "POST OK with empty attribute, default picked up from config" => sub {
         'attribute[fixmystreet_id]' => 1004,
         'attribute[title]' => 'Title',
         'attribute[description]' => 'This is the details',
-        'attribute[report_url]' => 'http://example.com/report/1004',
+        'attribute[report_url]' => 'http://fixmystreet/report/1004',
         'attribute[DEPT]' => '',
     );
     ok $res->is_success, 'valid request'
@@ -1089,7 +1089,7 @@ subtest "POST OK with attribute value takes precedence over default picked in co
         'attribute[fixmystreet_id]' => 1005,
         'attribute[title]' => 'Title',
         'attribute[description]' => 'This is the details',
-        'attribute[report_url]' => 'http://example.com/report/1005',
+        'attribute[report_url]' => 'http://fixmystreet/report/1005',
         'attribute[DEPT]' => '2M',
     );
     ok $res->is_success, 'valid request'
@@ -1119,7 +1119,7 @@ subtest 'POST with failed document storage' => sub {
             'attribute[fixmystreet_id]' => 1001,
             'attribute[title]'          => 'Title',
             'attribute[description]'    => 'This is the details',
-            'attribute[report_url]'     => 'http://example.com/report/1001',
+            'attribute[report_url]'     => 'http://fixmystreet/report/1001',
         )
     }
     'Document storage failed: Something bad happened', 'warning is generated';
@@ -1150,7 +1150,7 @@ subtest "POST OK with FMS ID in customer ref field" => sub {
         'attribute[fixmystreet_id]' => 1001,
         'attribute[title]' => 'Title',
         'attribute[description]' => 'Customer Ref report',
-        'attribute[report_url]' => 'http://example.com/report/1001',
+        'attribute[report_url]' => 'http://fixmystreet/report/1001',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -1173,7 +1173,7 @@ subtest 'POST update' => sub {
         description => 'Update here',
         status => 'OPEN',
         updated_datetime => '2016-09-01T15:00:00Z',
-        media_url => 'http://example.org/',
+        media_url => 'http://fixmystreet/',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
 
@@ -1201,7 +1201,7 @@ subtest 'POST update with invalid LoggedTime' => sub {
         description => 'Update here',
         status => 'OPEN',
         updated_datetime => '2016-09-01T15:00:00Z',
-        media_url => 'http://example.org/',
+        media_url => 'http://fixmystreet/',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
 
@@ -1230,7 +1230,7 @@ subtest 'POST update with category change' => sub {
         description => 'Category change update',
         status => 'OPEN',
         updated_datetime => '2016-09-01T15:00:00Z',
-        media_url => 'http://example.org/',
+        media_url => 'http://fixmystreet/',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
 
@@ -1340,7 +1340,7 @@ subtest "fetching of completion photos" => sub {
         GET => '/servicerequestupdates.xml?start_date=2022-10-23T00:00:00Z&end_date=2022-10-24T00:00:00Z',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
-    contains_string $res->content, '<media_url>http://example.com/photo/completion?jurisdiction_id=confirm_dummy&amp;job=432&amp;photo=1</media_url>';
+    contains_string $res->content, '<media_url>http://confirm/photo/completion?jurisdiction_id=confirm_dummy&amp;job=432&amp;photo=1</media_url>';
 };
 
 $endpoint = Open311::Endpoint::Integration::UK::DummyDupedServices->new;
