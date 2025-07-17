@@ -604,14 +604,7 @@ sub get_service_request_updates {
             _normalise_service_code($_->{service_code}) => $_
         } reverse @services;
 
-        my $w3c = DateTime::Format::W3CDTF->new;
-        my $start_time = $w3c->parse_datetime( $args->{start_date} );
-        $start_time->set_time_zone($integ->server_timezone);
-        my $start = $w3c->format_datetime($start_time);
-
-        my $end_time = $w3c->parse_datetime( $args->{end_date} );
-        $end_time->set_time_zone($integ->server_timezone);
-        my $end = $w3c->format_datetime($end_time);
+        my ($start, $end) = $self->_parse_start_end_dates($args);
 
         my $query = <<GRAPHQL;
 {
@@ -1057,14 +1050,7 @@ sub get_service_requests {
     } reverse @services;
     my %private_services = map { $_ => 1 } @{$self->private_services};
 
-    my $w3c = DateTime::Format::W3CDTF->new;
-    my $start_time = $w3c->parse_datetime( $args->{start_date} );
-    $start_time->set_time_zone($integ->server_timezone);
-    my $start = $w3c->format_datetime($start_time);
-
-    my $end_time = $w3c->parse_datetime( $args->{end_date} );
-    $end_time->set_time_zone($integ->server_timezone);
-    my $end = $w3c->format_datetime($end_time);
+    my ($start, $end) = $self->_parse_start_end_dates($args);
 
     # Enquiries
     if ($self->use_graphql_for_enquiries) {
@@ -1588,6 +1574,22 @@ sub _normalise_service_code {
     my ($serv, $subj, $extra) = split /_/, $code;
     return $code unless defined $subj; # In case it's e.g. a job code with no _
     return join("_", $serv, $subj);
+}
+
+sub _parse_start_end_dates {
+    my ($self, $args) = @_;
+
+    my $integ = $self->get_integration;
+
+    my $start_time = $self->date_parser->parse_datetime( $args->{start_date} );
+    $start_time->set_time_zone($integ->server_timezone);
+    my $start = $self->date_parser->format_datetime($start_time);
+
+    my $end_time = $self->date_parser->parse_datetime( $args->{end_date} );
+    $end_time->set_time_zone($integ->server_timezone);
+    my $end = $self->date_parser->format_datetime($end_time);
+
+    return ($start, $end);
 }
 
 1;
