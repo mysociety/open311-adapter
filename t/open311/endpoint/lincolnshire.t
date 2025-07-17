@@ -86,7 +86,7 @@ subtest "looking up of completion photos" => sub {
         GET => '/servicerequestupdates.xml?start_date=2022-10-23T00:00:00Z&end_date=2022-10-24T00:00:00Z',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
-    contains_string $res->content, '<media_url>http://example.com/photo/completion?jurisdiction_id=lincolnshire_confirm&amp;job=432&amp;photo=2</media_url>';
+    contains_string $res->content, '<media_url>http://confirm/photo/completion?jurisdiction_id=lincolnshire_confirm&amp;job=432&amp;photo=2</media_url>';
 };
 
 subtest 'fetching of completion photos' => sub {
