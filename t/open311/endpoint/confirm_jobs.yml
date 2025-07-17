@@ -1,5 +1,5 @@
-endpoint_url: "http://example.org/endpoint"
-web_url: "http://example.org/web/api"
+endpoint_url: "http://confirm/endpoint"
+web_url: "http://confirm/web/api"
 username: "username"
 password: "pw"
 tenant_id: "123"
