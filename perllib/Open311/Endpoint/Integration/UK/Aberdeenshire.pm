@@ -13,26 +13,40 @@ around BUILDARGS => sub {
 sub _description_for_defect {
     my ($self, $defect, $service) = @_;
 
-    my $desc = 'Defect type: ' . $service->service_name;
+    my $attribs = $self->_defect_attributes_description($defect);
 
+    my $target = '';
     if ( $defect->{targetDate} ) {
         my ($date) = split('T', $defect->{targetDate});
-        $desc .= "\nTarget completion date: $date";
+        $target = "To be completed by: $date";
     }
 
-    $desc = $self->_defect_attributes_description($defect, $desc);
 
-    return $desc;
+    return <<DESC;
+We've recorded a defect at this location following a statutory inspection and evaluated the risk it poses.
+
+This risk level determines our target response time which are then are used to prioritise and programme work.
+
+This defect has been assessed as:
+
+$target
+$attribs
+
+Please be aware that this is the latest date we plan to have a repair completed by but may change as competing priorities and resources allow.
+
+When works are due to take place we will let you know.
+DESC
 }
 
 sub _defect_attributes_description {
-    my ($self, $defect, $desc) = @_;
+    my ($self, $defect) = @_;
 
     my $integ = $self->get_integration;
     my $mapping = $integ->config->{defect_attributes};
 
-    return $desc unless $mapping;
+    return '' unless $mapping;
 
+    my $desc = '';
     try {
         my $res = $integ->json_web_api_call("/defects/" . $defect->{defectNumber});
         foreach my $attr (@{ $res->{attributes} }) {
@@ -41,7 +55,7 @@ sub _defect_attributes_description {
                 my $name = $c->{name} || $attr->{name};
                 my $value = $c->{numeric} ? $attr->{numericValue} : $c->{values}->{$attr->{pickValue}->{key}};
                 $value ||= $attr->{currentValue};
-                $desc .= "\n$name: $value";
+                $desc .= "$name: $value\n";
             }
         }
     };
