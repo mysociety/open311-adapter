@@ -275,7 +275,7 @@ sub post_service_request {
         },
         'Maint' => {
             Location => $args->{attributes}->{title},
-            Problem => $args->{attributes}->{description},
+            Problem => "$args->{attributes}->{title}\n\n$args->{attributes}->{description}",
             Easting => $args->{attributes}->{easting},
             Northing => $args->{attributes}->{northing},
             AdminArea => $AdminArea,

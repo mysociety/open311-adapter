@@ -12,7 +12,7 @@
         "LinkType": "2",
         "AdminArea": "081",
         "Location": "Bridge damaged",
-        "Problem": "Handrail has come off",
+        "Problem": "Bridge damaged\n\nHandrail has come off",
         "Northing": "2",
         "LinkCode": "TLE/43418"
     },
