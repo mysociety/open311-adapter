@@ -33,3 +33,6 @@ service_extra_data:
 reverse_status_mapping:
   'Officer Progressing Issue': 'in_progress'
   'No Action Required': 'not_councils_responsibility'
+
+admin_areas:
+  081: Area 081
