@@ -151,6 +151,16 @@ has api_calls => (
     is => 'ro',
 );
 
+=head2 admin_areas
+
+Mapping of admin area code to admin area description
+
+=cut
+
+has admin_areas => (
+    is => 'ro',
+);
+
 =head2 get_integration
 
 Set the integration as 'cams'
@@ -251,20 +261,28 @@ sub post_service_request {
     }
 
     die "No Type Description" unless $TypeDescr;
+    (my $TypeGroupDescr = $TypeDescr) =~ s/\/.*//;
+
+    my $AdminArea = $args->{attributes}->{AdminArea};
+    my $AdminAreaDescr = $self->admin_areas->{$AdminArea};
 
     my $serviceRequest = {
         'Info' => {
+            AdminAreaDescr => $AdminAreaDescr,
             TypeDescr => $TypeDescr,
+            TypeGroupDescr => $TypeGroupDescr,
             StatusDescr => 'Unresolved',
         },
         'Maint' => {
             Location => $args->{attributes}->{title},
-            Problem => $args->{attributes}->{description},
+            Problem => "$args->{attributes}->{title}\n\n$args->{attributes}->{description}",
             Easting => $args->{attributes}->{easting},
             Northing => $args->{attributes}->{northing},
-            AdminArea => $args->{attributes}->{AdminArea},
+            AdminArea => $AdminArea,
             LinkCode => $args->{attributes}->{LinkCode},
             LinkType => $args->{attributes}->{LinkType},
+            WKTPoint => "POINT($args->{attributes}->{easting} $args->{attributes}->{northing})",
+            Type => $args->{service_code},
         },
         'Contact' => {
             FirstName => $args->{first_name},
