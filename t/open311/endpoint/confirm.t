@@ -143,6 +143,10 @@ BEGIN { $ENV{TEST_MODE} = 1; }
 
 my ($IC, $SIC, $DC);
 
+my $lwp = Test::MockModule->new('LWP::UserAgent');
+sub empty_json { HTTP::Response->new(200, 'OK', [], '{}') }
+$lwp->mock(request => \&empty_json);
+
 my $open311 = Test::MockModule->new('Integrations::Confirm');
 $open311->mock(perform_request => sub {
     my ($self, $op) = @_; # Don't care about subsequent ops
@@ -873,6 +877,7 @@ subtest "fetching of completion photos" => sub {
     );
     ok $res->is_success, 'valid request' or diag $res->content;
     contains_string $res->content, '<media_url>http://example.com/photo/completion?jurisdiction_id=confirm_dummy&amp;job=432&amp;photo=1</media_url>';
+    $lwp->mock(request => \&empty_json);
 };
 
 $endpoint = Open311::Endpoint::Integration::UK::DummyDupedServices->new;
