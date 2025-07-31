@@ -246,6 +246,13 @@ $open311->mock(perform_request => sub {
             is_deeply \%attrib, { EnqAttribTypeCode => 'DEPT', EnqAttribStringValue => '1M' };
             return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 1003, EnquiryLogNumber => 3 } } } };
         }
+        if ($req{EnquiryNumber} eq '1004') {
+            # Changing categories when using wrapped services is currently not
+            # supported, so check that ServiceCode/Subject code don't get set.
+            is $req{ServiceCode}, undef, 'ServiceCode not set for wrapped service';
+            is $req{SubjectCode}, undef, 'SubjectCode not set for wrapped service';
+            return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 1004, EnquiryLogNumber => 3 } } } };
+        }
         return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 2001, EnquiryLogNumber => 2 } } } };
     } elsif ($op->name eq 'GetEnquiryStatusChanges') {
         my %req = map { $_->name => $_->value } ${$op->value}->value;
@@ -1463,6 +1470,36 @@ XML
     is_string $res->content, $expected, 'xml string ok'
     or diag $res->content;
 };
+
+subtest 'POST update with category change' => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.xml',
+        api_key => 'test',
+        service_request_id => 1004,
+        update_id => 124,
+        service_code => 'POTHOLES',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => 'Category change update',
+        status => 'OPEN',
+        updated_datetime => '2016-09-01T15:00:00Z',
+        media_url => 'http://example.org/',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+my $expected = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_request_updates>
+  <request_update>
+    <update_id>1004_3</update_id>
+  </request_update>
+</service_request_updates>
+XML
+
+    is_string $res->content, $expected, 'xml string ok'
+    or diag $res->content;
+};
+
 
 $endpoint = Open311::Endpoint::Integration::UK::DummyJobs->new;
 

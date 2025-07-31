@@ -971,28 +971,36 @@ sub operation_for_update {
     # attributes on the new service
     if ($new_service) {
         my ($serv, $subj) = split /_/, $new_service->service_code;
-        $enq->{ServiceCode} = $serv;
-        $enq->{SubjectCode} = $subj;
+        # TODO: wrapped services are a problem - at this point the $new_service
+        # is the wrapped service so we can't split its code into a valid Confirm
+        # service/subject code. For now we just skip over if we can't break the
+        # service code apart but this does need handling properly at some point.
+        # This approach will cause invalid service/subject codes to be sent to
+        # Confirm if a wrapped service's Open311 code has an underscore...
+        if ( $serv && $subj ) {
+            $enq->{ServiceCode} = $serv;
+            $enq->{SubjectCode} = $subj;
 
-        # Build args hash with default values from attribute_overrides
-        my $args = { attributes => {} };
+            # Build args hash with default values from attribute_overrides
+            my $args = { attributes => {} };
 
-        # Apply attribute overrides with default values
-        my @codes = map { $_->code } @{ $new_service->attributes };
-        for my $code (@codes) {
-            my $cfg = $self->attribute_overrides->{$code};
-            if ($cfg && $cfg->{default}) {
-                $args->{attributes}->{$code} = $cfg->{default};
+            # Apply attribute overrides with default values
+            my @codes = map { $_->code } @{ $new_service->attributes };
+            for my $code (@codes) {
+                my $cfg = $self->attribute_overrides->{$code};
+                if ($cfg && $cfg->{default}) {
+                    $args->{attributes}->{$code} = $cfg->{default};
+                }
             }
-        }
 
-        if (%{ $args->{attributes} }) {
-            my %service_types = map { $_->code => $_->datatype } @{ $new_service->attributes };
-            my %attributes_required = map { $_->code => $_->required } @{ $new_service->attributes };
+            if (%{ $args->{attributes} }) {
+                my %service_types = map { $_->code => $_->datatype } @{ $new_service->attributes };
+                my %attributes_required = map { $_->code => $_->required } @{ $new_service->attributes };
 
-            push @elements, $self->_build_enquiry_attribute_elements(
-                $new_service, $args, \%service_types, \%attributes_required
-            );
+                push @elements, $self->_build_enquiry_attribute_elements(
+                    $new_service, $args, \%service_types, \%attributes_required
+                );
+            }
         }
     }
 
