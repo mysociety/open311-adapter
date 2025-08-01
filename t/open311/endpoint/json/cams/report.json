@@ -1,0 +1,25 @@
+{
+    "Info": {
+        "AdminAreaDescr": "Area 081",
+        "StatusDescr": "Unresolved",
+        "TypeGroupDescr": "Bridge",
+        "TypeDescr": "Bridge/Damaged"
+    },
+    "Maint": {
+        "Type": "I274",
+        "WKTPoint": "POINT(1 2)",
+        "Easting": "1",
+        "LinkType": "2",
+        "AdminArea": "081",
+        "Location": "Bridge damaged",
+        "Problem": "Bridge damaged\n\nHandrail has come off",
+        "Northing": "2",
+        "LinkCode": "TLE/43418"
+    },
+    "Contact": {
+        "FirstName": "Bob",
+        "LastName": "Mould",
+        "Email": "test@example.com",
+        "Phone": ""
+    }
+}
