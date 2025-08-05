@@ -25,7 +25,8 @@ $lwp->mock(request => sub {
         return HTTP::Response->new(200, 'OK', [], '12345');
     } elsif ($req->uri =~ /WebHolding/) {
         ok $req->header('.aspxauth') eq 'OpenSesame', 'Authorisation header set';
-        ok $req->content eq 'data:image/jpeg;base64,' . encode_base64(path(__FILE__)->sibling('files')->child('test_image.jpg')->slurp), 'Image is body of request';
+        my $content = decode_json($req->content);
+        ok $content->{FileBytes} eq path(__FILE__)->sibling('files')->child('test_image.jpg')->slurp, 'Image is body of request';
         return HTTP::Response->new(200, 'OK', [], '"random"');
     } elsif ($req->uri =~ /jpeg/) {
         my $image_data = path(__FILE__)->sibling('files')->child('test_image.jpg')->slurp;

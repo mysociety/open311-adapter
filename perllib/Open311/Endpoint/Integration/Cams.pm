@@ -397,13 +397,7 @@ generated to submit the service request in the path.
 sub _add_service_request_images {
     my ($self, $uuid, $media_urls) = @_;
 
-    my @attachments = map {
-        my $content_type = $_->content_type ? $_->content_type : 'image/jpeg';
-        {
-            content_type => $content_type,
-            body => 'data:' . $content_type . ';base64,' . encode_base64($_->content),
-        }
-    } $self->_get_attachments($media_urls);
+    my @attachments = $self->_get_attachments($media_urls);
 
     $self->do_login;
 
@@ -411,8 +405,7 @@ sub _add_service_request_images {
         my $response = $self->cams->api_call(
             call => $self->api_calls->{'upload_files'} . $uuid,
             headers => { '.aspxauth' => $self->access_token },
-            body => $image->{body},
-            content_type => $image->{content_type},
+            body => { FileBytes => $image->{FileBytes}, FileName => $image->{FileName} },
         );
     }
 
@@ -433,10 +426,13 @@ sub _get_attachments {
 
     my @photos = ();
     my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+    my $filename;
     for (@$urls) {
         my $response = $ua->get($_);
         if ($response->is_success) {
-            push @photos, $response;
+            $_ =~  m|https://[^/]+/([^/]+)\?|;
+            $filename = $1;
+            push @photos, { FileBytes => $response->content, FileName => $filename };
         } else {
             $self->logger->error("[CAMS] Unable to download attachment: " . $_);
             $self->logger->debug("[CAMS] Photo response status: " . $response->status_line);
