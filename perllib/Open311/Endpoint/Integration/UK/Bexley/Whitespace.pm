@@ -30,6 +30,8 @@ sub _worksheet_message {
         next unless $val;
 
         if ( $_->{key} eq 'collection_date' ) {
+            my $orig_val = $val;
+
             my $dtf_from = DateTime::Format::Strptime->new(
                 pattern => '%Y-%m-%d',
             );
@@ -41,10 +43,8 @@ sub _worksheet_message {
             $val = $dtf_from->parse_datetime($val);
             $val = $dtf_to->format_datetime($val) if $val;
 
-            unless ($val) {
-                $self->logger->error('Bad collection_date string for worksheet message');
-                next;
-            }
+            # Just send original string if it's faulty
+            $val = $orig_val unless $val;
         }
 
         push @messages, "$_->{label} $val";
