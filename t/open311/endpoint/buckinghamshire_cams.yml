@@ -1,0 +1,38 @@
+username: User1
+password: password123
+
+api_url: https://dummy/api/
+
+api_calls:
+  login: 'usersaccess/dologin'
+  insert: 'Users/Insert/'
+  upload_files : 'Users/WebHolding/'
+  get_updates: 'Users/usp_FMS_GetUpdates/Last30Days'
+
+service_list:
+  Public Rights of Way:
+    '9':
+      service_name:
+        CAMSCategoryName: 'Alignment/Path Off Line'
+    'I274':
+      service_name:
+        CAMSCategoryName: 'Bridge/Damaged'
+        FMSDisplayName: 'Damaged Bridge'
+    'I273':
+      service_name:
+        CAMSCategoryName: 'Bridge/Missing'
+
+service_extra_data:
+  - code: AdminArea
+    description: Admin Area
+  - code: LinkCode
+    description: Link Code
+  - code: LinkType
+    description: Link Type
+
+reverse_status_mapping:
+  'Officer Progressing Issue': 'in_progress'
+  'No Action Required': 'not_councils_responsibility'
+
+admin_areas:
+  081: Area 081
