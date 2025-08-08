@@ -107,40 +107,32 @@ sub CreateWorksheet {
         ? $service_params->{collection_service_id}
         : $service_params->{service_id};
 
+    my @service_inputs;
+    if ($params->{service_code} eq 'bulky_collection') {
+        push @service_inputs, service_input(144, 1); # Signifier of a bulky collection
+        foreach (@{$params->{bulky_items}}) {
+            push @service_inputs, service_input($_, 1);
+        }
+    } else {
+        push @service_inputs,
+            service_input($service_params->{service_item_id}, $params->{quantity});
+    }
+
     my $worksheet = ixhash(
         Uprn => $params->{uprn},
         ServiceId => $service_id,
         WorksheetReference => $params->{worksheet_reference},
         WorksheetMessage => $params->{worksheet_message},
-        ServiceItemInputs => ixhash(
-            'wsap:Input.CreateWorksheetInput.ServiceItemInput' => [
-                ixhash(
-                    'wsap:ServiceItemId' => $service_params->{service_item_id},
-                    'wsap:ServiceItemName' => '',
-                    'wsap:ServiceItemQuantity' => $params->{quantity},
-                )
-            ]
-        ),
+        $params->{collection_date} ? (WorksheetDueDate => $params->{collection_date}) : (),
+        ServiceItemInputs => \@service_inputs,
         ServicePropertyInputs => [
-            {
-                'wsap:Input.CreateWorksheetInput.ServicePropertyInput' => ixhash(
-                    'wsap:ServicePropertyId' => 79,
-                    'wsap:ServicePropertyValue' => $params->{assisted_yn},
-                ),
-            },
-            {
-                'wsap:Input.CreateWorksheetInput.ServicePropertyInput' => ixhash(
-                    'wsap:ServicePropertyId' => 80,
-                    'wsap:ServicePropertyValue' => $params->{location_of_containers},
-                ),
-            },
-            $params->{location_of_letterbox} ? ({
-                'wsap:Input.CreateWorksheetInput.ServicePropertyInput' => ixhash(
-                    'wsap:ServicePropertyId' => 82,
-                    'wsap:ServicePropertyValue' => $params->{location_of_letterbox},
-                ),
-            }) : (),
+            property_input(79, $params->{assisted_yn}),
+            property_input(80, $params->{location_of_containers}),
+            property_input(82, $params->{location_of_letterbox}),
+            property_input(65, $params->{bulky_parking}),
+            property_input(66, $params->{bulky_location}),
         ],
+        $params->{round_instance_id} ? (AdHocRoundInstanceId =>  $params->{round_instance_id}) : (),
     );
 
     my $res = $self->call('CreateWorksheet', worksheetInput => $worksheet);
@@ -155,6 +147,44 @@ sub CreateWorksheet {
     $self->logger->info("Created worksheet in Whitespace: $worksheet_id");
 
     return $worksheet_id;
+}
+
+sub service_input {
+    my ($id, $quantity) = @_;
+    return $id ? ({
+        'wsap:Input.CreateWorksheetInput.ServiceItemInput' => ixhash(
+            'wsap:ServiceItemId' => $id,
+            'wsap:ServiceItemName' => '',
+            'wsap:ServiceItemQuantity' => $quantity,
+        )
+    }) : ();
+}
+sub property_input {
+    my ($id, $value) = @_;
+    return $value ? ({
+        'wsap:Input.CreateWorksheetInput.ServicePropertyInput' => ixhash(
+            'wsap:ServicePropertyId' => $id,
+            'wsap:ServicePropertyValue' => $value,
+        ),
+    }) : ();
+}
+
+sub CancelWorksheet {
+    my ($self, $params) = @_;
+
+    my $worksheet = ixhash(
+        WorksheetId => $params->{worksheet_id},
+    );
+
+    my $res = $self->call('CancelWorksheet', cancelWorksheetInput => $worksheet);
+    $self->logger->debug("CancelWorksheet response: " . encode_json($res));
+
+    if ($res->{ErrorCode}) {
+        $self->logger->error("Error cancelling worksheet in Whitespace: $res->{ErrorDescription}");
+        die "Error cancelling worksheet in Whitespace: $res->{ErrorDescription}";
+    }
+
+    $self->logger->info("Cancelled worksheet $params->{worksheet_id} in Whitespace");
 }
 
 sub GetServices {

@@ -7,6 +7,7 @@ BEGIN { $ENV{TEST_MODE} = 1; }
 
 test_multi(0, 'Open311::Endpoint::Integration::UK',
     'Open311::Endpoint::Integration::UK::Aberdeenshire' => 'aberdeenshire_confirm',
+    'Open311::Endpoint::Integration::UK::AlloyDemo' => 'alloy_demo',
     'Open311::Endpoint::Integration::UK::CheshireEast' => 'cheshireeast_confirm',
     'Open311::Endpoint::Integration::UK::EastSussex' => 'eastsussex_salesforce',
     'Open311::Endpoint::Integration::UK::Gloucester' => 'gloucester_alloy',
@@ -65,14 +66,17 @@ test_multi(1, 'Open311::Endpoint::Integration::UK::Oxfordshire',
     'Open311::Endpoint::Integration::UK::Oxfordshire::AlloyV2' => 'oxfordshire_alloy_v2',
 );
 
-test_multi(1, 'Open311::Endpoint::Integration::UK::Hackney',
+test_multi(0, 'Open311::Endpoint::Integration::UK::Hackney',
     'Open311::Endpoint::Integration::UK::Hackney::Highways' => 'hackney_highways_alloy_v2',
     'Open311::Endpoint::Integration::UK::Hackney::Environment' => 'hackney_environment_alloy_v2',
+    #'Open311::Endpoint::Integration::UK::Hackney::Arcus' => 'hackney_arcus',
+
 );
 
 test_multi(1, 'Open311::Endpoint::Integration::UK::Buckinghamshire',
     'Open311::Endpoint::Integration::UK::Buckinghamshire::Alloy' => 'buckinghamshire_alloy',
     'Open311::Endpoint::Integration::UK::Buckinghamshire::Abavus' => 'buckinghamshire_abavus',
+    'Open311::Endpoint::Integration::UK::Buckinghamshire::Cams' => 'buckinghamshire_cams',
 );
 
 test_multi(1, 'Open311::Endpoint::Integration::UK::CentralBedfordshire',
