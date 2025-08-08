@@ -414,8 +414,8 @@ sub job_status_logs_graphql_query {
     ) = (
         $args{start_date},
         $args{end_date},
-        join( ',', @job_type_codes ),
-        join( ',', @status_codes ),
+        join( '","', @job_type_codes ),
+        join( '","', @status_codes ),
     );
 
     return <<GRAPHQL;
@@ -427,7 +427,7 @@ sub job_status_logs_graphql_query {
                 lessThanEquals: "$end_date"
             }
             statusCode: {
-                inList: [ $status_codes_str ]
+                inList: [ "$status_codes_str" ]
             }
         }
     ) {
@@ -440,7 +440,7 @@ sub job_status_logs_graphql_query {
             jobType(
                 filter: {
                     code: {
-                        inList: [ $job_type_codes_str ]
+                        inList: [ "$job_type_codes_str" ]
                     }
                 }
             ){
@@ -469,8 +469,8 @@ sub jobs_graphql_query {
     ) = (
         $args{start_date},
         $args{end_date},
-        join( ',', @job_type_codes ),
-        join( ',', @status_codes ),
+        join( '","', @job_type_codes ),
+        join( '","', @status_codes ),
     );
 
     return <<"GRAPHQL"
@@ -486,7 +486,7 @@ sub jobs_graphql_query {
         jobType(
             filter: {
                 code: {
-                    inList: [ $job_type_codes_str ]
+                    inList: [ "$job_type_codes_str" ]
                 }
             }
         ){
@@ -497,7 +497,7 @@ sub jobs_graphql_query {
         statusLogs (
             filter: {
                 statusCode: {
-                    inList: [ $status_codes_str ]
+                    inList: [ "$status_codes_str" ]
                 }
             }
         ) {
