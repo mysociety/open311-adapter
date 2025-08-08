@@ -227,7 +227,6 @@ sub do_login {
             call => $self->api_calls->{login},
             method => 'POST',
             headers => {
-                content_length => '0',
                 username => $self->username,
                 password => $self->password,
             }
@@ -405,7 +404,9 @@ sub _add_service_request_images {
         my $response = $self->cams->api_call(
             call => $self->api_calls->{'upload_files'} . $uuid,
             headers => { '.aspxauth' => $self->access_token },
-            body => { FileBytes => $image->{FileBytes}, FileName => $image->{FileName} },
+            form => [
+                file => [ undef, $image->filename, Content_Type => $image->header('Content-Type'), Content => $image->content ],
+            ],
         );
     }
 
@@ -414,10 +415,8 @@ sub _add_service_request_images {
 
 =head2 _get_attachments
 
-Fetch attachements from FMS for a report. Will only work for
+Fetch attachments from FMS for a report. Will only work for
 public reports.
-
-Straight copy from ATAK - may need to start a utils role.
 
 =cut
 
@@ -426,13 +425,10 @@ sub _get_attachments {
 
     my @photos = ();
     my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
-    my $filename;
     for (@$urls) {
         my $response = $ua->get($_);
         if ($response->is_success) {
-            $_ =~  m|https://[^/]+/([^/]+)\?|;
-            $filename = $1;
-            push @photos, { FileBytes => $response->content, FileName => $filename };
+            push @photos, $response;
         } else {
             $self->logger->error("[CAMS] Unable to download attachment: " . $_);
             $self->logger->debug("[CAMS] Photo response status: " . $response->status_line);

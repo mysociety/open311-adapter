@@ -14,19 +14,19 @@ $lwp->mock(request => sub {
     my ($ua, $req) = @_;
 
     if ($req->uri =~ /login/) {
-        ok $req->uri =~ /dummy\/api/, 'api url read from config';
+        like $req->uri, qr/dummy\/api/, 'api url read from config';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'userId' => 'User-12345', 'access_token' => 'OpenSesame' }));
     } elsif ($req->uri =~ /usp_FMS_GetUpdates/) {
-        ok $req->header('.aspxauth') eq 'OpenSesame', 'Authorisation header set';
+        is $req->header('.aspxauth'), 'OpenSesame', 'Authorisation header set';
         return HTTP::Response->new(200, 'OK', [], path(__FILE__)->sibling("/json/cams/updates.json")->slurp);
     } elsif ($req->uri =~ /Insert/) {
-        ok $req->header('.aspxauth') eq 'OpenSesame', 'Authorisation header set';
+        is $req->header('.aspxauth'),'OpenSesame', 'Authorisation header set';
         is_deeply decode_json($req->content), decode_json(path(__FILE__)->sibling("/json/cams/report.json")->slurp), 'Report details filled';
         return HTTP::Response->new(200, 'OK', [], '12345');
     } elsif ($req->uri =~ /WebHolding/) {
-        ok $req->header('.aspxauth') eq 'OpenSesame', 'Authorisation header set';
-        my $content = decode_json($req->content);
-        ok $content->{FileBytes} eq path(__FILE__)->sibling('files')->child('test_image.jpg')->slurp, 'Image is body of request';
+        is $req->header('.aspxauth'), 'OpenSesame', 'Authorisation header set';
+        my $content = ($req->parts)[0]->content;
+        is $content, path(__FILE__)->sibling('files')->child('test_image.jpg')->slurp, 'Image is body of request';
         return HTTP::Response->new(200, 'OK', [], '"random"');
     } elsif ($req->uri =~ /jpeg/) {
         my $image_data = path(__FILE__)->sibling('files')->child('test_image.jpg')->slurp;
@@ -79,7 +79,7 @@ subtest "GET Service List" => sub {
 
 subtest "Check services structure" => sub {
     my @services = $bucks_endpoint->services;
-    ok scalar @services == 3, 'Three services received';
+    is @services, 3, 'Three services received';
     for my $test (
         {
             service_code => '9',
@@ -95,12 +95,12 @@ subtest "Check services structure" => sub {
         },
     ) {
         my $contact = shift @services;
-        ok $contact->{service_code} eq $test->{service_code}, 'Correct service code';
-        ok $contact->{service_name} eq $test->{service_name}, 'Correct service name';
-        ok $contact->{group} eq 'Public Rights of Way', 'Correct group';
+        is $contact->{service_code}, $test->{service_code}, 'Correct service code';
+        is $contact->{service_name}, $test->{service_name}, 'Correct service name';
+        is $contact->{group}, 'Public Rights of Way', 'Correct group';
         my @hidden_fields = ('AdminArea', 'LinkCode', 'LinkType');
         for my $attribute (grep { $_->{automated} eq 'hidden_field' } @{$contact->{attributes}}) {
-            ok $attribute->code eq shift @hidden_fields;
+            is $attribute->code, shift @hidden_fields;
         };
     };
 };
@@ -113,7 +113,7 @@ subtest 'check fetch updates' => sub {
 
     ok $res->is_success, "Fetching updates ok";
     my $response = decode_json($res->content);
-    ok @{ $response } == 2, "Two updates fetched in default 10 minute window";
+    is @$response, 2, "Two updates fetched in default 10 minute window";
 
     $res = $bucks_endpoint->run_test_request(
       GET => '/servicerequestupdates.json?start_date=2025-06-17T10:40:00Z',
@@ -121,14 +121,14 @@ subtest 'check fetch updates' => sub {
 
     ok $res->is_success, "Fetching updates ok";
     $response = decode_json($res->content);
-    ok @{ decode_json($res->content) } == 3, "Three updates fetched when start date supplied";
+    is @{ decode_json($res->content) }, 3, "Three updates fetched when start date supplied";
 
     $res = $bucks_endpoint->run_test_request(
       GET => '/servicerequestupdates.json?start_date=2025-06-15T14:50:25Z',
     );
 
     $response = decode_json($res->content);
-    ok @{ decode_json($res->content) } == 5, "Five updates fetched when one update without matching status";
+    is @{ decode_json($res->content) }, 5, "Five updates fetched when one update without matching status";
 };
 
 subtest "POST report" => sub {

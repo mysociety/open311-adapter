@@ -1,6 +1,7 @@
 package Integrations::Rest;
 
 use Moo;
+use HTTP::Request::Common;
 use LWP::UserAgent;
 use JSON::MaybeXS qw(encode_json decode_json);
 
@@ -35,7 +36,12 @@ has allow_nonref => (
 
 api calls are either GET or POSTING JSON data.
 
-Expects { call => ** string uri **, $body => ** hashref of data ** headers => ** hashref of headers ** }
+Expects {
+    call => ** string uri **,
+    headers => ** hashref of headers **
+    body => ** hashref of data to be JSON-encoded, or **
+    form => ** hashref or arrayref of form data **
+}
 
 JSON is expected in a successful response, but allow_nonref can be set in initialisation.
 
@@ -46,8 +52,8 @@ sub api_call {
 
     my $call = $args{call};
     my $body = $args{body};
+    my $form = $args{form};
     my $headers = $args{headers};
-    my $content_type = $args{content_type};
 
     $self->logger->debug($call);
 
@@ -57,27 +63,28 @@ sub api_call {
     );
 
     my $method = $args{method};
-    $method = $body ? 'POST' : 'GET' unless $method;
+    $method = ($body || $form) ? 'POST' : 'GET' unless $method;
+    $method = HTTP::Request::Common->can($method);
+
     my $uri = URI->new( $self->config->{api_url} . $call );
     $uri->query_form(%{ $args{params} });
 
-    my $request = HTTP::Request->new($method, $uri);
-    for my $header (keys %$headers) {
-        $request->header($header => $headers->{$header});
-    }
-
     if ($body) {
-        if (ref $body eq 'HASH' || ref $body eq 'ARRAY') {
-            $request->content_type('application/json; charset=UTF-8');
-            $body = encode_json($body);
-        } else {
-            $request->content_type($content_type);
-        }
-
-        $request->content($body);
+        $headers->{Content_Type} = 'application/json; charset=UTF-8';
+        $body = encode_json($body);
+        $headers->{Content} = $body;
         $self->logger->debug($body);
     }
+    if ($form) {
+        my @data = ref($form) eq "HASH" ? %$form : @$form;
+        while (my ($k,$v) = splice(@data, 0, 2)) {
+            if (ref($v)) {
+                $headers->{Content_Type} = 'form-data';
+            }
+        }
+    }
 
+    my $request = $method->($uri, $form ? ($form) : (), %$headers);
     my $response = $ua->request($request);
     if ($response->is_success) {
         $self->logger->debug($response->content);
