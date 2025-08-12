@@ -64,7 +64,7 @@ $soap_lite->mock(call => sub {
             is $params{ServiceId}, '78';
             is $params{WorksheetReference}, 2000234;
             is $params{AdHocRoundInstanceId}, 304;
-            is $params{WorksheetDueDate}, '2025-07-04';
+            is $params{WorksheetDueDate}, '2025-07-04 23:59';
 
             my %service_property_inputs = map { $_->value } map { ${$_->value}->value } ${$params{ServicePropertyInputs}}->value->value;
             is $service_property_inputs{65}, 'No';

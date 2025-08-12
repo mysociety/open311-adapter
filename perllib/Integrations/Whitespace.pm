@@ -118,12 +118,16 @@ sub CreateWorksheet {
             service_input($service_params->{service_item_id}, $params->{quantity});
     }
 
+    my $collection_date;
+    $collection_date = $params->{collection_date} . ' 23:59'
+        if $params->{collection_date};
+
     my $worksheet = ixhash(
         Uprn => $params->{uprn},
         ServiceId => $service_id,
         WorksheetReference => $params->{worksheet_reference},
         WorksheetMessage => $params->{worksheet_message},
-        $params->{collection_date} ? (WorksheetDueDate => $params->{collection_date}) : (),
+        $collection_date ? ( WorksheetDueDate => $collection_date ) : (),
         ServiceItemInputs => \@service_inputs,
         ServicePropertyInputs => [
             property_input(79, $params->{assisted_yn}),
