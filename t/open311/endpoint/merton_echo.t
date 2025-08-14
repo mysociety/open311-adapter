@@ -31,12 +31,10 @@ use Test::More;
 use Test::MockModule;
 use JSON::MaybeXS;
 
-use constant EVENT_TYPE_MISSED => 'missed';
-use constant EVENT_TYPE_ASSISTED => 1565;
-use constant EVENT_TYPE_MISSED_REFUSE => 1566;
-use constant EVENT_TYPE_MISSED_RECYCLING => 1568;
-use constant EVENT_TYPE_SUBSCRIBE => 1638;
-use constant EVENT_TYPE_BULKY => 1636;
+use constant EVENT_TYPE_MISSED => 3145;
+use constant EVENT_TYPE_ASSISTED => 3200;
+use constant EVENT_TYPE_SUBSCRIBE => 3159;
+use constant EVENT_TYPE_BULKY => 3130;
 
 my $soap_lite = Test::MockModule->new('SOAP::Lite');
 $soap_lite->mock(call => sub {
@@ -53,53 +51,43 @@ $soap_lite->mock(call => sub {
             my $service_id = $params[4]->value;
             like $client_ref, qr/MRT-200012[4-8]|bulky-cc/;
             if ($client_ref eq 'MRT-2000124') {
-                is $event_type, EVENT_TYPE_MISSED_REFUSE;
-                is $service_id, 405;
-                my @data = ${$params[0]->value}->value->value;
-                my @bin = ${$data[0]->value}->value;
-                is $bin[0]->value, 2000;
-                is $bin[1]->value, 1;
+                is $event_type, EVENT_TYPE_MISSED;
+                is $service_id, 1067;
             } elsif ($client_ref eq 'MRT-2000125') {
-                is $event_type, EVENT_TYPE_MISSED_RECYCLING;
-                is $service_id, 408;
-                my @data = ${$params[0]->value}->value->value;
-                my @paper = ${$data[0]->value}->value;
-                is $paper[0]->value, 2002;
-                is $paper[1]->value, 1;
+                is $event_type, EVENT_TYPE_MISSED;
+                is $service_id, 1075;
             } elsif ($event_type eq EVENT_TYPE_BULKY) {
-                my @data = ${$params[0]->value}->value->value;
-                my @payment = ${$data[0]->value}->value;
-                is $payment[0]->value, 1011;
-                is $payment[1]->value, 1;
-                my $val = $client_ref eq 'bulky-cc' ? 2 : 1;
-                @payment = ${$data[1]->value}->value;
-                is $payment[0]->value, 1013;
-                is $payment[1]->value, $val;
-                if ($client_ref eq 'bulky-cc') { # Also check items
-                    is @data, 3, 'Has item present in the data';
-                }
+                my @dataa = ${$params[0]->value}->value->value;
+                my @datab = ${$dataa[0]->value}->value->value;
+                my @datac = ${$datab[0]}->value->value;
+                my @item = ${$datac[0]->value}->value;
+                is $item[0]->value, 1021;
+                is $item[1]->value, 11;
+                @item = ${$datac[1]->value}->value;
+                is $item[0]->value, 1022;
+                is $item[1]->value, 'Vanity dressing table';
             } elsif ($event_type eq EVENT_TYPE_ASSISTED) {
                 my @data = ${$params[0]->value}->value->value;
-                my @payment = ${$data[0]->value}->value;
-                is $payment[0]->value, 3001;
-                is $payment[1]->value, 'Notes';
-                my $val = $client_ref eq 'bulky-cc' ? 2 : 1;
-                @payment = ${$data[1]->value}->value;
-                is $payment[0]->value, 3002;
-                is $payment[1]->value, 1;
+                my @action = ${$data[0]->value}->value;
+                is $action[0]->value, 3001;
+                is $action[1]->value, '1';
+                my @notes = ${$data[1]->value}->value;
+                is $notes[0]->value, 3002;
+                is $notes[1]->value, 'Notes';
+                my @start = ${$data[2]->value}->value;
+                is $start[0]->value, 3003;
+                is $start[1]->value, DateTime->today(time_zone => "Europe/London")->dmy('/');
+                is $data[3], undef;
             }
         } elsif (@params == 2) {
             is $params[0]->value, '123pay';
             my @data = ${$params[1]->value}->value->value;
-            my @payment = ${$data[0]->value}->value;
-            is $payment[1]->value, 27409;
-            my @child = ${$payment[0]->value}->value->value;
-            my @ref = ${$child[0]->value}->value;
-            is $ref[0]->value, 27410;
+            my @ref = ${$data[0]->value}->value;
+            is $ref[0]->value, 57236;
             is $ref[1]->value, 'ABC';
-            @ref = ${$child[1]->value}->value;
-            is $ref[0]->value, 27411;
-            is $ref[1]->value, '34.56';
+            my @amount = ${$data[1]->value}->value;
+            is $amount[0]->value, 57237;
+            is $amount[1]->value, '34.56';
         } else {
             is @params, 'UNKNOWN';
         }
@@ -118,13 +106,10 @@ $soap_lite->mock(call => sub {
         if ($id eq EVENT_TYPE_BULKY) {
             return SOAP::Result->new(result => {
                 Datatypes => { ExtensibleDatatype => [
-                    { Id => 1011, Name => "Payment Type" },
-                    { Id => 1012, Name => "Payment Taken By" },
-                    { Id => 1013, Name => "Payment Method" },
-                    { Id => 1020, Name => "Bulky Collection",
+                    { Id => 1020, Name => "TEM - Bulky Collection",
                         ChildDatatypes => { ExtensibleDatatype => [
-                            { Id => 1021, Name => "Bulky Items" },
-                            { Id => 1022, Name => "Notes" },
+                            { Id => 1021, Name => "Item" },
+                            { Id => 1022, Name => "Description" },
                         ] },
                     },
                 ] },
@@ -134,36 +119,25 @@ $soap_lite->mock(call => sub {
                 Datatypes => { ExtensibleDatatype => [
                     { Id => 1004, Name => "Subscription Details",
                         ChildDatatypes => { ExtensibleDatatype => [
-                            { Id => 1005, Name => "Quantity" },
-                            { Id => 1007, Name => "Containers" },
+                            { Id => 1005, Name => "Paid Container Quantity" },
+                            { Id => 1007, Name => "Paid Container Type" },
                         ] },
                     },
                 ] },
             });
-        } elsif ($id eq EVENT_TYPE_MISSED_REFUSE) {
+        } elsif ($id eq EVENT_TYPE_MISSED) {
             return SOAP::Result->new(result => {
                 Datatypes => { ExtensibleDatatype => [
                     { Id => 1008, Name => "Notes" },
-                    { Id => 2000, Name => "Refuse Bin" },
-                    { Id => 2001, Name => "Container Mix" },
-                    { Id => 2002, Name => "Paper" },
-                ] },
-            });
-        } elsif ($id eq EVENT_TYPE_MISSED_RECYCLING) {
-            return SOAP::Result->new(result => {
-                Datatypes => { ExtensibleDatatype => [
-                    { Id => 1008, Name => "Notes" },
-                    { Id => 2000, Name => "Refuse Bin" },
-                    { Id => 2001, Name => "Container Mix" },
-                    { Id => 2002, Name => "Paper" },
                 ] },
             });
         } elsif ($id eq EVENT_TYPE_ASSISTED) {
             return SOAP::Result->new(result => {
                 Datatypes => { ExtensibleDatatype => [
-                    { Id => 3001, Name => "Crew Notes" },
-                    { Id => 3002, Name => "Add to Assist" },
-                    { Id => 3003, Name => "Remove from Assist" },
+                    { Id => 3001, Name => "Action" },
+                    { Id => 3002, Name => "Exact Location" },
+                    { Id => 3003, Name => "Start Date" },
+                    { Id => 3004, Name => "End Date" },
                 ] },
             });
         }
@@ -172,7 +146,7 @@ $soap_lite->mock(call => sub {
         is @params, 2, 'No notes';
         my $ref = ${(${$params[1]->value}->value)[2]->value}->value->value->value;
         my $actiontype_id = $params[0]->value;
-        is $actiontype_id, 8;
+        is $actiontype_id, 518;
         return SOAP::Result->new(result => { EventActionGuid => 'ABC' });
     } else {
         is $method, 'UNKNOWN';
@@ -198,7 +172,7 @@ subtest "POST missed bin OK" => sub {
     my $res = $endpoint->run_test_request(@params,
         service_code => EVENT_TYPE_MISSED,
         'attribute[fixmystreet_id]' => 2000124,
-        'attribute[service_id]' => 2238,
+        'attribute[service_id]' => 1067,
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -213,7 +187,7 @@ subtest "POST missed mixed+paper OK" => sub {
     my $res = $endpoint->run_test_request(@params,
         service_code => EVENT_TYPE_MISSED,
         'attribute[fixmystreet_id]' => 2000125,
-        'attribute[service_id]' => 2240,
+        'attribute[service_id]' => 1075,
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -228,9 +202,8 @@ subtest "POST subscription request OK" => sub {
     my $res = $endpoint->run_test_request(@params,
         service_code => EVENT_TYPE_SUBSCRIBE,
         'attribute[fixmystreet_id]' => 2000126,
-        'attribute[Subscription_Details_Containers]' => 26, # Garden Bin
-        'attribute[Subscription_Details_Quantity]' => 1,
-        'attribute[Request_Type]' => 1,
+        'attribute[Paid_Container_Type]' => 39, # Garden Bin
+        'attribute[Paid_Container_Quantity]' => 1,
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -247,8 +220,8 @@ subtest "POST bulky request card payment OK" => sub {
         'attribute[fixmystreet_id]' => 2000127,
         'attribute[payment_method]' => 'credit_card',
         'attribute[client_reference]' => 'bulky-cc',
-        'attribute[Bulky_Collection_Bulky_Items]' => "11",
-        'attribute[Bulky_Collection_Notes]' => "Vanity dressing table",
+        'attribute[TEM_-_Bulky_Collection_Item]' => "11",
+        'attribute[TEM_-_Bulky_Collection_Description]' => "Vanity dressing table",
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -305,9 +278,9 @@ subtest "POST a cancellation" => sub {
 subtest "POST assisted collection OK" => sub {
     my $res = $endpoint->run_test_request(@params,
         service_code => EVENT_TYPE_ASSISTED . '-add',
-        'attribute[service_id]' => 2238,
+        'attribute[service_id]' => 1067,
         'attribute[fixmystreet_id]' => 2000128,
-        'attribute[Crew_Notes]' => 'Notes',
+        'attribute[Exact_Location]' => 'Notes',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
