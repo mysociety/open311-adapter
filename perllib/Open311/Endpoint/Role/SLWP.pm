@@ -66,6 +66,12 @@ around post_service_request_update => sub {
         $args->{datatype_id} = 0;
     }
 
+    if ($args->{description} =~ /Amend Bulky collection/) {
+        $args->{actiontype_id} = $class->bulky_amend_actiontype_id;
+        use Data::Dumper; warn Dumper $args;
+        $class->update_event_bulky_booking($args, { ref => $ref, amount => $amount });
+    }
+
     my $result = $class->$orig($args);
 
     return $result;

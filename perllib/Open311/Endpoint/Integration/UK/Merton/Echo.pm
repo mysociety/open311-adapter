@@ -25,6 +25,8 @@ around BUILDARGS => sub {
 
 has cancel_actiontype_id => ( is => 'ro', default => 8 );
 
+has bulky_amend_actiontype_id => ( is => 'ro', default => 12 );
+
 =head2 process_service_request_args
 
 If we are sending an assisted collection event, we need to set some special
