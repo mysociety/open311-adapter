@@ -13,6 +13,7 @@ Merton specifics for its Echo backend
 package Open311::Endpoint::Integration::UK::Merton::Echo;
 
 use utf8;
+use DateTime;
 use Moo;
 extends 'Open311::Endpoint::Integration::Echo';
 with 'Open311::Endpoint::Role::SLWP';
@@ -36,10 +37,15 @@ around process_service_request_args => sub {
     my ($orig, $class, $args) = @_;
     my $request = $class->$orig($args);
     # Assisted collection
-    if ($args->{service_code} eq "1565-add") {
-        $args->{attributes}{"Add_to_Assist"} = 1;
-    } elsif ($args->{service_code} eq "1565-remove") {
-        $args->{attributes}{"Remove_from_Assist"} = 1;
+    if ($request->{event_type} == 3200) {
+        my $date = DateTime->today(time_zone => "Europe/London");
+        if ($args->{service_code} eq "3200-add") {
+            $args->{attributes}{"Action"} = 1;
+            $args->{attributes}{"Start_Date"} = $date->strftime("%d/%m/%Y");
+        } elsif ($args->{service_code} eq "3200-remove") {
+            $args->{attributes}{"Action"} = 2;
+            $args->{attributes}{"End_Date"} = $date->strftime("%d/%m/%Y");
+        }
     }
     return $request;
 };
