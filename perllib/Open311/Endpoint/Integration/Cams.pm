@@ -282,6 +282,7 @@ sub post_service_request {
             LinkType => $args->{attributes}->{LinkType},
             WKTPoint => "POINT($args->{attributes}->{easting} $args->{attributes}->{northing})",
             Type => $args->{service_code},
+            FMSCode => $args->{attributes}->{fixmystreet_id},
         },
         'Contact' => {
             FirstName => $args->{first_name},
