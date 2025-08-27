@@ -1,0 +1,12 @@
+username: ''
+password: ''
+
+api_url: ''
+
+api_calls: {}
+
+service_list: {}
+
+service_extra_data: {}
+
+reverse_status_mapping: {}
