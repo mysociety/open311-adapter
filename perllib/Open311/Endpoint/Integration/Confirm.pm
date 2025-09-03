@@ -1550,7 +1550,13 @@ sub _wrap_services {
 sub get_completion_photo {
     my ($self, $args) = @_;
 
-    my ($content_type, $content) = $self->get_integration->get_job_photo($args->{job}, $args->{photo});
+    my $content_type, $content;
+    if ($args->{job}) {
+        ($content_type, $content) = $self->get_integration->get_job_photo($args->{job}, $args->{photo});
+    } elsif ($args->{url}) {
+        ($content_type, $content) = $self->get_integration->get_photo_via_url($args->{url});
+    }
+
     return [ 404, [ 'Content-type', 'text/plain' ], [ 'Not found' ] ] unless $content;
 
     return [ 200, [ 'Content-type', $content_type ], [ $content ] ];

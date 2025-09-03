@@ -1149,4 +1149,12 @@ sub get_job_photo {
     return ( $type, $response->decoded_content );
 }
 
+sub get_photo_via_url {
+    my ($self, $url) = @_;
+    my $response = $self->web_api_call($url) or return;
+    my $type = $response->header('Content-Type') || '';
+    return unless $type =~ m{image/(jpeg|pjpeg|gif|tiff|png)}i;
+    return ( $type, $response->decoded_content );
+}
+
 1;
