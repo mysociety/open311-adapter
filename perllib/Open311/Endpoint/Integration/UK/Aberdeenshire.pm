@@ -63,4 +63,12 @@ sub _defect_attributes_description {
     return $desc;
 }
 
+# Use only the first photo.
+# Assumes GraphQL has returned already returned the documents in order.
+around graphql_photo_documents_filter => sub {
+    my ($orig, $self, $args) = @_;
+    my $filtered = $self->$orig($args);
+    return $filtered ? $filtered[0] : $filtered;
+}
+
 1;

@@ -15,6 +15,7 @@ use Integrations::Confirm;
 
 use Path::Tiny;
 use SOAP::Lite; # +trace => [ qw/method debug/ ];
+use URI::Escape;
 
 
 has jurisdiction_id => (
@@ -614,6 +615,20 @@ sub get_service_request_updates {
     centralEnquiry {
       subjectCode
       serviceCode
+      enquiryLink {
+        defect {
+          documents {
+            url
+            documentName
+          }
+        }
+        job {
+          documents {
+            url
+            documentName
+          }
+        }
+      }
     }
   }
 }
@@ -621,11 +636,23 @@ GRAPHQL
         my $results =$integ->perform_request_graphql(query => $query)->{data}->{enquiryStatusLogs};
         for my $status_log (@$results) {
             # remap from GraphQL key names
+
+            my $defect_documents;
+            my $job_documents;
+            if (my $raw_defect_documents = $status_log->{centralEnquiry}{enquiryLink}{defect}{documents}) {
+                $defect_documents = map { { URL => $_->{url}, Name => $_->{documentName} } } $raw_defect_documents;
+            }
+            if (my $raw_job_documents = $status_log->{centralEnquiry}{enquiryLink}{job}{documents}) {
+                $job_documents = map { { URL => $_->{url}, Name => $_->{documentName} } } $raw_job_documents;
+            }
+
             my $log = {
                 EnquiryLogNumber => $status_log->{logNumber},
                 LoggedTime => $status_log->{loggedDate},
                 StatusLogNotes => $status_log->{notes},
                 EnquiryStatusCode => $status_log->{enquiryStatusCode},
+                DefectDocuments => $defect_documents,
+                JobDocuments => $job_documents,
             };
 
             # The enquiry's service/subject codes may have changed with this
@@ -750,13 +777,63 @@ sub _get_service_request_updates_for_defects {
     }
 }
 
+sub photo_urls_for_enquiry_update {
+    my ($self, $status_log, $enquiry_id) = @_;
+
+    my $integ = $self->get_integration;
+    my %defect_photo_statuses = map { $_ => 1 } @{ $integ->enquiry_update_defect_photo_statuses };
+    my %job_photo_statuses = map { $_ => 1 } @{ $integ->enquiry_update_job_photo_statuses };
+
+    my @media_urls;
+    if ($defect_photo_statuses{$status_log->{EnquiryStatusCode}}) {
+        push @media_urls, $self->defect_photo_urls_for_enquiry_update($status_log, $enquiry_id);
+    }
+
+    if ($job_photo_statuses{$status_log->{EnquiryStatusCode}}) {
+        push @media_urls, $self->job_photo_urls_for_enquiry_update($status_log, $enquiry_id);
+    }
+
+    return \@media_urls;
+}
+
 sub photo_filter {
     my ($self, $doc) = @_;
     return $doc->{fileName} =~ /jpe?g/i;
 }
 
-sub photo_urls_for_update {
-    my ($self, $enquiry_id) = @_;
+sub construct_photo_url {
+    my ($self,  $query_string) = @_;
+    my $integ = $self->get_integration;
+    my $jurisdiction_id = $self->jurisdiction_id;
+    return $integ->config->{base_url} . "photo/completion?jurisdiction_id=$jurisdiction_id&" . $query_string;
+}
+
+sub construct_photo_url_for_graphql_document {
+    my ($self, $document) = @_;
+    reutrn $self->construct_photo_url("url=" . uri_escape($document->{URL}));
+}
+
+sub graphql_photo_documents_filter {
+    my ($self, $documents) = @_;
+    return grep { $_->{Name} =~ /\.(jpg|jpeg|pjpeg|gif|tiff|png)$/ } $documents;
+}
+
+sub defect_photo_urls_for_enquiry_update {
+    my ($self, $status_log, $enquiry_id) = @_;
+    if (defined $status_log->{DefectDocuments}) {
+        my $docs = $self->graphql_photo_documents_filter($status_log->{DefectDocuments});
+        return map { $self->construct_photo_url_for_graphql_document($_) } $docs;
+    };
+    die "querying for defect photos for enquiry updates outside of graphql unimplemented";
+}
+
+sub job_photo_urls_for_enquiry_update {
+    my ($self, $status_log, $enquiry_id) = @_;
+    if (defined $status_log->{JobDocuments}) {
+        my $docs = $self->graphql_photo_documents_filter($status_log->{JobDocuments});
+        return map { $self->construct_photo_url_for_graphql_document($_) } $docs;
+    };
+
     my $integ = $self->get_integration;
 
     my $enquiry = $integ->get_enquiry_json($enquiry_id) or return;
@@ -767,9 +844,9 @@ sub photo_urls_for_update {
     return unless @ids;
 
     my $jurisdiction_id = $self->jurisdiction_id;
-    my @urls = map { $integ->config->{base_url} . "photo/completion?jurisdiction_id=$jurisdiction_id&job=$job_id&photo=$_" } @ids;
+    my @urls = map { $self->construct_photo_url("job=$job_id&photo=$_") } @ids;
 
-    return \@urls;
+    return @urls;
 }
 
 sub services {
@@ -1147,8 +1224,6 @@ sub _parse_enquiry {
 sub _parse_enquiry_status_log {
     my ($self, $status_log, $enquiry_id, $integ, $extras) = @_;
 
-    my %completion_statuses = map { $_ => 1} @{ $integ->completion_statuses };
-
     my $update_id = $enquiry_id . "_" . $status_log->{EnquiryLogNumber};
     my $ts = $self->date_parser->parse_datetime($status_log->{LoggedTime})->truncate( to => 'second' );
     $ts->set_time_zone($integ->server_timezone);
@@ -1162,12 +1237,7 @@ sub _parse_enquiry_status_log {
         $status = "open";
     }
 
-    my $media_urls;
-    if ($completion_statuses{$status_log->{EnquiryStatusCode}}) {
-        # This enquiry has been marked as complete by this update;
-        # see if there's a photo.
-        $media_urls = $self->photo_urls_for_update($enquiry_id);
-    }
+    my $media_urls = $self->photo_urls_for_enquiry_update($status_log, $enquiry_id);
 
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
         status => $status,
@@ -1550,7 +1620,8 @@ sub _wrap_services {
 sub get_completion_photo {
     my ($self, $args) = @_;
 
-    my $content_type, $content;
+    my $content_type;
+    my $content;
     if ($args->{job}) {
         ($content_type, $content) = $self->get_integration->get_job_photo($args->{job}, $args->{photo});
     } elsif ($args->{url}) {

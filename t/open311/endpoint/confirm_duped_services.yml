@@ -15,7 +15,7 @@ reverse_status_mapping:
   FOR: for_triage
 request_ignore_statuses:
   - FOR
-completion_statuses:
+enquiry_update_job_photo_statuses:
   - FIX
 service_enquiry_class_code:
   ABC: TEST
