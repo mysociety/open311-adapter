@@ -1,0 +1,15 @@
+endpoint_url: "http://example.org/endpoint"
+web_url: "http://example.org/web/api"
+base_url: http://example.com/
+graphql_key: "key"
+
+username: "username"
+password: "pw"
+tenant_id: "tenant"
+
+server_timezone: Europe/London
+
+reverse_status_mapping:
+  FIX: fixed
+enquiry_update_job_photo_statuses:
+  - FIX
