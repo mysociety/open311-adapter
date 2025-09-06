@@ -1147,7 +1147,7 @@ sub _parse_enquiry {
 sub _parse_enquiry_status_log {
     my ($self, $status_log, $enquiry_id, $integ, $extras) = @_;
 
-    my %completion_statuses = map { $_ => 1} @{ $integ->completion_statuses };
+    my %statuses_for_job_photos = map { $_ => 1 } @{ $integ->enquiry_update_job_photo_statuses };
 
     my $update_id = $enquiry_id . "_" . $status_log->{EnquiryLogNumber};
     my $ts = $self->date_parser->parse_datetime($status_log->{LoggedTime})->truncate( to => 'second' );
@@ -1163,9 +1163,7 @@ sub _parse_enquiry_status_log {
     }
 
     my $media_urls;
-    if ($completion_statuses{$status_log->{EnquiryStatusCode}}) {
-        # This enquiry has been marked as complete by this update;
-        # see if there's a photo.
+    if ($statuses_for_job_photos{$status_log->{EnquiryStatusCode}}) {
         $media_urls = $self->photo_urls_for_update($enquiry_id);
     }
 
