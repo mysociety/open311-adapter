@@ -15,6 +15,7 @@ use Integrations::Confirm;
 
 use Path::Tiny;
 use SOAP::Lite; # +trace => [ qw/method debug/ ];
+use URI::Escape;
 
 
 has jurisdiction_id => (
@@ -614,6 +615,13 @@ sub get_service_request_updates {
     centralEnquiry {
       subjectCode
       serviceCode
+      enquiryLink {
+        job {
+          documents {
+            url
+            documentName
+          }
+        }
     }
   }
 }
@@ -621,11 +629,15 @@ GRAPHQL
         my $results =$integ->perform_request_graphql(query => $query)->{data}->{enquiryStatusLogs};
         for my $status_log (@$results) {
             # remap from GraphQL key names
+
+            my @job_documents = $self->_parse_graphql_docs($status_log->{centralEnquiry}{enquiryLink}{job}{documents});
+
             my $log = {
                 EnquiryLogNumber => $status_log->{logNumber},
                 LoggedTime => $status_log->{loggedDate},
                 StatusLogNotes => $status_log->{notes},
                 EnquiryStatusCode => $status_log->{enquiryStatusCode},
+                JobDocuments => \@job_documents,
             };
 
             # The enquiry's service/subject codes may have changed with this
@@ -750,15 +762,59 @@ sub _get_service_request_updates_for_defects {
     }
 }
 
+sub construct_photo_url {
+    my ($self, $query_string) = @_;
+
+    my $integ = $self->get_integration;
+    my $base_url = $integ->config->{base_url};
+    my $tenant_id = $integ->config->{tenant_id};
+    my $jurisdiction_id = $self->jurisdiction_id;
+
+    return $base_url ."photos?jurisdiction_id=$jurisdiction_id&" . $query_string;
+}
+
+sub construct_photo_url_from_rest_fetched_job {
+    my ($self, $job_id, $doc_num) = @_;
+    return $self->construct_photo_url("job=$job_id&photo=$doc_num");
+}
+
+sub construct_photo_url_from_graphql_fetched_doc {
+    my ($self, $doc) = @_;
+
+    my $integ = $self->get_integration;
+    my $tenant_id = $integ->config->{tenant_id};
+
+    # GraphQL document URLs appear to include the full web api URL and tenant
+    # e.g. /ConfirmWeb/api/<tenant>/atttachments/...
+    # Strip this if present.
+    my $doc_url = ($doc->{URL} =~ /$tenant_id(.*)/) ? $1 : $doc->{URL};
+
+    my $qs = "doc_url=" . uri_escape($doc_url);
+    return $self->construct_photo_url($qs);
+}
+
 sub photo_filter {
     my ($self, $doc) = @_;
     return $doc->{fileName} =~ /jpe?g/i;
 }
 
-sub photo_urls_for_update {
-    my ($self, $enquiry_id) = @_;
-    my $integ = $self->get_integration;
+sub filter_photos_graphql {
+    my ($self, $graphql_docs) = @_;
+    return grep { $_->{Name} =~ /\.(jpg|jpeg|pjpeg|gif|tiff|png)$/ } $graphql_docs;
+}
 
+sub photo_urls_for_update {
+    my ($self, $status_log, $enquiry_id) = @_;
+
+    if (defined $status_log->{JobDocuments}) {
+        # We've already queried for the documents in GraphQL.
+        my @docs = $self->filter_photos_graphql(@{$status_log->{JobDocuments}});
+        my @urls = map { $self->construct_photo_url_from_graphql_fetched_doc($_) } @docs;
+        return \@urls;
+    };
+
+
+    my $integ = $self->get_integration;
     my $enquiry = $integ->get_enquiry_json($enquiry_id) or return;
     my $job_id = $enquiry->{jobNumber};
     my $documents = $integ->documents_for_job($job_id) or return;
@@ -766,9 +822,7 @@ sub photo_urls_for_update {
     my @ids = map { $_->{documentNo} } grep { $self->photo_filter($_) } @$documents;
     return unless @ids;
 
-    my $jurisdiction_id = $self->jurisdiction_id;
-    my @urls = map { $integ->config->{base_url} . "photos?jurisdiction_id=$jurisdiction_id&job=$job_id&photo=$_" } @ids;
-
+    my @urls = map { $self->construct_photo_url_from_rest_fetched_job($job_id, $_) } @ids;
     return \@urls;
 }
 
@@ -1164,7 +1218,7 @@ sub _parse_enquiry_status_log {
 
     my $media_urls;
     if ($statuses_for_job_photos{$status_log->{EnquiryStatusCode}}) {
-        $media_urls = $self->photo_urls_for_update($enquiry_id);
+        $media_urls = $self->photo_urls_for_update($status_log, $enquiry_id);
     }
 
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
@@ -1548,9 +1602,15 @@ sub _wrap_services {
 sub get_photo {
     my ($self, $args) = @_;
 
-    my ($content_type, $content) = $self->get_integration->get_job_photo($args->{job}, $args->{photo});
-    return [ 404, [ 'Content-type', 'text/plain' ], [ 'Not found' ] ] unless $content;
+    my $content_type;
+    my $content;
+    if ($args->{job}) {
+        ($content_type, $content) = $self->get_integration->get_job_photo($args->{job}, $args->{photo});
+    } elsif ($args->{doc_url}) {
+        ($content_type, $content) = $self->get_integration->get_photo_by_doc_url($args->{doc_url});
+    }
 
+    return [ 404, [ 'Content-type', 'text/plain' ], [ 'Not found' ] ] unless $content;
     return [ 200, [ 'Content-type', $content_type ], [ $content ] ];
 }
 
@@ -1575,6 +1635,12 @@ sub _parse_start_end_dates {
     my $end = $self->date_parser->format_datetime($end_time);
 
     return ($start, $end);
+}
+
+sub _parse_graphql_docs {
+    my ($self, $docs) = @_;
+    return () unless $docs;
+    return map { { URL => $_->{url}, Name => $_->{documentName} } } @$docs;
 }
 
 1;
