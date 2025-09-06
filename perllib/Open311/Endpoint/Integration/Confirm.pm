@@ -799,7 +799,7 @@ sub photo_urls_for_update {
     return unless @ids;
 
     my $jurisdiction_id = $self->jurisdiction_id;
-    my @urls = map { $integ->config->{base_url} . "photo/completion?jurisdiction_id=$jurisdiction_id&job=$job_id&photo=$_" } @ids;
+    my @urls = map { $integ->config->{base_url} . "photos?jurisdiction_id=$jurisdiction_id&job=$job_id&photo=$_" } @ids;
 
     return \@urls;
 }
@@ -1589,7 +1589,7 @@ sub _wrap_services {
     return @services;
 }
 
-sub get_completion_photo {
+sub get_photo {
     my ($self, $args) = @_;
 
     my ($content_type, $content) = $self->get_integration->get_job_photo($args->{job}, $args->{photo});
