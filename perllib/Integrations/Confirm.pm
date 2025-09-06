@@ -142,16 +142,16 @@ has 'server_timezone' => (
 );
 
 
-=head2 completion_statuses
+=head2 enquiry_update_job_photo_statuses
 
-A list of enquiry status codes that determine whether job completion photos
-should be looked up when fetching updates.
+A list of enquiry status codes that determine whether job photos
+should be returned when fetching enquiry updates.
 
 =cut
 
-has completion_statuses => (
+has enquiry_update_job_photo_statuses => (
     is => 'lazy',
-    default => sub { $_[0]->config->{completion_statuses} || [] }
+    default => sub { $_[0]->config->{enquiry_update_job_photo_statuses} || [] }
 );
 
 =head2 external_system_number

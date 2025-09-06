@@ -10,5 +10,5 @@ server_timezone: Europe/London
 
 reverse_status_mapping:
   FIX: fixed
-completion_statuses:
+enquiry_update_job_photo_statuses:
   - FIX
