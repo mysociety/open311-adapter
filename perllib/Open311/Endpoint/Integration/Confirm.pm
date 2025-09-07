@@ -622,6 +622,12 @@ sub get_service_request_updates {
             documentName
           }
         }
+        defect {
+          documents {
+            url
+            documentName
+          }
+        }
     }
   }
 }
@@ -631,6 +637,7 @@ GRAPHQL
             # remap from GraphQL key names
 
             my @job_documents = $self->_parse_graphql_docs($status_log->{centralEnquiry}{enquiryLink}{job}{documents});
+            my @defect_documents = $self->_parse_graphql_docs($status_log->{centralEnquiry}{enquiryLink}{defect}{documents});
 
             my $log = {
                 EnquiryLogNumber => $status_log->{logNumber},
@@ -638,6 +645,7 @@ GRAPHQL
                 StatusLogNotes => $status_log->{notes},
                 EnquiryStatusCode => $status_log->{enquiryStatusCode},
                 JobDocuments => \@job_documents,
+                DefectDocuments => \@defect_documents,
             };
 
             # The enquiry's service/subject codes may have changed with this
@@ -803,7 +811,7 @@ sub filter_photos_graphql {
     return grep { $_->{Name} =~ /\.(jpg|jpeg|pjpeg|gif|tiff|png)$/ } $graphql_docs;
 }
 
-sub photo_urls_for_update {
+sub job_photo_urls_for_enquiry_update {
     my ($self, $status_log, $enquiry_id) = @_;
 
     if (defined $status_log->{JobDocuments}) {
@@ -815,15 +823,28 @@ sub photo_urls_for_update {
 
 
     my $integ = $self->get_integration;
-    my $enquiry = $integ->get_enquiry_json($enquiry_id) or return;
+    my $enquiry = $integ->get_enquiry_json($enquiry_id) or return [];
     my $job_id = $enquiry->{jobNumber};
-    my $documents = $integ->documents_for_job($job_id) or return;
+    my $documents = $integ->documents_for_job($job_id) or return [];
 
     my @ids = map { $_->{documentNo} } grep { $self->photo_filter($_) } @$documents;
-    return unless @ids;
+    return [] unless @ids;
 
     my @urls = map { $self->construct_photo_url_from_rest_fetched_job($job_id, $_) } @ids;
     return \@urls;
+}
+
+sub defect_photo_urls_for_enquiry_update {
+    my ($self, $status_log) = @_;
+
+    if (defined $status_log->{DefectDocuments}) {
+        # We've already queried for the documents in GraphQL.
+        my @docs = $self->filter_photos_graphql(@{$status_log->{DefectDocuments}});
+        my @urls = map { $self->construct_photo_url_from_graphql_fetched_doc($_) } @docs;
+        return \@urls;
+    };
+
+    die "Fetching defect photos for an enquiry update when not using graphql is unimplemented.";
 }
 
 sub services {
@@ -1202,6 +1223,7 @@ sub _parse_enquiry_status_log {
     my ($self, $status_log, $enquiry_id, $integ, $extras) = @_;
 
     my %statuses_for_job_photos = map { $_ => 1 } @{ $integ->enquiry_update_job_photo_statuses };
+    my %statuses_for_defect_photos = map { $_ => 1 } @{ $integ->enquiry_update_defect_photo_statuses };
 
     my $update_id = $enquiry_id . "_" . $status_log->{EnquiryLogNumber};
     my $ts = $self->date_parser->parse_datetime($status_log->{LoggedTime})->truncate( to => 'second' );
@@ -1216,11 +1238,15 @@ sub _parse_enquiry_status_log {
         $status = "open";
     }
 
-    my $media_urls;
+    my @media_urls;
     if ($statuses_for_job_photos{$status_log->{EnquiryStatusCode}}) {
-        $media_urls = $self->photo_urls_for_update($status_log, $enquiry_id);
+        push @media_urls, @{$self->job_photo_urls_for_enquiry_update($status_log, $enquiry_id)};
+    }
+    if ($statuses_for_defect_photos{$status_log->{EnquiryStatusCode}}) {
+        push @media_urls, @{$self->defect_photo_urls_for_enquiry_update($status_log)};
     }
 
+    # NOTE: Only the first media_url in the array will actually be returned.
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
         status => $status,
         update_id => $update_id,
@@ -1228,7 +1254,7 @@ sub _parse_enquiry_status_log {
         description => $description,
         updated_datetime => $ts,
         external_status_code => $status_log->{EnquiryStatusCode},
-        $media_urls ? ( media_url => $media_urls ) : (),
+        @media_urls ? ( media_url => \@media_urls ) : (),
         $extras ? ( extras => $extras ) : (),
     );
 }
