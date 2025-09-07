@@ -13,3 +13,5 @@ reverse_status_mapping:
   FIX: fixed
 enquiry_update_job_photo_statuses:
   - FIX
+enquiry_update_defect_photo_statuses:
+  - RAISED
