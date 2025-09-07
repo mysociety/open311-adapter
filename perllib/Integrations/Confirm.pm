@@ -154,6 +154,20 @@ has enquiry_update_job_photo_statuses => (
     default => sub { $_[0]->config->{enquiry_update_job_photo_statuses} || [] }
 );
 
+
+=head2 enquiry_update_defect_photo_statuses
+
+A list of enquiry status codes that determine whether defect photos
+should be returned when fetching enquiry updates.
+
+=cut
+
+has enquiry_update_defect_photo_statuses => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{enquiry_update_defect_photo_statuses} || [] }
+);
+
+
 =head2 external_system_number
 
 A code to use to mark enquiries we submit as coming from us; with this set,
