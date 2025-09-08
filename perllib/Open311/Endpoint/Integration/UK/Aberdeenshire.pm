@@ -2,6 +2,8 @@ package Open311::Endpoint::Integration::UK::Aberdeenshire;
 
 use Moo;
 use Try::Tiny;
+use List::Util qw(reduce);
+
 extends 'Open311::Endpoint::Integration::Confirm';
 
 around BUILDARGS => sub {
@@ -62,5 +64,14 @@ sub _defect_attributes_description {
 
     return $desc;
 }
+
+# Aberdeenshire want us to return the first photo
+# only.
+around filter_photos_graphql => sub {
+    my ($orig, $class, @photos) = @_;
+    my @filtered = $class->$orig(@photos);
+    return @filtered unless scalar @filtered > 1;
+    return (reduce { $a->{Date} < $b->{Date} ? $a : $b } @filtered);
+};
 
 1;
