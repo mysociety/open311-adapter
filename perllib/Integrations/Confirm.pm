@@ -181,6 +181,18 @@ has defect_update_job_photo_statuses => (
 );
 
 
+=head2 include_photos_on_defect_fetch
+
+Whether or not to include defect photos when they are fetched in get_service_requests.
+
+=cut
+
+has include_photos_on_defect_fetch => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{include_photos_on_defect_fetch} }
+);
+
+
 =head2 external_system_number
 
 A code to use to mark enquiries we submit as coming from us; with this set,
@@ -614,6 +626,7 @@ sub defects_graphql_query { # XXX factor together with jobs?
     }
     documents {
       url
+      documentName
     }
     description
   }
