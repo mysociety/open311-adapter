@@ -15,3 +15,12 @@ enquiry_update_job_photo_statuses:
   - FIX
 enquiry_update_defect_photo_statuses:
   - RAISED
+
+defect_update_job_photo_statuses:
+  - FIXED
+job_reverse_status_mapping:
+  FIXED: fixed
+defect_service_mapping:
+  SLDA:
+    group: Street Lighting
+    category: Defective Street Light
