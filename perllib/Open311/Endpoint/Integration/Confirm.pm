@@ -630,6 +630,7 @@ sub get_service_request_updates {
             documentDate
           }
         }
+      }
     }
   }
 }
