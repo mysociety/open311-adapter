@@ -121,7 +121,8 @@ subtest "fetching of job photos for enquiry update via GraphQL" => sub {
                                     documents => [
                                         {
                                             url => "/ConfirmWeb/api/tenant/attachments/JOB/123/1",
-                                            documentName => "photo.jpg"
+                                            documentName => "photo.jpg",
+                                            documentDate => '2025-01-01T00:00:00Z',
                                         }
                                     ]
                                 }
@@ -163,7 +164,8 @@ subtest "fetching of defect photos for enquiry update via GraphQL" => sub {
                                     documents => [
                                         {
                                             url => "/ConfirmWeb/api/tenant/attachments/DEFECT/123/1",
-                                            documentName => "photo.jpg"
+                                            documentName => "photo.jpg",
+                                            documentDate => '2025-01-01T00:00:00Z',
                                         }
                                     ]
                                 }
@@ -198,7 +200,8 @@ subtest "fetching of job photos for defect update via GraphQL" => sub {
                             documents => [
                                 {
                                     url => "/ConfirmWeb/api/tenant/attachments/JOB/123/1",
-                                    documentName => "photo.jpg"
+                                    documentName => "photo.jpg",
+                                    documentDate => '2025-01-01T00:00:00Z',
                                 }
                             ],
                             defects => [
@@ -248,7 +251,8 @@ subtest "fetching of defect photos for defect fetch" => sub {
                             documents => [
                                 {
                                     url => "/ConfirmWeb/api/tenant/attachments/DEFECT/123/1",
-                                    documentName => "photo.jpg"
+                                    documentName => "photo.jpg",
+                                    documentDate => '2025-01-01T00:00:00Z',
                                 }
                             ],
                         }
