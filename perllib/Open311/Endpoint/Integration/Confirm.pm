@@ -1440,6 +1440,14 @@ sub _get_service_requests_for_defects {
 
         my $description = $self->_description_for_defect($defect, $service);
 
+        my @media_urls;
+        if ($integ->include_photos_on_defect_fetch) {
+            my @defect_docs = $self->_parse_graphql_docs($defect->{documents});
+            my @filtered = $self->filter_photos_graphql(@defect_docs);
+            my @urls = map { $self->construct_photo_url_from_graphql_fetched_doc($_) } @filtered;
+            push @media_urls, @urls;
+        }
+
         my %args = (
             service => $service,
             service_request_id => 'DEFECT_' . $defect_id,
@@ -1450,6 +1458,7 @@ sub _get_service_requests_for_defects {
             # enquiries above
             latlong => [ $defect->{northing}, $defect->{easting} ],
             status => $status,
+            @media_urls ? ( media_url => \@media_urls ) : (),
         );
 
         my $request = $self->new_request( %args );

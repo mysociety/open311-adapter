@@ -24,3 +24,5 @@ defect_service_mapping:
   SLDA:
     group: Street Lighting
     category: Defective Street Light
+
+include_photos_on_defect_fetch: true
