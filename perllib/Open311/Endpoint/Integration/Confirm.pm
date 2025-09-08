@@ -855,8 +855,8 @@ sub photo_filter {
 }
 
 sub filter_photos_graphql {
-    my ($self, $graphql_docs) = @_;
-    return grep { $_->{Name} =~ /\.(jpg|jpeg|pjpeg|gif|tiff|png)$/ } $graphql_docs;
+    my ($self, @graphql_docs) = @_;
+    return grep { $_->{Name} =~ /\.(jpg|jpeg|pjpeg|gif|tiff|png)$/ } @graphql_docs;
 }
 
 sub job_photo_urls_for_enquiry_update {
