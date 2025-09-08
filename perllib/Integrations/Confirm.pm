@@ -168,6 +168,19 @@ has enquiry_update_defect_photo_statuses => (
 );
 
 
+=head2 defect_update_job_photo_statuses
+
+A list of job status codes that determine whether job photos
+should be returned when fetching defect updates.
+
+=cut
+
+has defect_update_job_photo_statuses => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{defect_update_job_photo_statuses} || [] }
+);
+
+
 =head2 external_system_number
 
 A code to use to mark enquiries we submit as coming from us; with this set,
@@ -656,6 +669,10 @@ sub defect_status_logs_graphql_query {
         key
 
         job {
+            documents {
+              url
+              documentName
+            }
             defects(filter: {
                 defectTypeCode: {
                     inList: [ $defect_type_codes_str ]

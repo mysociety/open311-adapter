@@ -765,6 +765,8 @@ sub _get_service_request_updates_for_defects {
         end_date   => $args->{end_date},
     );
 
+    my %statuses_for_job_photos = map { $_ => 1 } @{ $integ->defect_update_job_photo_statuses };
+
     for my $log ( @{$status_logs} ) {
         my $status
             = $self->job_reverse_status_mapping->{ $log->{statusCode} };
@@ -783,6 +785,16 @@ sub _get_service_request_updates_for_defects {
             ->truncate( to => 'second' );
         $dt->set_time_zone( $integ->server_timezone );
 
+
+        my @media_urls;
+        if ($statuses_for_job_photos{$log->{statusCode}}) {
+            my @job_docs = $self->_parse_graphql_docs($log->{job}{documents});
+            my @filtered = $self->filter_photos_graphql(@job_docs);
+            my @urls = map { $self->construct_photo_url_from_graphql_fetched_doc($_) } @filtered;
+            push @media_urls, @urls;
+        }
+
+        # NOTE: Only the first media_url in the array will actually be returned.
         for my $defect ( @{$log->{job}->{defects}} ) {
 
             my $supersedes_value = $defect->{supersedesDefectNumber} ? "DEFECT_" . $defect->{supersedesDefectNumber} : undef;
@@ -798,6 +810,7 @@ sub _get_service_request_updates_for_defects {
                 $supersedes_value  ? ( extras => {
                     supersedes => $supersedes_value,
                 } ) : (),
+                @media_urls ? ( media_url => \@media_urls ) : (),
             );
         }
     }

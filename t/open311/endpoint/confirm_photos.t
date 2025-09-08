@@ -185,4 +185,43 @@ subtest "fetching of defect photos for enquiry update via GraphQL" => sub {
     $integration->unmock('perform_request_graphql');
 };
 
+subtest "fetching of job photos for defect update via GraphQL" => sub {
+    $integration->mock(perform_request_graphql => sub {
+        return {
+            data => {
+                jobStatusLogs => [
+                    {
+                        loggedDate => '2025-01-01T00:00:00Z',
+                        statusCode => 'FIXED',
+                        key => 'key',
+                        job => {
+                            documents => [
+                                {
+                                    url => "/ConfirmWeb/api/tenant/attachments/JOB/123/1",
+                                    documentName => "photo.jpg"
+                                }
+                            ],
+                            defects => [
+                                {
+                                    defectNumber => 1,
+                                    targetDate => '2025-01-01T00:00:00Z',
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        };
+    });
+
+    my $res = $endpoint_graphql->run_test_request(
+        GET => '/servicerequestupdates.xml?start_date=2025-01-01T00:00:00Z&end_date=2025-01-01T01:00:00Z',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+    contains_string $res->content, '<media_url>http://example.com/photos?jurisdiction_id=confirm_dummy_photos_graphql&amp;doc_url=%2Fattachments%2FJOB%2F123%2F1</media_url>';
+
+    $lwp->mock(request => \&empty_json);
+    $integration->unmock('perform_request_graphql');
+};
+
 done_testing;
