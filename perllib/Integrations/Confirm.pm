@@ -142,17 +142,56 @@ has 'server_timezone' => (
 );
 
 
-=head2 completion_statuses
+=head2 enquiry_update_job_photo_statuses
 
-A list of enquiry status codes that determine whether job completion photos
-should be looked up when fetching updates.
+A list of enquiry status codes that determine whether job photos
+should be returned when fetching enquiry updates.
 
 =cut
 
-has completion_statuses => (
+has enquiry_update_job_photo_statuses => (
     is => 'lazy',
-    default => sub { $_[0]->config->{completion_statuses} || [] }
+    default => sub { $_[0]->config->{enquiry_update_job_photo_statuses} || [] }
 );
+
+
+=head2 enquiry_update_defect_photo_statuses
+
+A list of enquiry status codes that determine whether defect photos
+should be returned when fetching enquiry updates.
+
+=cut
+
+has enquiry_update_defect_photo_statuses => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{enquiry_update_defect_photo_statuses} || [] }
+);
+
+
+=head2 defect_update_job_photo_statuses
+
+A list of job status codes that determine whether job photos
+should be returned when fetching defect updates.
+
+=cut
+
+has defect_update_job_photo_statuses => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{defect_update_job_photo_statuses} || [] }
+);
+
+
+=head2 include_photos_on_defect_fetch
+
+Whether or not to include defect photos when they are fetched in get_service_requests.
+
+=cut
+
+has include_photos_on_defect_fetch => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{include_photos_on_defect_fetch} }
+);
+
 
 =head2 external_system_number
 
@@ -584,6 +623,8 @@ sub defects_graphql_query { # XXX factor together with jobs?
     }
     documents {
       url
+      documentName
+      documentDate
     }
     description
   }
@@ -639,6 +680,11 @@ sub defect_status_logs_graphql_query {
         key
 
         job {
+            documents {
+              url
+              documentName
+              documentDate
+            }
             defects(filter: {
                 defectTypeCode: {
                     inList: [ $defect_type_codes_str ]
@@ -1144,6 +1190,14 @@ sub documents_for_job {
 sub get_job_photo {
     my ($self, $job_id, $photo_id) = @_;
     my $response = $self->web_api_call("/documents/0/JOB/$job_id/$photo_id") or return;
+    my $type = $response->header('Content-Type') || '';
+    return unless $type =~ m{image/(jpeg|pjpeg|gif|tiff|png)}i;
+    return ( $type, $response->decoded_content );
+}
+
+sub get_photo_by_doc_url {
+    my ($self, $doc_url) = @_;
+    my $response = $self->web_api_call($doc_url) or return;
     my $type = $response->header('Content-Type') || '';
     return unless $type =~ m{image/(jpeg|pjpeg|gif|tiff|png)}i;
     return ( $type, $response->decoded_content );

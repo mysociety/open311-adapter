@@ -15,6 +15,7 @@ use Integrations::Confirm;
 
 use Path::Tiny;
 use SOAP::Lite; # +trace => [ qw/method debug/ ];
+use URI::Escape;
 
 
 has jurisdiction_id => (
@@ -614,6 +615,21 @@ sub get_service_request_updates {
     centralEnquiry {
       subjectCode
       serviceCode
+      enquiryLink {
+        job {
+          documents {
+            url
+            documentName
+            documentDate
+          }
+        }
+        defect {
+          documents {
+            url
+            documentName
+            documentDate
+          }
+        }
     }
   }
 }
@@ -621,11 +637,17 @@ GRAPHQL
         my $results =$integ->perform_request_graphql(query => $query)->{data}->{enquiryStatusLogs};
         for my $status_log (@$results) {
             # remap from GraphQL key names
+
+            my @job_documents = $self->_parse_graphql_docs($status_log->{centralEnquiry}{enquiryLink}{job}{documents});
+            my @defect_documents = $self->_parse_graphql_docs($status_log->{centralEnquiry}{enquiryLink}{defect}{documents});
+
             my $log = {
                 EnquiryLogNumber => $status_log->{logNumber},
                 LoggedTime => $status_log->{loggedDate},
                 StatusLogNotes => $status_log->{notes},
                 EnquiryStatusCode => $status_log->{enquiryStatusCode},
+                JobDocuments => \@job_documents,
+                DefectDocuments => \@defect_documents,
             };
 
             # The enquiry's service/subject codes may have changed with this
@@ -718,6 +740,8 @@ sub _get_service_request_updates_for_defects {
         end_date   => $args->{end_date},
     );
 
+    my %statuses_for_job_photos = map { $_ => 1 } @{ $integ->defect_update_job_photo_statuses };
+
     for my $log ( @{$status_logs} ) {
         my $status
             = $self->job_reverse_status_mapping->{ $log->{statusCode} };
@@ -736,6 +760,16 @@ sub _get_service_request_updates_for_defects {
             ->truncate( to => 'second' );
         $dt->set_time_zone( $integ->server_timezone );
 
+
+        my @media_urls;
+        if ($statuses_for_job_photos{$log->{statusCode}}) {
+            my @job_docs = $self->_parse_graphql_docs($log->{job}{documents});
+            my @filtered = $self->filter_photos_graphql(@job_docs);
+            my @urls = map { $self->construct_photo_url_from_graphql_fetched_doc($_) } @filtered;
+            push @media_urls, @urls;
+        }
+
+        # NOTE: Only the first media_url in the array will actually be returned.
         for my $defect ( @{$log->{job}->{defects}} ) {
             push @$updates,
                 Open311::Endpoint::Service::Request::Update::mySociety->new(
@@ -745,9 +779,41 @@ sub _get_service_request_updates_for_defects {
                 updated_datetime     => $dt,
                 external_status_code => $log->{statusCode},
                 description          => $defect->{targetDate} || '',
+                @media_urls ? ( media_url => \@media_urls ) : (),
             );
         }
     }
+}
+
+sub construct_photo_url {
+    my ($self, $query_string) = @_;
+
+    my $integ = $self->get_integration;
+    my $base_url = $integ->config->{base_url};
+    my $tenant_id = $integ->config->{tenant_id};
+    my $jurisdiction_id = $self->jurisdiction_id;
+
+    return $base_url ."photos?jurisdiction_id=$jurisdiction_id&" . $query_string;
+}
+
+sub construct_photo_url_from_rest_fetched_job {
+    my ($self, $job_id, $doc_num) = @_;
+    return $self->construct_photo_url("job=$job_id&photo=$doc_num");
+}
+
+sub construct_photo_url_from_graphql_fetched_doc {
+    my ($self, $doc) = @_;
+
+    my $integ = $self->get_integration;
+    my $tenant_id = $integ->config->{tenant_id};
+
+    # GraphQL document URLs appear to include the full web api URL and tenant
+    # e.g. /ConfirmWeb/api/<tenant>/atttachments/...
+    # Strip this if present.
+    my $doc_url = ($doc->{URL} =~ /$tenant_id(.*)/) ? $1 : $doc->{URL};
+
+    my $qs = "doc_url=" . uri_escape($doc_url);
+    return $self->construct_photo_url($qs);
 }
 
 sub photo_filter {
@@ -755,21 +821,45 @@ sub photo_filter {
     return $doc->{fileName} =~ /jpe?g/i;
 }
 
-sub photo_urls_for_update {
-    my ($self, $enquiry_id) = @_;
-    my $integ = $self->get_integration;
+sub filter_photos_graphql {
+    my ($self, @graphql_docs) = @_;
+    return grep { $_->{Name} =~ /\.(jpg|jpeg|pjpeg|gif|tiff|png)$/ } @graphql_docs;
+}
 
-    my $enquiry = $integ->get_enquiry_json($enquiry_id) or return;
+sub job_photo_urls_for_enquiry_update {
+    my ($self, $status_log, $enquiry_id) = @_;
+
+    if (defined $status_log->{JobDocuments}) {
+        # We've already queried for the documents in GraphQL.
+        my @docs = $self->filter_photos_graphql(@{$status_log->{JobDocuments}});
+        my @urls = map { $self->construct_photo_url_from_graphql_fetched_doc($_) } @docs;
+        return \@urls;
+    };
+
+
+    my $integ = $self->get_integration;
+    my $enquiry = $integ->get_enquiry_json($enquiry_id) or return [];
     my $job_id = $enquiry->{jobNumber};
-    my $documents = $integ->documents_for_job($job_id) or return;
+    my $documents = $integ->documents_for_job($job_id) or return [];
 
     my @ids = map { $_->{documentNo} } grep { $self->photo_filter($_) } @$documents;
-    return unless @ids;
+    return [] unless @ids;
 
-    my $jurisdiction_id = $self->jurisdiction_id;
-    my @urls = map { $integ->config->{base_url} . "photo/completion?jurisdiction_id=$jurisdiction_id&job=$job_id&photo=$_" } @ids;
-
+    my @urls = map { $self->construct_photo_url_from_rest_fetched_job($job_id, $_) } @ids;
     return \@urls;
+}
+
+sub defect_photo_urls_for_enquiry_update {
+    my ($self, $status_log) = @_;
+
+    if (defined $status_log->{DefectDocuments}) {
+        # We've already queried for the documents in GraphQL.
+        my @docs = $self->filter_photos_graphql(@{$status_log->{DefectDocuments}});
+        my @urls = map { $self->construct_photo_url_from_graphql_fetched_doc($_) } @docs;
+        return \@urls;
+    };
+
+    die "Fetching defect photos for an enquiry update when not using graphql is unimplemented.";
 }
 
 sub services {
@@ -1147,7 +1237,8 @@ sub _parse_enquiry {
 sub _parse_enquiry_status_log {
     my ($self, $status_log, $enquiry_id, $integ, $extras) = @_;
 
-    my %completion_statuses = map { $_ => 1} @{ $integ->completion_statuses };
+    my %statuses_for_job_photos = map { $_ => 1 } @{ $integ->enquiry_update_job_photo_statuses };
+    my %statuses_for_defect_photos = map { $_ => 1 } @{ $integ->enquiry_update_defect_photo_statuses };
 
     my $update_id = $enquiry_id . "_" . $status_log->{EnquiryLogNumber};
     my $ts = $self->date_parser->parse_datetime($status_log->{LoggedTime})->truncate( to => 'second' );
@@ -1162,13 +1253,15 @@ sub _parse_enquiry_status_log {
         $status = "open";
     }
 
-    my $media_urls;
-    if ($completion_statuses{$status_log->{EnquiryStatusCode}}) {
-        # This enquiry has been marked as complete by this update;
-        # see if there's a photo.
-        $media_urls = $self->photo_urls_for_update($enquiry_id);
+    my @media_urls;
+    if ($statuses_for_job_photos{$status_log->{EnquiryStatusCode}}) {
+        push @media_urls, @{$self->job_photo_urls_for_enquiry_update($status_log, $enquiry_id)};
+    }
+    if ($statuses_for_defect_photos{$status_log->{EnquiryStatusCode}}) {
+        push @media_urls, @{$self->defect_photo_urls_for_enquiry_update($status_log)};
     }
 
+    # NOTE: Only the first media_url in the array will actually be returned.
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
         status => $status,
         update_id => $update_id,
@@ -1176,7 +1269,7 @@ sub _parse_enquiry_status_log {
         description => $description,
         updated_datetime => $ts,
         external_status_code => $status_log->{EnquiryStatusCode},
-        $media_urls ? ( media_url => $media_urls ) : (),
+        @media_urls ? ( media_url => \@media_urls ) : (),
         $extras ? ( extras => $extras ) : (),
     );
 }
@@ -1349,6 +1442,14 @@ sub _get_service_requests_for_defects {
 
         my $description = $self->_description_for_defect($defect, $service);
 
+        my @media_urls;
+        if ($integ->include_photos_on_defect_fetch) {
+            my @defect_docs = $self->_parse_graphql_docs($defect->{documents});
+            my @filtered = $self->filter_photos_graphql(@defect_docs);
+            my @urls = map { $self->construct_photo_url_from_graphql_fetched_doc($_) } @filtered;
+            push @media_urls, @urls;
+        }
+
         my %args = (
             service => $service,
             service_request_id => 'DEFECT_' . $defect_id,
@@ -1359,6 +1460,7 @@ sub _get_service_requests_for_defects {
             # enquiries above
             latlong => [ $defect->{northing}, $defect->{easting} ],
             status => $status,
+            @media_urls ? ( media_url => \@media_urls ) : (),
         );
 
         my $request = $self->new_request( %args );
@@ -1547,12 +1649,18 @@ sub _wrap_services {
     return @services;
 }
 
-sub get_completion_photo {
+sub get_photo {
     my ($self, $args) = @_;
 
-    my ($content_type, $content) = $self->get_integration->get_job_photo($args->{job}, $args->{photo});
-    return [ 404, [ 'Content-type', 'text/plain' ], [ 'Not found' ] ] unless $content;
+    my $content_type;
+    my $content;
+    if ($args->{job}) {
+        ($content_type, $content) = $self->get_integration->get_job_photo($args->{job}, $args->{photo});
+    } elsif ($args->{doc_url}) {
+        ($content_type, $content) = $self->get_integration->get_photo_by_doc_url($args->{doc_url});
+    }
 
+    return [ 404, [ 'Content-type', 'text/plain' ], [ 'Not found' ] ] unless $content;
     return [ 200, [ 'Content-type', $content_type ], [ $content ] ];
 }
 
@@ -1577,6 +1685,16 @@ sub _parse_start_end_dates {
     my $end = $self->date_parser->format_datetime($end_time);
 
     return ($start, $end);
+}
+
+sub _parse_graphql_docs {
+    my ($self, $docs) = @_;
+    return () unless $docs;
+    return map { {
+        URL => $_->{url},
+        Name => $_->{documentName},
+        Date => $self->date_parser->parse_datetime($_->{documentDate})
+    } } @$docs;
 }
 
 1;
