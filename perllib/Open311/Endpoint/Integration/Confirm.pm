@@ -646,12 +646,14 @@ sub get_service_request_updates {
           documents {
             url
             documentName
+            documentDate
           }
         }
         defect {
           documents {
             url
             documentName
+            documentDate
           }
         }
       }
@@ -1733,7 +1735,11 @@ sub _parse_start_end_dates {
 sub _parse_graphql_docs {
     my ($self, $docs) = @_;
     return () unless $docs;
-    return map { { URL => $_->{url}, Name => $_->{documentName} } } @$docs;
+    return map { {
+        URL => $_->{url},
+        Name => $_->{documentName},
+        Date => $self->date_parser->parse_datetime($_->{documentDate})
+    } } @$docs;
 }
 
 1;

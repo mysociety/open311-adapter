@@ -627,6 +627,7 @@ sub defects_graphql_query { # XXX factor together with jobs?
     documents {
       url
       documentName
+      documentDate
     }
     description
   }
@@ -685,6 +686,7 @@ sub defect_status_logs_graphql_query {
             documents {
               url
               documentName
+              documentDate
             }
             defects(filter: {
                 defectTypeCode: {
