@@ -129,6 +129,7 @@ subtest 'check fetch updates' => sub {
 
     $response = decode_json($res->content);
     is @{ decode_json($res->content) }, 5, "Five updates fetched when one update without matching status";
+    is_deeply $response, &_parsed_updates, "Updates parsed correctly";
 };
 
 subtest "POST report" => sub {
@@ -189,5 +190,56 @@ subtest "POST report" => sub {
 
     is $res->code, 200, 'Report submitted ok';
 };
+
+sub _parsed_updates {
+
+return [
+          {
+            'description' => '',
+            'media_url' => '',
+            'update_id' => 'e6306a2d754b293c89ea752898c9e921',
+            'updated_datetime' => '2025-06-18T14:50:25Z',
+            'status' => 'in_progress',
+            'external_status_code' => 'Officer Progressing Issue',
+            'service_request_id' => '1'
+          },
+          {
+            'updated_datetime' => '2025-06-18T14:45:25Z',
+            'update_id' => '5bf252f58d4d86ff22e873c566dea3eb',
+            'status' => 'not_councils_responsibility',
+            'description' => '',
+            'media_url' => '',
+            'service_request_id' => '2',
+            'external_status_code' => 'No Action Required'
+          },
+          {
+            'external_status_code' => 'Officer Progressing Issue',
+            'service_request_id' => '3',
+            'media_url' => '',
+            'description' => '',
+            'status' => 'in_progress',
+            'update_id' => 'a95618c7ed67071e95d774f3b17aa7f2',
+            'updated_datetime' => '2025-06-17T10:45:25Z'
+          },
+          {
+            'service_request_id' => '4',
+            'external_status_code' => 'Officer Progressing Issue',
+            'status' => 'in_progress',
+            'update_id' => '2be1de199009838211fefb197862db6c',
+            'updated_datetime' => '2025-06-16T14:50:25Z',
+            'media_url' => '',
+            'description' => ''
+          },
+          {
+            'external_status_code' => 'Officer Progressing Issue',
+            'description' => '',
+            'media_url' => '',
+            'update_id' => 'b2781003964434ff94dc0d4a994af396',
+            'updated_datetime' => '2025-06-15T14:50:25Z',
+            'service_request_id' => '6',
+            'status' => 'in_progress'
+          }
+        ];
+}
 
 done_testing;

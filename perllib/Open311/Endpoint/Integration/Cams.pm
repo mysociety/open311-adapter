@@ -21,6 +21,7 @@ with 'Open311::Endpoint::Role::mySociety';
 with 'Open311::Endpoint::Role::ConfigFile';
 
 use Data::UUID;
+use Digest::MD5 qw(md5_hex);
 use Integrations::Rest;
 use MIME::Base64 qw(encode_base64);
 use Open311::Endpoint::Service::Request::Update::mySociety;
@@ -353,18 +354,16 @@ sub get_service_request_updates {
             && $_->{'LastUpdatedDate'} <= $end_time
         } @$recent_updates;
 
-        my $ug = Data::UUID->new;
-        my $uuid;
         for my $update (@$recent_updates) {
-            $uuid = $ug->to_string($ug->create());
             my $status = $self->reverse_status_mapping->{ $update->{'StatusDesc'} };
             next unless $status;
+            my $md5_hash = md5_hex($update->{'webTrackingNo'}, $status, $update->{'LastUpdatedDate'});
             my %update_args = (
                 status => $status,
                 external_status_code => $update->{'StatusDesc'},
                 description => '',
                 service_request_id => $update->{'webTrackingNo'},
-                update_id => $uuid,
+                update_id => $md5_hash,
                 updated_datetime => $update->{'LastUpdatedDate'},
             );
 
