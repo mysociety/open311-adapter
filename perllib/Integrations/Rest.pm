@@ -100,13 +100,13 @@ sub api_call {
     my $response = $ua->request($request);
     if ($response->is_success) {
         $self->logger->debug($response->content);
-        return $self->json->decode($response->content, $self->allow_nonref);
+        return $self->json->decode($response->content);
     } else {
         $self->logger->error($call);
         $self->logger->error($self->json->encode($body)) if $body and (ref $body eq 'HASH' || ref $body eq 'ARRAY');
         $self->logger->error($response->content);
         try {
-            my $json_response = $self->json->decode($response->content, $self->allow_nonref);
+            my $json_response = $self->json->decode($response->content);
             my $code = $json_response->{code} || "";
             my $msg = $json_response->{message} || "";
             die $self->caller . " call failed: [$code] $msg";
