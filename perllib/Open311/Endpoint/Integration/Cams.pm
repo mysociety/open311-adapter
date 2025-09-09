@@ -82,7 +82,7 @@ has password => (
 
 =head2 userId and access_token
 
-Some API calls must pass a token in the .aspxauth header and the userid in the endpoint.
+Some API calls must pass a token in the 'camslogin' header and the userid in the endpoint.
 
 This is set by sending login credentials to the login endpoint and retrieving the userid and access_token
 
@@ -298,7 +298,7 @@ sub post_service_request {
     my $response = $self->cams->api_call(
         call => $self->api_calls->{insert} . $uuid,
         body => $serviceRequest,
-        headers => { '.aspxauth' => $self->access_token }
+        headers => { 'camslogin' => $self->access_token }
     );
     if ($response && $response =~ /^\d+$/) {
         $self->_add_service_request_images($uuid, $args->{media_url}) if $args->{media_url} && $args->{media_url}->[0];
@@ -330,7 +330,7 @@ sub get_service_request_updates {
 
     my $response = $self->cams->api_call(
         call => $self->api_calls->{get_updates},
-        headers => { '.aspxauth' => $self->access_token }
+        headers => { 'camslogin' => $self->access_token }
     );
 
     my $w3c = DateTime::Format::W3CDTF->new();
@@ -402,7 +402,7 @@ sub _add_service_request_images {
     for my $image (@attachments) {
         my $response = $self->cams->api_call(
             call => $self->api_calls->{'upload_files'} . $uuid,
-            headers => { '.aspxauth' => $self->access_token },
+            headers => { 'camslogin' => $self->access_token },
             form => [
                 file => [ undef, $image->filename, Content_Type => $image->header('Content-Type'), Content => $image->content ],
             ],

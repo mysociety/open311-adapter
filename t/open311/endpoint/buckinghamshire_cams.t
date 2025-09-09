@@ -17,14 +17,14 @@ $lwp->mock(request => sub {
         like $req->uri, qr/dummy\/api/, 'api url read from config';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'userId' => 'User-12345', 'access_token' => 'OpenSesame' }));
     } elsif ($req->uri =~ /usp_FMS_GetUpdates/) {
-        is $req->header('.aspxauth'), 'OpenSesame', 'Authorisation header set';
+        is $req->header('camslogin'), 'OpenSesame', 'Authorisation header set';
         return HTTP::Response->new(200, 'OK', [], path(__FILE__)->sibling("/json/cams/updates.json")->slurp);
     } elsif ($req->uri =~ /Insert/) {
-        is $req->header('.aspxauth'),'OpenSesame', 'Authorisation header set';
+        is $req->header('camslogin'),'OpenSesame', 'Authorisation header set';
         is_deeply decode_json($req->content), decode_json(path(__FILE__)->sibling("/json/cams/report.json")->slurp), 'Report details filled';
         return HTTP::Response->new(200, 'OK', [], '12345');
     } elsif ($req->uri =~ /WebHolding/) {
-        is $req->header('.aspxauth'), 'OpenSesame', 'Authorisation header set';
+        is $req->header('camslogin'), 'OpenSesame', 'Authorisation header set';
         my $content = ($req->parts)[0]->content;
         is $content, path(__FILE__)->sibling('files')->child('test_image.jpg')->slurp, 'Image is body of request';
         return HTTP::Response->new(200, 'OK', [], '"random"');
