@@ -301,7 +301,7 @@ sub post_service_request {
         headers => { '.aspxauth' => $self->access_token }
     );
 
-    if ($response) {
+    if ($response && $response ne 'fail') {
         $self->_add_service_request_images($uuid, $args->{media_url}) if $args->{media_url} && $args->{media_url}->[0];
         return $self->new_request(
             service_request_id => $response
