@@ -106,7 +106,7 @@ subtest "Check services structure" => sub {
 };
 
 subtest 'check fetch updates' => sub {
-    set_fixed_time('2025-06-18T14:50:25');
+    set_fixed_time('2025-06-18T13:50:25'); # UTC
     my $res = $bucks_endpoint->run_test_request(
       GET => '/servicerequestupdates.json',
     );
@@ -197,15 +197,15 @@ return [
           {
             'description' => '',
             'media_url' => '',
-            'update_id' => 'e6306a2d754b293c89ea752898c9e921',
-            'updated_datetime' => '2025-06-18T14:50:25+01:00',
+            'update_id' => 'f1e22380d1c6b522874041b562d3dad1',
+            'updated_datetime' => '2025-06-18T13:50:25Z',
             'status' => 'in_progress',
             'external_status_code' => 'Officer Progressing Issue',
             'service_request_id' => '1'
           },
           {
-            'updated_datetime' => '2025-06-18T14:45:25+01:00',
-            'update_id' => '5bf252f58d4d86ff22e873c566dea3eb',
+            'updated_datetime' => '2025-06-18T13:45:25Z',
+            'update_id' => '1557be78fc48c1a82041f2aa0d710dd4',
             'status' => 'not_councils_responsibility',
             'description' => '',
             'media_url' => '',
@@ -218,15 +218,15 @@ return [
             'media_url' => '',
             'description' => '',
             'status' => 'in_progress',
-            'update_id' => 'a95618c7ed67071e95d774f3b17aa7f2',
-            'updated_datetime' => '2025-06-17T10:45:25+01:00'
+            'update_id' => '575d63d7febc9b8c9e6626a480302ed2',
+            'updated_datetime' => '2025-06-17T09:45:25Z'
           },
           {
             'service_request_id' => '4',
             'external_status_code' => 'Officer Progressing Issue',
             'status' => 'in_progress',
-            'update_id' => '2be1de199009838211fefb197862db6c',
-            'updated_datetime' => '2025-06-16T14:50:25+01:00',
+            'update_id' => '9f9bd9bcb0f0f4c9181620866c8fa064',
+            'updated_datetime' => '2025-06-16T13:50:25Z',
             'media_url' => '',
             'description' => ''
           },
@@ -234,8 +234,8 @@ return [
             'external_status_code' => 'Officer Progressing Issue',
             'description' => '',
             'media_url' => '',
-            'update_id' => 'b2781003964434ff94dc0d4a994af396',
-            'updated_datetime' => '2025-06-15T14:50:25+01:00',
+            'update_id' => '2f7ee0d614b1ab9c82e0c9707d7712b8',
+            'updated_datetime' => '2025-06-15T13:50:25Z',
             'service_request_id' => '6',
             'status' => 'in_progress'
           }
