@@ -335,7 +335,7 @@ sub get_service_request_updates {
     );
 
     my $w3c = DateTime::Format::W3CDTF->new();
-    $args->{start_date} = $args->{start_date} ? $w3c->parse_datetime($args->{start_date}) : $w3c->parse_datetime(DateTime->now()) - DateTime::Duration->new( minutes => 10 );
+    $args->{start_date} = $args->{start_date} ? $w3c->parse_datetime($args->{start_date}) : DateTime->now() - DateTime::Duration->new( minutes => 10 );
 
     my @updates;
     my $formatter = DateTime::Format::Strptime->new(pattern => "%FT%T");
@@ -345,7 +345,8 @@ sub get_service_request_updates {
         for my $date (@$recent_updates) {
             $date->{LastUpdatedDate} =~ s/\.\d+$//;
             $date->{LastUpdatedDate} = $formatter->parse_datetime($date->{LastUpdatedDate});
-            $date->{LastUpdatedDate}->set_time_zone('Europe/London');
+            # Want to return them in UTC
+            $date->{LastUpdatedDate}->set_time_zone('Europe/London')->set_time_zone('UTC');
         }
 
         @$recent_updates = grep {
