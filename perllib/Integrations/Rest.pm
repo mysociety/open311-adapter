@@ -3,7 +3,7 @@ package Integrations::Rest;
 use Moo;
 use HTTP::Request::Common;
 use LWP::UserAgent;
-use JSON::MaybeXS qw(encode_json decode_json);
+use JSON::MaybeXS;
 
 with 'Role::Config';
 with 'Role::Logger';
@@ -30,6 +30,18 @@ to be parsed - defaults to 0
 has allow_nonref => (
     is => 'ro',
     default => 0
+);
+
+=head2 json
+
+JSON class to use which can be set by integration, but will default to
+MaybeXS and if so, is set to use the attribute allow_nonref setting
+
+=cut
+
+has json => (
+    is => 'lazy',
+    default => sub { JSON->new->utf8->allow_nonref($_[0]->allow_nonref) },
 );
 
 =head2 api_call
@@ -71,7 +83,7 @@ sub api_call {
 
     if ($body) {
         $headers->{Content_Type} = 'application/json; charset=UTF-8';
-        $body = encode_json($body);
+        $body = $self->json->encode($body);
         $headers->{Content} = $body;
         $self->logger->debug($body);
     }
@@ -88,13 +100,13 @@ sub api_call {
     my $response = $ua->request($request);
     if ($response->is_success) {
         $self->logger->debug($response->content);
-        return decode_json($response->content, $self->allow_nonref);
+        return $self->json->decode($response->content);
     } else {
         $self->logger->error($call);
-        $self->logger->error(encode_json($body)) if $body and (ref $body eq 'HASH' || ref $body eq 'ARRAY');
+        $self->logger->error($self->json->encode($body)) if $body and (ref $body eq 'HASH' || ref $body eq 'ARRAY');
         $self->logger->error($response->content);
         try {
-            my $json_response = decode_json($response->content, $self->allow_nonref);
+            my $json_response = $self->json->decode($response->content);
             my $code = $json_response->{code} || "";
             my $msg = $json_response->{message} || "";
             die $self->caller . " call failed: [$code] $msg";

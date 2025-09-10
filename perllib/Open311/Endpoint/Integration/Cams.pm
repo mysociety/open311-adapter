@@ -21,6 +21,7 @@ with 'Open311::Endpoint::Role::mySociety';
 with 'Open311::Endpoint::Role::ConfigFile';
 
 use Data::UUID;
+use Digest::MD5 qw(md5_hex);
 use Integrations::Rest;
 use MIME::Base64 qw(encode_base64);
 use Open311::Endpoint::Service::Request::Update::mySociety;
@@ -81,7 +82,7 @@ has password => (
 
 =head2 userId and access_token
 
-Some API calls must pass a token in the .aspxauth header and the userid in the endpoint.
+Some API calls must pass a token in the 'camslogin' header and the userid in the endpoint.
 
 This is set by sending login credentials to the login endpoint and retrieving the userid and access_token
 
@@ -297,10 +298,9 @@ sub post_service_request {
     my $response = $self->cams->api_call(
         call => $self->api_calls->{insert} . $uuid,
         body => $serviceRequest,
-        headers => { '.aspxauth' => $self->access_token }
+        headers => { 'camslogin' => $self->access_token }
     );
-
-    if ($response) {
+    if ($response && $response =~ /^\d+$/) {
         $self->_add_service_request_images($uuid, $args->{media_url}) if $args->{media_url} && $args->{media_url}->[0];
         return $self->new_request(
             service_request_id => $response
@@ -330,7 +330,7 @@ sub get_service_request_updates {
 
     my $response = $self->cams->api_call(
         call => $self->api_calls->{get_updates},
-        headers => { '.aspxauth' => $self->access_token }
+        headers => { 'camslogin' => $self->access_token }
     );
 
     my $w3c = DateTime::Format::W3CDTF->new();
@@ -353,18 +353,16 @@ sub get_service_request_updates {
             && $_->{'LastUpdatedDate'} <= $end_time
         } @$recent_updates;
 
-        my $ug = Data::UUID->new;
-        my $uuid;
         for my $update (@$recent_updates) {
-            $uuid = $ug->to_string($ug->create());
             my $status = $self->reverse_status_mapping->{ $update->{'StatusDesc'} };
             next unless $status;
+            my $md5_hash = md5_hex($update->{'webTrackingNo'}, $status, $update->{'LastUpdatedDate'});
             my %update_args = (
                 status => $status,
                 external_status_code => $update->{'StatusDesc'},
                 description => '',
                 service_request_id => $update->{'webTrackingNo'},
-                update_id => $uuid,
+                update_id => $md5_hash,
                 updated_datetime => $update->{'LastUpdatedDate'},
             );
 
@@ -404,7 +402,7 @@ sub _add_service_request_images {
     for my $image (@attachments) {
         my $response = $self->cams->api_call(
             call => $self->api_calls->{'upload_files'} . $uuid,
-            headers => { '.aspxauth' => $self->access_token },
+            headers => { 'camslogin' => $self->access_token },
             form => [
                 file => [ undef, $image->filename, Content_Type => $image->header('Content-Type'), Content => $image->content ],
             ],
