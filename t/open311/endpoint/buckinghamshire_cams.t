@@ -116,7 +116,7 @@ subtest 'check fetch updates' => sub {
     is @$response, 2, "Two updates fetched in default 10 minute window";
 
     $res = $bucks_endpoint->run_test_request(
-      GET => '/servicerequestupdates.json?start_date=2025-06-17T10:40:00Z',
+      GET => '/servicerequestupdates.json?start_date=2025-06-17T09:40:00Z',
     );
 
     ok $res->is_success, "Fetching updates ok";
@@ -124,7 +124,7 @@ subtest 'check fetch updates' => sub {
     is @{ decode_json($res->content) }, 3, "Three updates fetched when start date supplied";
 
     $res = $bucks_endpoint->run_test_request(
-      GET => '/servicerequestupdates.json?start_date=2025-06-15T14:50:25Z',
+      GET => '/servicerequestupdates.json?start_date=2025-06-15T13:50:25Z',
     );
 
     $response = decode_json($res->content);
@@ -198,13 +198,13 @@ return [
             'description' => '',
             'media_url' => '',
             'update_id' => 'e6306a2d754b293c89ea752898c9e921',
-            'updated_datetime' => '2025-06-18T14:50:25Z',
+            'updated_datetime' => '2025-06-18T14:50:25+01:00',
             'status' => 'in_progress',
             'external_status_code' => 'Officer Progressing Issue',
             'service_request_id' => '1'
           },
           {
-            'updated_datetime' => '2025-06-18T14:45:25Z',
+            'updated_datetime' => '2025-06-18T14:45:25+01:00',
             'update_id' => '5bf252f58d4d86ff22e873c566dea3eb',
             'status' => 'not_councils_responsibility',
             'description' => '',
@@ -219,14 +219,14 @@ return [
             'description' => '',
             'status' => 'in_progress',
             'update_id' => 'a95618c7ed67071e95d774f3b17aa7f2',
-            'updated_datetime' => '2025-06-17T10:45:25Z'
+            'updated_datetime' => '2025-06-17T10:45:25+01:00'
           },
           {
             'service_request_id' => '4',
             'external_status_code' => 'Officer Progressing Issue',
             'status' => 'in_progress',
             'update_id' => '2be1de199009838211fefb197862db6c',
-            'updated_datetime' => '2025-06-16T14:50:25Z',
+            'updated_datetime' => '2025-06-16T14:50:25+01:00',
             'media_url' => '',
             'description' => ''
           },
@@ -235,7 +235,7 @@ return [
             'description' => '',
             'media_url' => '',
             'update_id' => 'b2781003964434ff94dc0d4a994af396',
-            'updated_datetime' => '2025-06-15T14:50:25Z',
+            'updated_datetime' => '2025-06-15T14:50:25+01:00',
             'service_request_id' => '6',
             'status' => 'in_progress'
           }

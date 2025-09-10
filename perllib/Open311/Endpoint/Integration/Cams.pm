@@ -21,6 +21,8 @@ with 'Open311::Endpoint::Role::mySociety';
 with 'Open311::Endpoint::Role::ConfigFile';
 
 use Data::UUID;
+use DateTime::Format::Strptime;
+use DateTime::Format::W3CDTF;
 use Digest::MD5 qw(md5_hex);
 use Integrations::Rest;
 use MIME::Base64 qw(encode_base64);
@@ -310,16 +312,15 @@ sub post_service_request {
 
 =head2 get_service_request_updates
 
-Currently using a call that gives us 30 days of updates, we filter down to the updates in the last 10 minutes,
-by default. But honours the start_date if supplied.
+Currently using a call that gives us some days of updates, we filter down to
+the updates in the last 10 minutes, by default. But honours the start_date if
+supplied. The end date is ignored as the API ignores that and is returning
+anything up to now.
 
-The end date is mandated to 'now' as we don't use the end date in our calls.
+LastUpdate datetimes are treated as in local timezone.
 
-LastUpdate dates are given a 'Z' timezone which replaces the microseconds, both actions allowing parsing of the datetime
-which fails without a timezone in the string or with microseconds.
-
-There is no id for a CAMS Desktop update as it is only a notifiction of change, not an actual update so we generate
-a uniqe ID to satify FMS
+There is no id for a CAMS Desktop update as it is only a notification of
+change, not an actual update so we generate a unique ID to satify FMS.
 
 =cut
 
@@ -335,22 +336,20 @@ sub get_service_request_updates {
 
     my $w3c = DateTime::Format::W3CDTF->new();
     $args->{start_date} = $args->{start_date} ? $w3c->parse_datetime($args->{start_date}) : $w3c->parse_datetime(DateTime->now()) - DateTime::Duration->new( minutes => 10 );
-    $args->{end_date} = $w3c->parse_datetime(DateTime->now());
 
     my @updates;
+    my $formatter = DateTime::Format::Strptime->new(pattern => "%FT%T");
     if ($response) {
         my $start_time = $args->{start_date};
-        my $end_time = $args->{end_date};
         my $recent_updates = $response->{'Table'};
         for my $date (@$recent_updates) {
-            $date->{'LastUpdatedDate'} =~ s/\.\d+$/Z/;
-            $date->{'LastUpdatedDate'} =~ s/$/Z/ unless $date->{'LastUpdatedDate'} =~ 'Z';
-            $date->{'LastUpdatedDate'} = $w3c->parse_datetime($date->{'LastUpdatedDate'});
+            $date->{LastUpdatedDate} =~ s/\.\d+$//;
+            $date->{LastUpdatedDate} = $formatter->parse_datetime($date->{LastUpdatedDate});
+            $date->{LastUpdatedDate}->set_time_zone('Europe/London');
         }
 
         @$recent_updates = grep {
             $_->{'LastUpdatedDate'} >= $start_time
-            && $_->{'LastUpdatedDate'} <= $end_time
         } @$recent_updates;
 
         for my $update (@$recent_updates) {
