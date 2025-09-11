@@ -559,6 +559,7 @@ sub defects_graphql_query { # XXX factor together with jobs?
         }
   ) {
     defectNumber
+    supersedesDefectNumber
     easting
     northing
     loggedDate
@@ -646,6 +647,7 @@ sub defect_status_logs_graphql_query {
                     inList: [ $defect_type_codes_str ]
                 }
             }) {
+                supersedesDefectNumber
                 defectNumber
                 targetDate
             }

@@ -1252,6 +1252,7 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
+    <extras></extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1308,6 +1309,7 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
+    <extras></extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1345,6 +1347,7 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
+    <extras></extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1406,6 +1409,7 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
+    <extras></extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1453,6 +1457,7 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
+    <extras></extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1598,6 +1603,7 @@ subtest 'GET jobs alongside enquiries' => sub {
                 {   address            => undef,
                     address_id         => undef,
                     description        => 'this is a report from confirm',
+                    extras             => undef,
                     lat                => '100',
                     long               => '100',
                     media_url          => undef,
@@ -1614,6 +1620,7 @@ subtest 'GET jobs alongside enquiries' => sub {
                 {   address            => undef,
                     address_id         => undef,
                     description        => 'An open job',
+                    extras             => undef,
                     lat                => '51.8458834999995',
                     long               => '-2.26317120000001',
                     media_url          => undef,
@@ -1628,6 +1635,7 @@ subtest 'GET jobs alongside enquiries' => sub {
                 {   address            => undef,
                     address_id         => undef,
                     description        => 'A completed job',
+                    extras             => undef,
                     lat                => '51.8458834999995',
                     long               => '-2.26317120000001',
                     media_url          => undef,
@@ -1754,6 +1762,7 @@ subtest 'GET reports - external system number filtering' => sub {
                 {   address            => undef,
                     address_id         => undef,
                     description        => 'this is a report from confirm',
+                    extras             => undef,
                     lat                => '100',
                     long               => '100',
                     media_url          => undef,
@@ -1768,6 +1777,7 @@ subtest 'GET reports - external system number filtering' => sub {
                 {   address            => undef,
                     address_id         => undef,
                     description        => 'this is a report from another system',
+                    extras             => undef,
                     lat                => '200',
                     long               => '200',
                     media_url          => undef,
