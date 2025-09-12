@@ -146,7 +146,7 @@ $soap_lite->mock(call => sub {
         is @params, 2, 'No notes';
         my $ref = ${(${$params[1]->value}->value)[2]->value}->value->value->value;
         my $actiontype_id = $params[0]->value;
-        is $actiontype_id, 8;
+        is $actiontype_id, 518;
         return SOAP::Result->new(result => { EventActionGuid => 'ABC' });
     } else {
         is $method, 'UNKNOWN';
