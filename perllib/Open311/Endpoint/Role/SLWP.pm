@@ -41,7 +41,7 @@ around post_service_request_update => sub {
     }
 
     if ($args->{description} =~ /Booking cancelled/ || $args->{attributes}{booking_cancelled}) {
-        $args->{actiontype_id} = $class->cancel_actiontype_id;
+        $args->{actiontype_id} = 518; # XXX Hard-coded
         $args->{datatype_id} = 0;
     }
 
