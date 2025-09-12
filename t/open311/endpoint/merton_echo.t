@@ -82,15 +82,12 @@ $soap_lite->mock(call => sub {
         } elsif (@params == 2) {
             is $params[0]->value, '123pay';
             my @data = ${$params[1]->value}->value->value;
-            my @payment = ${$data[0]->value}->value;
-            is $payment[1]->value, 27409;
-            my @child = ${$payment[0]->value}->value->value;
-            my @ref = ${$child[0]->value}->value;
-            is $ref[0]->value, 27410;
+            my @ref = ${$data[0]->value}->value;
+            is $ref[0]->value, 57236;
             is $ref[1]->value, 'ABC';
-            @ref = ${$child[1]->value}->value;
-            is $ref[0]->value, 27411;
-            is $ref[1]->value, '34.56';
+            my @amount = ${$data[1]->value}->value;
+            is $amount[0]->value, 57237;
+            is $amount[1]->value, '34.56';
         } else {
             is @params, 'UNKNOWN';
         }
