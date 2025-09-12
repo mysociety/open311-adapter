@@ -92,7 +92,7 @@ sub _update_status {
             'action_scheduled'
         } elsif ($action_due =~ /^(ROD|MAJ|SNPR)$/ || $event_type =~ /^(MAJ|SNPR)$/) {
             'closed'
-        } elsif ($action_due =~ /^(BESP|RDC)$/ || $event_type =~ /^(BESP|RDC)$/) {
+        } elsif ($action_due =~ /^(BESP|RDC|403)$/ || $event_type =~ /^(BESP|RDC|403)$/) {
             'no_further_action'
         } elsif ($row->{Stage} == 9 || $row->{Stage} == 8) {
             undef
