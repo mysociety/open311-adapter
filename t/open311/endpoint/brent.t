@@ -662,18 +662,20 @@ for my $test (
                 is $headers{Authorization}, 'AUTH-123';
 
                 my $data = decode_json($headers{Content})->{tasks}->[0];
-                is $data->{issue}, "Category: Parks littering\nGroup: Parks and open spaces\nLocation: Location name\n\n" .
+                is $data->{request_desc}, "Location: Location name\n\n" .
                     "location of problem: title\n\ndetail: detail\n\nurl: url\n\n" .
                     "Submitted via FixMyStreet\n";
-                is $data->{client_ref}, '42';
+                is $data->{request_client_ref}, '42';
                 is $data->{project_name}, 'LB BRENT';
                 is $data->{project_code}, 'C123';
-                is $data->{taken_on}, '2023-07-27T12:00:00Z';
+                is $data->{request_start_date}, '2023-07-27T12:00:00Z';
+                is $data->{request_end_date}, '2023-07-27T13:00:00Z';
                 is $data->{location_name}, 'Location name';
+                is $data->{request_title}, 'Parks and open spaces|Parks littering';
+                is $data->{requesttype_desc}, 'FixMyStreets';
                 is $data->{caller}, '';
-                is $data->{resolve_by}, '';
-                is $data->{location}->{type}, 'Point';
-                is_deeply $data->{location}->{coordinates}, [ -1, 51 ];
+                is $data->{request_geo_ref}->{type}, 'Point';
+                is_deeply $data->{request_geo_ref}->{coordinates}, [ -1, 51 ];
                 my $photo = $data->{attachments}->[0];
                 if ($test->{upload}) {
                     is $photo->{filename}, 'test_image.jpg';
@@ -819,356 +821,40 @@ subtest "POST update OK" => sub {
         } ], 'correct json returned';
 };
 
-sub _get_and_check_service_request_updates {
-    my ($start_date, $end_date, $expected) = @_;
-    my $res = $endpoint->run_test_request(
-        GET => sprintf(
-            '/servicerequestupdates.json?start_date=%s&end_date=%s',
-            $start_date,
-            $end_date
-        )
-    );
-    ok $res->is_success, 'valid request'
-        or diag $res->content;
-
-    my $response = decode_json($res->content);
-    is_deeply $response, $expected, 'correct json returned';
-}
-
-subtest "GET updates OK" => sub {
-    _get_and_check_service_request_updates(
-        '2018-11-27T00:00:00Z',
-        '2018-11-29T00:00:00Z',
-        [
-            {
-                description => "",
-                media_url => '',
-                service_request_id => 'Symology-323',
-                status => 'investigating',
-                update_id => 'Symology-00000323_6',
-                updated_datetime => '2018-11-28T15:05:00+00:00',
-                external_status_code => '19',
-            },
-            {
-                description => "Text going here explaining reason for no further action",
-                media_url => '',
-                service_request_id => 'Symology-323',
-                status => 'no_further_action',
-                update_id => 'Symology-00000323_8',
-                updated_datetime => '2018-11-28T15:05:00+00:00',
-                external_status_code => '21_NFA',
-            }
-        ]
-    );
-};
-
-subtest "GET ATAK service request updates OK" => sub {
-    my $mock_ua = Test::MockModule->new('LWP::UserAgent');
-
-    # Handle logins.
-    $mock_ua->mock('post', sub {
-        my ($self, $url) = @_;
-        if ($url eq 'https://example.com/ords/hws/atak/v1/login') {
-            return HTTP::Response->new(200, 'OK', [], '{"token": "AUTH-123"}');
-        }
-        return HTTP::Response->new(404, 'Not Found', [], '');
-    });
-
-    set_fixed_time('2023-08-02T00:00:00Z');
-    $atak_endpoint->init_update_gathering_files(DateTime->now->subtract(days => 1));
-
-    $mock_ua->mock('get', sub {
-        my ($self, $url) = @_;
-        like $url, qr/from=2023-08-01T00:00:00Z/, "correct from time";
-        like $url, qr/to=2023-08-02T00:00:00Z/, "correct to time";
-        return HTTP::Response->new(200, 'OK', [], '{
-            "tasks": [
-                {
-                    "testing_comment": "missing_client_ref",
-                    "task_comments": "Closed - Completed",
-                    "task_d_created": "2023-08-01T00:00:00Z",
-                    "task_d_planned": "2023-08-01T00:00:00Z",
-                    "task_d_completed": "2023-08-01T00:00:00Z",
-                    "task_d_approved": "2023-08-01T00:00:00Z",
-                    "task_p_id": "123"
-                },
-                {
-                    "client_ref": "missing_created_time",
-                    "task_comments": "Closed - Completed",
-                    "task_d_planned": "2023-08-01T00:00:00Z",
-                    "task_d_completed": "2023-08-01T00:00:00Z",
-                    "task_d_approved": "2023-08-01T00:00:00Z",
-                    "task_p_id": "124"
-                },
-                {
-                    "client_ref": "unknown_state",
-                    "task_comments": "Closed - Unknown",
-                    "task_d_created": "2023-08-01T00:00:00Z",
-                    "task_d_planned": "2023-08-01T00:00:00Z",
-                    "task_d_completed": "2023-08-01T00:00:00Z",
-                    "task_d_approved": "2023-08-01T00:00:00Z",
-                    "task_p_id": "125"
-                },
-                {
-                    "client_ref": "issue_too_old",
-                    "task_comments": "Closed - Completed",
-                    "task_d_created": "2022-08-01T00:00:00Z",
-                    "task_d_planned": "2023-08-01T00:00:00Z",
-                    "task_d_completed": "2023-08-01T00:00:00Z",
-                    "task_d_approved": "2023-08-01T00:00:00Z",
-                    "task_p_id": "126"
-                },
-                {
-                    "client_ref": "test",
-                    "task_comments": "Closed - Passed to Brent",
-                    "task_d_created": "2023-08-01T00:00:00Z",
-                    "task_d_planned": "2023-08-01T01:00:00Z",
-                    "task_d_completed": "2023-08-01T02:00:00Z",
-                    "task_d_approved": "2023-08-01T03:00:00Z",
-                    "task_p_id": "127"
-                },
-                {
-                    "client_ref": "no_comments",
-                    "task_comments": "",
-                    "task_d_created": "2023-08-01T00:00:00Z",
-                    "task_d_planned": "2023-08-01T01:00:00Z",
-                    "task_d_completed": "2023-08-01T02:00:00Z",
-                    "task_d_approved": "2023-08-01T03:00:00Z",
-                    "task_p_id": "128"
-                },
-                {
-                    "client_ref":"in_progress",
-                    "task_d_created":"2023-08-01T00:00:00Z",
-                    "task_d_planned":"2023-08-01T01:00:00Z",
-                    "task_p_id": "129"
-                }
-            ]
-        }');
-    });
-
-    $atak_endpoint->gather_updates();
-
-    _get_and_check_service_request_updates(
-        '2023-08-01T00:00:00Z',
-        '2023-08-02T00:00:00Z',
-        [
-            {
-                description => '',
-                media_url => '',
-                service_request_id => 'ATAK-127',
-                status => 'internal_referral',
-                update_id => 'ATAK-test_1690858800',
-                updated_datetime => '2023-08-01T03:00:00Z',
-                external_status_code => 'Closed - Passed to Brent',
-            },
-            {
-                description => '',
-                media_url => '',
-                service_request_id => 'ATAK-128',
-                status => 'fixed',
-                update_id => 'ATAK-no_comments_1690858800',
-                updated_datetime => '2023-08-01T03:00:00Z',
-                external_status_code => 'Closed - Completed',
-            },
-            {
-                description => '',
-                media_url => '',
-                service_request_id => 'ATAK-129',
-                status => 'action_scheduled',
-                update_id => 'ATAK-in_progress_1690851600',
-                updated_datetime => '2023-08-01T01:00:00Z',
-                external_status_code => 'In progress',
-            },
-            {
-                description => '',
-                media_url => '',
-                service_request_id => 'ATAK-125',
-                status => 'closed',
-                update_id => 'ATAK-unknown_state_1690848000',
-                updated_datetime => '2023-08-01T00:00:00Z',
-                external_status_code => 'Closed - Not found',
-            }
-        ]
-    );
-
-    # Next day.
-    set_fixed_time('2023-08-03T00:00:00Z');
-
-    $mock_ua->mock('get', sub {
-        my ($self, $url) = @_;
-        like $url, qr/from=2023-08-01T03:00:00Z/, "correct from time";
-        like $url, qr/to=2023-08-03T00:00:00Z/, "correct to time";
-        # One of the times is outside of query window, next query should start from range end
-        # rather than the 'future' time.
-        return HTTP::Response->new(200, 'OK', [], '{
-            "tasks": [
-                {
-                    "testing_comment": "same ATAK status - should ignore",
-                    "client_ref": "unknown_state",
-                    "task_comments": "Closed - Unknown",
-                    "task_d_created": "2023-08-01T00:00:00Z",
-                    "task_d_planned": "2023-08-01T00:00:00Z",
-                    "task_d_completed": "2023-08-01T00:00:00Z",
-                    "task_d_approved": "2023-08-01T00:00:00Z",
-                    "task_p_id": "125"
-                },
-                {
-                    "testing_comment": "new update but same ATAK status - should ignore",
-                    "client_ref": "test",
-                    "task_comments": "Closed - Passed to Brent",
-                    "task_d_created": "2023-08-01T00:00:00Z",
-                    "task_d_planned": "2023-08-02T01:00:00Z",
-                    "task_d_completed": "2023-08-02T02:00:00Z",
-                    "task_d_approved": "2023-08-04T03:00:00Z",
-                    "task_p_id": "127"
-                }
-            ]
-        }');
-    });
-
-    $atak_endpoint->gather_updates();
-
-    # We get the old updates and nothing new.
-    _get_and_check_service_request_updates(
-        '2023-08-01T00:00:00Z',
-        '2023-08-03T00:00:00Z',
-        [
-            {
-                description => "",
-                media_url => '',
-                service_request_id => 'ATAK-127',
-                status => 'internal_referral',
-                update_id => 'ATAK-test_1690858800',
-                updated_datetime => '2023-08-01T03:00:00Z',
-                external_status_code => 'Closed - Passed to Brent',
-            },
-            {
-                description => '',
-                media_url => '',
-                service_request_id => 'ATAK-128',
-                status => 'fixed',
-                update_id => 'ATAK-no_comments_1690858800',
-                updated_datetime => '2023-08-01T03:00:00Z',
-                external_status_code => 'Closed - Completed',
-            },
-            {
-                description => '',
-                media_url => '',
-                service_request_id => 'ATAK-129',
-                status => 'action_scheduled',
-                update_id => 'ATAK-in_progress_1690851600',
-                updated_datetime => '2023-08-01T01:00:00Z',
-                external_status_code => 'In progress',
-            },
-            {
-                description => '',
-                media_url => '',
-                service_request_id => 'ATAK-125',
-                status => 'closed',
-                update_id => 'ATAK-unknown_state_1690848000',
-                updated_datetime => '2023-08-01T00:00:00Z',
-                external_status_code => 'Closed - Not found',
-            }
-        ]
-    );
-
-    # Next day.
-    set_fixed_time('2023-08-04T00:00:00Z');
-
-    $mock_ua->mock('get', sub {
-        my ($self, $url) = @_;
-        like $url, qr/from=2023-08-03T00:00:00Z/, "correct from time";
-        like $url, qr/to=2023-08-04T00:00:00Z/, "correct to time";
-        return HTTP::Response->new(200, 'OK', [], '{
-            "tasks": [
-                {
-                    "testing_comment": "new ATAK status - should get an update",
-                    "client_ref": "test",
-                    "task_comments": "Closed - Completed description",
-                    "task_d_created": "2023-08-01T00:00:00Z",
-                    "task_d_planned": "2023-08-03T01:00:00Z",
-                    "task_d_completed": "2023-08-03T02:00:00Z",
-                    "task_d_approved": "2023-08-03T03:00:00Z",
-                    "task_p_id": "130"
-                }
-            ]
-        }');
-    });
-
-    $atak_endpoint->gather_updates();
-
-    _get_and_check_service_request_updates(
-        '2023-08-02T00:00:00Z',
-        '2023-08-04T00:00:00Z',
-        [
-            {
-                description => "description",
-                media_url => '',
-                service_request_id => 'ATAK-130',
-                status => 'fixed',
-                update_id => 'ATAK-test_1691031600',
-                updated_datetime => '2023-08-03T03:00:00Z',
-                external_status_code => 'Closed - Completed',
-            },
-        ]
-    );
-
-    # A year later.
-    set_fixed_time('2024-08-05T00:00:00Z');
-
-    $mock_ua->mock('get', sub {
-        my ($self, $url) = @_;
-        like $url, qr/from=2023-08-03T03:00:00Z/, "correct from time";
-        like $url, qr/to=2024-08-05T00:00:00Z/, "correct to time";
-        return HTTP::Response->new(200, 'OK', [], '{}');
-    });
-
-    $atak_endpoint->gather_updates();
-
-    # Old updates should be gone.
-    _get_and_check_service_request_updates(
-        '2023-08-01T00:00:00Z',
-        '2024-08-05T00:00:00Z',
-        []
-    );
-};
-
 subtest "ATAK issue text formatting" => sub {
     dies_ok { $atak_endpoint->_format_issue_text(
-        133, 'category', 'group', 'location name', 'url', 'title', 'detail'
+        100, 'location name', 'url', 'title', 'detail'
     ) } "formatting issue text fails when inputs are too big";
 
     my $issue_text =  $atak_endpoint->_format_issue_text(
-        135, 'category', 'group', 'location name', 'url', 'title', 'detail'
+        103, 'location name', 'url', 'title', 'detail'
     );
-    is $issue_text, "Category: category\nGroup: group\nLocation: location name\n\nlocation of problem: title\n\n" .
+    is $issue_text, "Location: location name\n\nlocation of problem: title\n\n" .
         "detail: d...\n\nurl: url\n\nSubmitted via FixMyStreet\n", "truncates detail when too large";
-    is length(encode('UTF-8', $issue_text)), 135, "restricts to max byte length";
+    is length(encode('UTF-8', $issue_text)), 103, "restricts to max byte length";
 
     $issue_text =  $atak_endpoint->_format_issue_text(
-        138, 'category', 'group', 'location name', 'url', 'title', 'detail'
+        105, 'location name', 'url', 'title', 'detail'
     );
-    is $issue_text, "Category: category\nGroup: group\nLocation: location name\n\nlocation of problem: title\n\n" .
+    is $issue_text, "Location: location name\n\nlocation of problem: title\n\n" .
         "detail: detail\n\nurl: url\n\nSubmitted via FixMyStreet\n", "does not truncate detail when within size";
-    is length(encode('UTF-8', $issue_text)), 137;
+    is length(encode('UTF-8', $issue_text)), 105;
 
     $issue_text =  $atak_endpoint->_format_issue_text(
-        139, 'category', 'group', 'location name', 'url', 'title', '£detail£'
+        107, 'location name', 'url', 'title', '£detail£'
     );
-    is $issue_text, "Category: category\nGroup: group\nLocation: location name\n\nlocation of problem: title\n\n" .
+    is $issue_text, "Location: location name\n\nlocation of problem: title\n\n" .
         "detail: £de...\n\nurl: url\n\nSubmitted via FixMyStreet\n", "accounts for multi-byte characters";
-    is length(encode('UTF-8', $issue_text)), 138, "restricts to max byte length";
+    is length(encode('UTF-8', $issue_text)), 106, "restricts to max byte length";
 
     $issue_text =  $atak_endpoint->_format_issue_text(
-        900,
-        'Overgrown grass',
-        'Parks and open spaces',
+        800,
         'Kenton Grange',
         'qOYft://TkCXIl.ccaNq.cQK.sk/fZCAxJ/0000000',
         'vTe 123',
         'UZimzSj jH bFcLloC: vTe 123\r\n\r\nXCirvX: yGS NWnFH vB lmB kOjAYZiO kLsHnG nz ZFdaxVrTi iImOpfdpV, lt’b YubrkhPX TWi cZYjpuMt wUU PZXvyfet OqTwYH hB tNhGrFHsZ ADCiW OO wo AfJW ICTrVHV ek QN SNW RUD TLLJD JJ tJ dqMJ zNytzeQh. uMwRj OHL 15 QCQRLipkt wxze xBDxgnN QXQ zoJvutWO FLHmzVuDc lWl yEWK fbc £1.84 KkA ExNF npH RUDwCSdVVDR Wg LcSn NgBse fBCOR (£1,435.20Hn lHxPTJZTR £119.60DYc) Gd gDV fsOvhA OPv l zMYWFXx Qsw UeQ dnXKhqsxD LZ. jedA mj jzpjWStcI hAcEMwvo, Kh vdz’B Niz CTv ciDwwwvT (OO BEUUeEgtq BbD Za vA H hfvskpZwzN PNEcZ Gh MXe uUp ieZq wS qZoXYe shd VzMsTV), UW BEp’q wtkNva HNk jFZYK lg PkW nyXU dnz TdCRx rhItc An nq ROMGSdNkf. bOJP Rx DG zmAPeY VgWBvN. O jRXq lAqxRoA FCLLkanb mtfd XoxpRd Ysw Rb’R ZMfN RjyLcKm. oT qHJV SpHcGl Bu oRV eJElODIp VquIVE Igx lbpt EoRoT NFGn z ewAf DlXU z ANDiPL TomFsansS Nl WFG Jzwqe FGzSgazXZF jFLuge.\r\n\r\nCKV: qOYft://TkCXIl.ccaNq.cQK.sk/fZCAxJ/0000000\r\n\r\nhHwZBhUTO Ojs FWhxEGjyaaC\r\n'
     );
-    is length(encode('UTF-8', $issue_text)), 898, "restricts to max byte length on real world example";
+    is length(encode('UTF-8', $issue_text)), 798, "restricts to max byte length on real world example";
 };
 
 done_testing;
