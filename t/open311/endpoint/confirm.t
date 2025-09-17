@@ -1568,7 +1568,7 @@ subtest "GET Service List - include ones for jobs/defects" => sub {
 };
 
 subtest 'GET jobs alongside enquiries' => sub {
-    local $ENV{TEST_LOGGER} = 'warn';
+    local $ENV{TEST_LOGGER} = 'warn'; # noop, as endpoint already created by here
 
     my @expected_warnings = (
         '.*Job type NOT doesn\'t exist in Confirm.',
@@ -1648,7 +1648,7 @@ subtest 'GET jobs alongside enquiries' => sub {
 };
 
 subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
-    local $ENV{TEST_LOGGER} = 'warn';
+    local $ENV{TEST_LOGGER} = 'warn'; # noop, as endpoint already created by here
 
     my @expected_warnings = (
         '.*Missing reverse job status mapping for statusCode NOT_IN_CONFIG \(jobNumber open_standard\)',
@@ -1789,9 +1789,27 @@ subtest 'GET reports - external system number filtering' => sub {
 
 subtest 'GET reports - no external system number filtering' => sub {
     # Test with regular endpoint that has no external_system_number set
-    my $res = $endpoint->run_test_request(
-        GET => '/requests.xml?jurisdiction_id=confirm_dummy&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
+    local $ENV{TEST_LOGGER} = 'warn'; # noop, as endpoint already created by here
+
+    my @expected_warnings = (
+        '.*Job type NOT doesn\'t exist in Confirm.',
+        '.*Defect type NOT doesn\'t exist in Confirm.',
+        '.*no easting/northing for Enquiry 2004',
+        '.*no easting/northing for Enquiry 2005',
+        '.*no service for job type code UNHANDLED for job unhandled_type',
+        '.*no status logs for job type code TYPE1 for job no_status_log',
     );
+
+    my $regex = join '\n', @expected_warnings;
+    $regex = qr/$regex/;
+
+    my $res;
+    stderr_like {
+        $res = $endpoint->run_test_request(
+            GET => '/requests.xml?jurisdiction_id=confirm_dummy&start_date=2018-04-17T00:00:00Z&end_date=2018-04-18T00:00:00Z',
+        );
+    } $regex, 'Various warnings';
+
     ok $res->is_success, 'valid request' or diag $res->content;
 
     # Should contain all enquiries including the one with FMS123 external system number
