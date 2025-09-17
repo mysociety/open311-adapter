@@ -407,6 +407,7 @@ sub perform_request_graphql {
     } elsif ( $args{query} ) {
         $query = $args{query};
     }
+    $self->logger->debug("GraphQL query: $query");
 
     my $body = {
         query => $query,
@@ -417,6 +418,7 @@ sub perform_request_graphql {
 
     my $response = $self->ua->request($request);
 
+    $self->logger->debug("GraphQL response: " . $response->content);
     my $content = decode_json($response->content);
 
     if ($content->{errors} && @{$content->{errors}}) {
