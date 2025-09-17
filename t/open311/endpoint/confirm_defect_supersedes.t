@@ -91,7 +91,7 @@ subtest "get service requests populates supersedes field correctly" => sub {
         GET => '/requests.xml?start_date=2025-01-01T00:00:00Z&end_date=2025-01-01T01:00:00Z',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
-    contains_string $res->content, '<supersedes></supersedes>';
+    lacks_string $res->content, '<supersedes>';
 
     $integration->unmock('perform_request_graphql');
 };
@@ -134,7 +134,7 @@ subtest "get service request updates populates supersedes field correctly" => su
         GET => '/servicerequestupdates.xml?start_date=2025-01-01T00:00:00Z&end_date=2025-01-01T01:00:00Z',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
-    contains_string $res->content, '<supersedes></supersedes>';
+    lacks_string $res->content, '<supersedes>';
 
     $integration->unmock('perform_request_graphql');
 };

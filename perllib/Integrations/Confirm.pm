@@ -154,20 +154,6 @@ has completion_statuses => (
     default => sub { $_[0]->config->{completion_statuses} || [] }
 );
 
-
-=head2 include_supersedes_field_for_defects
-
-If this is set, when using GraphQL to fetch defects and defect updates an
-extra 'supersedes' field will be returned which will be populated with the
-service_request_id of a defect superseded by this defect, if present.
-
-=cut
-
-has include_supersedes_field_for_defects => (
-    is => 'lazy',
-    default => sub { $_[0]->config->{include_supersedes_field_for_defects} }
-);
-
 =head2 external_system_number
 
 A code to use to mark enquiries we submit as coming from us; with this set,
@@ -559,11 +545,6 @@ sub defects_graphql_query { # XXX factor together with jobs?
         join( ',', @defect_type_codes ),
     );
 
-    my $defect_supersedes_field;
-    if ($self->config->{include_supersedes_field_for_defects}) {
-        $defect_supersedes_field = "supersedesDefectNumber";
-    }
-
     return <<"GRAPHQL"
 {
   defects(
@@ -576,7 +557,7 @@ sub defects_graphql_query { # XXX factor together with jobs?
         }
   ) {
     defectNumber
-    $defect_supersedes_field
+    supersedesDefectNumber
     easting
     northing
     loggedDate
@@ -641,11 +622,6 @@ sub defect_status_logs_graphql_query {
         join( ',', @status_codes ),
     );
 
-    my $defect_supersedes_field;
-    if ($self->config->{include_supersedes_field_for_defects}) {
-        $defect_supersedes_field = "supersedesDefectNumber";
-    }
-
     return <<GRAPHQL;
 {
     jobStatusLogs(
@@ -669,7 +645,7 @@ sub defect_status_logs_graphql_query {
                     inList: [ $defect_type_codes_str ]
                 }
             }) {
-                $defect_supersedes_field
+                supersedesDefectNumber
                 defectNumber
                 targetDate
             }
