@@ -49,4 +49,52 @@ subtest 'POST update' => sub {
     is $res->content, $expected_update_post;
 };
 
+my $returned_update_get = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_request_updates>
+  <request_update>
+    <update_id>2003</update_id>
+    <service_request_id>1001</service_request_id>
+    <status>OPEN</status>
+    <description>This is an update</description>
+    <updated_datetime>2025-09-22T09:00:00Z</updated_datetime>
+  </request_update>
+  <request_update>
+    <update_id>2004</update_id>
+    <service_request_id>1002</service_request_id>
+    <status>OPEN</status>
+    <description>A citizen has provided a follow-up to the original enquiry.</description>
+    <updated_datetime>2025-09-22T10:00:00Z</updated_datetime>
+  </request_update>
+</service_request_updates>
+XML
+
+my $expected_update_get = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_request_updates>
+  <request_update>
+    <description>This is an update</description>
+    <media_url></media_url>
+    <service_request_id>1001</service_request_id>
+    <status>open</status>
+    <update_id>2003</update_id>
+    <updated_datetime>2025-09-22T09:00:00Z</updated_datetime>
+  </request_update>
+</service_request_updates>
+XML
+
+$ua->mock(get => sub {
+    my $args = $_[2];
+    is $args->{service_code}, undef;
+    return HTTP::Response->new(200, 'OK', [], $returned_update_get);
+});
+
+subtest 'GET updates' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.xml?api_key=test&start_date=2019-10-23T00:00:00Z&end_date=2019-10-24T00:00:00Z',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+    is $res->content, $expected_update_get;
+};
+
 done_testing;
