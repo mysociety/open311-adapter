@@ -86,7 +86,7 @@ subtest "looking up of completion photos" => sub {
         GET => '/servicerequestupdates.xml?start_date=2022-10-23T00:00:00Z&end_date=2022-10-24T00:00:00Z',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
-    contains_string $res->content, '<media_url>http://example.com/photo/completion?jurisdiction_id=lincolnshire_confirm&amp;job=432&amp;photo=2</media_url>';
+    contains_string $res->content, '<media_url>http://example.com/photos?jurisdiction_id=lincolnshire_confirm&amp;job=432&amp;photo=2</media_url>';
 };
 
 subtest 'fetching of completion photos' => sub {
@@ -98,7 +98,7 @@ subtest 'fetching of completion photos' => sub {
         return HTTP::Response->new(200, 'OK', [Content_Type => 'image/jpeg'], 'data') if $req->uri =~ /documents\/0/;
     });
     my $res = $endpoint->run_test_request(
-        GET => '/photo/completion?jurisdiction_id=lincolnshire_confirm&job=432&photo=2'
+        GET => '/photos?jurisdiction_id=lincolnshire_confirm&job=432&photo=2'
     );
     ok $res->is_success, 'valid request' or diag $res->content;
     is $res->content, 'data';
