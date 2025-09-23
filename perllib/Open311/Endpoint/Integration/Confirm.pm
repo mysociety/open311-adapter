@@ -737,6 +737,9 @@ sub _get_service_request_updates_for_defects {
         $dt->set_time_zone( $integ->server_timezone );
 
         for my $defect ( @{$log->{job}->{defects}} ) {
+
+            my $supersedes_value = $defect->{supersedesDefectNumber} ? "DEFECT_" . $defect->{supersedesDefectNumber} : undef;
+
             push @$updates,
                 Open311::Endpoint::Service::Request::Update::mySociety->new(
                 status               => $status,
@@ -745,6 +748,9 @@ sub _get_service_request_updates_for_defects {
                 updated_datetime     => $dt,
                 external_status_code => $log->{statusCode},
                 description          => $defect->{targetDate} || '',
+                $supersedes_value  ? ( extras => {
+                    supersedes => $supersedes_value,
+                } ) : (),
             );
         }
     }
@@ -1349,6 +1355,8 @@ sub _get_service_requests_for_defects {
 
         my $description = $self->_description_for_defect($defect, $service);
 
+        my $supersedes_value = $defect->{supersedesDefectNumber} ? "DEFECT_" . $defect->{supersedesDefectNumber} : undef;
+
         my %args = (
             service => $service,
             service_request_id => 'DEFECT_' . $defect_id,
@@ -1359,7 +1367,11 @@ sub _get_service_requests_for_defects {
             # enquiries above
             latlong => [ $defect->{northing}, $defect->{easting} ],
             status => $status,
+            $supersedes_value  ? ( extras => {
+                supersedes => $supersedes_value,
+            } ) : (),
         );
+
 
         my $request = $self->new_request( %args );
 
