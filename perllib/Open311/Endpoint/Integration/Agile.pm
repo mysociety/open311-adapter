@@ -111,7 +111,10 @@ sub _garden_subscription {
 
     my $integration = $self->get_integration;
 
-    my $is_free = $integration->IsAddressFree( $args->{attributes}{uprn} );
+    my $is_free
+        = $args->{attributes}{renew_as_new_subscription}
+        ? { IsFree => 'True' }
+        : $integration->IsAddressFree( $args->{attributes}{uprn} );
 
     if ( $is_free->{IsFree} eq 'True' ) {
         my $res = $integration->SignUp( {
