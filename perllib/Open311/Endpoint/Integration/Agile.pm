@@ -123,7 +123,7 @@ sub _garden_subscription {
             Email                     => $args->{email},
             TelNumber                 => $args->{phone} || '',
             TitleCode                 => 'Default',
-            CustomerExternalReference => '',
+            CustomerExternalReference => $args->{attributes}{customer_external_ref} || '',
             ServiceContractUPRN       => $args->{attributes}{uprn},
             WasteContainerQuantity    => int( $args->{attributes}{total_containers} ) || 1,
             AlreadyHasBinQuantity => int( $args->{attributes}{current_containers} ) || 0,
