@@ -195,6 +195,11 @@ subtest 'GET service' => sub {
                 description          => 'Denotes whether subscription request is a renewal or not',
                 order                => 15,
             },
+            {   %defaults,
+                code                 => 'renew_as_new_subscription',
+                description          => 'Denotes a renewal that is being made as a new subscription due to new (unverified) user',
+                order                => 16,
+            },
         ],
     }, 'correct json returned';
 };

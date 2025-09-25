@@ -122,6 +122,14 @@ sub _build_attributes {
             required => 0,
             automated => 'hidden_field',
         ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'renew_as_new_subscription',
+            description =>
+                'Denotes a renewal that is being made as a new subscription due to new (unverified) user',
+            datatype => 'string',
+            required => 0,
+            automated => 'hidden_field',
+        ),
 
     );
 
