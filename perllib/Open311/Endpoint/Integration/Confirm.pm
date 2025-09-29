@@ -13,6 +13,8 @@ use Open311::Endpoint::Service::Request::Update::mySociety;
 use Open311::Endpoint::Service::Request::Confirm;
 use Integrations::Confirm;
 
+use MooX::HandlesVia;
+use Types::Standard qw(Maybe ArrayRef);
 use Path::Tiny;
 use SOAP::Lite; # +trace => [ qw/method debug/ ];
 
@@ -232,6 +234,30 @@ This attribute should be an arrayref of Confirm attribute codes to ignore.
 has ignored_attributes => (
     is => 'ro',
     default => sub { [] }
+);
+
+=head2 allowed_attributes
+
+Undefined or an arrayref of allowed attributes to be pulled through
+from Confirm.
+
+If an arrayref is supplied, will invert the logic for the pulling
+through of attributes to only pull through those in this list and
+will act instead of ignored_attributes.
+
+An empty array will, in effect, act as though all attributes
+had been added to ignored_attributes.
+
+=cut
+
+has allowed_attributes => (
+    is => 'ro',
+    isa => Maybe[ArrayRef],
+    handles_via => 'Array',
+    predicate => 1,
+    handles => {
+        get_allowed_attributes => 'elements',
+    }
 );
 
 =head2 ignored_attribute_options
@@ -795,7 +821,13 @@ sub _services {
 
     my $available_attributes = $self->_parse_attributes($response);
 
-    my %ignored_attribs = map { $_ => 1 } @{$self->ignored_attributes};
+    my %ignored_attribs;
+    my %allowed_attribs;
+    if ($self->has_allowed_attributes) {
+        %allowed_attribs = map { $_ => 1 } $self->get_allowed_attributes;
+    } else {
+        %ignored_attribs = map { $_ => 1 } @{$self->ignored_attributes};
+    }
     my %private_services = map { $_ => 1 } @{$self->private_services};
 
     my %services = ();
@@ -811,13 +843,13 @@ sub _services {
 
             my $subjectattributes = $subject->{SubjectAttribute};
             $subjectattributes = [ $subjectattributes ] if (ref($subjectattributes) eq 'HASH');
-
             my @attribs = map {
                 $available_attributes->{$_->{EnqAttribTypeCode}}
             } grep {
-                !$ignored_attribs{$_->{EnqAttribTypeCode}}
+                $self->has_allowed_attributes
+                    ? $allowed_attribs{$_->{EnqAttribTypeCode}}
+                    : !$ignored_attribs{$_->{EnqAttribTypeCode}};
             } @$subjectattributes;
-
             $services{$code} = {
                 service => $service,
                 subject => $subject,
