@@ -234,6 +234,24 @@ has ignored_attributes => (
     default => sub { [] }
 );
 
+=head2 allowed_attributes
+
+Undefined or an arrayref of allowed attributes to be pulled through
+from Confirm.
+
+If an arrayref is supplied, will invert the logic for the pulling
+through of attributes to only pull through those in this list and
+will act instead of ignored_attributes.
+
+An empty array will, in effect, act as though all attributes
+had been added to ignored_attributes.
+
+=cut
+
+has allowed_attributes => (
+    is => 'ro',
+);
+
 =head2 ignored_attribute_options
 
 Some options Confirm attributes should never be published in the Open311 service
@@ -795,7 +813,13 @@ sub _services {
 
     my $available_attributes = $self->_parse_attributes($response);
 
-    my %ignored_attribs = map { $_ => 1 } @{$self->ignored_attributes};
+    my %ignored_attribs;
+    my %allowed_attribs;
+    if ($self->allowed_attributes && ref $self->allowed_attributes eq 'ARRAY') {
+        %allowed_attribs = map { $_ => 1 } @{$self->allowed_attributes};
+    } else {
+        %ignored_attribs = map { $_ => 1 } @{$self->ignored_attributes};
+    }
     my %private_services = map { $_ => 1 } @{$self->private_services};
 
     my %services = ();
@@ -815,7 +839,9 @@ sub _services {
             my @attribs = map {
                 $available_attributes->{$_->{EnqAttribTypeCode}}
             } grep {
-                !$ignored_attribs{$_->{EnqAttribTypeCode}}
+                $self->allowed_attributes && ref $self->allowed_attributes eq 'ARRAY'
+                    ? $allowed_attribs{$_->{EnqAttribTypeCode}}
+                    : !$ignored_attribs{$_->{EnqAttribTypeCode}};
             } @$subjectattributes;
 
             $services{$code} = {
