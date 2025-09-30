@@ -111,7 +111,10 @@ sub _garden_subscription {
 
     my $integration = $self->get_integration;
 
-    my $is_free = $integration->IsAddressFree( $args->{attributes}{uprn} );
+    my $is_free
+        = $args->{attributes}{renew_as_new_subscription}
+        ? { IsFree => 'True' }
+        : $integration->IsAddressFree( $args->{attributes}{uprn} );
 
     if ( $is_free->{IsFree} eq 'True' ) {
         my $res = $integration->SignUp( {
@@ -120,7 +123,7 @@ sub _garden_subscription {
             Email                     => $args->{email},
             TelNumber                 => $args->{phone} || '',
             TitleCode                 => 'Default',
-            CustomerExternalReference => '',
+            CustomerExternalReference => $args->{attributes}{customer_external_ref} || '',
             ServiceContractUPRN       => $args->{attributes}{uprn},
             WasteContainerQuantity    => int( $args->{attributes}{total_containers} ) || 1,
             AlreadyHasBinQuantity => int( $args->{attributes}{current_containers} ) || 0,
