@@ -268,6 +268,9 @@ sub post_service_request {
     my $AdminArea = $args->{attributes}->{AdminArea};
     my $AdminAreaDescr = $self->admin_areas->{$AdminArea};
 
+    my $text = "$args->{attributes}->{title}\n\n$args->{attributes}->{description}";
+    $text =~ s/(\r?\n)+/ . /g;
+
     my $serviceRequest = {
         'Info' => {
             AdminAreaDescr => $AdminAreaDescr,
@@ -277,7 +280,7 @@ sub post_service_request {
         },
         'Maint' => {
             Location => $args->{attributes}->{title},
-            Problem => "$args->{attributes}->{title}\n\n$args->{attributes}->{description}",
+            Problem => $text,
             Easting => $args->{attributes}->{easting},
             Northing => $args->{attributes}->{northing},
             AdminArea => $AdminArea,
