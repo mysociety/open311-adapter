@@ -13,6 +13,8 @@ use Open311::Endpoint::Service::Request::Update::mySociety;
 use Open311::Endpoint::Service::Request::Confirm;
 use Integrations::Confirm;
 
+use MooX::HandlesVia;
+use Types::Standard qw(Maybe ArrayRef);
 use Path::Tiny;
 use SOAP::Lite; # +trace => [ qw/method debug/ ];
 
@@ -250,6 +252,12 @@ had been added to ignored_attributes.
 
 has allowed_attributes => (
     is => 'ro',
+    isa => Maybe[ArrayRef],
+    handles_via => 'Array',
+    predicate => 1,
+    handles => {
+        get_allowed_attributes => 'elements',
+    }
 );
 
 =head2 ignored_attribute_options
@@ -815,8 +823,8 @@ sub _services {
 
     my %ignored_attribs;
     my %allowed_attribs;
-    if ($self->allowed_attributes && ref $self->allowed_attributes eq 'ARRAY') {
-        %allowed_attribs = map { $_ => 1 } @{$self->allowed_attributes};
+    if ($self->has_allowed_attributes) {
+        %allowed_attribs = map { $_ => 1 } $self->get_allowed_attributes;
     } else {
         %ignored_attribs = map { $_ => 1 } @{$self->ignored_attributes};
     }
@@ -835,15 +843,13 @@ sub _services {
 
             my $subjectattributes = $subject->{SubjectAttribute};
             $subjectattributes = [ $subjectattributes ] if (ref($subjectattributes) eq 'HASH');
-
             my @attribs = map {
                 $available_attributes->{$_->{EnqAttribTypeCode}}
             } grep {
-                $self->allowed_attributes && ref $self->allowed_attributes eq 'ARRAY'
+                $self->has_allowed_attributes
                     ? $allowed_attribs{$_->{EnqAttribTypeCode}}
                     : !$ignored_attribs{$_->{EnqAttribTypeCode}};
             } @$subjectattributes;
-
             $services{$code} = {
                 service => $service,
                 subject => $subject,
