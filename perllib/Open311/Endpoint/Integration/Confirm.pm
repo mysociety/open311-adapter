@@ -659,10 +659,15 @@ GRAPHQL
             # FMS to handle this.
             my $extras;
             my $service_code = $status_log->{centralEnquiry}->{serviceCode} . "_" . $status_log->{centralEnquiry}->{subjectCode};
-            if ( my $service = $services{$service_code} ) {
+            my $service = $services{$service_code} || $self->_find_wrapping_service($service_code, \%services);
+            if ( $service ) {
                 $extras = {
                     category => $service->service_name,
                     group => @{$service->groups} ? $service->groups->[0] : $service->group,
+                    # Need to send this in case it's a wrapped service, so FMS
+                    # can correctly populate the _wrapped_service_code extra
+                    # field on the report.
+                    original_service_code => $service_code,
                 };
             }
             my $enquiry_id = $status_log->{enquiryNumber};

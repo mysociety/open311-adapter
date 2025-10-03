@@ -51,6 +51,60 @@ $open311->mock(perform_request => sub {
     return {};
 });
 $open311->mock(endpoint_url => sub { 'http://example.org/' });
+$open311->mock(config => sub {
+    {
+        server_timezone => 'Europe/London',
+        graphql_key => 'test-key',
+        web_url => 'http://example.org/web',
+        tenant_id => 'test',
+    }
+});
+$open311->mock(perform_request_graphql => sub {
+    my ($self, %args) = @_;
+
+    if ($args{query} =~ /enquiryStatusLogs/) {
+        return {
+            data => {
+                enquiryStatusLogs => [
+                    {
+                        enquiryNumber => '1001',
+                        enquiryStatusCode => 'INP',
+                        logNumber => '1',
+                        loggedDate => '2018-03-01T12:00:00+00:00',
+                        notes => 'Update for small pothole',
+                        centralEnquiry => {
+                            subjectCode => 'PHS',
+                            serviceCode => 'HM'
+                        }
+                    },
+                    {
+                        enquiryNumber => '1002',
+                        enquiryStatusCode => 'FIX',
+                        logNumber => '2',
+                        loggedDate => '2018-03-01T13:00:00+00:00',
+                        notes => 'Fixed large pothole',
+                        centralEnquiry => {
+                            subjectCode => 'PHL',
+                            serviceCode => 'HM'
+                        }
+                    },
+                    {
+                        enquiryNumber => '1003',
+                        enquiryStatusCode => 'INP',
+                        logNumber => '3',
+                        loggedDate => '2018-03-01T14:00:00+00:00',
+                        notes => 'Update for bridge',
+                        centralEnquiry => {
+                            subjectCode => 'STP4',
+                            serviceCode => 'ST'
+                        }
+                    }
+                ]
+            }
+        };
+    }
+    return {};
+});
 
 my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
 
@@ -216,6 +270,60 @@ subtest "GET wrapped Service List Description" => sub {
   </attributes>
   <service_code>POTHOLES</service_code>
 </service_definition>
+XML
+    is_string $res->content, $expected;
+};
+
+subtest "GET Service Request Updates with category change for wrapped services" => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.xml?start_date=2018-03-01T00:00:00Z&end_date=2018-03-02T00:00:00Z'
+    );
+    my $expected = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_request_updates>
+  <request_update>
+    <description></description>
+    <external_status_code>INP</external_status_code>
+    <extras>
+      <category>Pothole</category>
+      <group>Road defects</group>
+      <original_service_code>HM_PHS</original_service_code>
+    </extras>
+    <media_url></media_url>
+    <service_request_id>1001</service_request_id>
+    <status>open</status>
+    <update_id>1001_1</update_id>
+    <updated_datetime>2018-03-01T12:00:00+00:00</updated_datetime>
+  </request_update>
+  <request_update>
+    <description></description>
+    <external_status_code>FIX</external_status_code>
+    <extras>
+      <category>Pothole</category>
+      <group>Road defects</group>
+      <original_service_code>HM_PHL</original_service_code>
+    </extras>
+    <media_url></media_url>
+    <service_request_id>1002</service_request_id>
+    <status>open</status>
+    <update_id>1002_2</update_id>
+    <updated_datetime>2018-03-01T13:00:00+00:00</updated_datetime>
+  </request_update>
+  <request_update>
+    <description></description>
+    <external_status_code>INP</external_status_code>
+    <extras>
+      <category>Broken bridge</category>
+      <group>Bridges and safety barriers</group>
+      <original_service_code>ST_STP4</original_service_code>
+    </extras>
+    <media_url></media_url>
+    <service_request_id>1003</service_request_id>
+    <status>open</status>
+    <update_id>1003_3</update_id>
+    <updated_datetime>2018-03-01T14:00:00+00:00</updated_datetime>
+  </request_update>
+</service_request_updates>
 XML
     is_string $res->content, $expected;
 };
