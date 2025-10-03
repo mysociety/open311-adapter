@@ -1549,6 +1549,7 @@ sub _wrap_services {
                 datatype => "singlevaluelist",
                 required => 1,
                 values => \%wrapped_services,
+                values_sorted => $self->wrapped_services->{$code}->{wraps},
             ),
         );
         my %seen_attributes = (_wrapped_service_code => 1);

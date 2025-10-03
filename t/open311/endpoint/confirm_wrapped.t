@@ -157,12 +157,12 @@ subtest "GET wrapped Service List Description" => sub {
       <required>true</required>
       <values>
         <value>
-          <name>Large pothole</name>
-          <key>HM_PHL</key>
-        </value>
-        <value>
           <name>Small pothole</name>
           <key>HM_PHS</key>
+        </value>
+        <value>
+          <name>Large pothole</name>
+          <key>HM_PHL</key>
         </value>
       </values>
       <variable>true</variable>

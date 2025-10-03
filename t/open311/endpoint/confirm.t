@@ -247,10 +247,8 @@ $open311->mock(perform_request => sub {
             return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 1003, EnquiryLogNumber => 3 } } } };
         }
         if ($req{EnquiryNumber} eq '1004') {
-            # Changing categories when using wrapped services is currently not
-            # supported, so check that ServiceCode/Subject code don't get set.
-            is $req{ServiceCode}, undef, 'ServiceCode not set for wrapped service';
-            is $req{SubjectCode}, undef, 'SubjectCode not set for wrapped service';
+            is $req{ServiceCode}, 'ABC', 'ServiceCode set from wrapped service';
+            is $req{SubjectCode}, 'GHI', 'SubjectCode set from wrapped service';
             return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 1004, EnquiryLogNumber => 3 } } } };
         }
         return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 2001, EnquiryLogNumber => 2 } } } };

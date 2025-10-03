@@ -972,13 +972,11 @@ sub operation_for_update {
     # ServiceCode/SubjectCode, as well as handle any default values for
     # attributes on the new service
     if ($new_service) {
-        my ($serv, $subj) = split /_/, $new_service->service_code;
-        # TODO: wrapped services are a problem - at this point the $new_service
-        # is the wrapped service so we can't split its code into a valid Confirm
-        # service/subject code. For now we just skip over if we can't break the
-        # service code apart but this does need handling properly at some point.
-        # This approach will cause invalid service/subject codes to be sent to
-        # Confirm if a wrapped service's Open311 code has an underscore...
+        # If the new service is a wrapping service we need to 'unwrap' one of
+        # the contained services so we have a valid Confirm service/subject code
+        # to send.
+        my $new_service_code = $self->_get_wrapped_service_code($new_service);
+        my ($serv, $subj) = split /_/, $new_service_code;
         if ( $serv && $subj ) {
             $enq->{ServiceCode} = $serv;
             $enq->{SubjectCode} = $subj;
@@ -1016,6 +1014,29 @@ sub operation_for_update {
             @elements
         ))
     );
+}
+
+=head2 _get_wrapped_service_code
+
+If this service wraps others then find the wrapped code and return it.
+Otherwise returns the service_code of the service that was passed.
+
+When a wrapped service exists, returns the first service code from the
+values_sorted array, which preserves the order defined in the config.
+
+=cut
+
+sub _get_wrapped_service_code {
+    my ($self, $service) = @_;
+
+    my @attributes = @{ $service->attributes };
+    my ($wrapped_codes) = grep { $_->code eq '_wrapped_service_code' } @attributes;
+    return $service->service_code unless $wrapped_codes;
+    my @sorted_values = $wrapped_codes->get_sorted_values;
+    return $sorted_values[0] if @sorted_values;
+    # Fallback to sorted keys if values_sorted is not populated
+    my ($wrapped_code) = sort keys %{ $wrapped_codes->values };
+    return $wrapped_code
 }
 
 sub GetEnquiryStatusChanges {
