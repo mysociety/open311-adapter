@@ -1085,12 +1085,6 @@ sub operation_for_update {
     # attributes on the new service
     if ($new_service) {
         my ($serv, $subj) = split /_/, $new_service->service_code;
-        # TODO: wrapped services are a problem - at this point the $new_service
-        # is the wrapped service so we can't split its code into a valid Confirm
-        # service/subject code. For now we just skip over if we can't break the
-        # service code apart but this does need handling properly at some point.
-        # This approach will cause invalid service/subject codes to be sent to
-        # Confirm if a wrapped service's Open311 code has an underscore...
         if ( $serv && $subj ) {
             $enq->{ServiceCode} = $serv;
             $enq->{SubjectCode} = $subj;
