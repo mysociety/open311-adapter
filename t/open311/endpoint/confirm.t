@@ -247,11 +247,14 @@ $open311->mock(perform_request => sub {
             return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 1003, EnquiryLogNumber => 3 } } } };
         }
         if ($req{EnquiryNumber} eq '1004') {
-            # Changing categories when using wrapped services is currently not
-            # supported, so check that ServiceCode/Subject code don't get set.
-            is $req{ServiceCode}, undef, 'ServiceCode not set for wrapped service';
-            is $req{SubjectCode}, undef, 'SubjectCode not set for wrapped service';
+            is $req{ServiceCode}, 'ABC', 'ServiceCode set from wrapped service';
+            is $req{SubjectCode}, 'GHI', 'SubjectCode set from wrapped service';
             return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 1004, EnquiryLogNumber => 3 } } } };
+        }
+        if ($req{EnquiryNumber} eq '1005') {
+            is $req{ServiceCode}, undef, 'ServiceCode not set';
+            is $req{SubjectCode}, undef, 'SubjectCode not set';
+            return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 1005, EnquiryLogNumber => 2 } } } };
         }
         return { OperationResponse => { EnquiryUpdateResponse => { Enquiry => { EnquiryNumber => 2001, EnquiryLogNumber => 2 } } } };
     } elsif ($op->name eq 'GetEnquiryStatusChanges') {
@@ -1477,7 +1480,7 @@ subtest 'POST update with category change' => sub {
         api_key => 'test',
         service_request_id => 1004,
         update_id => 124,
-        service_code => 'POTHOLES',
+        service_code => 'ABC_GHI',
         first_name => 'Bob',
         last_name => 'Mould',
         description => 'Category change update',
@@ -1492,6 +1495,35 @@ my $expected = <<XML;
 <service_request_updates>
   <request_update>
     <update_id>1004_3</update_id>
+  </request_update>
+</service_request_updates>
+XML
+
+    is_string $res->content, $expected, 'xml string ok'
+    or diag $res->content;
+};
+
+subtest 'POST update with category change - invalid service code' => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.xml',
+        api_key => 'test',
+        service_request_id => 1005,
+        update_id => 124,
+        service_code => 'POTHOLES',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => 'Category change update',
+        status => 'OPEN',
+        updated_datetime => '2016-09-01T15:00:00Z',
+        media_url => 'http://example.org/',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+my $expected = <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_request_updates>
+  <request_update>
+    <update_id>1005_2</update_id>
   </request_update>
 </service_request_updates>
 XML
