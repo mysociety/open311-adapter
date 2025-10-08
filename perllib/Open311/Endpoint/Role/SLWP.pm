@@ -14,6 +14,8 @@ package Open311::Endpoint::Role::SLWP;
 use utf8;
 use Moo::Role;
 
+has cancel_actiontype_id => ( is => 'ro', default => 518 );
+
 around check_for_data_value => sub {
     my ($orig, $class, $name, $args, $request, $parent_name) = @_;
 

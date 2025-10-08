@@ -24,8 +24,6 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
-has cancel_actiontype_id => ( is => 'ro', default => 8 );
-
 =head2 process_service_request_args
 
 If we are sending an assisted collection event, we need to set some special

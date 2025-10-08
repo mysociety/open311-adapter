@@ -682,7 +682,8 @@ GRAPHQL
             # FMS to handle this.
             my $extras;
             my $service_code = $status_log->{centralEnquiry}->{serviceCode} . "_" . $status_log->{centralEnquiry}->{subjectCode};
-            if ( my $service = $services{$service_code} ) {
+            my $service = $services{$service_code} || $self->_find_wrapping_service($service_code, \%services);
+            if ( $service ) {
                 $extras = {
                     category => $service->service_name,
                     group => @{$service->groups} ? $service->groups->[0] : $service->group,
@@ -1651,6 +1652,7 @@ sub _wrap_services {
                 datatype => "singlevaluelist",
                 required => 1,
                 values => \%wrapped_services,
+                values_sorted => $self->wrapped_services->{$code}->{wraps},
             ),
         );
         my %seen_attributes = (_wrapped_service_code => 1);
