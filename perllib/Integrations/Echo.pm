@@ -116,6 +116,7 @@ sub extensible_data {
     my @data;
     foreach (@$data) {
         my $data = ixhash(
+            $_->{existing_id} ? (Guid => $_->{existing_id}) : (),
             $_->{childdata} ? (ChildData => extensible_data($_->{childdata})) : (),
             DatatypeId => $_->{id},
             Value => $_->{value},
