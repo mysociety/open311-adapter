@@ -527,4 +527,105 @@ sub update_event_payment {
     $args->{description} = ''; # Blank out so nothing sent to Echo now
 }
 
+=head2 amend_booking
+
+If we are sent through a same-day booking amendment, carry out the steps
+needed to update the booking in Echo. This is currently only for SLWP,
+and includes hard-coded SLWP IDs.
+
+=cut
+
+sub amend_booking {
+    my ($self, $args) = @_;
+
+    my $integ = $self->get_integration;
+    my $event = $integ->GetEvent($args->{service_request_id}, $args->{id_type});
+
+    my $remove_data = $self->_amend_booking_remove_step($event, $args);
+    my $add_data = $self->_amend_booking_add_step($args);
+
+    $integ->UpdateEvent({ id => $event->{Id}, data => $remove_data });
+    $integ->UpdateEvent({ id => $event->{Id}, data => $add_data });
+}
+
+# Removing involves setting the quantity of the original items to 0, removing images, updating the location
+sub _amend_booking_remove_step {
+    my ($self, $event, $args) = @_;
+    my $location = $args->{attributes}{amend_location};
+    my $updated_location = 0;
+    my $data = [];
+    foreach (@{$event->{Data}{ExtensibleDatum}}) {
+        if ($location && $_->{DatatypeId} == 57224) {
+            $updated_location = 1;
+            push @$data, {
+                id => $_->{DatatypeId},
+                existing_id => $_->{Guid},
+                value => $location,
+            };
+        }
+        if ($_->{DatatypeId} == 57228) {
+            push @$data, {
+                id => $_->{DatatypeId},
+                existing_id => $_->{Guid},
+                value => "",
+            };
+        }
+        if ($_->{DatatypeId} == 57229) {
+            my $parent_id = $_->{Guid};
+            foreach (@{$_->{ChildData}{ExtensibleDatum}}) {
+                next unless $_->{DatatypeId} == 57232;
+                push @$data, {
+                    id => 57229,
+                    existing_id => $parent_id,
+                    childdata => [ { id => $_->{DatatypeId}, existing_id => $_->{Guid}, value => 0 } ],
+                };
+            }
+        }
+    }
+
+    if (!$updated_location && $location) {
+        push @$data, { id => 57224, value => $location, };
+    }
+
+    return $data;
+}
+
+# Adding involves adding all the new items and images we've been sent
+sub _amend_booking_add_step {
+    my ($self, $args) = @_;
+
+    my @items = split /::/, $args->{attributes}{amend_items};
+    my @notes = split /::/, $args->{attributes}{amend_notes};
+
+    my @images;
+    if (@{$args->{media_url}}) {
+        foreach (@{$args->{media_url}}) {
+            my $photo = $self->ua->get($_);
+            push @images, encode_base64($photo->content, '');
+        }
+    } elsif (@{$args->{uploads}}) {
+        foreach (@{$args->{uploads}}) {
+            my $photo = path($_)->slurp;
+            push @images, encode_base64($photo, '');
+        }
+    }
+
+    my $data = [];
+    foreach (@images) {
+        push @$data, { id => 57228, value => $_ };
+    }
+
+    for (0..@items-1) {
+        push @$data, {
+            id => 57229,
+            childdata => [
+                { id => 57230, value => $items[$_] },
+                { id => 57231, value => $notes[$_] },
+            ],
+        };
+    }
+
+    return $data;
+}
+
 1;

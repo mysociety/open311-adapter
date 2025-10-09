@@ -80,14 +80,50 @@ $soap_lite->mock(call => sub {
                 is $data[3], undef;
             }
         } elsif (@params == 2) {
-            is $params[0]->value, '123pay';
-            my @data = ${$params[1]->value}->value->value;
-            my @ref = ${$data[0]->value}->value;
-            is $ref[0]->value, 57236;
-            is $ref[1]->value->value, 'ABC'; # Is wrapped to make it a string
-            my @amount = ${$data[1]->value}->value;
-            is $amount[0]->value, 57237;
-            is $amount[1]->value->value, '34.56';
+            if ($params[0]->value eq '123pay') {
+                is $params[0]->value, '123pay';
+                my @data = ${$params[1]->value}->value->value;
+                my @ref = ${$data[0]->value}->value;
+                is $ref[0]->value, 57236;
+                is $ref[1]->value->value, 'ABC'; # Is wrapped to make it a string
+                my @amount = ${$data[1]->value}->value;
+                is $amount[0]->value, 57237;
+                is $amount[1]->value->value, '34.56';
+            } elsif ($params[0]->value eq '123amend') {
+                my @data = ${$params[1]->value}->value->value;
+                if (@data == 3) { # Removal
+                    my @loc = ${$data[0]->value}->value;
+                    is $loc[0]->value, 57224;
+                    is $loc[1]->value, 'New location';
+                    for (1..2) {
+                        my ($guid, $item, $datatypeid) = ${$data[$_]->value}->value;
+                        is $guid->name, 'Guid';
+                        is $guid->value, 'item_' . $_ . '_parent';
+                        is $datatypeid->name, 'DatatypeId';
+                        is $datatypeid->value, 57229;
+                        my @childdata = ${$item->value}->value->value;
+                        my @q = ${$childdata[0]->value}->value;
+                        is $q[0]->value, 'item_' . $_ . '_num';
+                        is $q[1]->value, 57232;
+                        is $q[2]->value, 0;
+                    }
+                } elsif (@data == 2) { # Adding
+                    for (0..1) {
+                        my ($item, $datatypeid) = ${$data[$_]->value}->value;
+                        my @childdata = ${$item->value}->value->value;
+                        my @item = ${$childdata[0]->value}->value;
+                        is $item[0]->value, 57230;
+                        is $item[1]->value, $_ ? 45 : 34;
+                        my @notes = ${$childdata[1]->value}->value;
+                        is $notes[0]->value, 57231;
+                        is $notes[1]->value, $_ ? undef : 'Notes';
+                    }
+                } else {
+                    is @params, 'UNKNOWN';
+                }
+            } else {
+                is @params, 'UNKNOWN';
+            }
         } else {
             is @params, 'UNKNOWN';
         }
@@ -95,10 +131,31 @@ $soap_lite->mock(call => sub {
             EventGuid => '1234',
         });
     } elsif ($method eq 'GetEvent') {
+        my @params = ${$args[3]->value}->value;
+        my $id = ${$params[2]->value}->value->value;
         return SOAP::Result->new(result => {
-            Id => '123pay',
+            Id => $id,
             EventTypeId => EVENT_TYPE_BULKY,
             EventStateId => 4002,
+            Data => { ExtensibleDatum => [
+                { DatatypeId => 57224, DatatypeName => 'Exact Location', Value => 'Location' },
+                { DatatypeId => 57229, DatatypeName => 'TEM - Bulky Collection',
+                    Guid => 'item_1_parent', Value => '',
+                    ChildData => { ExtensibleDatum => [
+                        { Guid => 'item_1_id', DatatypeId => 57230, DatatypeName => 'Item', value => 1865 },
+                        { Guid => 'item_1_num', DatatypeId => 57232, DatatypeName => 'Quantity', value => 1 },
+                        { Guid => 'item_1_desc', DatatypeId => 57231, DatatypeName => 'Description', value => 'description' },
+                    ] },
+                },
+                { DatatypeId => 57229, DatatypeName => 'TEM - Bulky Collection',
+                    Guid => 'item_2_parent', Value => '',
+                    ChildData => { ExtensibleDatum => [
+                        { Guid => 'item_2_id', DatatypeId => 57230, DatatypeName => 'Item', value => 1866 },
+                        { Guid => 'item_2_num', DatatypeId => 57232, DatatypeName => 'Quantity', value => 1 },
+                        { Guid => 'item_2_desc', DatatypeId => 57231, DatatypeName => 'Description', value => 'description' },
+                    ] },
+                },
+            ] },
         });
     } elsif ($method eq 'GetEventType') {
         my @params = ${$args[3]->value}->value;
@@ -144,9 +201,15 @@ $soap_lite->mock(call => sub {
     } elsif ($method eq 'PerformEventAction') {
         my @params = ${$args[3]->value}->value;
         is @params, 2, 'No notes';
-        my $ref = ${(${$params[1]->value}->value)[2]->value}->value->value->value;
         my $actiontype_id = $params[0]->value;
-        is $actiontype_id, 518;
+        my $ref = ${(${$params[1]->value}->value)[2]->value}->value->value->value;
+        if ($ref eq '123amend') {
+            is $actiontype_id, 520; # Amend
+        } elsif ($ref eq '123cancel') {
+            is $actiontype_id, 518; # Cancel
+        } else {
+            is @params, 'UNKNOWN';
+        }
         return SOAP::Result->new(result => { EventActionGuid => 'ABC' });
     } else {
         is $method, 'UNKNOWN';
@@ -251,6 +314,31 @@ subtest "POST a successful payment" => sub {
     is_deeply decode_json($res->content),
         [ {
             "update_id" => 'BLANK',
+        } ], 'correct json returned';
+};
+
+subtest "POST an amendment" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        updated_datetime => '2023-09-01T19:00:00+01:00',
+        service_request_id => '123amend',
+        update_id => 456,
+        status => 'OPEN',
+        description => 'Booking amended',
+        'attribute[amend_items]' => '34::45',
+        'attribute[amend_notes]' => 'Notes::',
+        'attribute[amend_images]' => 'image.jpeg',
+        'attribute[amend_location]' => 'New location',
+        first_name => 'Bob',
+        last_name => 'Mould',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "update_id" => 'ABC',
         } ], 'correct json returned';
 };
 
