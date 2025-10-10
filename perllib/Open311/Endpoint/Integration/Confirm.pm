@@ -592,8 +592,12 @@ sub post_service_request_update {
         $args->{status_code} = $status_code;
     }
 
-    # If service_code is provided, look up the service and pass it to the integration layer
-    $args->{_new_service} = $self->service($args->{service_code}) if $args->{service_code};
+    # If service_code is provided, validate it and look up the service and  pass
+    # it to the integration layer.
+    if ($args->{service_code}) {
+        my %services = map { $_->service_code => $_ } $self->_services;
+        $args->{_new_service} = $services{$args->{service_code}};
+    }
 
     my $response = $self->get_integration->EnquiryUpdate($args);
     my $enquiry = $response->{OperationResponse}->{EnquiryUpdateResponse}->{Enquiry};

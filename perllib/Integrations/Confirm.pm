@@ -1018,11 +1018,7 @@ sub operation_for_update {
     # ServiceCode/SubjectCode, as well as handle any default values for
     # attributes on the new service
     if ($new_service) {
-        # If the new service is a wrapping service we need to 'unwrap' one of
-        # the contained services so we have a valid Confirm service/subject code
-        # to send.
-        my $new_service_code = $self->_get_wrapped_service_code($new_service);
-        my ($serv, $subj) = split /_/, $new_service_code;
+        my ($serv, $subj) = split /_/, $new_service->service_code;
         if ( $serv && $subj ) {
             $enq->{ServiceCode} = $serv;
             $enq->{SubjectCode} = $subj;
