@@ -25,3 +25,16 @@ defect_attributes:
   depth:
     name: "Depth"
     numeric: true
+feature_attributes:
+  CCAT:
+    name: "Carriageway Category"
+    values:
+      1: "Category 1"
+      2: "Category 2"
+      3: "Category 3"
+  SPD:
+    name: "Speed Limit"
+    values:
+      20: "20 mph"
+      30: "30 mph"
+      40: "40 mph"

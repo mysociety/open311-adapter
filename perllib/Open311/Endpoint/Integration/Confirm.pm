@@ -643,6 +643,14 @@ sub get_service_request_updates {
       enquiryLink {
         defect {
           targetDate
+          feature {
+            attribute_CCAT {
+              attributeValueCode
+            }
+            attribute_SPD {
+              attributeValueCode
+            }
+          }
         }
       }
     }
@@ -662,7 +670,7 @@ GRAPHQL
             # The enquiry's service/subject codes may have changed with this
             # update, so find the corresponding Open311 service code to allow
             # FMS to handle this.
-            my $extras = {};
+            my $extras;
             my $service_code = $status_log->{centralEnquiry}->{serviceCode} . "_" . $status_log->{centralEnquiry}->{subjectCode};
             if ( my $service = $services{$service_code} ) {
                 $extras = {
@@ -672,8 +680,19 @@ GRAPHQL
             }
 
             # If there is an attached defect with a targetDate set, include that in extras too
-            if ( $status_log->{centralEnquiry}->{enquiryLink} && $status_log->{centralEnquiry}->{enquiryLink}->{defect} && $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{targetDate} ) {
-                $extras->{targetDate} = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{targetDate};
+            if ( my $targetDate = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{targetDate} ) {
+                $extras ||= {};
+                $extras->{targetDate} = $targetDate;
+            }
+
+            # There might be some feature attribute values we want too
+            if ( my $featureCCAT = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{feature}->{attribute_CCAT}->{attributeValueCode} ) {
+                $extras ||= {};
+                $extras->{featureCCAT} = $featureCCAT;
+            }
+            if ( my $featureSPD = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{feature}->{attribute_SPD}->{attributeValueCode} ) {
+                $extras ||= {};
+                $extras->{featureSPD} = $featureSPD;
             }
 
             my $enquiry_id = $status_log->{enquiryNumber};
@@ -773,6 +792,15 @@ sub _get_service_request_updates_for_defects {
         $dt->set_time_zone( $integ->server_timezone );
 
         for my $defect ( @{$log->{job}->{defects}} ) {
+            my $extras = {
+                targetDate => $defect->{targetDate} || '',
+            };
+            if ( my $featureCCAT = $defect->{feature}->{attribute_CCAT}->{attributeValueCode} ) {
+                $extras->{featureCCAT} = $featureCCAT;
+            }
+            if ( my $featureSPD = $defect->{feature}->{attribute_SPD}->{attributeValueCode} ) {
+                $extras->{featureSPD} = $featureSPD;
+            }
             push @$updates,
                 Open311::Endpoint::Service::Request::Update::mySociety->new(
                 status               => $status,
@@ -781,9 +809,7 @@ sub _get_service_request_updates_for_defects {
                 updated_datetime     => $dt,
                 external_status_code => $log->{statusCode},
                 description          => '',
-                extras => {
-                    targetDate => $defect->{targetDate} || '',
-                },
+                extras               => $extras,
             );
         }
     }
@@ -1201,7 +1227,7 @@ sub _parse_enquiry_status_log {
         ($status_log->{StatusLogNotes} || "") :
         "";
     my $status = $self->reverse_status_mapping->{$status_log->{EnquiryStatusCode}};
-    next if $status && $status eq 'IGNORE';
+    return if $status && $status eq 'IGNORE';
     if (!$status) {
         $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code $status_log->{EnquiryStatusCode} (EnquiryNumber $enquiry_id)");
         $status = "open";
