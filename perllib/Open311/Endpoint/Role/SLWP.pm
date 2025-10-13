@@ -30,6 +30,12 @@ around post_service_request_update => sub {
     my ($orig, $class, $args) = @_;
     return $class->$orig($args) unless $args->{description};
 
+    if (my $amend = $args->{attributes}{amend_items}) {
+        $class->amend_booking($args);
+        $args->{actiontype_id} = 520; # Amend items
+        $args->{datatype_id} = 0;
+    }
+
     if (my $payments = $args->{attributes}{payments}) {
         my @data = split /\|/, $payments;
         my @payments;
