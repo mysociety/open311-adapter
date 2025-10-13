@@ -44,23 +44,33 @@ sub _defect_attributes_description {
     my ($self, $defect) = @_;
 
     my $integ = $self->get_integration;
-    my $mapping = $integ->config->{defect_attributes};
-
-    return '' unless $mapping;
-
     my $desc = '';
-    try {
-        my $res = $integ->json_web_api_call("/defects/" . $defect->{defectNumber});
-        foreach my $attr (@{ $res->{attributes} }) {
-            my $k = $attr->{type}->{key};
-            if (my $c = $mapping->{$k}) {
-                my $name = $c->{name} || $attr->{name};
-                my $value = $c->{numeric} ? $attr->{numericValue} : $c->{values}->{$attr->{pickValue}->{key}};
-                $value ||= $attr->{currentValue};
-                $desc .= "$name: $value\n";
+
+    my $mapping;
+    if ( $mapping = $integ->config->{defect_attributes} ) {
+        try {
+            my $res = $integ->json_web_api_call("/defects/" . $defect->{defectNumber});
+            foreach my $attr (@{ $res->{attributes} }) {
+                my $k = $attr->{type}->{key};
+                if (my $c = $mapping->{$k}) {
+                    my $name = $c->{name} || $attr->{name};
+                    my $value = $c->{numeric} ? $attr->{numericValue} : $c->{values}->{$attr->{pickValue}->{key}};
+                    $value ||= $attr->{currentValue};
+                    $desc .= "$name: $value\n";
+                }
+            }
+        };
+    }
+
+    if ( $mapping = $integ->config->{feature_attributes} ) {
+        foreach my $k ( keys %$mapping ) {
+            if ( my $val = $defect->{feature}->{"attribute_$k"}->{attributeValueCode} ) {
+                my $c = $mapping->{$k};
+                $val = $c->{values}->{$val} || $val;
+                $desc .= $c->{name} . ": $val\n";
             }
         }
-    };
+    }
 
     return $desc;
 }

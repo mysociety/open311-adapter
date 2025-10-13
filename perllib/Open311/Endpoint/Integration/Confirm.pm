@@ -656,6 +656,14 @@ sub get_service_request_updates {
             documentName
             documentDate
           }
+          feature {
+            attribute_CCAT {
+              attributeValueCode
+            }
+            attribute_SPD {
+              attributeValueCode
+            }
+          }
         }
       }
     }
@@ -681,7 +689,7 @@ GRAPHQL
             # The enquiry's service/subject codes may have changed with this
             # update, so find the corresponding Open311 service code to allow
             # FMS to handle this.
-            my $extras = {};
+            my $extras;
             my $service_code = $status_log->{centralEnquiry}->{serviceCode} . "_" . $status_log->{centralEnquiry}->{subjectCode};
             if ( my $service = $services{$service_code} ) {
                 $extras = {
@@ -691,8 +699,19 @@ GRAPHQL
             }
 
             # If there is an attached defect with a targetDate set, include that in extras too
-            if ( $status_log->{centralEnquiry}->{enquiryLink} && $status_log->{centralEnquiry}->{enquiryLink}->{defect} && $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{targetDate} ) {
-                $extras->{targetDate} = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{targetDate};
+            if ( my $targetDate = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{targetDate} ) {
+                $extras ||= {};
+                $extras->{targetDate} = $targetDate;
+            }
+
+            # There might be some feature attribute values we want too
+            if ( my $featureCCAT = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{feature}->{attribute_CCAT}->{attributeValueCode} ) {
+                $extras ||= {};
+                $extras->{featureCCAT} = $featureCCAT;
+            }
+            if ( my $featureSPD = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{feature}->{attribute_SPD}->{attributeValueCode} ) {
+                $extras ||= {};
+                $extras->{featureSPD} = $featureSPD;
             }
 
             my $enquiry_id = $status_log->{enquiryNumber};
@@ -805,7 +824,18 @@ sub _get_service_request_updates_for_defects {
         # NOTE: Only the first media_url in the array will actually be returned.
         for my $defect ( @{$log->{job}->{defects}} ) {
 
-            my $supersedes_value = $defect->{supersedesDefectNumber} ? "DEFECT_" . $defect->{supersedesDefectNumber} : undef;
+            my $extras = {
+                targetDate => $defect->{targetDate} || '',
+            };
+            if ( my $featureCCAT = $defect->{feature}->{attribute_CCAT}->{attributeValueCode} ) {
+                $extras->{featureCCAT} = $featureCCAT;
+            }
+            if ( my $featureSPD = $defect->{feature}->{attribute_SPD}->{attributeValueCode} ) {
+                $extras->{featureSPD} = $featureSPD;
+            }
+            if ( my $supersedes = $defect->{supersedesDefectNumber} ) {
+                $extras->{supersedes} =  "DEFECT_" . $supersedes,
+            };
 
             push @$updates,
                 Open311::Endpoint::Service::Request::Update::mySociety->new(
@@ -815,10 +845,7 @@ sub _get_service_request_updates_for_defects {
                 updated_datetime     => $dt,
                 external_status_code => $log->{statusCode},
                 description          => '',
-                extras => {
-                    targetDate => $defect->{targetDate} || '',
-                    $supersedes_value  ? ( supersedes => $supersedes_value ) : (),
-                },
+                extras               => $extras,
                 @media_urls ? ( media_url => \@media_urls ) : (),
             );
         }
@@ -1293,7 +1320,7 @@ sub _parse_enquiry_status_log {
         ($status_log->{StatusLogNotes} || "") :
         "";
     my $status = $self->reverse_status_mapping->{$status_log->{EnquiryStatusCode}};
-    next if $status && $status eq 'IGNORE';
+    return if $status && $status eq 'IGNORE';
     if (!$status) {
         $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code $status_log->{EnquiryStatusCode} (EnquiryNumber $enquiry_id)");
         $status = "open";
