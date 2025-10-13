@@ -157,4 +157,120 @@ subtest "Test defect description without attribute mapping config" => sub {
     unlike $description, qr/Priority|Surface|Depth/, 'Does not contain attributes without mapping config';
 };
 
+subtest "Test defect description with feature attributes (CCAT and SPD)" => sub {
+    # Mock json_web_api_call to return defect attributes
+    $confirm_mock->mock(json_web_api_call => sub {
+        my ($self, $path) = @_;
+
+        if ($path eq '/defects/54321') {
+            return {
+                defectNumber => '54321',
+                attributes => []
+            };
+        }
+
+        return {};
+    });
+
+    my $defect = {
+        defectNumber => '54321',
+        targetDate => '2025-09-20T12:00:00Z',
+        feature => {
+            attribute_CCAT => {
+                attributeValueCode => '2'
+            },
+            attribute_SPD => {
+                attributeValueCode => '30'
+            }
+        }
+    };
+
+    my $service = Open311::Endpoint::Service->new(
+        service_name => 'Road Defect',
+        service_code => 'ROAD',
+        description => 'Road surface defect'
+    );
+
+    my $description = $endpoint->_description_for_defect($defect, $service);
+
+    like $description, qr/We've recorded a defect at this location/, 'Contains boilerplate text';
+    like $description, qr/To be completed by: 2025-09-20/, 'Contains formatted target date';
+    like $description, qr/Carriageway Category: Category 2/, 'Contains CCAT feature attribute with mapped value';
+    like $description, qr/Speed Limit: 30 mph/, 'Contains SPD feature attribute with mapped value';
+};
+
+subtest "Test defect description with feature attributes without value mapping" => sub {
+    my $defect = {
+        defectNumber => '54322',
+        targetDate => '2025-09-21T14:30:00Z',
+        feature => {
+            attribute_CCAT => {
+                attributeValueCode => '4'
+            },
+            attribute_SPD => {
+                attributeValueCode => '50'
+            }
+        }
+    };
+
+    my $service = Open311::Endpoint::Service->new(
+        service_name => 'Road Defect',
+        service_code => 'ROAD',
+        description => 'Road surface defect'
+    );
+
+    my $description = $endpoint->_description_for_defect($defect, $service);
+
+    like $description, qr/Carriageway Category: 4/, 'Contains unmapped CCAT value as-is';
+    like $description, qr/Speed Limit: 50/, 'Contains unmapped SPD value as-is';
+};
+
+subtest "Test defect description with both defect and feature attributes" => sub {
+    # Mock json_web_api_call to return defect attributes
+    $confirm_mock->mock(json_web_api_call => sub {
+        my ($self, $path) = @_;
+
+        if ($path eq '/defects/67890') {
+            return {
+                defectNumber => '67890',
+                attributes => [
+                    {
+                        name => 'Priority Level',
+                        type => { key => 'priority' },
+                        pickValue => { key => 'high' },
+                        currentValue => 'High Priority'
+                    }
+                ]
+            };
+        }
+
+        return {};
+    });
+
+    my $defect = {
+        defectNumber => '67890',
+        targetDate => '2025-10-01T09:00:00Z',
+        feature => {
+            attribute_CCAT => {
+                attributeValueCode => '1'
+            },
+            attribute_SPD => {
+                attributeValueCode => '20'
+            }
+        }
+    };
+
+    my $service = Open311::Endpoint::Service->new(
+        service_name => 'Pothole',
+        service_code => 'POTHOLE',
+        description => 'Road pothole'
+    );
+
+    my $description = $endpoint->_description_for_defect($defect, $service);
+
+    like $description, qr/Priority: High Priority/, 'Contains defect attribute';
+    like $description, qr/Carriageway Category: Category 1/, 'Contains CCAT feature attribute';
+    like $description, qr/Speed Limit: 20 mph/, 'Contains SPD feature attribute';
+};
+
 done_testing;

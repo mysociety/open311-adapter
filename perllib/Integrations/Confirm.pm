@@ -563,6 +563,14 @@ sub defects_graphql_query { # XXX factor together with jobs?
     northing
     loggedDate
     targetDate
+    feature {
+        attribute_CCAT {
+            attributeValueCode
+        }
+        attribute_SPD {
+            attributeValueCode
+        }
+    }
     defectType(
         filter: {
             code: {
@@ -648,6 +656,14 @@ sub defect_status_logs_graphql_query {
             }) {
                 defectNumber
                 targetDate
+                feature {
+                    attribute_CCAT {
+                        attributeValueCode
+                    }
+                    attribute_SPD {
+                        attributeValueCode
+                    }
+                }
             }
         }
     }
