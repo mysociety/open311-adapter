@@ -14,8 +14,8 @@ wrapped_services:
     group: "Road/Footpath Problems"
     name: "Pothole"
     wraps:
-      - ABC_DEF
       - ABC_GHI
+      - ABC_DEF
   ABC_JKL:
     passthrough: 1
     group: Flooding & Drainage
