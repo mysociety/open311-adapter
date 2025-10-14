@@ -659,6 +659,15 @@ sub get_service_request_updates {
             documentName
             documentDate
           }
+          targetDate
+          feature {
+            attribute_CCAT {
+              attributeValueCode
+            }
+            attribute_SPD {
+              attributeValueCode
+            }
+          }
         }
       }
     }
@@ -697,8 +706,24 @@ GRAPHQL
                     original_service_code => $service_code,
                 };
             }
-            my $enquiry_id = $status_log->{enquiryNumber};
 
+            # If there is an attached defect with a targetDate set, include that in extras too
+            if ( my $targetDate = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{targetDate} ) {
+                $extras ||= {};
+                $extras->{targetDate} = $targetDate;
+            }
+
+            # There might be some feature attribute values we want too
+            if ( my $featureCCAT = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{feature}->{attribute_CCAT}->{attributeValueCode} ) {
+                $extras ||= {};
+                $extras->{featureCCAT} = $featureCCAT;
+            }
+            if ( my $featureSPD = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{feature}->{attribute_SPD}->{attributeValueCode} ) {
+                $extras ||= {};
+                $extras->{featureSPD} = $featureSPD;
+            }
+
+            my $enquiry_id = $status_log->{enquiryNumber};
             my $update = $self->_parse_enquiry_status_log($log, $enquiry_id, $integ, $extras);
             push(@updates, $update) if $update;
         }
@@ -807,6 +832,15 @@ sub _get_service_request_updates_for_defects {
 
         # NOTE: Only the first media_url in the array will actually be returned.
         for my $defect ( @{$log->{job}->{defects}} ) {
+            my $extras = {
+                targetDate => $defect->{targetDate} || '',
+            };
+            if ( my $featureCCAT = $defect->{feature}->{attribute_CCAT}->{attributeValueCode} ) {
+                $extras->{featureCCAT} = $featureCCAT;
+            }
+            if ( my $featureSPD = $defect->{feature}->{attribute_SPD}->{attributeValueCode} ) {
+                $extras->{featureSPD} = $featureSPD;
+            }
             push @$updates,
                 Open311::Endpoint::Service::Request::Update::mySociety->new(
                 status               => $status,
@@ -814,7 +848,8 @@ sub _get_service_request_updates_for_defects {
                 service_request_id   => 'DEFECT_' . $defect->{defectNumber},
                 updated_datetime     => $dt,
                 external_status_code => $log->{statusCode},
-                description          => $defect->{targetDate} || '',
+                description          => '',
+                extras               => $extras,
                 @media_urls ? ( media_url => \@media_urls ) : (),
             );
         }
@@ -1289,7 +1324,7 @@ sub _parse_enquiry_status_log {
         ($status_log->{StatusLogNotes} || "") :
         "";
     my $status = $self->reverse_status_mapping->{$status_log->{EnquiryStatusCode}};
-    next if $status && $status eq 'IGNORE';
+    return if $status && $status eq 'IGNORE';
     if (!$status) {
         $self->logger->warn("Missing reverse status mapping for EnquiryStatus Code $status_log->{EnquiryStatusCode} (EnquiryNumber $enquiry_id)");
         $status = "open";

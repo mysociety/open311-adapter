@@ -1,4 +1,4 @@
-endpoint_url: "http://example.org/endpoint"
+endpoint_url: "http://confirm/endpoint"
 username: "username"
 password: "pw"
 tenant_id: "123"
