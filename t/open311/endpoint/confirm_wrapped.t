@@ -287,6 +287,7 @@ subtest "GET Service Request Updates with category change for wrapped services" 
     <extras>
       <category>Pothole</category>
       <group>Road defects</group>
+      <original_service_code>HM_PHS</original_service_code>
     </extras>
     <media_url></media_url>
     <service_request_id>1001</service_request_id>
@@ -300,6 +301,7 @@ subtest "GET Service Request Updates with category change for wrapped services" 
     <extras>
       <category>Pothole</category>
       <group>Road defects</group>
+      <original_service_code>HM_PHL</original_service_code>
     </extras>
     <media_url></media_url>
     <service_request_id>1002</service_request_id>
@@ -313,6 +315,7 @@ subtest "GET Service Request Updates with category change for wrapped services" 
     <extras>
       <category>Broken bridge</category>
       <group>Bridges and safety barriers</group>
+      <original_service_code>ST_STP4</original_service_code>
     </extras>
     <media_url></media_url>
     <service_request_id>1003</service_request_id>
