@@ -85,7 +85,19 @@ has pt_xml => (
 has ua => (
     is => 'lazy',
     default => sub {
-        LWP::UserAgent->new();
+        LWP::UserAgent->new(
+            ssl_opts => {
+                # Allow one expired certificate to pass verification
+                SSL_verify_callback => sub {
+                    my ($ok, $store) = @_;
+                    my $cert = Net::SSLeay::X509_STORE_CTX_get_current_cert($store);
+                    my $fingerprint = Net::SSLeay::X509_get_fingerprint($cert, "sha1");
+                    my $expiry = Net::SSLeay::P_ASN1_TIME_get_isotime(Net::SSLeay::X509_get_notAfter($cert));
+                    return 1 if !$ok && $fingerprint eq "4A:19:FD:80:22:C8:19:34:06:C5:B7:35:E3:08:FB:EE:10:36:80:92" && $expiry eq "2026-10-14T23:59:59Z";
+                    return $ok;
+                }
+            }
+        );
     },
 );
 
