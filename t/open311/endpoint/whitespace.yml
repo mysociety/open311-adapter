@@ -9,11 +9,17 @@ category_mapping:
   bulky_collection:
     name: Bulky collection
     group: Waste
+  assisted_remove:
+    name: Assisted collection remove
+    group: Waste
 
 service_mapping:
   RES-180:
     service_id: 289
     service_item_id: 22
+
+  assisted_remove:
+    service_id: 76
 
   bulky:
     service_id: 78
