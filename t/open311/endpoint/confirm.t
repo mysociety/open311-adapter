@@ -442,7 +442,44 @@ $open311->mock( perform_request_graphql => sub {
                 ],
             },
         };
-    } elsif ( $args{query} =~ /enquiryStatusLogs/ ) {
+    } elsif ( $args{type} && $args{type} eq 'defect_status_logs' ) {
+        return {
+            data => {
+                jobStatusLogs => [
+                    {
+                        statusCode => 'OPEN',
+                        loggedDate => '2018-03-01T12:00:00Z',
+                        key => 'defect_log_1',
+                        job => {
+                            defects => [
+                                {
+                                    defectNumber => '1001',
+                                    targetDate => '2018-04-01T00:00:00Z',
+                                },
+                                {
+                                    defectNumber => '1002',
+                                    targetDate => '',
+                                },
+                            ]
+                        }
+                    },
+                    {
+                        statusCode => 'FIXED',
+                        loggedDate => '2018-03-01T15:00:00Z',
+                        key => 'defect_log_2',
+                        job => {
+                            defects => [
+                                {
+                                    defectNumber => '1003',
+                                    targetDate => '2018-03-15T00:00:00Z',
+                                },
+                            ]
+                        }
+                    }
+                ]
+            }
+        };
+    } elsif ( $args{query} && $args{query} =~ /enquiryStatusLogs/ ) {
         return {
             data => {
                 enquiryStatusLogs => [
@@ -488,6 +525,38 @@ $open311->mock( perform_request_graphql => sub {
                         centralEnquiry => {
                             subjectCode => 'UNKNOWN',
                             serviceCode => 'UNKNOWN'
+                        }
+                    },
+                    {
+                        enquiryNumber => '3004',
+                        enquiryStatusCode => 'INP',
+                        logNumber => '1',
+                        loggedDate => '2018-03-01T14:00:00+00:00',
+                        notes => '',
+                        centralEnquiry => {
+                            subjectCode => 'DEF',
+                            serviceCode => 'ABC',
+                            enquiryLink => {
+                                defect => {
+                                    targetDate => '2018-04-01T12:00:00+00:00'
+                                }
+                            }
+                        }
+                    },
+                    {
+                        enquiryNumber => '3005',
+                        enquiryStatusCode => 'INP',
+                        logNumber => '1',
+                        loggedDate => '2018-03-01T15:00:00+00:00',
+                        notes => '',
+                        centralEnquiry => {
+                            subjectCode => 'DEF',
+                            serviceCode => 'ABC',
+                            enquiryLink => {
+                                defect => {
+                                    targetDate => undef
+                                }
+                            }
                         }
                     }
                 ],
@@ -929,7 +998,7 @@ subtest "POST OK" => sub {
         'attribute[fixmystreet_id]' => 1001,
         'attribute[title]' => 'Title',
         'attribute[description]' => 'This is the details',
-        'attribute[report_url]' => 'http://example.com/report/1001',
+        'attribute[report_url]' => 'http://fixmystreet/report/1001',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -957,7 +1026,7 @@ subtest "POST OK with logged time omitted" => sub {
         'attribute[fixmystreet_id]' => 1002,
         'attribute[title]' => 'Title',
         'attribute[description]' => 'This is the details',
-        'attribute[report_url]' => 'http://example.com/report/1001',
+        'attribute[report_url]' => 'http://fixmystreet/report/1001',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -982,7 +1051,7 @@ subtest "POST OK with unrecognised attribute" => sub {
         'attribute[fixmystreet_id]' => 1003,
         'attribute[title]' => 'Title',
         'attribute[description]' => 'This is the details',
-        'attribute[report_url]' => 'http://example.com/report/1003',
+        'attribute[report_url]' => 'http://fixmystreet/report/1003',
         'attribute[testing]' => 'This should be ignored',
     );
     ok $res->is_success, 'valid request'
@@ -1008,7 +1077,7 @@ subtest "POST OK with empty attribute, default picked up from config" => sub {
         'attribute[fixmystreet_id]' => 1004,
         'attribute[title]' => 'Title',
         'attribute[description]' => 'This is the details',
-        'attribute[report_url]' => 'http://example.com/report/1004',
+        'attribute[report_url]' => 'http://fixmystreet/report/1004',
         'attribute[DEPT]' => '',
     );
     ok $res->is_success, 'valid request'
@@ -1034,7 +1103,7 @@ subtest "POST OK with attribute value takes precedence over default picked in co
         'attribute[fixmystreet_id]' => 1005,
         'attribute[title]' => 'Title',
         'attribute[description]' => 'This is the details',
-        'attribute[report_url]' => 'http://example.com/report/1005',
+        'attribute[report_url]' => 'http://fixmystreet/report/1005',
         'attribute[DEPT]' => '0',
     );
     ok $res->is_success, 'valid request'
@@ -1064,7 +1133,7 @@ subtest 'POST with failed document storage' => sub {
             'attribute[fixmystreet_id]' => 1001,
             'attribute[title]'          => 'Title',
             'attribute[description]'    => 'This is the details',
-            'attribute[report_url]'     => 'http://example.com/report/1001',
+            'attribute[report_url]'     => 'http://fixmystreet/report/1001',
         )
     }
     'Document storage failed: Something bad happened', 'warning is generated';
@@ -1095,7 +1164,7 @@ subtest "POST OK with FMS ID in customer ref field" => sub {
         'attribute[fixmystreet_id]' => 1001,
         'attribute[title]' => 'Title',
         'attribute[description]' => 'Customer Ref report',
-        'attribute[report_url]' => 'http://example.com/report/1001',
+        'attribute[report_url]' => 'http://fixmystreet/report/1001',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -1118,7 +1187,7 @@ subtest 'POST update' => sub {
         description => 'Update here',
         status => 'OPEN',
         updated_datetime => '2016-09-01T15:00:00Z',
-        media_url => 'http://example.org/',
+        media_url => 'http://fixmystreet/',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
 
@@ -1146,7 +1215,7 @@ subtest 'POST update with invalid LoggedTime' => sub {
         description => 'Update here',
         status => 'OPEN',
         updated_datetime => '2016-09-01T15:00:00Z',
-        media_url => 'http://example.org/',
+        media_url => 'http://fixmystreet/',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
 
@@ -1175,7 +1244,7 @@ subtest 'POST update with category change' => sub {
         description => 'Category change update',
         status => 'OPEN',
         updated_datetime => '2016-09-01T15:00:00Z',
-        media_url => 'http://example.org/',
+        media_url => 'http://fixmystreet/',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
 
@@ -1285,7 +1354,7 @@ subtest "fetching of completion photos" => sub {
         GET => '/servicerequestupdates.xml?start_date=2022-10-23T00:00:00Z&end_date=2022-10-24T00:00:00Z',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
-    contains_string $res->content, '<media_url>http://example.com/photo/completion?jurisdiction_id=confirm_dummy&amp;job=432&amp;photo=1</media_url>';
+    contains_string $res->content, '<media_url>http://confirm/photo/completion?jurisdiction_id=confirm_dummy&amp;job=432&amp;photo=1</media_url>';
     $lwp->mock(request => \&empty_json);
 };
 
@@ -1705,6 +1774,24 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     update_id            => '3003_2',
                     updated_datetime     => '2018-03-01T13:30:00+00:00',
                 },
+                {   description          => undef,
+                    external_status_code => 'INP',
+                    media_url            => undef,
+                    service_request_id   => '3004',
+                    status               => 'in_progress',
+                    update_id            => '3004_1',
+                    updated_datetime     => '2018-03-01T14:00:00+00:00',
+                    extras               => { category => 'Flooding', group => 'Flooding & Drainage', targetDate => '2018-04-01T12:00:00+00:00' },
+                },
+                {   description          => undef,
+                    external_status_code => 'INP',
+                    media_url            => undef,
+                    service_request_id   => '3005',
+                    status               => 'in_progress',
+                    update_id            => '3005_1',
+                    updated_datetime     => '2018-03-01T15:00:00+00:00',
+                    extras               => { category => 'Flooding', group => 'Flooding & Drainage' },
+                },
 
                 # Jobs
                 {   description          => undef,
@@ -1730,6 +1817,35 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'open',
                     update_id            => 'JOB_open_standardx3',
                     updated_datetime     => '2023-12-01T02:00:00+00:00',
+                },
+
+                # Defect updates
+                {   description          => undef,
+                    external_status_code => 'OPEN',
+                    media_url            => undef,
+                    service_request_id   => 'DEFECT_1001',
+                    status               => 'open',
+                    update_id            => 'DEFECT_1001_defect_log_1',
+                    updated_datetime     => '2018-03-01T12:00:00+00:00',
+                    extras               => { targetDate => '2018-04-01T00:00:00Z' },
+                },
+                {   description          => undef,
+                    external_status_code => 'OPEN',
+                    media_url            => undef,
+                    service_request_id   => 'DEFECT_1002',
+                    status               => 'open',
+                    update_id            => 'DEFECT_1002_defect_log_1',
+                    updated_datetime     => '2018-03-01T12:00:00+00:00',
+                    extras               => { targetDate => undef },
+                },
+                {   description          => undef,
+                    external_status_code => 'FIXED',
+                    media_url            => undef,
+                    service_request_id   => 'DEFECT_1003',
+                    status               => 'fixed',
+                    update_id            => 'DEFECT_1003_defect_log_2',
+                    updated_datetime     => '2018-03-01T15:00:00+00:00',
+                    extras               => { targetDate => '2018-03-15T00:00:00Z' },
                 },
             ],
         },
