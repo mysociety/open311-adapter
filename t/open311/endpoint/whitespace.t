@@ -74,6 +74,9 @@ $soap_lite->mock(call => sub {
             is $service_item_inputs{144}, 1, 'ServiceItemId correct';
             is $service_item_inputs{83}, 1, 'ServiceItemQuantity correct';
             is $service_item_inputs{5}, 1, 'ServiceItemName correct';
+        } elsif ($params{Uprn} eq 20001) { # Start with 2 for assisted testing
+            is $params{ServiceId}, '76';
+            is $params{WorksheetReference}, 2345678;
         } else {
             die "Unknown uprn $params{Uprn}";
         }
@@ -107,6 +110,15 @@ subtest "GET services" => sub {
         or diag $res->content;
 
     is_deeply decode_json($res->content), [
+        {
+            group        => "Waste",
+            service_code => "assisted_remove",
+            description  => "Assisted collection remove",
+            keywords     => "waste_only",
+            type         => "realtime",
+            service_name => "Assisted collection remove",
+            metadata     => "true"
+        },
         {
             group        => "Waste",
             service_code => "bulky_collection",
@@ -236,6 +248,28 @@ subtest "POST any other update" => sub {
     is_deeply decode_json($res->content),
         [ {
             "update_id" => 'BLANK',
+        } ], 'correct json returned';
+};
+
+subtest "POST assisted collection removal OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'assisted_remove',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 20001,
+        'attribute[fixmystreet_id]' => 2345678,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '242259',
         } ], 'correct json returned';
 };
 
