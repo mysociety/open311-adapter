@@ -83,6 +83,7 @@ sub post_service_request {
 
     my $service_item_name = $args->{attributes}->{service_item_name};
     $service_item_name = 'bulky' if $args->{service_code} eq 'bulky_collection';
+    $service_item_name = 'assisted_remove' if $args->{service_code} eq 'assisted_remove';
 
     my $worksheet_id = $integration->CreateWorksheet({
         service_code => $args->{service_code},
