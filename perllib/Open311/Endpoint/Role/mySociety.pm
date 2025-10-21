@@ -412,6 +412,10 @@ sub learn_additional_types {
                 non_public => '//str',
                 contact_name => '//str',
                 contact_email => '//str',
+                extras => {
+                    type => '//map',
+                    values => '//str',
+                }
             },
         }
     );
