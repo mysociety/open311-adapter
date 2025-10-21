@@ -84,10 +84,10 @@ $soap_lite->mock(call => sub {
             my @data = ${$params[1]->value}->value->value;
             my @ref = ${$data[0]->value}->value;
             is $ref[0]->value, 57236;
-            is $ref[1]->value, 'ABC';
+            is $ref[1]->value->value, 'ABC'; # Is wrapped to make it a string
             my @amount = ${$data[1]->value}->value;
             is $amount[0]->value, 57237;
-            is $amount[1]->value, '34.56';
+            is $amount[1]->value->value, '34.56';
         } else {
             is @params, 'UNKNOWN';
         }
