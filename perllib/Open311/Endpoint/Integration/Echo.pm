@@ -520,8 +520,8 @@ sub update_event_payment {
         $_->{amount} =~ s/£//;
         # Could GetEventType and loop through it all to find these IDs out but for just this seemed okay
         push @$data,
-            { id => 57236, value => $_->{ref} },
-            { id => 57237, value => $_->{amount} };
+            { id => 57236, value => SOAP::Data->value($_->{ref})->type('string') },
+            { id => 57237, value => SOAP::Data->value($_->{amount})->type('string') };
     }
     $integ->UpdateEvent({ id => $event->{Id}, data => $data });
     $args->{description} = ''; # Blank out so nothing sent to Echo now
