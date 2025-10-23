@@ -21,7 +21,6 @@ use JSON::MaybeXS;
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
-with 'Open311::Endpoint::Role::ConfigFile';
 with 'Role::EndpointConfig';
 with 'Role::Logger';
 

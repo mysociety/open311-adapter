@@ -251,7 +251,7 @@ subtest "Whitespace worksheets use Bexley's custom message" => sub {
     my $ws = Test::MockModule->new('Integrations::Whitespace');
     $ws->mock(CreateWorksheet => sub {
         my ($self, $args) = @_;
-        is $args->{quantity}, 1;
+        is $args->{attributes}{quantity}, 1;
         is $args->{worksheet_message}, "Assisted collection? Yes\n\nLocation of containers: location of containers";
         return 1001;
     });
@@ -283,7 +283,7 @@ subtest "Bulky specific Whitespace worksheet message" => sub {
     my $ws = Test::MockModule->new('Integrations::Whitespace');
     $ws->mock(CreateWorksheet => sub {
         my ($self, $args) = @_;
-        is $args->{quantity}, 1;
+        is $args->{attributes}{quantity}, 1;
         is $args->{worksheet_message}, q{Booking reference: 2000234
 
 Collection date: 08/08/2025
@@ -325,8 +325,8 @@ subtest "Whitespace worksheet, no location, with quantity" => sub {
     my $ws = Test::MockModule->new('Integrations::Whitespace');
     $ws->mock(CreateWorksheet => sub {
         my ($self, $args) = @_;
-        is $args->{quantity}, 3;
-        is $args->{location_of_containers}, undef;
+        is $args->{attributes}{quantity}, 3;
+        is $args->{attributes}{location_of_containers}, undef;
         is $args->{worksheet_message}, "Assisted collection? No";
         return 1002;
     });
