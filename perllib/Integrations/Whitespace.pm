@@ -88,6 +88,8 @@ sub GetWorksheetDetails {
 sub CreateWorksheet {
     my ($self, $params) = @_;
 
+    my $attributes = $params->{attributes};
+
     if (!$params->{service_item_name}) {
         $self->logger->error("No service_item_name provided");
         die "No service_item_name provided";
@@ -115,12 +117,12 @@ sub CreateWorksheet {
         }
     } else {
         push @service_inputs,
-            service_input($service_params->{service_item_id}, $params->{quantity});
+            service_input($service_params->{service_item_id}, $attributes->{quantity});
     }
 
     my $collection_date;
-    $collection_date = $params->{collection_date} . ' 23:59'
-        if $params->{collection_date};
+    $collection_date = $attributes->{collection_date} . ' 23:59'
+        if $attributes->{collection_date};
 
     my $worksheet = ixhash(
         Uprn => $params->{uprn},
@@ -130,13 +132,16 @@ sub CreateWorksheet {
         $collection_date ? ( WorksheetDueDate => $collection_date ) : (),
         ServiceItemInputs => \@service_inputs,
         ServicePropertyInputs => [
-            property_input(79, $params->{assisted_yn}),
-            property_input(80, $params->{location_of_containers}),
-            property_input(82, $params->{location_of_letterbox}),
-            property_input(65, $params->{bulky_parking}),
-            property_input(66, $params->{bulky_location}),
+            property_input(79, $attributes->{assisted_yn}),
+            property_input(80, $attributes->{location_of_containers}),
+            property_input(82, $attributes->{location_of_letterbox}),
+            property_input(65, $attributes->{bulky_parking}),
+            property_input(66, $attributes->{bulky_location}),
+            property_input(59, $attributes->{assisted_reason}),
+            property_input(61, $attributes->{assisted_duration}),
+            property_input(80, $attributes->{assisted_location}),
         ],
-        $params->{round_instance_id} ? (AdHocRoundInstanceId =>  $params->{round_instance_id}) : (),
+        $attributes->{round_instance_id} ? (AdHocRoundInstanceId => $attributes->{round_instance_id}) : (),
     );
 
     my $res = $self->call('CreateWorksheet', worksheetInput => $worksheet);
