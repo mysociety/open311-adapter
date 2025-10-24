@@ -97,6 +97,12 @@ sub atak_config {
     }
 }
 
+sub atak_token_config {
+    my $config = atak_config();
+    $config->{token_url} = 'https://example.com/ords/alternative/url/v1';
+    return $config;
+};
+
 my $atak = Test::MockModule->new('Open311::Endpoint::Integration::UK::Brent::ATAK');
 $atak->mock(endpoint_config => sub { return atak_config() });
 
@@ -656,41 +662,53 @@ for my $test (
             }
         });
 
-        $mock_ua->mock('post', sub {
-            my ($self, $url, %headers) = @_;
-            if ($url eq 'https://example.com/ords/hws/atak/v1/request') {
-                is $headers{Authorization}, 'AUTH-123';
-
-                my $data = decode_json($headers{Content})->{request}->[0];
-                is $data->{request_desc}, "Location: Location name\n\n" .
-                    "location of problem: title\n\ndetail: detail\n\nurl: url\n\n" .
-                    "Submitted via FixMyStreet\n";
-                is $data->{request_client_ref}, '42';
-                is $data->{project}, 'C123';
-                is $data->{request_start_date}, '20230727';
-                is $data->{request_end_date}, '20230728';
-                is $data->{location_name}, 'Location name';
-                is $data->{request_title}, 'Parks and open spaces|Parks littering';
-                is $data->{requesttype_desc}, 'FixMyStreets';
-                is $data->{caller}, '';
-                is $data->{request_geo_ref}->{type}, 'Point';
-                is_deeply $data->{request_geo_ref}->{coordinates}, [ -1, 51 ];
-                my $photo = $data->{attachments}->[0];
-                if ($test->{upload}) {
-                    is $photo->{filename}, 'test_image.jpg';
-                } else {
-                    is $photo->{filename}, '1.jpeg';
-                }
-                is $photo->{description}, 'Image 1';
-                like $photo->{data}, qr{^data:image/jpeg;base64,/9j/4};
-
-                return HTTP::Response->new(200, 'OK', [], '{"Processed task 1": "123ABC"}');
-            } elsif ($url eq 'https://example.com/ords/hws/atak/v1/login') {
-                return HTTP::Response->new(200, 'OK', [], '{"token": "AUTH-123"}');
+        for my $authorisation ('AUTH-456', 'AUTH-123') {
+            if ($authorisation eq 'AUTH-456') {
+                $atak->mock(endpoint_config => sub { return atak_token_config() });
             } else {
-                return HTTP::Response->new(404, 'Not Found', [], '');
+                $atak->mock(endpoint_config => sub { return atak_config() });
             }
-        });
+
+            $mock_ua->mock('post', sub {
+                my ($self, $url, %headers) = @_;
+                if ($url eq 'https://example.com/ords/hws/atak/v1/request') {
+                    is $headers{Authorization}, $authorisation;
+
+                    my $data = decode_json($headers{Content})->{request}->[0];
+                    is $data->{request_desc}, "Location: Location name\n\n" .
+                        "location of problem: title\n\ndetail: detail\n\nurl: url\n\n" .
+                        "Submitted via FixMyStreet\n";
+                    is $data->{request_client_ref}, '42';
+                    is $data->{project}, 'C123';
+                    is $data->{request_start_date}, '20230727';
+                    is $data->{request_end_date}, '20230728';
+                    is $data->{location_name}, 'Location name';
+                    is $data->{request_title}, 'Parks and open spaces|Parks littering';
+                    is $data->{requesttype_desc}, 'FixMyStreets';
+                    is $data->{caller}, '';
+                    is $data->{request_geo_ref}->{type}, 'Point';
+                    is_deeply $data->{request_geo_ref}->{coordinates}, [ -1, 51 ];
+                    my $photo = $data->{attachments}->[0];
+                    if ($test->{upload}) {
+                        is $photo->{filename}, 'test_image.jpg';
+                    } else {
+                        is $photo->{filename}, '1.jpeg';
+                    }
+                    is $photo->{description}, 'Image 1';
+                    like $photo->{data}, qr{^data:image/jpeg;base64,/9j/4};
+
+                    return HTTP::Response->new(200, 'OK', [], '{"Processed task 1": "123ABC"}');
+                } elsif ($url eq 'https://example.com/ords/hws/atak/v1/login') {
+                    return HTTP::Response->new(200, 'OK', [], '{"token": "AUTH-123"}');
+                } elsif ($url eq 'https://example.com/ords/alternative/url/v1') {
+                    return HTTP::Response->new(200, 'OK', [], '{"token": "AUTH-456"}');
+                }
+
+                else {
+                    return HTTP::Response->new(404, 'Not Found', [], '');
+                }
+            });
+        }
 
         my $photo_upload = Web::Dispatch::Upload->new(
             tempname => path(__FILE__)->dirname . '/files/test_image.jpg',
