@@ -658,7 +658,7 @@ for my $test (
 
         $mock_ua->mock('post', sub {
             my ($self, $url, %headers) = @_;
-            if ($url eq 'https://example.com/ords/hws/atak/v1/enq') {
+            if ($url eq 'https://example.com/ords/hws/atak/v1/request') {
                 is $headers{Authorization}, 'AUTH-123';
 
                 my $data = decode_json($headers{Content})->{tasks}->[0];
