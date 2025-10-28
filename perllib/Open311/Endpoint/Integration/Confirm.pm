@@ -647,6 +647,7 @@ sub get_service_request_updates {
       serviceCode
       enquiryLink {
         job {
+          estimatedStartDate
           documents {
             url
             documentName
@@ -711,6 +712,11 @@ GRAPHQL
             if ( my $targetDate = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{targetDate} ) {
                 $extras ||= {};
                 $extras->{targetDate} = $targetDate;
+            }
+            # similarly for estimatedStartDate on an attached job
+            if ( my $jobStartDate = $status_log->{centralEnquiry}{enquiryLink}{job}{estimatedStartDate} ) {
+                $extras ||= {};
+                $extras->{jobStartDate} = $jobStartDate;
             }
 
             # There might be some feature attribute values we want too
