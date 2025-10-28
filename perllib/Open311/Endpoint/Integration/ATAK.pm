@@ -90,9 +90,9 @@ sub post_service_request {
 
     my $issue_title = $args->{attributes}->{group} . '|' . $service->service_name,
 
-    my $now = DateTime->now;
-    my $later = $now->clone->add(hours => 1);
-    my $time_format = "%Y-%m-%dT%H:%M:%SZ";
+    my $now = DateTime->now(time_zone => "Europe/London");
+    my $later = $now->clone->add(days => 1);
+    my $time_format = "%Y%m%d";
 
     my $issue = {
         request_client_ref => $args->{attributes}->{fixmystreet_id},
