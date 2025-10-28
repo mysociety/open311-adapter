@@ -1,7 +1,6 @@
 package Open311::Endpoint::Integration::UK::Aberdeenshire;
 
 use Moo;
-use Try::Tiny;
 use List::Util qw(reduce);
 
 extends 'Open311::Endpoint::Integration::Confirm';
@@ -46,22 +45,13 @@ sub _defect_attributes_description {
     my $integ = $self->get_integration;
     my $desc = '';
 
-    my $mapping;
-    if ( $mapping = $integ->config->{defect_attributes} ) {
-        try {
-            my $res = $integ->json_web_api_call("/defects/" . $defect->{defectNumber});
-            foreach my $attr (@{ $res->{attributes} }) {
-                my $k = $attr->{type}->{key};
-                if (my $c = $mapping->{$k}) {
-                    my $name = $c->{name} || $attr->{name};
-                    my $value = $c->{numeric} ? $attr->{numericValue} : $c->{values}->{$attr->{pickValue}->{key}};
-                    $value ||= $attr->{currentValue};
-                    $desc .= "$name: $value\n";
-                }
-            }
-        };
+    my $attributes = $self->_fetch_defect_web_api_attributes($defect);
+    foreach my $attr (@$attributes) {
+        my ($code, $name, $value) = @$attr;
+        $desc .= "$name: $value\n";
     }
 
+    my $mapping;
     if ( $mapping = $integ->config->{feature_attributes} ) {
         foreach my $k ( keys %$mapping ) {
             if ( my $val = $defect->{feature}->{"attribute_$k"}->{attributeValueCode} ) {
