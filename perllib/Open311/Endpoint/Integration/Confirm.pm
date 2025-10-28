@@ -654,12 +654,12 @@ sub get_service_request_updates {
           }
         }
         defect {
+          targetDate
           documents {
             url
             documentName
             documentDate
           }
-          targetDate
           feature {
             attribute_CCAT {
               attributeValueCode
@@ -832,8 +832,10 @@ sub _get_service_request_updates_for_defects {
 
         # NOTE: Only the first media_url in the array will actually be returned.
         for my $defect ( @{$log->{job}->{defects}} ) {
+
             my $extras = {
                 targetDate => $defect->{targetDate} || '',
+                jobStartDate => $log->{job}->{estimatedStartDate} || '',
             };
             if ( my $featureCCAT = $defect->{feature}->{attribute_CCAT}->{attributeValueCode} ) {
                 $extras->{featureCCAT} = $featureCCAT;
@@ -841,6 +843,10 @@ sub _get_service_request_updates_for_defects {
             if ( my $featureSPD = $defect->{feature}->{attribute_SPD}->{attributeValueCode} ) {
                 $extras->{featureSPD} = $featureSPD;
             }
+            if ( my $supersedes = $defect->{supersedesDefectNumber} ) {
+                $extras->{supersedes} =  "DEFECT_" . $supersedes,
+            };
+
             push @$updates,
                 Open311::Endpoint::Service::Request::Update::mySociety->new(
                 status               => $status,
@@ -1519,6 +1525,8 @@ sub _get_service_requests_for_defects {
 
         my $description = $self->_description_for_defect($defect, $service);
 
+        my $supersedes_value = $defect->{supersedesDefectNumber} ? "DEFECT_" . $defect->{supersedesDefectNumber} : undef;
+
         my @media_urls;
         if ($integ->include_photos_on_defect_fetch) {
             my @defect_docs = $self->_parse_graphql_docs($defect->{documents});
@@ -1537,8 +1545,12 @@ sub _get_service_requests_for_defects {
             # enquiries above
             latlong => [ $defect->{northing}, $defect->{easting} ],
             status => $status,
+            $supersedes_value  ? ( extras => {
+                supersedes => $supersedes_value,
+            } ) : (),
             @media_urls ? ( media_url => \@media_urls ) : (),
         );
+
 
         my $request = $self->new_request( %args );
 

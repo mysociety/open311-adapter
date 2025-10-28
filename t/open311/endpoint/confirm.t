@@ -450,6 +450,7 @@ $open311->mock( perform_request_graphql => sub {
                         loggedDate => '2018-03-01T12:00:00Z',
                         key => 'defect_log_1',
                         job => {
+                            estimatedStartDate => '2018-03-20T00:00:00Z',
                             defects => [
                                 {
                                     defectNumber => '1001',
@@ -467,6 +468,7 @@ $open311->mock( perform_request_graphql => sub {
                         loggedDate => '2018-03-01T15:00:00Z',
                         key => 'defect_log_2',
                         job => {
+                            estimatedStartDate => '2018-03-10T00:00:00Z',
                             defects => [
                                 {
                                     defectNumber => '1003',
@@ -1320,6 +1322,7 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
+    <extras></extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1357,6 +1360,7 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
+    <extras></extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1394,6 +1398,7 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
+    <extras></extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1455,6 +1460,7 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
+    <extras></extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1502,6 +1508,7 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
+    <extras></extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1676,6 +1683,7 @@ subtest 'GET jobs alongside enquiries' => sub {
                 {   address            => undef,
                     address_id         => undef,
                     description        => 'this is a report from confirm',
+                    extras             => undef,
                     lat                => '100',
                     long               => '100',
                     media_url          => undef,
@@ -1692,6 +1700,7 @@ subtest 'GET jobs alongside enquiries' => sub {
                 {   address            => undef,
                     address_id         => undef,
                     description        => 'An open job',
+                    extras             => undef,
                     lat                => '51.8458834999995',
                     long               => '-2.26317120000001',
                     media_url          => undef,
@@ -1706,6 +1715,7 @@ subtest 'GET jobs alongside enquiries' => sub {
                 {   address            => undef,
                     address_id         => undef,
                     description        => 'A completed job',
+                    extras             => undef,
                     lat                => '51.8458834999995',
                     long               => '-2.26317120000001',
                     media_url          => undef,
@@ -1836,7 +1846,7 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'open',
                     update_id            => 'DEFECT_1001_defect_log_1',
                     updated_datetime     => '2018-03-01T12:00:00+00:00',
-                    extras               => { targetDate => '2018-04-01T00:00:00Z' },
+                    extras               => { targetDate => '2018-04-01T00:00:00Z', jobStartDate => '2018-03-20T00:00:00Z' },
                 },
                 {   description          => undef,
                     external_status_code => 'OPEN',
@@ -1845,7 +1855,7 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'open',
                     update_id            => 'DEFECT_1002_defect_log_1',
                     updated_datetime     => '2018-03-01T12:00:00+00:00',
-                    extras               => { targetDate => undef },
+                    extras               => { targetDate => undef, jobStartDate => '2018-03-20T00:00:00Z' },
                 },
                 {   description          => undef,
                     external_status_code => 'FIXED',
@@ -1854,7 +1864,7 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'fixed',
                     update_id            => 'DEFECT_1003_defect_log_2',
                     updated_datetime     => '2018-03-01T15:00:00+00:00',
-                    extras               => { targetDate => '2018-03-15T00:00:00Z' },
+                    extras               => { targetDate => '2018-03-15T00:00:00Z', jobStartDate => '2018-03-10T00:00:00Z' },
                 },
             ],
         },
@@ -1879,6 +1889,7 @@ subtest 'GET reports - external system number filtering' => sub {
                 {   address            => undef,
                     address_id         => undef,
                     description        => 'this is a report from confirm',
+                    extras             => undef,
                     lat                => '100',
                     long               => '100',
                     media_url          => undef,
@@ -1893,6 +1904,7 @@ subtest 'GET reports - external system number filtering' => sub {
                 {   address            => undef,
                     address_id         => undef,
                     description        => 'this is a report from another system',
+                    extras             => undef,
                     lat                => '200',
                     long               => '200',
                     media_url          => undef,
