@@ -808,6 +808,28 @@ sub GetDefectLookups {  # XXX factor together with jobs?
     return $lookups->{data}{defectTypes} // [];
 }
 
+=head2 GetDefectAttributes
+
+Fetches full defect data from the web API, including attributes.
+Results are cached in memcache for 30 minutes.
+
+=cut
+
+sub GetDefectAttributes {
+    my ($self, $defect_number) = @_;
+
+    return unless $defect_number;
+
+    my $cache_key = "DefectAttributes:$defect_number";
+    my $attributes = $self->memcache->get($cache_key);
+    unless ($attributes) {
+        $attributes = $self->json_web_api_call("/defects/$defect_number");
+        $self->memcache->set($cache_key, $attributes, 600);
+    }
+
+    return $attributes;
+}
+
 sub GetEnquiries {
     my $self = shift;
 

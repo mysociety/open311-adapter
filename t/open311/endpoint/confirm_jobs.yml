@@ -35,3 +35,12 @@ job_reverse_status_mapping:
   FIXED: fixed
 job_priority_blacklist:
   EOFY: End Of Financial Year
+defect_attributes:
+  priority:
+    name: "Priority"
+    values:
+      high: "High"
+      medium: "Medium"
+  severity:
+    name: "Severity"
+    numeric: true
