@@ -539,6 +539,7 @@ $open311->mock( perform_request_graphql => sub {
                             serviceCode => 'ABC',
                             enquiryLink => {
                                 defect => {
+                                    defectNumber => '2001',
                                     targetDate => '2018-04-01T12:00:00+00:00'
                                 }
                             }
@@ -555,6 +556,7 @@ $open311->mock( perform_request_graphql => sub {
                             serviceCode => 'ABC',
                             enquiryLink => {
                                 defect => {
+                                    defectNumber => '2002',
                                     targetDate => undef
                                 }
                             }
@@ -670,6 +672,80 @@ $open311->mock( perform_request_graphql => sub {
                 },
             };
         }
+    }
+
+    return {};
+});
+
+$open311->mock( GetDefectAttributes => sub {
+    my ( $self, $defect_number ) = @_;
+
+    if ( $defect_number eq '1001' ) {
+        return {
+            defectNumber => '1001',
+            attributes => [
+                {
+                    name => 'Priority Level',
+                    type => { key => 'priority' },
+                    pickValue => { key => 'high' },
+                    currentValue => 'High Priority'
+                },
+                {
+                    name => 'Severity Level',
+                    type => { key => 'severity' },
+                    numericValue => 3,
+                    currentValue => '3'
+                }
+            ]
+        };
+    } elsif ( $defect_number eq '1003' ) {
+        return {
+            defectNumber => '1003',
+            attributes => [
+                {
+                    name => 'Priority Level',
+                    type => { key => 'priority' },
+                    pickValue => { key => 'medium' },
+                    currentValue => 'Medium Priority'
+                },
+                {
+                    name => 'Severity Level',
+                    type => { key => 'severity' },
+                    numericValue => 2,
+                    currentValue => '2'
+                }
+            ]
+        };
+    } elsif ( $defect_number eq '2001' ) {
+        return {
+            defectNumber => '2001',
+            attributes => [
+                {
+                    name => 'Priority Level',
+                    type => { key => 'priority' },
+                    pickValue => { key => 'high' },
+                    currentValue => 'High Priority'
+                },
+                {
+                    name => 'Severity Level',
+                    type => { key => 'severity' },
+                    numericValue => 1,
+                    currentValue => '1'
+                }
+            ]
+        };
+    } elsif ( $defect_number eq '2002' ) {
+        return {
+            defectNumber => '2002',
+            attributes => [
+                {
+                    name => 'Priority Level',
+                    type => { key => 'priority' },
+                    pickValue => { key => 'medium' },
+                    currentValue => 'Medium Priority'
+                }
+            ]
+        };
     }
 
     return {};
@@ -1816,7 +1892,7 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'in_progress',
                     update_id            => '3004_1',
                     updated_datetime     => '2018-03-01T14:00:00+00:00',
-                    extras               => { category => 'Flooding', group => 'Flooding & Drainage', targetDate => '2018-04-01T12:00:00+00:00', original_service_code => 'ABC_DEF' },
+                    extras               => { category => 'Flooding', group => 'Flooding & Drainage', targetDate => '2018-04-01T12:00:00+00:00', defectAttrib_priority => 'High', defectAttrib_severity => 1, original_service_code => 'ABC_DEF' },
                 },
                 {   description          => undef,
                     external_status_code => 'INP',
@@ -1825,7 +1901,7 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'in_progress',
                     update_id            => '3005_1',
                     updated_datetime     => '2018-03-01T15:00:00+00:00',
-                    extras               => { category => 'Flooding', group => 'Flooding & Drainage', original_service_code => 'ABC_DEF' },
+                    extras               => { category => 'Flooding', group => 'Flooding & Drainage', defectAttrib_priority => 'Medium', original_service_code => 'ABC_DEF' },
                 },
                 {   description          => undef,
                     external_status_code => 'INP',
@@ -1834,7 +1910,7 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'in_progress',
                     update_id            => '3006_1',
                     updated_datetime     => '2018-03-01T16:00:00+00:00',
-                    extras               => { category => 'Flooding', group => 'Flooding & Drainage', jobStartDate => '2018-03-25T00:00:00+00:00' },
+                    extras               => { category => 'Flooding', group => 'Flooding & Drainage', jobStartDate => '2018-03-25T00:00:00+00:00', original_service_code => 'ABC_DEF' },
                 },
 
                 # Jobs
@@ -1871,7 +1947,7 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'open',
                     update_id            => 'DEFECT_1001_defect_log_1',
                     updated_datetime     => '2018-03-01T12:00:00+00:00',
-                    extras               => { targetDate => '2018-04-01T00:00:00Z', jobStartDate => '2018-03-20T00:00:00Z' },
+                    extras               => { targetDate => '2018-04-01T00:00:00Z', jobStartDate => '2018-03-20T00:00:00Z', defectAttrib_priority => 'High', defectAttrib_severity => 3 },
                 },
                 {   description          => undef,
                     external_status_code => 'OPEN',
@@ -1889,7 +1965,7 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'fixed',
                     update_id            => 'DEFECT_1003_defect_log_2',
                     updated_datetime     => '2018-03-01T15:00:00+00:00',
-                    extras               => { targetDate => '2018-03-15T00:00:00Z', jobStartDate => '2018-03-10T00:00:00Z' },
+                    extras               => { targetDate => '2018-03-15T00:00:00Z', jobStartDate => '2018-03-10T00:00:00Z', defectAttrib_priority => 'Medium', defectAttrib_severity => 2 },
                 },
             ],
         },

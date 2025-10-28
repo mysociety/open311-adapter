@@ -17,6 +17,7 @@ use MooX::HandlesVia;
 use Types::Standard qw(Maybe ArrayRef);
 use Path::Tiny;
 use SOAP::Lite; # +trace => [ qw/method debug/ ];
+use Try::Tiny;
 use URI::Escape;
 
 
@@ -655,6 +656,7 @@ sub get_service_request_updates {
           }
         }
         defect {
+          defectNumber
           targetDate
           documents {
             url
@@ -729,6 +731,18 @@ GRAPHQL
                 $extras->{featureSPD} = $featureSPD;
             }
 
+            # Add defect attributes from web API if there's a linked defect
+            if ( my $defect = $status_log->{centralEnquiry}->{enquiryLink}->{defect} ) {
+                my $attributes = $self->_fetch_defect_web_api_attributes($defect);
+                if (@$attributes) {
+                    $extras ||= {};
+                    foreach my $attr (@$attributes) {
+                        my ($code, $name, $value) = @$attr;
+                        $extras->{"defectAttrib_$code"} = $value;
+                    }
+                }
+            }
+
             my $enquiry_id = $status_log->{enquiryNumber};
             my $update = $self->_parse_enquiry_status_log($log, $enquiry_id, $integ, $extras);
             push(@updates, $update) if $update;
@@ -797,6 +811,38 @@ sub _get_service_request_updates_for_jobs {
     }
 }
 
+=head2 _fetch_defect_web_api_attributes
+
+Fetches defect attributes from the Confirm web API and returns them as an
+arrayref of [code, description, value] arrays for configured attributes.
+
+=cut
+
+sub _fetch_defect_web_api_attributes {
+    my ($self, $defect) = @_;
+
+    my $integ = $self->get_integration;
+    my @attributes;
+
+    my $mapping = $integ->config->{defect_attributes};
+    return \@attributes unless $mapping;
+
+    try {
+        my $res = $integ->GetDefectAttributes($defect->{defectNumber});
+        foreach my $attr (@{ $res->{attributes} }) {
+            my $k = $attr->{type}->{key};
+            if (my $c = $mapping->{$k}) {
+                my $name = $c->{name} || $attr->{name};
+                my $value = $c->{numeric} ? $attr->{numericValue} : $c->{values}->{$attr->{pickValue}->{key}};
+                $value ||= $attr->{currentValue};
+                push @attributes, [ $k, $name, $value ];
+            }
+        }
+    };
+
+    return \@attributes;
+}
+
 sub _get_service_request_updates_for_defects {
     my ($self, $integ, $args, $updates) = @_;
 
@@ -852,6 +898,13 @@ sub _get_service_request_updates_for_defects {
             if ( my $supersedes = $defect->{supersedesDefectNumber} ) {
                 $extras->{supersedes} =  "DEFECT_" . $supersedes,
             };
+
+            # Add defect attributes from web API
+            my $attributes = $self->_fetch_defect_web_api_attributes($defect);
+            foreach my $attr (@$attributes) {
+                my ($code, $name, $value) = @$attr;
+                $extras->{"defectAttrib_$code"} = $value;
+            }
 
             push @$updates,
                 Open311::Endpoint::Service::Request::Update::mySociety->new(

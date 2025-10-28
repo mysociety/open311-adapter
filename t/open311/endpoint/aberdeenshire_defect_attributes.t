@@ -31,15 +31,64 @@ BEGIN { $ENV{TEST_MODE} = 1; }
 my $lwp = Test::MockModule->new('LWP::UserAgent');
 my $endpoint = Open311::Endpoint::Integration::UK::AberdeenshireDummy->new;
 
-# Mock the json_web_api_call method directly
+# Mock the GetDefectAttributes method
 my $confirm_mock = Test::MockModule->new('Integrations::Confirm');
 
-subtest "Test defect description with attributes" => sub {
-    # Mock json_web_api_call to return defect attributes
-    $confirm_mock->mock(json_web_api_call => sub {
-        my ($self, $path) = @_;
+subtest "Test _fetch_defect_web_api_attributes returns structured data" => sub {
+    # Mock GetDefectAttributes to return defect attributes
+    $confirm_mock->mock(GetDefectAttributes => sub {
+        my ($self, $defect_number) = @_;
 
-        if ($path eq '/defects/12345') {
+        if ($defect_number eq '12345') {
+            return {
+                defectNumber => '12345',
+                attributes => [
+                    {
+                        name => 'Priority Level',
+                        type => { key => 'priority' },
+                        pickValue => { key => 'high' },
+                        currentValue => 'High Priority'
+                    },
+                    {
+                        name => 'Surface Type',
+                        type => { key => 'surface' },
+                        pickValue => { key => 'tarmac' },
+                        currentValue => 'Tarmac'
+                    },
+                    {
+                        name => 'Depth',
+                        type => { key => 'depth' },
+                        numericValue => 15,
+                        currentValue => '15'
+                    }
+                ]
+            };
+        }
+
+        return {};
+    });
+
+    my $defect = {
+        defectNumber => '12345',
+        targetDate => '2025-08-15T10:00:00Z'
+    };
+
+    my $attributes = $endpoint->_fetch_defect_web_api_attributes($defect);
+
+    is ref($attributes), 'ARRAY', 'Returns arrayref';
+    is scalar(@$attributes), 3, 'Returns three attributes';
+
+    is_deeply $attributes->[0], ['priority', 'Priority', 'High Priority'], 'First attribute has correct structure';
+    is_deeply $attributes->[1], ['surface', 'Surface', 'Tarmac'], 'Second attribute has correct structure';
+    is_deeply $attributes->[2], ['depth', 'Depth', 15], 'Third attribute has correct structure';
+};
+
+subtest "Test defect description with attributes" => sub {
+    # Mock GetDefectAttributes to return defect attributes
+    $confirm_mock->mock(GetDefectAttributes => sub {
+        my ($self, $defect_number) = @_;
+
+        if ($defect_number eq '12345') {
             return {
                 defectNumber => '12345',
                 attributes => [
@@ -106,8 +155,8 @@ subtest "Test defect description without target date" => sub {
 };
 
 subtest "Test defect description with API error" => sub {
-    # Mock json_web_api_call to throw error
-    $confirm_mock->mock(json_web_api_call => sub {
+    # Mock GetDefectAttributes to throw error
+    $confirm_mock->mock(GetDefectAttributes => sub {
         die "API Error";
     });
 
@@ -158,11 +207,11 @@ subtest "Test defect description without attribute mapping config" => sub {
 };
 
 subtest "Test defect description with feature attributes (CCAT and SPD)" => sub {
-    # Mock json_web_api_call to return defect attributes
-    $confirm_mock->mock(json_web_api_call => sub {
-        my ($self, $path) = @_;
+    # Mock GetDefectAttributes to return defect attributes
+    $confirm_mock->mock(GetDefectAttributes => sub {
+        my ($self, $defect_number) = @_;
 
-        if ($path eq '/defects/54321') {
+        if ($defect_number eq '54321') {
             return {
                 defectNumber => '54321',
                 attributes => []
@@ -226,11 +275,11 @@ subtest "Test defect description with feature attributes without value mapping" 
 };
 
 subtest "Test defect description with both defect and feature attributes" => sub {
-    # Mock json_web_api_call to return defect attributes
-    $confirm_mock->mock(json_web_api_call => sub {
-        my ($self, $path) = @_;
+    # Mock GetDefectAttributes to return defect attributes
+    $confirm_mock->mock(GetDefectAttributes => sub {
+        my ($self, $defect_number) = @_;
 
-        if ($path eq '/defects/67890') {
+        if ($defect_number eq '67890') {
             return {
                 defectNumber => '67890',
                 attributes => [
@@ -271,6 +320,62 @@ subtest "Test defect description with both defect and feature attributes" => sub
     like $description, qr/Priority: High Priority/, 'Contains defect attribute';
     like $description, qr/Carriageway Category: Category 1/, 'Contains CCAT feature attribute';
     like $description, qr/Speed Limit: 20 mph/, 'Contains SPD feature attribute';
+};
+
+subtest "Test service request updates include defect attributes in extras" => sub {
+    # Verify that _fetch_defect_web_api_attributes is called and data added to extras
+    my $defect = {
+        defectNumber => '11111',
+        targetDate => '2025-11-15T10:00:00Z',
+        feature => {
+            attribute_CCAT => { attributeValueCode => '2' },
+            attribute_SPD => { attributeValueCode => '30' }
+        }
+    };
+
+    # Mock GetDefectAttributes to return defect attributes
+    $confirm_mock->mock(GetDefectAttributes => sub {
+        my ($self, $defect_number) = @_;
+        if ($defect_number eq '11111') {
+            return {
+                defectNumber => '11111',
+                attributes => [
+                    {
+                        name => 'Priority Level',
+                        type => { key => 'priority' },
+                        pickValue => { key => 'high' },
+                        currentValue => 'High Priority'
+                    },
+                    {
+                        name => 'Depth',
+                        type => { key => 'depth' },
+                        numericValue => 20,
+                        currentValue => '20'
+                    }
+                ]
+            };
+        }
+        return {};
+    });
+
+    # Test the attributes fetch directly
+    my $attributes = $endpoint->_fetch_defect_web_api_attributes($defect);
+    is scalar(@$attributes), 2, 'Fetches two attributes';
+
+    # Verify structure - these will be added to extras with defectAttrib_ prefix
+    is $attributes->[0][0], 'priority', 'First attribute code is priority';
+    is $attributes->[0][2], 'High Priority', 'First attribute value is High Priority';
+    is $attributes->[1][0], 'depth', 'Second attribute code is depth';
+    is $attributes->[1][2], 20, 'Second attribute value is 20';
+
+    # Verify that when added to extras, they'll be prefixed
+    my $extras = {};
+    foreach my $attr (@$attributes) {
+        my ($code, $name, $value) = @$attr;
+        $extras->{"defectAttrib_$code"} = $value;
+    }
+    is $extras->{defectAttrib_priority}, 'High Priority', 'Extras key has defectAttrib_ prefix for priority';
+    is $extras->{defectAttrib_depth}, 20, 'Extras key has defectAttrib_ prefix for depth';
 };
 
 done_testing;
