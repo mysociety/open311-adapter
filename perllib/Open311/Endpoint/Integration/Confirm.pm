@@ -826,6 +826,7 @@ sub _get_service_request_updates_for_defects {
 
             my $extras = {
                 targetDate => $defect->{targetDate} || '',
+                jobStartDate => $log->{job}->{estimatedStartDate} || '',
             };
             if ( my $featureCCAT = $defect->{feature}->{attribute_CCAT}->{attributeValueCode} ) {
                 $extras->{featureCCAT} = $featureCCAT;

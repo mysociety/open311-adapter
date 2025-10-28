@@ -447,6 +447,7 @@ $open311->mock( perform_request_graphql => sub {
                         loggedDate => '2018-03-01T12:00:00Z',
                         key => 'defect_log_1',
                         job => {
+                            estimatedStartDate => '2018-03-20T00:00:00Z',
                             defects => [
                                 {
                                     defectNumber => '1001',
@@ -464,6 +465,7 @@ $open311->mock( perform_request_graphql => sub {
                         loggedDate => '2018-03-01T15:00:00Z',
                         key => 'defect_log_2',
                         job => {
+                            estimatedStartDate => '2018-03-10T00:00:00Z',
                             defects => [
                                 {
                                     defectNumber => '1003',
@@ -1812,7 +1814,7 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'open',
                     update_id            => 'DEFECT_1001_defect_log_1',
                     updated_datetime     => '2018-03-01T12:00:00+00:00',
-                    extras               => { targetDate => '2018-04-01T00:00:00Z' },
+                    extras               => { targetDate => '2018-04-01T00:00:00Z', jobStartDate => '2018-03-20T00:00:00Z' },
                 },
                 {   description          => undef,
                     external_status_code => 'OPEN',
@@ -1821,7 +1823,7 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'open',
                     update_id            => 'DEFECT_1002_defect_log_1',
                     updated_datetime     => '2018-03-01T12:00:00+00:00',
-                    extras               => { targetDate => undef },
+                    extras               => { targetDate => undef, jobStartDate => '2018-03-20T00:00:00Z' },
                 },
                 {   description          => undef,
                     external_status_code => 'FIXED',
@@ -1830,7 +1832,7 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     status               => 'fixed',
                     update_id            => 'DEFECT_1003_defect_log_2',
                     updated_datetime     => '2018-03-01T15:00:00+00:00',
-                    extras               => { targetDate => '2018-03-15T00:00:00Z' },
+                    extras               => { targetDate => '2018-03-15T00:00:00Z', jobStartDate => '2018-03-10T00:00:00Z' },
                 },
             ],
         },

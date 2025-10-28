@@ -691,6 +691,7 @@ sub defect_status_logs_graphql_query {
         key
 
         job {
+            estimatedStartDate
             documents {
               url
               documentName
