@@ -14,6 +14,7 @@ use JSON::MaybeXS;
 use DateTime::Format::W3CDTF;
 use Path::Tiny;
 use Try::Tiny;
+use Tie::IxHash;
 use Encode qw(encode);
 
 has jurisdiction_id => (
@@ -94,6 +95,15 @@ sub post_service_request {
     my $later = $now->clone->add(days => 1);
     my $time_format = "%Y%m%d";
 
+    tie (my %geo, 'Tie::IxHash',
+        type => 'Point',
+        coordinates => [
+            # Add zero to force numeric context
+            $args->{long} + 0,
+            $args->{lat} + 0,
+        ],
+    );
+
     my $issue = {
         request_client_ref => $args->{attributes}->{fixmystreet_id},
         requesttype_desc => 'FixMyStreets',
@@ -105,14 +115,7 @@ sub post_service_request {
         location_name => $args->{attributes}->{location_name} || '',
         caller => "",
         resolve_by => "",
-        request_geo_ref => {
-            type => 'Point',
-            coordinates => [
-                # Add zero to force numeric context
-                $args->{long} + 0,
-                $args->{lat} + 0,
-            ],
-        }
+        request_geo_ref => \%geo,
     };
 
     $self->logger->debug("[ATAK] Issue: " . encode_json($issue));
