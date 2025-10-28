@@ -680,8 +680,8 @@ for my $test (
                     "Submitted via FixMyStreet\n";
                     is $data->{request_client_ref}, '42';
                     is $data->{project}, 'C123';
-                    is $data->{request_start_date}, '2023-07-27T12:00:00Z';
-                    is $data->{request_end_date}, '2023-07-27T13:00:00Z';
+                    is $data->{request_start_date}, '20230727';
+                    is $data->{request_end_date}, '20230728';
                     is $data->{location_name}, 'Location name';
                     is $data->{request_title}, 'Parks and open spaces|Parks littering';
                     is $data->{requesttype_desc}, 'FixMyStreets';
