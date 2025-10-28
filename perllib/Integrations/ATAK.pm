@@ -76,7 +76,7 @@ Create an issue in the Continental Landscapes ATAK system.
 sub create_issue {
     my ($self, $issue_data) = @_;
 
-    my $request_data = { tasks => [ $issue_data] };
+    my $request_data = { request => [ $issue_data] };
     my $response = $self->post('/request', $request_data);
 
     my $issue_id = $response->{'Processed task 1'};

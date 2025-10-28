@@ -661,7 +661,7 @@ for my $test (
             if ($url eq 'https://example.com/ords/hws/atak/v1/request') {
                 is $headers{Authorization}, 'AUTH-123';
 
-                my $data = decode_json($headers{Content})->{tasks}->[0];
+                my $data = decode_json($headers{Content})->{request}->[0];
                 is $data->{request_desc}, "Location: Location name\n\n" .
                     "location of problem: title\n\ndetail: detail\n\nurl: url\n\n" .
                     "Submitted via FixMyStreet\n";
