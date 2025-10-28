@@ -666,8 +666,7 @@ for my $test (
                     "location of problem: title\n\ndetail: detail\n\nurl: url\n\n" .
                     "Submitted via FixMyStreet\n";
                 is $data->{request_client_ref}, '42';
-                is $data->{project_name}, 'LB BRENT';
-                is $data->{project_code}, 'C123';
+                is $data->{project}, 'C123';
                 is $data->{request_start_date}, '2023-07-27T12:00:00Z';
                 is $data->{request_end_date}, '2023-07-27T13:00:00Z';
                 is $data->{location_name}, 'Location name';
