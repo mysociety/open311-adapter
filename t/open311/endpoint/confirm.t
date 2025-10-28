@@ -556,6 +556,22 @@ $open311->mock( perform_request_graphql => sub {
                                 }
                             }
                         }
+                    },
+                    {
+                        enquiryNumber => '3006',
+                        enquiryStatusCode => 'INP',
+                        logNumber => '1',
+                        loggedDate => '2018-03-01T16:00:00+00:00',
+                        notes => '',
+                        centralEnquiry => {
+                            subjectCode => 'DEF',
+                            serviceCode => 'ABC',
+                            enquiryLink => {
+                                job => {
+                                    estimatedStartDate => '2018-03-25T00:00:00+00:00'
+                                }
+                            }
+                        }
                     }
                 ],
             },
@@ -1778,6 +1794,15 @@ subtest 'GET updates - including for jobs and GraphQL enquiries' => sub {
                     update_id            => '3005_1',
                     updated_datetime     => '2018-03-01T15:00:00+00:00',
                     extras               => { category => 'Flooding', group => 'Flooding & Drainage' },
+                },
+                {   description          => undef,
+                    external_status_code => 'INP',
+                    media_url            => undef,
+                    service_request_id   => '3006',
+                    status               => 'in_progress',
+                    update_id            => '3006_1',
+                    updated_datetime     => '2018-03-01T16:00:00+00:00',
+                    extras               => { category => 'Flooding', group => 'Flooding & Drainage', jobStartDate => '2018-03-25T00:00:00+00:00' },
                 },
 
                 # Jobs
