@@ -593,8 +593,12 @@ sub post_service_request_update {
         $args->{status_code} = $status_code;
     }
 
-    # If service_code is provided, look up the service and pass it to the integration layer
-    $args->{_new_service} = $self->service($args->{service_code}) if $args->{service_code};
+    # If service_code is provided, validate it and look up the service and  pass
+    # it to the integration layer.
+    if ($args->{service_code}) {
+        my %services = map { $_->service_code => $_ } $self->_services;
+        $args->{_new_service} = $services{$args->{service_code}};
+    }
 
     my $response = $self->get_integration->EnquiryUpdate($args);
     my $enquiry = $response->{OperationResponse}->{EnquiryUpdateResponse}->{Enquiry};
@@ -694,10 +698,15 @@ GRAPHQL
             # FMS to handle this.
             my $extras;
             my $service_code = $status_log->{centralEnquiry}->{serviceCode} . "_" . $status_log->{centralEnquiry}->{subjectCode};
-            if ( my $service = $services{$service_code} ) {
+            my $service = $services{$service_code} || $self->_find_wrapping_service($service_code, \%services);
+            if ( $service ) {
                 $extras = {
                     category => $service->service_name,
                     group => @{$service->groups} ? $service->groups->[0] : $service->group,
+                    # Need to send this in case it's a wrapped service, so FMS
+                    # can correctly populate the _wrapped_service_code extra
+                    # field on the report.
+                    original_service_code => $service_code,
                 };
             }
 
@@ -1757,6 +1766,7 @@ sub _wrap_services {
                 datatype => "singlevaluelist",
                 required => 1,
                 values => \%wrapped_services,
+                values_sorted => $self->wrapped_services->{$code}->{wraps},
             ),
         );
         my %seen_attributes = (_wrapped_service_code => 1);
