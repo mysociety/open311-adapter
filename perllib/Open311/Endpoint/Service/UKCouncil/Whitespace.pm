@@ -49,7 +49,7 @@ sub _build_attributes {
                     required => 0,
                     automated => 'hidden_field',
                 ),
-            } qw(assisted_reason assised_duration assisted_location);
+            } qw(assisted_reason assisted_duration assisted_location);
     } else {
         push @attributes,
         Open311::Endpoint::Service::Attribute->new(
