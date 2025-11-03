@@ -811,7 +811,7 @@ sub GetDefectLookups {  # XXX factor together with jobs?
 =head2 GetDefectAttributes
 
 Fetches full defect data from the web API, including attributes.
-Results are cached in memcache for 30 minutes.
+Results are cached in memcache for 10 minutes.
 
 =cut
 

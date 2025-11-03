@@ -74,6 +74,16 @@ $soap_lite->mock(call => sub {
             is $service_item_inputs{144}, 1, 'ServiceItemId correct';
             is $service_item_inputs{83}, 1, 'ServiceItemQuantity correct';
             is $service_item_inputs{5}, 1, 'ServiceItemName correct';
+        } elsif ($params{Uprn} eq 20001) { # Start with 2 for assisted testing
+            is $params{ServiceId}, '76';
+            is $params{WorksheetReference}, 2345678;
+        } elsif ($params{Uprn} eq 20002) { # Start with 2 for assisted testing
+            is $params{ServiceId}, '77';
+            is $params{WorksheetReference}, 2345678;
+            my %service_property_inputs = map { $_->value } map { ${$_->value}->value } ${$params{ServicePropertyInputs}}->value->value;
+            is $service_property_inputs{80}, 'front gate';
+            is $service_property_inputs{59}, 'physical';
+            is $service_property_inputs{61}, '6 months';
         } else {
             die "Unknown uprn $params{Uprn}";
         }
@@ -107,6 +117,24 @@ subtest "GET services" => sub {
         or diag $res->content;
 
     is_deeply decode_json($res->content), [
+        {
+            group        => "Waste",
+            service_code => "assisted_add",
+            description  => "Assisted collection add",
+            keywords     => "waste_only",
+            type         => "realtime",
+            service_name => "Assisted collection add",
+            metadata     => "true"
+        },
+        {
+            group        => "Waste",
+            service_code => "assisted_remove",
+            description  => "Assisted collection remove",
+            keywords     => "waste_only",
+            type         => "realtime",
+            service_name => "Assisted collection remove",
+            metadata     => "true"
+        },
         {
             group        => "Waste",
             service_code => "bulky_collection",
@@ -236,6 +264,53 @@ subtest "POST any other update" => sub {
     is_deeply decode_json($res->content),
         [ {
             "update_id" => 'BLANK',
+        } ], 'correct json returned';
+};
+
+subtest "POST assisted collection addition OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'assisted_add',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 20002,
+        'attribute[fixmystreet_id]' => 2345678,
+        'attribute[assisted_reason]' => 'physical',
+        'attribute[assisted_duration]' => '6 months',
+        'attribute[assisted_location]' => 'front gate',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '242259',
+        } ], 'correct json returned';
+};
+
+subtest "POST assisted collection removal OK" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'assisted_remove',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 20001,
+        'attribute[fixmystreet_id]' => 2345678,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => '242259',
         } ], 'correct json returned';
 };
 
