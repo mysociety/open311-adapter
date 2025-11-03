@@ -39,6 +39,17 @@ sub _build_attributes {
                 ),
             } qw(payment payment_method collection_date round_instance_id
             bulky_items pension disability bulky_location bulky_parking);
+    } elsif ($self->service_name eq 'Assisted collection add') {
+        push @attributes,
+            map {
+                Open311::Endpoint::Service::Attribute->new(
+                    code => $_,
+                    description => $_,
+                    datatype => "string",
+                    required => 0,
+                    automated => 'hidden_field',
+                ),
+            } qw(assisted_reason assised_duration assisted_location);
     } else {
         push @attributes,
         Open311::Endpoint::Service::Attribute->new(
