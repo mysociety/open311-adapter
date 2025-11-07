@@ -131,7 +131,7 @@ subtest "Test defect description with attributes" => sub {
     my $description = $endpoint->_description_for_defect($defect, $service);
 
     like $description, qr/We've recorded a defect at this location/, 'Contains boilerplate text';
-    like $description, qr/To be completed by: 2025-08-15/, 'Contains formatted target date';
+    like $description, qr{To be completed by: 15/08/2025}, 'Contains formatted target date';
     like $description, qr/Priority: High Priority/, 'Contains priority attribute';
     like $description, qr/Surface: Tarmac/, 'Contains surface attribute with mapped value';
     like $description, qr/Depth: 15/, 'Contains numeric depth attribute';
@@ -174,7 +174,7 @@ subtest "Test defect description with API error" => sub {
     my $description = $endpoint->_description_for_defect($defect, $service);
 
     like $description, qr/We've recorded a defect at this location/, 'Contains boilerplate text';
-    like $description, qr/To be completed by: 2025-08-15/, 'Contains target date even with API error';
+    like $description, qr{To be completed by: 15/08/2025}, 'Contains target date even with API error';
     # Should not contain attribute info when API fails
     unlike $description, qr/Priority|Surface|Depth/, 'Does not contain attributes when API fails';
 };
@@ -201,7 +201,7 @@ subtest "Test defect description without attribute mapping config" => sub {
     my $description = $simple_endpoint->_description_for_defect($defect, $service);
 
     like $description, qr/We've recorded a defect at this location/, 'Contains boilerplate text';
-    like $description, qr/To be completed by: 2025-08-15/, 'Contains target date';
+    like $description, qr{To be completed by: 15/08/2025}, 'Contains target date';
     # Should not attempt to fetch attributes without mapping config
     unlike $description, qr/Priority|Surface|Depth/, 'Does not contain attributes without mapping config';
 };
@@ -243,7 +243,7 @@ subtest "Test defect description with feature attributes (CCAT and SPD)" => sub 
     my $description = $endpoint->_description_for_defect($defect, $service);
 
     like $description, qr/We've recorded a defect at this location/, 'Contains boilerplate text';
-    like $description, qr/To be completed by: 2025-09-20/, 'Contains formatted target date';
+    like $description, qr{To be completed by: 20/09/2025}, 'Contains formatted target date';
     like $description, qr/Carriageway Category: Category 2/, 'Contains CCAT feature attribute with mapped value';
     like $description, qr/Speed Limit: 30 mph/, 'Contains SPD feature attribute with mapped value';
 };

@@ -1,6 +1,7 @@
 package Open311::Endpoint::Integration::UK::Aberdeenshire;
 
 use Moo;
+use DateTime::Format::W3CDTF;
 use List::Util qw(reduce);
 
 extends 'Open311::Endpoint::Integration::Confirm';
@@ -18,7 +19,7 @@ sub _description_for_defect {
 
     my $target = '';
     if ( $defect->{targetDate} ) {
-        my ($date) = split('T', $defect->{targetDate});
+        my ($date) = DateTime::Format::W3CDTF->parse_datetime($defect->{targetDate})->dmy('/');
         $target = "To be completed by: $date";
     }
 
