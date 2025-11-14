@@ -1,0 +1,45 @@
+    <ServiceRequests_GetResponse xmlns="http://bartec-systems.com/">
+      <ServiceRequests_GetResult xmlns="http://www.bartec-systems.com/ServiceRequests_Get.xsd" RecordCount="1">
+        <ServiceRequest>
+          <id xmlns="http://www.bartec-systems.com">51393</id>
+          <ServiceCode xmlns="http://www.bartec-systems.com">SR4</ServiceCode>
+          <Premises xmlns="http://www.bartec-systems.com">
+            <UPRN>10000000004</UPRN>
+            <USRN>20000004</USRN>
+            <Location>
+              <BNG Easting="517572.970437695" Northing="295392.962529791"/>
+              <Metric Latitude="51.543673" Longitude="-0.268678"/>
+            </Location>
+          </Premises>
+          <ServiceLocation xmlns="http://www.bartec-systems.com">
+            <BNG Easting="537574.431717046" Northing="245405.572821964"/>
+            <Metric Latitude="52.843786" Longitude="-0.367652"/>
+          </ServiceLocation>
+          <DateRequested xmlns="http://www.bartec-systems.com">2020-06-23T16:17:00</DateRequested>
+          <ServiceType xmlns="http://www.bartec-systems.com">
+            <ID>6</ID>
+            <Name>Missed food</Name>
+            <Description>Missed food</Description>
+            <ServiceClass>
+              <ID>84</ID>
+              <Name>MISSED BIN</Name>
+              <Description>MISSED BIN</Description>
+              <Category>General</Category>
+              <Mobile>false</Mobile>
+              <Private>false</Private>
+            </ServiceClass>
+          </ServiceType>
+          <ServiceStatus xmlns="http://www.bartec-systems.com">
+            <ID>2644</ID>
+            <Status>OPEN</Status>
+            <SequenceNumber>2</SequenceNumber>
+            <ServiceTypeID>270</ServiceTypeID>
+          </ServiceStatus>
+          <ExternalReference xmlns="http://www.bartec-systems.com"></ExternalReference>
+        </ServiceRequest>
+        <Errors>
+          <Result xmlns="http://www.bartec-systems.com">0</Result>
+          <Message xmlns="http://www.bartec-systems.com"/>
+        </Errors>
+      </ServiceRequests_GetResult>
+    </ServiceRequests_GetResponse>

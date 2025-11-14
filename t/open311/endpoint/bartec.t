@@ -1318,7 +1318,7 @@ subtest 'fetch_requests' => sub {
 
     is_deeply $sent_get->body->{ServiceRequests_Get}, {
         token => 'ABC=',
-        ServiceCode => 'SR4',
+        ServiceCode => 'SR6',
     }, 'correct fetch history request sent';
 
     ok $res->is_success, 'valid request'
