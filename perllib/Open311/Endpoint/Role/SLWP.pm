@@ -42,7 +42,7 @@ around post_service_request_update => sub {
         $class->update_event_payment($args, [ { ref => $ref, amount => $amount } ]);
     }
 
-    if ($args->{description} =~ /Booking cancelled/ || $args->{attributes}{booking_cancelled}) {
+    if ($args->{status} eq 'CANCELLED') {
         $args->{actiontype_id} = $class->cancel_actiontype_id;
         $args->{datatype_id} = 0;
     }
