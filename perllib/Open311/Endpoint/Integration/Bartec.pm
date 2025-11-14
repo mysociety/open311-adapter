@@ -518,18 +518,25 @@ sub get_service_requests {
     return @requests;
 }
 
-# if it's got an external reference it's an FixMyStreet report. And ignore reports
-# that are in any state other than open as it's assumed they are not new.
+# Ignore reports with external references (it's a FixMyStreet report),
+# and any that are in any state other than open as it's assumed they are
+# not new, plus any waste categories.
 sub skip_request {
     my ($self, $sr) = @_;
-    my $skip = 0;
 
-    if ( $sr->{ExternalReference} ||
-         not grep { $sr->{ServiceStatus}->{Status} eq $_ } @{ $self->get_integration->config->{statuses_to_fetch} } ) {
-         $skip = 1;
+    return 1 if $sr->{ExternalReference};
+
+    my $statuses = $self->get_integration->config->{statuses_to_fetch};
+    if (not grep { $sr->{ServiceStatus}->{Status} eq $_ } @$statuses) {
+         return 1;
     }
 
-    return $skip;
+    my $keywords_map = $self->get_integration->config->{service_keywords};
+    foreach (@{ $keywords_map->{$sr->{ServiceType}->{ID}} || [] }) {
+        return 1 if $_ eq 'waste_only';
+    }
+
+    return 0;
 }
 
 sub upload_urls {
