@@ -1,0 +1,9 @@
+"create_endpoint_url": "https://dummy.example.org"
+"username": 'fms_user'
+"password": 'fms_password'
+"service_whitelist":
+  'bench_or_seat_problem':
+    'name': 'Bench or seat on the pavement'
+    'group': 'Benches'
+    'form_name': 'lle_benches_form'
+    'typekey': 'bench_or_seat_problem'
