@@ -3,13 +3,16 @@ package Open311::Endpoint::Integration::Verint;
 use Moo;
 use DateTime::Format::W3CDTF;
 use Integrations::Verint;
+use Digest::MD5 qw(md5_hex);
 use MIME::Base64 qw(encode_base64);
 use Path::Tiny;
 use Tie::IxHash;
 use URI::Split qw(uri_split);
-use Open311::Endpoint::Service::UKCouncil
+use Open311::Endpoint::Service::UKCouncil;
+use Open311::Endpoint::Service::Request::Update::mySociety;
 
 extends 'Open311::Endpoint';
+with 'Open311::Endpoint::Role::mySociety';
 with 'Role::EndpointConfig';
 with 'Role::Logger';
 
@@ -101,6 +104,53 @@ sub post_service_request {
     return $self->new_request(
         service_request_id => $ref,
     )
+}
+
+sub get_service_request_updates {
+    my ($self, $args) = @_;
+
+    my $integ = $self->get_integration;
+    my $mapping = $self->endpoint_config->{status_mapping};
+
+    my $result = $integ->searchAndRetrieveCaseDetails(
+        ixhash(
+            'LastModifiedDateFrom' => $args->{start_date},
+            'LastModifiedDateTo' => $args->{end_date},
+        ),
+        'all',
+    );
+    return unless $result;
+    $result = $result->method;
+    return unless $result;
+
+    my $requests = $result->{FWTCaseFullDetails};
+    $requests = [ $requests ] unless ref $requests eq 'ARRAY';
+    my @updates;
+    foreach (@$requests) {
+        my $core = $_->{CoreDetails};
+        my $closed = $core->{Closed};
+        next unless $closed;
+        my $ref = $core->{CaseReference};
+        my $reason = $core->{caseCloseureReason};
+        my $status = 'closed';
+        foreach (keys %$mapping) {
+            if ($reason =~ /^$_/) {
+                $status = $mapping->{$_};
+            }
+        }
+
+        my $digest = substr(md5_hex($reason), 0, 8);
+        my $update_id = $ref . '_' . $digest;
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
+            status => $status,
+            update_id => $update_id,
+            service_request_id => $ref,
+            description => '',
+            updated_datetime => DateTime::Format::W3CDTF->parse_datetime($closed),
+            extra => { latest_data_only => 1 },
+        );
+    }
+    return @updates;
 }
 
 =head2 services

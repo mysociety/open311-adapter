@@ -28,6 +28,15 @@ my %methods = (
       SOAP::Data->new(name => 'sch:field', type => 'sch:nonEmptyString', attr => {}),
     ], # end parameters
   }, # end AttachFile
+
+'searchAndRetrieveCaseDetails' => {
+    soapaction => 'http://www.lagan.com/wsdl/FLService',
+    namespace => 'http://www.lagan.com/wsdl/FLService',
+    parameters => [
+      SOAP::Data->new(name => 'flt:FWTCaseSearch', type => 'flt:FWTCaseSearch', attr => {}),
+      SOAP::Data->new(name => 'Option', type => 'xs:string', attr => {}),
+    ], # end parameters
+  }, # end searchAndRetrieveCaseDetails
 );
 
 use vars qw(@ISA $AUTOLOAD @EXPORT_OK %EXPORT_TAGS);
@@ -48,7 +57,9 @@ sub _call {
     my $proxy;
     if ($name eq 'CreateRequest' || $name eq 'AttachFileRequest') {
         $proxy = $config->{'create_endpoint_url'};
-    };
+    } else {
+        $proxy = $config->{fl_endpoint_url};
+    }
 
     $self->proxy($proxy || Carp::croak "No server address (proxy) specified")
         unless $self->proxy;
@@ -71,6 +82,7 @@ sub _call {
     $self->serializer->register_ns("http://schemas.xmlsoap.org/wsdl/","wsdl");
     $self->serializer->register_ns("http://kana.com/dforms","tns");
     $self->serializer->register_ns("http://kana.com/dforms","sch");
+    $self->serializer->register_ns("http://www.lagan.com/wsdl/FLTypes","flt");
 
     my $som = $self->SUPER::call($method => @parameters);
     if ($self->want_som) {
@@ -83,6 +95,11 @@ sub _call {
 sub SOAP::Serializer::as_nonEmptyString {
     my ($self, $value, $name, $type, $attr) = @_;
 
+    return [$name, {'type' => $type, %$attr}, $value];
+}
+
+sub SOAP::Serializer::as_FWTCaseReference {
+    my ($self, $value, $name, $type, $attr) = @_;
     return [$name, {'type' => $type, %$attr}, $value];
 }
 
@@ -102,6 +119,14 @@ sub SOAP::Serializer::as_Data {
     return [$name, {'type' => $type, %$attr}, \@elem];
 }
 
+sub SOAP::Serializer::as_FWTCaseSearch {
+    my ($self, $value, $name, $type, $attr) = @_;
+
+    my $elem = \SOAP::Data->value( make_soap_structure(%$value));
+
+    return [$name, {type => $type, %$attr}, $elem];
+}
+
 sub ixhash {
     tie (my %data, 'Tie::IxHash', @_);
     return \%data;
@@ -119,6 +144,9 @@ sub make_soap_structure {
         } elsif (ref $v eq 'ARRAY') {
             my @map = map { make_soap_structure(%$_) } @$v;
             $val = \SOAP::Data->value(SOAP::Data->name('dummy' => @map));
+        } elsif ($name =~ /^LastModified/) {
+        } elsif ($name eq 'flt:CaseReference') {
+            $d->type('flt:FWTCaseReference');
         } else {
             $d->type('string');
         }
