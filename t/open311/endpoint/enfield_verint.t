@@ -54,6 +54,12 @@ $soap_lite->mock(call => sub {
         }
 
         return SOAP::Result->new(method => { status => 'success', ref => 12345 });
+    } elsif ($call eq 'AttachFileRequest') {
+        is $args[0]->value, '12345';
+        is $args[1]->value, 'image.jpg';
+        is $args[2]->value, 'VGhpcyBpcyBhIGZha2UgaW1hZ2UK';
+        is $args[3]->value, 'image/jpeg';
+        is $args[4]->value, 'txt_filename';
     } else {
         die "Unknown call $call made";
     }
@@ -88,6 +94,8 @@ use Test::MockTime ':all';
 use Path::Tiny;
 use Open311::Endpoint::Service::UKCouncil;
 use JSON::MaybeXS qw(encode_json decode_json);
+use HTTP::Request::Common;
+use Web::Dispatch::Upload;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
@@ -124,6 +132,23 @@ subtest "POST report" => sub {
     set_fixed_time($create_report_time);
     my $res = $enfield_endpoint->run_test_request(
         POST => '/requests.json', @standard);
+    is $res->code, 200, 'Report submitted ok';
+};
+
+subtest "POST report with photo" => sub {
+    set_fixed_time($create_report_time);
+
+    my $file = Web::Dispatch::Upload->new(
+        tempname => path(__FILE__)->dirname . '/files/bartec/image.jpg',
+        filename => 'image.jpg',
+        size => 10,
+    );
+
+    my $req = POST '/requests.json',
+        Content_Type => 'form-data',
+        Content => [ @standard, uploads => [ $file ] ];
+    my $res = $enfield_endpoint->run_test_request($req);
+
     is $res->code, 200, 'Report submitted ok';
 };
 
