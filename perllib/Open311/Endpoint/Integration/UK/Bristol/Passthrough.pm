@@ -29,6 +29,7 @@ around BUILDARGS => sub {
 around post_service_request_update => sub {
     my ($orig, $self, $args) = @_;
     delete $args->{service_code};
+    $args->{description} = 'No update text' unless $args->{description};
     return $self->$orig($args);
 };
 
