@@ -18,6 +18,17 @@ my %methods = (
       SOAP::Data->new(name => 'sch:complete', type => 'sch:stringBoolean', attr => {}),
     ],
   },
+'AttachFileRequest' => {
+    soapaction => 'http://kana.com/dforms/AttachFile',
+    namespace => 'http://kana.com/dforms',
+    parameters => [
+      SOAP::Data->new(name => 'sch:ref', type => 'sch:nonEmptyString', attr => {}),
+      SOAP::Data->new(name => 'sch:filename', type => 'sch:nonEmptyString', attr => {}),
+      SOAP::Data->new(name => 'sch:file', type => 'sch:nonEmptyString', attr => {}),
+      SOAP::Data->new(name => 'sch:mimetype', type => 'sch:nonEmptyString', attr => {}),
+      SOAP::Data->new(name => 'sch:field', type => 'sch:nonEmptyString', attr => {}),
+    ], # end parameters
+  }, # end AttachFile
 );
 
 use vars qw(@ISA $AUTOLOAD @EXPORT_OK %EXPORT_TAGS);
@@ -36,7 +47,7 @@ sub _call {
 
     my $config = $self->config;
     my $proxy;
-    if ($name eq 'CreateRequest') {
+    if ($name eq 'CreateRequest' || $name eq 'AttachFileRequest') {
         $proxy = $config->{'create_endpoint_url'};
     };
 
