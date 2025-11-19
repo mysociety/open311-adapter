@@ -60,6 +60,23 @@ $soap_lite->mock(call => sub {
         is $args[2]->value, 'VGhpcyBpcyBhIGZha2UgaW1hZ2UK';
         is $args[3]->value, 'image/jpeg';
         is $args[4]->value, 'txt_filename';
+    } elsif ($call eq 'searchAndRetrieveCaseDetails') {
+        my @dates = ${$args[0]->value}->value;
+        is $dates[0]->value, '2025-11-18T12:00:00Z';
+        is $dates[1]->value, '2025-11-18T13:00:00Z';
+        is $args[1]->value, 'all';
+        return SOAP::Result->new(method => { FWTCaseFullDetails => [ {
+            CoreDetails => {
+                ExternalReferences => { ExternalReference => 1 },
+                caseCloseureReason => '',
+            },
+        }, {
+            CoreDetails => {
+                Closed => '2025-11-18T09:00:00Z',
+                ExternalReferences => { ExternalReference => [ 2, '46/W' ] },
+                caseCloseureReason => 'Case Resolved (some text)',
+            },
+        } ] });
     } else {
         die "Unknown call $call made";
     }
@@ -150,6 +167,28 @@ subtest "POST report with photo" => sub {
     my $res = $enfield_endpoint->run_test_request($req);
 
     is $res->code, 200, 'Report submitted ok';
+};
+
+subtest 'GET updates' => sub {
+    my $res = $enfield_endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?start_date=2025-11-18T12:00:00Z&end_date=2025-11-18T13:00:00Z');
+    is $res->code, 200, 'Updates fetched ok';
+    my $content = decode_json($res->content);
+    is_deeply $content, [{
+      'status' => 'fixed',
+      'update_id' => '2_f57de23c',
+      'media_url' => '',
+      'description' => '',
+      'service_request_id' => 2,
+      'updated_datetime' => '2025-11-18T09:00:00Z'
+    }, {
+      'status' => 'fixed',
+      'update_id' => '46W_f57de23c',
+      'media_url' => '',
+      'description' => '',
+      'service_request_id' => '46W',
+      'updated_datetime' => '2025-11-18T09:00:00Z'
+    }];
 };
 
 done_testing;
