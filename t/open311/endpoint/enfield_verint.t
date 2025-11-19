@@ -1,3 +1,6 @@
+package SOAP::Result;
+use Object::Tiny qw(method result);
+
 package Integrations::Verint::Dummy;
 
 use Path::Tiny;
@@ -10,7 +13,7 @@ use Test::MockTime;
 extends 'Integrations::Verint';
 
 my $soap_lite = Test::MockModule->new('SOAP::Lite');
-my $create_report_time = '2025-11-18T16:28:30';
+my $create_report_time = '2025-11-18T16:28:30Z';
 
 $soap_lite->mock(call => sub {
     my ($cls, @args) = @_;
@@ -28,15 +31,19 @@ $soap_lite->mock(call => sub {
         is $args[1]->type, 'sch:Data';
         my $data = $args[1]->value->[0]->value;
         my @expected = (
+            [ 'le_gis_lat', '50' ],
+            [ 'le_gis_lon', '0.1' ],
+            [ 'txt_easting', '1' ],
+            [ 'txt_northing', '2' ],
+            [ 'txt_map_usrn', '12345' ],
+            [ 'txt_map_uprn', '67899' ],
             [ 'txt_request_open_date', $create_report_time ],
-            [ 'txta_additional_location', 'Bench on High Street next to post office' ],
-            [ 'txta_problem', 'Back has come off bench' ],
             [ 'le_typekey', 'bench_or_seat_problem' ],
             [ 'txt_cust_info_first_name', 'Bob' ],
             [ 'txt_cust_info_last_name', 'Mould' ],
             [ 'eml_cust_info_email', 'test@example.com' ],
-            [ 'txt_map_usrn', '12345' ],
-            [ 'txt_map_uprn', '67899' ],
+            [ 'txta_additional_location', 'Bench on High Street next to post office' ],
+            [ 'txta_problem', 'Back has come off bench' ],
         );
         for my $field ($$data->value->value) {
             my $expected = shift @expected;
@@ -46,17 +53,9 @@ $soap_lite->mock(call => sub {
             };
         }
 
-    return <<EOF
-    <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/">
-    <SOAP-ENV:Header/>
-        <SOAP-ENV:Body>
-        <ns2:CreateResponse xmlns:ns2="http://kana.com/dforms">
-        <ns2:status>success</ns2:status>
-        <ns2:ref>12345</ns2:ref>
-        </ns2:CreateResponse>
-        </SOAP-ENV:Body>
-    </SOAP-ENV:Envelope>
-EOF
+        return SOAP::Result->new(method => { status => 'success', ref => 12345 });
+    } else {
+        die "Unknown call $call made";
     }
 });
 
@@ -65,11 +64,14 @@ sub _build_config_file { path(__FILE__)->sibling("enfield_verint.yml")->stringif
 package Open311::Endpoint::Integration::Verint::Dummy;
 use Path::Tiny;
 use Moo;
-use HTTP::Response;
-use HTTP::Headers;
 
 extends 'Open311::Endpoint::Integration::Verint';
 
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{config_file} = path(__FILE__)->sibling("enfield_verint.yml")->stringify;
+    return $class->$orig(%args);
+};
 has integration_class => (
     is => 'ro',
     default => 'Integrations::Verint::Dummy',
@@ -77,8 +79,8 @@ has integration_class => (
 
 package main;
 
-use strict; use warnings;
-
+use strict;
+use warnings;
 use utf8;
 
 use Test::More;
@@ -89,10 +91,7 @@ use JSON::MaybeXS qw(encode_json decode_json);
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
-my $enfield_endpoint = Open311::Endpoint::Integration::Verint::Dummy->new(
-    jurisdiction_id => 'enfield_verint',
-    config_file => path(__FILE__)->sibling("enfield_verint.yml")->stringify,
-    );
+my $enfield_endpoint = Open311::Endpoint::Integration::Verint::Dummy->new;
 
 subtest "GET Service List" => sub {
     my $res = $enfield_endpoint->run_test_request( GET => '/services.xml' );
@@ -100,32 +99,31 @@ subtest "GET Service List" => sub {
     ok $res->is_success, 'xml success';
 };
 
+my @standard = (
+    api_key => 'api-key',
+    service_code => 'bench_or_seat_problem',
+    address_string => '22 Acacia Avenue',
+    first_name => 'Bob',
+    last_name => 'Mould',
+    email => 'test@example.com',
+    description => 'Back has come off bench',
+    lat => '50',
+    long => '0.1',
+    'attribute[description]' => 'Back has come off bench',
+    'attribute[title]' => 'Bench on High Street next to post office',
+    'attribute[report_url]' => 'http://localhost/1',
+    'attribute[easting]' => 1,
+    'attribute[northing]' => 2,
+    'attribute[category]' => '',
+    'attribute[fixmystreet_id]' => 1,
+    'attribute[usrn]' => '12345',
+    'attribute[uprn]' => '67899',
+);
+
 subtest "POST report" => sub {
     set_fixed_time($create_report_time);
-
     my $res = $enfield_endpoint->run_test_request(
-        POST => '/requests.json',
-        jurisdiction_id => 'enfield_verint',
-        api_key => 'api-key',
-        service_code => 'bench_or_seat_problem',
-        address_string => '22 Acacia Avenue',
-        first_name => 'Bob',
-        last_name => 'Mould',
-        email => 'test@example.com',
-        description => 'Back has come off bench',
-        lat => '50',
-        long => '0.1',
-        'attribute[description]' => 'Back has come off bench',
-        'attribute[title]' => 'Bench on High Street next to post office',
-        'attribute[report_url]' => 'http://localhost/1',
-        'attribute[easting]' => 1,
-        'attribute[northing]' => 2,
-        'attribute[category]' => '',
-        'attribute[fixmystreet_id]' => 1,
-        'attribute[usrn]' => '12345',
-        'attribute[uprn]' => '67899',
-    );
-
+        POST => '/requests.json', @standard);
     is $res->code, 200, 'Report submitted ok';
 };
 

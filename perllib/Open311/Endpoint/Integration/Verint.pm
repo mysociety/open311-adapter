@@ -17,44 +17,65 @@ has integration_class => (
     default => 'Integrations::Verint',
 );
 
+sub get_integration {
+    my $self = shift;
+    my $integ = $self->integration_class;
+    $integ = $integ->on_fault(sub { my($soap, $res) = @_; die ref $res ? $res->faultstring : $soap->transport->status, "\n"; });
+    $integ->want_som(1);
+    return $integ;
+}
+
 sub post_service_request {
     my ($self, $service, $args) = @_;
 
     die "No such service" unless $service;
     my $date = DateTime->now();
 
-    my $form_name = $self->endpoint_config->{service_data}->{$service->service_code}->{form_name};
+    my $services = $self->endpoint_config->{service_whitelist};
+    my $service_cfg = $services->{$service->service_code};
 
-    my $integ = $self->integration_class->new;
+    my $integ = $self->get_integration;
 
-    my $res = $integ->CreateRequest($self->endpoint_config, $form_name,
+    my $result = $integ->CreateRequest($self->endpoint_config, $service_cfg->{form_name},
         ixhash(
-            'txt_request_open_date' => $date,
-            'txta_additional_location' => $args->{attributes}->{title},
-            'txta_problem' => $args->{attributes}->{description},
-            'le_typekey' => $args->{service_code},
-            'txt_cust_info_first_name' => $args->{first_name},
-            'txt_cust_info_last_name' => $args->{last_name},
-            'eml_cust_info_email' => $args->{email},
-            'txt_map_usrn' => $args->{attributes}->{usrn},
-            'txt_map_uprn' => $args->{attributes}->{uprn},
+            # Location
+            le_gis_lat => $args->{lat},
+            le_gis_lon => $args->{long},
+            txt_easting => $args->{attributes}->{easting},
+            txt_northing => $args->{attributes}->{northing},
+            txt_map_usrn => $args->{attributes}->{usrn},
+            txt_map_uprn => $args->{attributes}->{uprn},
+            # Metadata
+            txt_request_open_date => $date->datetime . "Z",
+            le_typekey => $service_cfg->{typekey},
+            # Person
+            txt_cust_info_first_name => $args->{first_name},
+            txt_cust_info_last_name => $args->{last_name},
+            eml_cust_info_email => $args->{email},
+            tel_cust_info_phone => $args->{phone},
+            # Report
+            txta_additional_location => $args->{attributes}->{title},
+            txta_problem => $args->{attributes}->{description},
         )
     );
+    die "Failed" unless $result;
+    $result = $result->method;
+    die "Failed" unless $result;
+    my $status = $result->{status};
+    my $ref = $result->{ref};
+    die "$status $ref" unless $status eq 'success';
 
-    my $parsed_response = SOAP::Deserializer->deserialize( $res );
-    my $body = $parsed_response->body->{CreateResponse};
 
-    if ($body->{status} eq 'success') {
-        return $self->new_request(
-            service_request_id => $body->{ref},
-        )
-    }
+    return $self->new_request(
+        service_request_id => $ref,
+    )
 }
 
-sub ixhash {
-    tie (my %data, 'Tie::IxHash', @_);
-    return \%data;
-}
+=head2 services
+
+This returns a list of Verint services from the service_whitelist.
+
+=cut
 
 sub services {
     my $self = shift;
@@ -68,10 +89,16 @@ sub services {
                 service_code => $_,
                 description => $name,
                 $services->{$_}{group} ? (group => $services->{$_}{group}) : (),
+                allow_any_attributes => 1,
         );
         } sort keys %$services;
 
     return @services;
+}
+
+sub ixhash {
+    tie (my %data, 'Tie::IxHash', @_);
+    return \%data;
 }
 
 1;

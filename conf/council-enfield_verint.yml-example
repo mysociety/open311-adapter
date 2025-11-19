@@ -1,12 +1,11 @@
-{
-  "endpoint_url": "",
-  "username": "",
-  "password": "",
-  "tenant_id": "",
-  "server_timezone": "Europe/London",
-  "customer_type_code": "",
-  "point_of_contact_code": "",
-  "enquiry_method_code": "",
-  "skip_enquiry_contact_fields": true,
-  "service_whitelist": {},
-}
+create_endpoint_url: ""
+
+username: fms_user
+password: fms_password
+
+service_whitelist:
+  bench_or_seat_problem:
+    name: Bench or seat on the pavement
+    group: Benches
+    form_name: lle_benches_form
+    typekey: bench_or_seat_problem

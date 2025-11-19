@@ -12,7 +12,6 @@ use Tie::IxHash;
 
 my %methods = (
 'CreateRequest' => {
-    endpoint => '',
     soapaction => 'http://kana.com/dforms/Create',
     namespace => 'http://kana.com/dforms',
     parameters => [
@@ -79,7 +78,10 @@ sub SOAP::Serializer::as_Data {
 
     my $form = { 'sch:form-data' => [] };
     for my $key (keys %$value) {
-        push @{$form->{'sch:form-data'}}, { 'sch:field' => ixhash( 'sch:name' => $key, 'sch:value' => $value->{$key} )};
+        next unless $value->{$key};
+        push @{$form->{'sch:form-data'}}, {
+            'sch:field' => ixhash( 'sch:name' => $key, 'sch:value' => $value->{$key} )
+        };
     }
 
     my @elem = make_soap_structure(%$form);

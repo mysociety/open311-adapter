@@ -5,6 +5,5 @@
   'bench_or_seat_problem':
     'name': 'Bench or seat on the pavement'
     'group': 'Benches'
-"service_data":
-  'bench_or_seat_problem':
     'form_name': 'lle_benches_form'
+    'typekey': 'bench_or_seat_problem'
