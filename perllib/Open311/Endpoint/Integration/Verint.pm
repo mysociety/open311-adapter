@@ -3,7 +3,10 @@ package Open311::Endpoint::Integration::Verint;
 use Moo;
 use DateTime::Format::W3CDTF;
 use Integrations::Verint;
+use MIME::Base64 qw(encode_base64);
+use Path::Tiny;
 use Tie::IxHash;
+use URI::Split qw(uri_split);
 use Open311::Endpoint::Service::UKCouncil
 
 extends 'Open311::Endpoint';
@@ -15,6 +18,13 @@ has jurisdiction_id => ( is => 'ro' );
 has integration_class => (
     is => 'ro',
     default => 'Integrations::Verint',
+);
+
+has ua => (
+    is => 'lazy',
+    default => sub {
+        LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter")
+    },
 );
 
 sub get_integration {
@@ -67,6 +77,26 @@ sub post_service_request {
     my $ref = $result->{ref};
     die "$status $ref" unless $status eq 'success';
 
+    my @photos;
+    if (@{$args->{media_url}}) {
+        foreach (@{$args->{media_url}}) {
+            my $photo = $self->ua->get($_);
+            my (undef, undef, $path) = uri_split($_);
+            my $filename = path($path)->basename;
+            my ($ext) = $filename =~ /\.([^.]*)$/;
+            push @photos, [$filename, $photo->content, "image/$ext"];
+        }
+    } elsif (@{$args->{uploads}}) {
+        foreach (@{$args->{uploads}}) {
+            my $photo = path($_)->slurp;
+            push @photos, [$_->basename, $photo, $_->content_type];
+        }
+    }
+    foreach (@photos) {
+        my $encoded = encode_base64($_->[1], '');
+        my $result = $integ->AttachFileRequest($ref, $_->[0], $encoded, $_->[2], "txt_filename");
+        # Log if failure? Nothing really can do at this point
+    }
 
     return $self->new_request(
         service_request_id => $ref,
