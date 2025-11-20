@@ -174,6 +174,17 @@ sub services {
             $cfg->{group} ? (group => $cfg->{group}) : (),
             allow_any_attributes => 1,
         );
+        foreach (@{$cfg->{attributes} || []}) {
+            if ($_->{type} eq 'notice') {
+                push @{$service->attributes}, Open311::Endpoint::Service::Attribute->new({
+                    code => $_->{code},
+                    description => $_->{description},
+                    variable => 0,
+                    datatype => 'string',
+                });
+            }
+        }
+        $service;
     } sort keys %$services;
 
     return @services;
