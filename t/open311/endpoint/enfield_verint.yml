@@ -8,6 +8,13 @@
     'group': 'Benches'
     'form_name': 'lle_benches_form'
     'typekey': 'bench_or_seat_problem'
+  abandoned_vehicle:
+    name: 'Abandoned vehicle'
+    form_name: 'abandoned_vehicle'
+    attributes:
+      - type: notice
+        code: emergency
+        description: 'Ring us'
 
 status_mapping:
   'Case Resolved': 'fixed'
