@@ -182,6 +182,15 @@ sub services {
                     variable => 0,
                     datatype => 'string',
                 });
+            } elsif ($_->{type} eq 'yn') {
+                push @{$service->attributes}, Open311::Endpoint::Service::Attribute->new({
+                    code => $_->{code},
+                    description => $_->{description},
+                    datatype => 'singlevaluelist',
+                    required => 1,
+                    values_sorted => [ 1, 0 ],
+                    values => { 0 => 'No', 1 => 'Yes' },
+                });
             }
         }
         $service;
