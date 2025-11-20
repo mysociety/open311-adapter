@@ -194,6 +194,25 @@ subtest "GET Service" => sub {
       <required>false</required>
       <variable>false</variable>
     </attribute>
+    <attribute>
+      <code>pca</code>
+      <datatype>singlevaluelist</datatype>
+      <datatype_description></datatype_description>
+      <description>Park?</description>
+      <order>5</order>
+      <required>true</required>
+      <values>
+        <value>
+          <name>Yes</name>
+          <key>1</key>
+        </value>
+        <value>
+          <name>No</name>
+          <key>0</key>
+        </value>
+      </values>
+      <variable>true</variable>
+    </attribute>
   </attributes>
   <service_code>abandoned_vehicle</service_code>
 </service_definition>
