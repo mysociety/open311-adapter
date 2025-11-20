@@ -15,6 +15,9 @@
       - type: notice
         code: emergency
         description: 'Ring us'
+      - type: yn
+        code: pca
+        description: 'Park?'
 
 status_mapping:
   'Case Resolved': 'fixed'
