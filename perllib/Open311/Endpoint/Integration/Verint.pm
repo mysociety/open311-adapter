@@ -159,15 +159,27 @@ sub services {
     my $services = $self->endpoint_config->{service_whitelist};
 
     my @services = map {
-            my $name = $services->{$_}{name};
-            my $service = Open311::Endpoint::Service::UKCouncil->new(
-                service_name => $name,
-                service_code => $_,
-                description => $name,
-                $services->{$_}{group} ? (group => $services->{$_}{group}) : (),
-                allow_any_attributes => 1,
+        my $cfg = $services->{$_};
+        my $name = $cfg->{name};
+        my $service = Open311::Endpoint::Service::UKCouncil->new(
+            service_name => $name,
+            service_code => $_,
+            description => $name,
+            $cfg->{group} ? (group => $cfg->{group}) : (),
+            allow_any_attributes => 1,
         );
-        } sort keys %$services;
+        foreach (@{$cfg->{attributes} || []}) {
+            if ($_->{type} eq 'notice') {
+                push @{$service->attributes}, Open311::Endpoint::Service::Attribute->new({
+                    code => $_->{code},
+                    description => $_->{description},
+                    variable => 0,
+                    datatype => 'string',
+                });
+            }
+        }
+        $service;
+    } sort keys %$services;
 
     return @services;
 }
