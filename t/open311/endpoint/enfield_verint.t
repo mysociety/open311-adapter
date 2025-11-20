@@ -122,6 +122,82 @@ subtest "GET Service List" => sub {
     my $res = $enfield_endpoint->run_test_request( GET => '/services.xml' );
 
     ok $res->is_success, 'xml success';
+    is $res->decoded_content, <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<services>
+  <service>
+    <description>Abandoned vehicle</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>true</metadata>
+    <service_code>abandoned_vehicle</service_code>
+    <service_name>Abandoned vehicle</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
+    <description>Bench or seat on the pavement</description>
+    <group>Benches</group>
+    <keywords></keywords>
+    <metadata>true</metadata>
+    <service_code>bench_or_seat_problem</service_code>
+    <service_name>Bench or seat on the pavement</service_name>
+    <type>realtime</type>
+  </service>
+</services>
+XML
+};
+
+subtest "GET Service" => sub {
+    my $res = $enfield_endpoint->run_test_request( GET => '/services/abandoned_vehicle.xml' );
+
+    ok $res->is_success, 'xml success';
+    is $res->decoded_content, <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_definition>
+  <attributes>
+    <attribute>
+      <automated>server_set</automated>
+      <code>easting</code>
+      <datatype>number</datatype>
+      <datatype_description></datatype_description>
+      <description>easting</description>
+      <order>1</order>
+      <required>true</required>
+      <variable>false</variable>
+    </attribute>
+    <attribute>
+      <automated>server_set</automated>
+      <code>northing</code>
+      <datatype>number</datatype>
+      <datatype_description></datatype_description>
+      <description>northing</description>
+      <order>2</order>
+      <required>true</required>
+      <variable>false</variable>
+    </attribute>
+    <attribute>
+      <automated>server_set</automated>
+      <code>fixmystreet_id</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>external system ID</description>
+      <order>3</order>
+      <required>true</required>
+      <variable>false</variable>
+    </attribute>
+    <attribute>
+      <code>emergency</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>Ring us</description>
+      <order>4</order>
+      <required>false</required>
+      <variable>false</variable>
+    </attribute>
+  </attributes>
+  <service_code>abandoned_vehicle</service_code>
+</service_definition>
+XML
 };
 
 my @standard = (
