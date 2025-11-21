@@ -35,6 +35,7 @@ sub get_integration {
     my $integ = $self->integration_class;
     $integ = $integ->on_fault(sub { my($soap, $res) = @_; die ref $res ? $res->faultstring : $soap->transport->status, "\n"; });
     $integ->want_som(1);
+    $self->log_identifier($self->jurisdiction_id);
     return $integ;
 }
 
