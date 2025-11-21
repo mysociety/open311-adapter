@@ -42,8 +42,8 @@ $soap_lite->mock(call => sub {
             [ 'txt_cust_info_first_name', 'Bob' ],
             [ 'txt_cust_info_last_name', 'Mould' ],
             [ 'eml_cust_info_email', 'test@example.com' ],
-            [ 'txta_additional_location', 'Bench on High Street next to post office' ],
-            [ 'txta_problem', 'Back has come off bench' ],
+            [ 'txta_problem', 'Bench on High Street next to post office' ],
+            [ 'txta_problem_details', 'Back has come off bench' ],
         );
         for my $field ($$data->value->value) {
             my $expected = shift @expected;

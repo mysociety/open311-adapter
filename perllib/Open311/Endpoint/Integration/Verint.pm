@@ -67,8 +67,8 @@ sub post_service_request {
             eml_cust_info_email => $args->{email},
             tel_cust_info_phone => $args->{phone},
             # Report
-            txta_additional_location => $args->{attributes}->{title},
-            txta_problem => $args->{attributes}->{description},
+            txta_problem => $args->{attributes}->{title},
+            txta_problem_details => $args->{attributes}->{description},
         )
     );
     die "Failed" unless $result;
