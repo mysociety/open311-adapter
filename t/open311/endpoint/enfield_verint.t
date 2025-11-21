@@ -74,7 +74,7 @@ $soap_lite->mock(call => sub {
             CoreDetails => {
                 Closed => '2025-11-18T09:00:00Z',
                 CaseReference => 2,
-                caseCloseureReason => 'Case Resolved',
+                caseCloseureReason => 'Case Resolved (some text)',
             },
         } ] });
     } else {
@@ -270,8 +270,8 @@ subtest 'GET updates' => sub {
     is $res->code, 200, 'Updates fetched ok';
     my $content = decode_json($res->content);
     is_deeply $content, [{
-      'status' => 'closed',
-      'update_id' => '2_7d63317f',
+      'status' => 'fixed',
+      'update_id' => '2_f57de23c',
       'media_url' => '',
       'description' => '',
       'service_request_id' => 2,
