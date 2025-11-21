@@ -2,7 +2,7 @@ package Integrations::Verint;
 
 use v5.14;
 use warnings;
-use SOAP::Lite +trace => [ qw/debug/ ];
+use SOAP::Lite; # +trace => [ qw/debug/ ];
 use Exporter;
 use DateTime::Format::W3CDTF;
 use Carp ();
