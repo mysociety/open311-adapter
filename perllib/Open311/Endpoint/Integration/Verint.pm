@@ -131,8 +131,12 @@ sub get_service_request_updates {
         next unless $closed;
         my $ref = $core->{CaseReference};
         my $reason = $core->{caseCloseureReason};
-        $reason =~ s/\s*\(.*\)$//; # Might be some text in brackets at the end
-        my $status = $mapping->{$reason} || 'closed';
+        my $status = 'closed';
+        foreach (keys %$mapping) {
+            if ($reason =~ /^$_/) {
+                $status = $mapping->{$_};
+            }
+        }
 
         my $digest = substr(md5_hex($reason), 0, 8);
         my $update_id = $ref . '_' . $digest;
