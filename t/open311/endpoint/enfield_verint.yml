@@ -1,0 +1,23 @@
+"create_endpoint_url": "https://dummy.example.org"
+"fl_endpoint_url": "https://dummy2.example.org"
+"username": 'fms_user'
+"password": 'fms_password'
+"service_whitelist":
+  'bench_or_seat_problem':
+    'name': 'Bench or seat on the pavement'
+    'group': 'Benches'
+    'form_name': 'lle_benches_form'
+    'typekey': 'bench_or_seat_problem'
+  abandoned_vehicle:
+    name: 'Abandoned vehicle'
+    form_name: 'abandoned_vehicle'
+    attributes:
+      - type: notice
+        code: emergency
+        description: 'Ring us'
+      - type: yn
+        code: pca
+        description: 'Park?'
+
+status_mapping:
+  'Case Resolved': 'fixed'

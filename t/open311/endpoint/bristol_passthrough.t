@@ -24,6 +24,11 @@ my $ua = Test::MockModule->new('LWP::UserAgent');
 $ua->mock(post => sub {
     my $args = $_[2];
     is $args->{service_code}, undef;
+    if ($args->{update_id} == 456) {
+      is $args->{description}, 'No update text';
+    } else {
+      is $args->{description}, 'Update here';
+    }
     return HTTP::Response->new(200, 'OK', [], $expected_update_post);
 });
 
@@ -44,6 +49,21 @@ subtest 'POST update' => sub {
         status => 'OPEN',
         updated_datetime => '2016-09-01T15:00:00Z',
         # media_url => 'http://example.org/',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+    is $res->content, $expected_update_post;
+};
+
+subtest 'POST update' => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.xml',
+        api_key => 'test',
+        service_code => 'SE01',
+        service_request_id => 1001,
+        update_id => 456,
+        description => '',
+        status => 'OPEN',
+        updated_datetime => '2016-09-01T15:00:00Z',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
     is $res->content, $expected_update_post;
