@@ -1,0 +1,62 @@
+api_url: https://localhost/api/
+api_key: api_key
+
+## Problem creation
+
+# The design we use to submit reports to
+rfs_design: ''
+
+# The attribute on rfs_design we use to attach photos/files
+resource_attachment_attribute_id: ''
+
+# The attribute on rfs_design that stores the problem creation time
+created_datetime_attribute_id: ''
+
+# Attributes on rfs_design that link to the list of groups available for category selection
+group_list_code: ''
+group_title_attribute: ''
+category_list_code: ''
+category_title_attribute: ''
+
+parent_attribute_name: ''
+
+# Attributes on rfs_design to map the FMS report fields to (automatically)
+request_to_resource_attribute_mapping:
+  description: ''
+  fixmystreet_id: ''
+  title: ''
+
+# Attributes on rfs_design to map FMS fields to (Dumfries-specific)
+request_to_resource_attribute_manual_mapping:
+  service_code: ''
+
+# How to link the created customer record to the enquiry in Alloy
+contact:
+  code: ''
+  attribute_id: ''
+  search_attribute_code_email: ''
+  search_attribute_code_phone: ''
+  attribute_defaults:
+    attributes_protectedDataConsentRecordedBy : ''
+  attribute_mapping:
+    first_name: ''
+    last_name: ''
+    email: ''
+    phone: ''
+    created: ''
+
+
+## Service list
+
+# For Dumfries, the group/subcategory values used in this structure are intended
+# for display on FMS and are independent of the string values used in Alloy. We
+# use the 'id' value of each subcategory as the Open311 service_code and use
+# this value when processing incoming service requests and setting the 'reported
+# issue' field in Alloy.
+
+service_whitelist:
+  Trees:
+    Tree Damaged - Hanging Branch:
+      id: ''
+    Potentially Diseased Tree:
+      id: ''
