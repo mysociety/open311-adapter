@@ -62,6 +62,7 @@ closing_code_map:
 
 statuses_to_fetch:
   - OPEN
+  - PENDING
 
 note_types:
   report: General note

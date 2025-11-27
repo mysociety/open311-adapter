@@ -30,6 +30,10 @@ has '+request_class' => (
     default => 'Open311::Endpoint::Service::Request::ExtendedStatus',
 );
 
+sub service_request_content {
+    '/open311/service_request_extended'
+}
+
 has integration_class => (
     is => 'ro',
     default => 'Integrations::Bartec'
@@ -475,6 +479,7 @@ sub get_service_requests {
     my ($self, $args) = @_;
 
     my $w3c = DateTime::Format::W3CDTF->new;
+    my $conf = $self->get_integration->config;
 
     my $response = $self->get_integration->ServiceRequests_Updates_Get($args->{start_date});
 
@@ -501,7 +506,7 @@ sub get_service_requests {
             requested_datetime => $date,
             updated_datetime => $date,
 
-            status => 'open',
+            status => $conf->{status_map}->{ $sr->{ServiceStatus}->{Status} },
             latlong => [ $location->attr->{Latitude}, $location->attr->{Longitude} ],
         );
 
@@ -519,8 +524,8 @@ sub get_service_requests {
 }
 
 # Ignore reports with external references (it's a FixMyStreet report),
-# and any that are in any state other than open as it's assumed they are
-# not new, plus any waste categories.
+# and any that are not listed in a list of statuses to fetch, plus any
+# waste categories.
 sub skip_request {
     my ($self, $sr) = @_;
 

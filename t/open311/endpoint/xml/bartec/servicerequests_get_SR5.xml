@@ -49,7 +49,7 @@
           </ServiceType>
           <ServiceStatus xmlns="http://www.bartec-systems.com">
             <ID>2644</ID>
-            <Status>OPEN</Status>
+            <Status>PENDING</Status>
             <SequenceNumber>2</SequenceNumber>
             <ServiceTypeID>270</ServiceTypeID>
           </ServiceStatus>
