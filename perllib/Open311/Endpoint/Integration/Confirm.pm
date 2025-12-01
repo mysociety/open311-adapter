@@ -593,7 +593,7 @@ sub post_service_request_update {
         $args->{status_code} = $status_code;
     }
 
-    # If service_code is provided, validate it and look up the service and  pass
+    # If service_code is provided, validate it and look up the service and pass
     # it to the integration layer.
     if ($args->{service_code}) {
         my %services = map { $_->service_code => $_ } $self->_services;

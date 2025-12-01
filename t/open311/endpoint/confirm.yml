@@ -22,6 +22,9 @@ enquiry_update_job_photo_statuses:
   - FIX
 service_enquiry_class_code:
   ABC: TEST
+customer_type_code_by_email:
+  CC:
+    - test@example.org
 base_url: http://confirm/
 web_url: http://confirm/web/api
 cutoff_enquiry_date: 2018-04-12T12:00:00

@@ -87,6 +87,17 @@ has 'customer_type_code' => (
     default => sub { $_[0]->config->{customer_type_code} }
 );
 
+=head2 customer_type_code_by_email
+
+This lets the customer type code be set differently for particular email addresses.
+
+=cut
+
+has customer_type_code_by_email => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{customer_type_code_by_email} }
+);
+
 
 =head2 send_customer_ref_field
 
@@ -972,9 +983,22 @@ sub NewEnquiry {
     if (my $point_of_contact = ($args->{point_of_contact_code} || $self->point_of_contact_code)) {
         push @customer, SOAP::Data->name('PointOfContactCode' => SOAP::Utils::encode_data($point_of_contact))->type("");
     }
-    if (my $customer_type = $self->customer_type_code) {
-        push @customer, SOAP::Data->name('CustomerTypeCode' => SOAP::Utils::encode_data($customer_type))->type("");
+
+    my $customer_type_code = $self->customer_type_code;
+    if ($args->{email} && $self->customer_type_code_by_email) {
+        foreach my $code (keys %{$self->customer_type_code_by_email}) {
+            foreach (@{$self->customer_type_code_by_email->{$code}}) {
+                if (lc $_ eq lc $args->{email}) {
+                    $customer_type_code = $code;
+                    last;
+                }
+            }
+        }
     }
+    if ($customer_type_code) {
+        push @customer, SOAP::Data->name('CustomerTypeCode' => SOAP::Utils::encode_data($customer_type_code))->type("");
+    }
+
     if ( $self->send_customer_ref_field ) {
         push @customer, SOAP::Data->name('CustomerReference' => SOAP::Utils::encode_data($args->{attributes}->{fixmystreet_id}))->type("");
     }
