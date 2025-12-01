@@ -36,6 +36,7 @@ $soap_lite->mock(call => sub {
             [ 'txt_northing', '2' ],
             [ 'txt_map_usrn', '12345' ],
             [ 'txt_map_uprn', '67899' ],
+            [ 'txt_location', 'Property' ],
             [ 'txt_request_open_date', $create_report_time ],
             [ 'le_typekey', 'bench_or_seat_problem' ],
             [ 'txt_cust_info_first_name', 'Bob' ],

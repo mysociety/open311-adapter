@@ -51,7 +51,8 @@ sub post_service_request {
 
     my $integ = $self->get_integration;
 
-    my $result = $integ->CreateRequest($service_cfg->{form_name},
+    my $result = $integ->CreateRequest(
+        $service_cfg->{form_name},
         ixhash(
             # Location
             le_gis_lat => $args->{lat},
@@ -60,9 +61,12 @@ sub post_service_request {
             txt_northing => $args->{attributes}->{northing},
             txt_map_usrn => $args->{attributes}->{usrn},
             txt_map_uprn => $args->{attributes}->{uprn},
+            txt_location => $args->{attributes}->{uprn} ? 'Property' : 'Street',
             # Metadata
             txt_request_open_date => $date->datetime . "Z",
             le_typekey => $service_cfg->{typekey},
+            txt_service_code => $service_cfg->{service_code},
+            txt_lob_system => $service_cfg->{lob_system},
             # Person
             txt_cust_info_first_name => $args->{first_name},
             txt_cust_info_last_name => $args->{last_name},
@@ -71,7 +75,8 @@ sub post_service_request {
             # Report
             txta_problem => $args->{attributes}->{title},
             txta_problem_details => $args->{attributes}->{description},
-        )
+        ),
+        "Y"
     );
     die "Failed" unless $result;
     $result = $result->method;
