@@ -61,6 +61,7 @@ sub post_service_request {
             txt_northing => $args->{attributes}->{northing},
             txt_map_usrn => $args->{attributes}->{usrn},
             txt_map_uprn => $args->{attributes}->{uprn},
+            txt_location => $args->{attributes}->{uprn} ? 'Property' : 'Street',
             # Metadata
             txt_request_open_date => $date->datetime . "Z",
             le_typekey => $service_cfg->{typekey},
