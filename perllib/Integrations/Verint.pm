@@ -15,6 +15,7 @@ my %methods = (
     parameters => [
       SOAP::Data->new(name => 'sch:name', type => 'sch:nonEmptyString', attr => {}),
       SOAP::Data->new(name => 'sch:data', type => 'sch:Data', attr => {'soapenc:arrayType' => undef}),
+      SOAP::Data->new(name => 'sch:complete', type => 'sch:stringBoolean', attr => {}),
     ],
   },
 'AttachFileRequest' => {
@@ -93,6 +94,12 @@ sub _call {
 }
 
 sub SOAP::Serializer::as_nonEmptyString {
+    my ($self, $value, $name, $type, $attr) = @_;
+
+    return [$name, {'type' => $type, %$attr}, $value];
+}
+
+sub SOAP::Serializer::as_stringBoolean {
     my ($self, $value, $name, $type, $attr) = @_;
 
     return [$name, {'type' => $type, %$attr}, $value];

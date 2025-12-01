@@ -51,7 +51,8 @@ sub post_service_request {
 
     my $integ = $self->get_integration;
 
-    my $result = $integ->CreateRequest($service_cfg->{form_name},
+    my $result = $integ->CreateRequest(
+        $service_cfg->{form_name},
         ixhash(
             # Location
             le_gis_lat => $args->{lat},
@@ -71,7 +72,8 @@ sub post_service_request {
             # Report
             txta_problem => $args->{attributes}->{title},
             txta_problem_details => $args->{attributes}->{description},
-        )
+        ),
+        "Y"
     );
     die "Failed" unless $result;
     $result = $result->method;
