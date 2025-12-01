@@ -64,6 +64,8 @@ sub post_service_request {
             # Metadata
             txt_request_open_date => $date->datetime . "Z",
             le_typekey => $service_cfg->{typekey},
+            txt_service_code => $service_cfg->{service_code},
+            txt_lob_system => $service_cfg->{lob_system},
             # Person
             txt_cust_info_first_name => $args->{first_name},
             txt_cust_info_last_name => $args->{last_name},
