@@ -180,7 +180,7 @@ sub services {
 
             my $subcategory_name = $subcategory_alias || $subcategory;
 
-            (my $code = $subcategory) =~ s/ /_/g;
+            my $code = $self->_get_service_code($group, $subcategory, $subcategory_config);
             if ($subcategory_alias) {
                 $code .= '_' . ++$suffixes{$code};
             }
@@ -275,6 +275,24 @@ sub post_service_request {
         service_request_id => $item_id
     );
 
+}
+
+=head2 _get_service_code
+
+Used to determine the Open311 service code for a service.
+Takes the group, subcategory, and value (aka subcategory_config) from
+service_whitelist in the integration's config file.
+
+By default we use the subcategory name as the service code, replacing spaces
+with underscores.
+
+=cut
+
+sub _get_service_code {
+    my ($self, $group, $subcategory, $subcategory_config) = @_;
+
+    (my $code = $subcategory) =~ s/ /_/g;
+    return $code;
 }
 
 sub _munge_service_code {
