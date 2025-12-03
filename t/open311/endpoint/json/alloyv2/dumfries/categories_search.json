@@ -1,0 +1,109 @@
+{
+  "page": 1,
+  "pageSize": 20,
+  "results": [
+    {
+      "itemId": "group_roads",
+      "designCode": "designs_seReportedIssueList",
+      "collection": "Live",
+      "start": "2025-01-01T00:00:00.000Z",
+      "end": "9999-12-31T23:59:59.999Z",
+      "icon": "icon-system-designer",
+      "colour": "#25aae1",
+      "signature": "sig_roads",
+      "attributes": [
+        { "attributeCode": "attributes_categoryListCategory", "value": "Roads" }
+      ],
+      "subtitle": "Category List"
+    },
+    {
+      "itemId": "123a123",
+      "designCode": "designs_seReportedIssueList",
+      "collection": "Live",
+      "start": "2025-01-01T00:00:00.000Z",
+      "end": "9999-12-31T23:59:59.999Z",
+      "icon": "icon-system-designer",
+      "colour": "#25aae1",
+      "signature": "sig_pothole_roads",
+      "attributes": [
+        { "attributeCode": "attributes_reportedIssueListReportedIssue", "value": "Pothole" },
+        { "attributeCode": "attributes_itemsParents", "value": ["group_roads"] }
+      ],
+      "subtitle": "Category List"
+    },
+    {
+      "itemId": "234b234",
+      "designCode": "designs_seReportedIssueList",
+      "collection": "Live",
+      "start": "2025-01-01T00:00:00.000Z",
+      "end": "9999-12-31T23:59:59.999Z",
+      "icon": "icon-system-designer",
+      "colour": "#25aae1",
+      "signature": "sig_sinkhole",
+      "attributes": [
+        { "attributeCode": "attributes_reportedIssueListReportedIssue", "value": "Sinkhole" },
+        { "attributeCode": "attributes_itemsParents", "value": ["group_roads"] }
+      ],
+      "subtitle": "Category List"
+    },
+    {
+      "itemId": "345c345",
+      "designCode": "designs_seReportedIssueList",
+      "collection": "Live",
+      "start": "2025-01-01T00:00:00.000Z",
+      "end": "9999-12-31T23:59:59.999Z",
+      "icon": "icon-system-designer",
+      "colour": "#25aae1",
+      "signature": "sig_drain_cover",
+      "attributes": [
+        { "attributeCode": "attributes_reportedIssueListReportedIssue", "value": "Missing Drain Cover" },
+        { "attributeCode": "attributes_itemsParents", "value": ["group_roads"] }
+      ],
+      "subtitle": "Category List"
+    },
+    {
+      "itemId": "group_pavements",
+      "designCode": "designs_seReportedIssueList",
+      "collection": "Live",
+      "start": "2025-01-01T00:00:00.000Z",
+      "end": "9999-12-31T23:59:59.999Z",
+      "icon": "icon-system-designer",
+      "colour": "#25aae1",
+      "signature": "sig_pavements",
+      "attributes": [
+        { "attributeCode": "attributes_categoryListCategory", "value": "Pavements" }
+      ],
+      "subtitle": "Category List"
+    },
+    {
+      "itemId": "456d456",
+      "designCode": "designs_seReportedIssueList",
+      "collection": "Live",
+      "start": "2025-01-01T00:00:00.000Z",
+      "end": "9999-12-31T23:59:59.999Z",
+      "icon": "icon-system-designer",
+      "colour": "#25aae1",
+      "signature": "sig_pothole_pavements",
+      "attributes": [
+        { "attributeCode": "attributes_reportedIssueListReportedIssue", "value": "Pothole" },
+        { "attributeCode": "attributes_itemsParents", "value": ["group_pavements"] }
+      ],
+      "subtitle": "Category List"
+    },
+    {
+      "itemId": "567e567",
+      "designCode": "designs_seReportedIssueList",
+      "collection": "Live",
+      "start": "2025-01-01T00:00:00.000Z",
+      "end": "9999-12-31T23:59:59.999Z",
+      "icon": "icon-system-designer",
+      "colour": "#25aae1",
+      "signature": "sig_cracked_paving",
+      "attributes": [
+        { "attributeCode": "attributes_reportedIssueListReportedIssue", "value": "Cracked/Damaged Paving Slab" },
+        { "attributeCode": "attributes_itemsParents", "value": ["group_pavements"] }
+      ],
+      "subtitle": "Category List"
+    }
+  ]
+}

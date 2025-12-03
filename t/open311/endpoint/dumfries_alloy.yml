@@ -1,0 +1,46 @@
+api_url: https://localhost/api/
+
+api_key: api_key
+
+rfs_design: designs_serviceEnquiry
+resource_attachment_attribute_id: attributes_filesAttachableAttachments
+created_datetime_attribute_id: attributes_defectsReportedDate
+group_list_code: designs_seCategoryList
+group_title_attribute: attributes_categoryListCategory
+category_list_code: designs_seReportedIssueList
+category_title_attribute: attributes_reportedIssueListReportedIssue
+parent_attribute_name: "Defects"
+request_to_resource_attribute_mapping:
+  description: attributes_serviceEnquiryCustomerDescription
+  fixmystreet_id: attributes_crmReferenceAndOutcomeCrmReference
+  title: attributes_serviceEnquiryLocation
+request_to_resource_attribute_manual_mapping:
+  service_code: attributes_serviceEnquiryReportedIssue
+
+contact:
+  code: designs_contacts
+  attribute_id: attributes_defectsReporters
+  search_attribute_code_email: attributes_contactsEmail
+  search_attribute_code_phone: attributes_contactsPhone
+  attribute_defaults:
+    attributes_protectedDataConsentRecordedBy : [ '1234' ]
+  attribute_mapping:
+    first_name: attributes_contactsFirstName
+    last_name: attributes_contactsLastName
+    email: attributes_contactsEmail
+    phone: attributes_contactsPhone
+    created: attributes_protectedDataDateRecorded
+
+service_whitelist:
+  Roads:
+    Pothole:
+      id: "123a123"
+    Sinkhole:
+      id: "234b234"
+    Missing Drain Cover:
+      id: "345c345"
+  Pavements:
+    Pothole:
+      id: "456d456"
+    Cracked/Damaged Paving Slab:
+      id: "567e567"
