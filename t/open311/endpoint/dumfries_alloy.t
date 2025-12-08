@@ -199,4 +199,146 @@ subtest 'send new report to Alloy with contact and service_code' => sub {
     restore_time();
 };
 
+subtest 'defect_status mapping' => sub {
+    # Test that defect_status correctly maps status/outcome/priority combinations
+    # to Open311 statuses based on the config
+
+    # Test OPEN status - Awaiting Inspection
+    my $defect = {
+        attributes_status => ['123abc'],
+    };
+    is $endpoint->defect_status($defect), 'open',
+        'Awaiting Inspection maps to open';
+
+    # Test OPEN status - Reported with 24hr priority
+    $defect = {
+        attributes_status => ['456def'],
+        attributes_hwyPriority => ['987ffa'],
+    };
+    is $endpoint->defect_status($defect), 'open',
+        'Reported + 24hr priority maps to open';
+
+    # Test OPEN status - Reported with 5 day priority (using se_priority)
+    $defect = {
+        attributes_status => ['456def'],
+        attributes_sePriority => ['12ef34a'],
+    };
+    is $endpoint->defect_status($defect), 'open',
+        'Reported + 5 day priority maps to open';
+
+    # Test INVESTIGATING status - note: this matches 'open' first due to config order
+    # The open rule with outcome=null matches before the investigating rule
+    $defect = {
+        attributes_status => ['456def'],
+        attributes_outcome => ['981bbe'],
+        attributes_hwyPriority => ['987ffa'],
+    };
+    is $endpoint->defect_status($defect), 'open',
+        'Reported + Further Investigation + 24hr priority matches open (config order)';
+
+    # Test PLANNED status
+    $defect = {
+        attributes_status => ['1212aad'],
+        attributes_hwyPriority => ['987ffa'],
+    };
+    is $endpoint->defect_status($defect), 'planned',
+        'Job Raised + 24hr priority maps to planned';
+
+    # Test FIXED status
+    $defect = {
+        attributes_status => ['91827eea'],
+    };
+    is $endpoint->defect_status($defect), 'fixed',
+        'Remedied maps to fixed';
+
+    # Test FIXED status, ignoring priority
+    $defect = {
+        attributes_status => ['91827eea'],
+        attributes_hwyPriority => ['12ef34a'],
+    };
+    is $endpoint->defect_status($defect), 'fixed',
+        'Remedied maps to fixed';
+
+    # Test DUPLICATE status
+    $defect = {
+        attributes_status => ['11aa22cc'],
+        attributes_outcome => ['1133cc11'],
+    };
+    is $endpoint->defect_status($defect), 'duplicate',
+        'No Action Required + No Action outcome maps to duplicate';
+
+    # Test NO_FURTHER_ACTION status
+    $defect = {
+        attributes_status => ['11aa22cc'],
+        attributes_outcome => ['98ae11'],
+    };
+    is $endpoint->defect_status($defect), 'no_further_action',
+        'No Action Required + Defect no action outcome maps to no_further_action';
+
+    # Test NOT_COUNCILS_RESPONSIBILITY status - note: this matches 'fixed' first due to config order
+    # The fixed rule with outcome=null, priority=null matches before the not_councils_responsibility rule
+    $defect = {
+        attributes_status => ['91827eea'],
+        attributes_outcome => ['123a9ea'],
+    };
+    is $endpoint->defect_status($defect), 'fixed',
+        'Remedied + Passed to 3rd Party matches fixed (config order)';
+
+    # Test CLOSED status with Low Risk priority
+    $defect = {
+        attributes_sePriority => ['9a9a9a'],
+    };
+    is $endpoint->defect_status($defect), 'closed',
+        'Low Risk priority maps to closed';
+
+    # Test CLOSED status with No Response priority
+    $defect = {
+        attributes_hwyPriority => ['9b9b9baa'],
+    };
+    is $endpoint->defect_status($defect), 'closed',
+        'No Response priority maps to closed';
+
+    # Test CLOSED status with No Response priority, ignoring outcome
+    $defect = {
+        attributes_outcome => ['123a9ea'],
+        attributes_hwyPriority => ['9b9b9baa'],
+    };
+    is $endpoint->defect_status($defect), 'closed',
+        'No Response priority maps to closed';
+
+    # Test CLOSED status with No Response priority, ignoring status
+    $defect = {
+        attributes_status => ['91827eeb'],
+        attributes_hwyPriority => ['9b9b9baa'],
+    };
+    is $endpoint->defect_status($defect), 'closed',
+        'No Response priority maps to closed';
+
+    # Test CLOSED status with No Response priority, ignoring status and outcome
+    $defect = {
+        attributes_status => ['91827eeb'],
+        attributes_outcome => ['123a9eb'],
+        attributes_hwyPriority => ['9b9b9baa'],
+    };
+    is $endpoint->defect_status($defect), 'closed',
+        'No Response priority maps to closed';
+
+    # Test that non-matching combinations return IGNORE
+    $defect = {
+        attributes_status => ['unknown_status'],
+        attributes_outcome => ['unknown_outcome'],
+        attributes_hwyPriority => ['unknown_priority'],
+    };
+    is $endpoint->defect_status($defect), 'IGNORE',
+        'Unmatched status combination returns IGNORE';
+
+    # Test _skip_job_update returns true for IGNORE status
+    ok $endpoint->_skip_job_update({}, 'IGNORE'),
+        '_skip_job_update returns true for IGNORE status';
+
+    # Test _skip_job_update returns false for other statuses
+    ok !$endpoint->_skip_job_update({}, 'open'),
+        '_skip_job_update returns false for open status';
+};
+
 done_testing;
