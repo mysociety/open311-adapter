@@ -8,9 +8,12 @@
     'group': 'Benches'
     'form_name': 'lle_benches_form'
     'typekey': 'bench_or_seat_problem'
+    'lob_system': 'EXOR'
   abandoned_vehicle:
     name: 'Abandoned vehicle'
-    form_name: 'abandoned_vehicle'
+    form_name: 'lle_abandoned_vehicle'
+    typekey: 'abandoned_vehicle'
+    lob_system: 'M3'
     attributes:
       - type: notice
         code: emergency
