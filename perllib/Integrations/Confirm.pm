@@ -615,6 +615,7 @@ sub defects_graphql_query { # XXX factor together with jobs?
     northing
     loggedDate
     targetDate
+    priorityCode
     feature {
         attribute_CCAT {
             attributeValueCode
