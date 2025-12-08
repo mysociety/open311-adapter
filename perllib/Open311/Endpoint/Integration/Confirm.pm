@@ -1584,7 +1584,13 @@ sub _get_service_requests_for_defects {
 
         my $description = $self->_description_for_defect($defect, $service);
 
-        my $supersedes_value = $defect->{supersedesDefectNumber} ? "DEFECT_" . $defect->{supersedesDefectNumber} : undef;
+        my $extras;
+        if ($defect->{supersedesDefectNumber}) {
+            $extras->{supersedes} = "DEFECT_" . $defect->{supersedesDefectNumber};
+        }
+        if ($defect->{priorityCode}) {
+            $extras->{priority} = $defect->{priorityCode};
+        }
 
         my @media_urls;
         if ($integ->include_photos_on_defect_fetch) {
@@ -1604,9 +1610,7 @@ sub _get_service_requests_for_defects {
             # enquiries above
             latlong => [ $defect->{northing}, $defect->{easting} ],
             status => $status,
-            $supersedes_value  ? ( extras => {
-                supersedes => $supersedes_value,
-            } ) : (),
+            $extras ? ( extras => $extras ) : (),
             @media_urls ? ( media_url => \@media_urls ) : (),
         );
 
