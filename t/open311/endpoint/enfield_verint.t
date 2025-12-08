@@ -21,8 +21,23 @@ $soap_lite->mock(call => sub {
     my $call = shift @args;
 
     if ($call eq 'CreateRequest') {
+      my %test = (
+        lle_abandoned_vehicle => {
+          typekey => 'abandoned_vehicle',
+          system => 'M3',
+          title => 'Next to supermarket',
+          description => 'Car left on pavement',
+        },
+        lle_benches_form => {
+          typekey => 'bench_or_seat_problem',
+          system => 'EXOR',
+          title => 'Bench on High Street next to post office',
+          description => 'Back has come off bench',
+        },
+      );
         is $args[0]->name, 'name';
-        is $args[0]->value, 'lle_benches_form';
+        my $form_name = $args[0]->value;
+        my $form_data = $test{$form_name};
         is $args[0]->type, 'sch:nonEmptyString';
 
         is $args[1]->name, 'data';
@@ -38,13 +53,19 @@ $soap_lite->mock(call => sub {
             [ 'txt_map_uprn', '67899' ],
             [ 'txt_location', 'Property' ],
             [ 'txt_request_open_date', $create_report_time ],
-            [ 'le_typekey', 'bench_or_seat_problem' ],
+            [ 'le_typekey', $form_data->{typekey} ],
+            [ 'txt_lob_system', $form_data->{system} ],
             [ 'txt_cust_info_first_name', 'Bob' ],
             [ 'txt_cust_info_last_name', 'Mould' ],
             [ 'eml_cust_info_email', 'test@example.com' ],
-            [ 'txta_problem_details', 'Bench on High Street next to post office' ],
-            [ 'txta_problem', 'Back has come off bench' ],
+            [ 'txta_problem_details', $form_data->{title} ],
+            [ 'txta_problem', $form_data->{description} ],
         );
+
+        if ($form_name eq 'lle_abandoned_vehicle') {
+          push(@expected, [ 'm3_comments', "Tell us about the problem: Next to supermarket\n\nProblem details: Car left on pavement\n\nLink: http://localhost/1" ] );
+        }
+
         for my $field ($$data->value->value) {
             my $expected = shift @expected;
             for my $values (pairs ${$field->value}->value) {
@@ -52,6 +73,7 @@ $soap_lite->mock(call => sub {
                 is $values->[1]->value, $expected->[1];
             };
         }
+        is scalar @expected, 0, "No unexpected fields";
 
         return SOAP::Result->new(method => { status => 'success', ref => 12345 });
     } elsif ($call eq 'AttachFileRequest') {
@@ -240,10 +262,39 @@ my @standard = (
     'attribute[uprn]' => '67899',
 );
 
+my @m3_data = (
+    api_key => 'api-key',
+    service_code => 'abandoned_vehicle',
+    address_string => '22 Acacia Avenue',
+    first_name => 'Bob',
+    last_name => 'Mould',
+    email => 'test@example.com',
+    description => 'Car left on pavement',
+    lat => '50',
+    long => '0.1',
+    'attribute[description]' => 'Car left on pavement',
+    'attribute[title]' => 'Next to supermarket',
+    'attribute[report_url]' => 'http://localhost/1',
+    'attribute[easting]' => 1,
+    'attribute[northing]' => 2,
+    'attribute[category]' => '',
+    'attribute[fixmystreet_id]' => 1,
+    'attribute[pca]' => 0,
+    'attribute[usrn]' => '12345',
+    'attribute[uprn]' => '67899',
+);
+
 subtest "POST report" => sub {
     set_fixed_time($create_report_time);
     my $res = $enfield_endpoint->run_test_request(
         POST => '/requests.json', @standard);
+    is $res->code, 200, 'Report submitted ok';
+};
+
+subtest "POST M3 report" => sub {
+    set_fixed_time($create_report_time);
+    my $res = $enfield_endpoint->run_test_request(
+        POST => '/requests.json', @m3_data);
     is $res->code, 200, 'Report submitted ok';
 };
 
