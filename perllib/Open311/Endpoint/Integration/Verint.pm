@@ -50,6 +50,13 @@ sub post_service_request {
     my $service_cfg = $services->{$service->service_code};
 
     my $integ = $self->get_integration;
+    my %extra;
+    if ($service_cfg->{lob_system} eq 'M3') {
+        $extra{m3_comments} =
+            'Tell us about the problem: ' . $args->{attributes}->{title}
+            . "\n\nProblem details: " . $args->{attributes}->{description}
+            . "\n\nLink: " . $args->{attributes}->{report_url};
+    }
 
     my $result = $integ->CreateRequest(
         $service_cfg->{form_name},
@@ -75,6 +82,7 @@ sub post_service_request {
             # Report
             txta_problem_details => $args->{attributes}->{title},
             txta_problem => $args->{attributes}->{description},
+            %extra,
         ),
         "Y"
     );
