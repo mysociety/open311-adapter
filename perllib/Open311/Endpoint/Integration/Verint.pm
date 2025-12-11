@@ -50,10 +50,12 @@ sub post_service_request {
     my $service_cfg = $services->{$service->service_code};
 
     my $integ = $self->get_integration;
+
+    my $title = $args->{attributes}->{title} . ' - FMS ID: ' . $args->{attributes}->{fixmystreet_id};
     my %extra;
     if ($service_cfg->{lob_system} eq 'M3') {
         $extra{m3_comments} =
-            'Tell us about the problem: ' . $args->{attributes}->{title}
+            'Tell us about the problem: ' . $title
             . "\n\nProblem details: " . $args->{attributes}->{description}
             . "\n\nLink: " . $args->{attributes}->{report_url};
     }
@@ -80,7 +82,7 @@ sub post_service_request {
             eml_cust_info_email => $args->{email},
             tel_cust_info_phone => $args->{phone},
             # Report
-            txta_problem_details => $args->{attributes}->{title},
+            txta_problem_details => $title,
             txta_problem => $args->{attributes}->{description},
             %extra,
         ),
