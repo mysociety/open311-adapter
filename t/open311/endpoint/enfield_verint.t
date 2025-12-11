@@ -58,12 +58,12 @@ $soap_lite->mock(call => sub {
             [ 'txt_cust_info_first_name', 'Bob' ],
             [ 'txt_cust_info_last_name', 'Mould' ],
             [ 'eml_cust_info_email', 'test@example.com' ],
-            [ 'txta_problem', $form_data->{title} ],
+            [ 'txta_problem', $form_data->{title} . ' - FMS ID: 1' ],
             [ 'txta_problem_details', $form_data->{description} ],
         );
 
         if ($form_name eq 'lle_abandoned_vehicle') {
-          push(@expected, [ 'm3_comments', "Tell us about the problem: Next to supermarket\n\nProblem details: Car left on pavement\n\nLink: http://localhost/1" ] );
+          push(@expected, [ 'm3_comments', "Tell us about the problem: Next to supermarket - FMS ID: 1\n\nProblem details: Car left on pavement\n\nLink: http://localhost/1" ] );
         }
 
         for my $field ($$data->value->value) {
