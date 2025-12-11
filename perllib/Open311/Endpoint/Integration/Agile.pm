@@ -195,9 +195,8 @@ sub _garden_subscription_renew {
         return $request;
 
     } else {
-        die 'UPRN '
-            . $args->{attributes}{uprn}
-            . ' does not have a subscription to be renewed, or is invalid';
+        # Send through as new instead
+        return $self->_garden_subscription($args);
     }
 }
 

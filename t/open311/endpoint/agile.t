@@ -377,6 +377,32 @@ subtest 'successfully renew garden subscription (direct debit)' => sub {
     } ], 'correct json returned';
 };
 
+subtest 'successfully renew garden subscription, but as new because expired' => sub {
+    # Payment method mapping tested in mock api_call
+    $last_payment_method = 'credit_card';
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        lat => 51,
+        long => -1,
+        service_code => 'garden_subscription',
+        'attribute[type]' => 'renew',
+        'attribute[customer_external_ref]' => 'customer_XYZ',
+        'attribute[uprn]' => '123_no_sub',
+        'attribute[fixmystreet_id]' => 2000005,
+        'attribute[total_containers]' => 1,
+        'attribute[current_containers]' => 1,
+        'attribute[payment_method]' => 'credit_card',
+        'attribute[PaymentCode]' => 'payment_renew_1',
+    );
+
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+    is_deeply decode_json($res->content), [ {
+        service_request_id => 'GW-SERV-001',
+    } ], 'correct json returned';
+};
+
 subtest 'try to subscribe to garden waste when already subscribed' => sub {
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
