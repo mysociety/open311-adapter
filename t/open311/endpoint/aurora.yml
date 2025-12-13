@@ -1,0 +1,6 @@
+category_mapping:
+  potholes:
+    name: "Potholes"
+    group: "Roads"
+  trees:
+    name: "Trees"

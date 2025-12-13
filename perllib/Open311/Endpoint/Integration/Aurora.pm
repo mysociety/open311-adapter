@@ -18,7 +18,7 @@ use warnings;
 
 use Moo;
 use Integrations::Aurora;
-use Open311::Endpoint::Service::UKCouncil;
+use Open311::Endpoint::Service::UKCouncil::Aurora;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 with 'Role::EndpointConfig';
@@ -47,22 +47,47 @@ Uses the same service class as our Symology Insight integration.
 
 has service_class  => (
     is => 'ro',
-    default => 'Open311::Endpoint::Service::UKCouncil'
+    default => 'Open311::Endpoint::Service::UKCouncil::Aurora'
 );
 
 has jurisdiction_id => ( is => 'ro' );
+
+=head2 category_mapping
+
+A map from service_code to:
+
+  name: The display name for the category
+  group: Optional category group
+  parameters: dictionary of default parameters to use
+
+=cut
+
+has category_mapping => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{category_mapping} }
+);
 
 =head1 BEHAVIOUR
 
 =head2 services
 
-TODO
+Returns services based on the configured C<category_mapping>.
 
 =cut
 
 sub services {
     my $self = shift;
-    die "unimplemented";
+    my $services = $self->category_mapping;
+    my @services = map {
+        my $name = $services->{$_}{name};
+        my $service = $self->service_class->new(
+            service_name => $name,
+            service_code => $_,
+            description => $name,
+            $services->{$_}{group} ? (group => $services->{$_}{group}) : (),
+        );
+    } keys %$services;
+    return @services;
 }
 
 =head2 post_service_request
