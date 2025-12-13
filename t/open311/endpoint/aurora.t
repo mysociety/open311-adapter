@@ -23,6 +23,7 @@ package main;
 use strict;
 use warnings;
 
+use JSON::MaybeXS;
 use Test::More;
 use Test::LongString;
 
@@ -34,7 +35,30 @@ subtest "services" => sub {
     my $res = $endpoint->run_test_request(
         GET => '/services.json',
     );
-    contains_string $res->content, "unimplemented";
+    ok $res->is_success, 'valid request' or diag $res->content;
+    my $services = decode_json($res->content);
+    my $sorted_services = [ sort { $a->{service_code} cmp $b->{service_code}} @$services];
+    is_deeply $sorted_services,
+        [
+            {
+                service_code => 'potholes',
+                service_name => 'Potholes',
+                group => 'Roads',
+                description => 'Potholes',
+                keywords => '',
+                type => 'realtime',
+                metadata => 'true',
+            },
+            {
+                service_code => 'trees',
+                service_name => 'Trees',
+                group => '',
+                description => 'Trees',
+                keywords => '',
+                type => 'realtime',
+                metadata => 'true',
+            },
+        ];
 };
 
 subtest "post_service_request" => sub {
