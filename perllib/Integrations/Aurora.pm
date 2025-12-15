@@ -183,6 +183,35 @@ sub create_contact_and_get_id {
     return $content->{contactId};
 }
 
+=head2 upload_attachment_and_get_id
+
+Takes the path to a local file, uploads it as an attachment and returns the ID.
+
+=cut
+
+sub upload_attachment_and_get_id {
+    my ($self, $filename) = @_;
+    die "File not found: $filename" unless -f $filename;
+    die "File not readable: $filename" unless -r $filename;
+
+    my $token = $self->access_token or die "Failed to get access token.";
+    my $request = HTTP::Request::Common::POST(
+        $self->cases_api_base_url . "Attachments",
+        Authorization => "Bearer $token",
+        Content_Type => "form-data",
+        Content => [
+            file => [ $filename ],
+        ],
+    );
+    my $response = $self->ua->request($request);
+    if (!$response->is_success) {
+        $self->_fail("Failed to upload attachment", $request, $response);
+    }
+
+    my $attachment_id = $response->content;
+    $attachment_id =~ s/^"(.*)"$/$1/;
+    return $attachment_id;
+}
 
 sub _fail {
     my ($self, $message, $request, $response) = @_;
