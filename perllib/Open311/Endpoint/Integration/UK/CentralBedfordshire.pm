@@ -17,7 +17,7 @@ has jurisdiction_id => (
 
 has integration_without_prefix => (
     is => 'ro',
-    default => 'Symology',
+    default => 'Aurora',
 );
 
 __PACKAGE__->run_if_script;
