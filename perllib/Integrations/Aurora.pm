@@ -210,6 +210,33 @@ sub upload_attachment_and_get_id {
     return decode_json($response->content);
 }
 
+=head2 create_case_and_get_number
+
+Creates a case using the given payload and returns the case number.
+
+=cut
+
+sub create_case_and_get_number {
+    my ($self, $payload) = @_;
+
+    my $token = $self->access_token or die "Failed to get access token.";
+    my $request = HTTP::Request->new(
+        'POST',
+        $self->cases_api_base_url . "Cases/Case/CreateCase",
+        [
+            Authorization => "Bearer $token",
+            "Content-Type" => "application/json",
+        ],
+        encode_json($payload)
+    );
+    my $response = $self->ua->request($request);
+    if (!$response->is_success) {
+        $self->_fail("Failed to create case ", $request, $response);
+    }
+    my $content = decode_json($response->content);
+    return $content->{caseNumber};
+}
+
 sub _fail {
     my ($self, $message, $request, $response) = @_;
     my $request_string = $request->as_string;
