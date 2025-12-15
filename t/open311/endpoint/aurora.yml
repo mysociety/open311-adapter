@@ -9,5 +9,9 @@ category_mapping:
   potholes:
     name: "Potholes"
     group: "Roads"
+    parameters:
+      caseTypeCode: P001
+      assetTypeCode: A001
+
   trees:
     name: "Trees"

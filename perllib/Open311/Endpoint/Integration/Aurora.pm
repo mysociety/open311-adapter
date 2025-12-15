@@ -17,6 +17,7 @@ use strict;
 use warnings;
 
 use Moo;
+use File::Temp qw(tempfile);
 use Integrations::Aurora;
 use Open311::Endpoint::Service::UKCouncil::Aurora;
 extends 'Open311::Endpoint';
@@ -92,13 +93,52 @@ sub services {
 
 =head2 post_service_request
 
-TODO
+Creates a contact if one doesn't already exist for the reporter's email.
+Uploads media provided as uploads or URLs as attachments.
+Creates a case using these and also the default parameters set in
+the C<category_mapping>.
+Calls C<populate_description> for description text.
 
 =cut
 
 sub post_service_request {
     my ( $self, $service, $args ) = @_;
-    die "unimplemented";
+
+    my $service_code = $args->{service_code};
+    my $category = $self->category_mapping->{$service_code};
+    my $payload = $category->{parameters} || {};
+    $payload->{easting} = $args->{attributes}->{easting};
+    $payload->{northing} = $args->{attributes}->{northing};
+    $payload->{usrn} = $args->{attributes}->{NSGRef};
+    $payload->{internalAssetId} = $args->{attributes}->{UnitID};
+    $payload->{externalReference} = "FMS" . $args->{attributes}->{fixmystreet_id};
+
+    $payload->{description} = $args->{description};
+    if ($args->{address_string}) {
+        $payload->{description} .= "\n\nLocation query entered: " . $args->{address_string};
+    }
+    if ($args->{attributes}->{report_url}) {
+        $payload->{description} .= "\n\nView report on FixMyStreet: $args->{attributes}->{report_url}";
+    }
+
+
+    my $email = $args->{email};
+    my $contact_id = $self->aurora->get_contact_id_for_email_address($email);
+    if (!$contact_id) {
+        $contact_id = $self->aurora->create_contact_and_get_id(
+            $email,
+            $args->{first_name},
+            $args->{last_name},
+            $args->{phone},
+        );
+    }
+    $payload->{contactId} = $contact_id;
+    $payload->{attachments} = $self->_upload_media_as_attachments($args);
+
+    my $case_number = $self->aurora->create_case_and_get_number($payload);
+    return $self->new_request(
+        service_request_id => $case_number
+    );
 }
 
 =head2 post_service_request_update
@@ -121,6 +161,45 @@ TODO
 sub get_service_request_updates {
     my ( $self, $service, $args ) = @_;
     die "unimplemented";
+}
+
+sub _upload_media_as_attachments {
+    my ( $self, $args ) = @_;
+    my $attachment_ids = ();
+
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+    foreach (@{$args->{media_url}}) {
+        my $response = $ua->get($_);
+        if ($response->is_success) {
+            # Extract file extension from URL
+            my $file_ext = '';
+            if ($_ =~ /(\.\w+)(?:\?.*)?$/) {
+                $file_ext = $1;
+            }
+
+            # Create temporary file and save downloaded content
+            my (undef, $tmp_file) = tempfile( SUFFIX => $file_ext );
+            open my $fh, '>', $tmp_file or do {
+                $self->logger->warn("Unable to create temp file for media " . $_);
+                next;
+            };
+            binmode $fh;
+            print $fh $response->content;
+            close $fh;
+
+            push @$attachment_ids,
+                $self->aurora->upload_attachment_and_get_id($tmp_file);
+        } else {
+            $self->logger->warn("Unable to download media " . $_);
+        }
+    }
+
+    foreach (@{$args->{uploads}}) {
+        push @$attachment_ids,
+            $self->aurora->upload_attachment_and_get_id($_->filename);
+    }
+
+    return [ map { { "id" => $_ } } @$attachment_ids ];
 }
 
 1;

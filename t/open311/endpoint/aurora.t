@@ -23,10 +23,15 @@ package main;
 use strict;
 use warnings;
 
+use HTTP::Request::Common;
 use JSON::MaybeXS;
+use Path::Tiny;
+use Test::MockModule;
 use Test::More;
 use Test::LongString;
+use Web::Dispatch::Upload;
 
+my $integration = Test::MockModule->new("Integrations::Aurora");
 my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
@@ -62,18 +67,96 @@ subtest "services" => sub {
 };
 
 subtest "post_service_request" => sub {
-    my $res = $endpoint->run_test_request(
-        POST => '/requests.json',
-        api_key => 'api_key',
-        service_code => 'potholes',
-        lat => 0,
-        long => 0,
-        address_id => 'id',
-        'attribute[easting]' => 0,
-        'attribute[northing]' => 0,
-        'attribute[fixmystreet_id]' => 0,
+    my $get_contact_email;
+    $integration->mock('get_contact_id_for_email_address', sub {
+        $get_contact_email = $_[1];
+        return undef;
+    });
+
+    my $create_contact_email;
+    my $create_contact_first_name;
+    my $create_contact_last_name;
+    my $create_contact_number;
+    $integration->mock('create_contact_and_get_id', sub {
+        $create_contact_email = $_[1];
+        $create_contact_first_name = $_[2];
+        $create_contact_last_name = $_[3];
+        $create_contact_number = $_[4];
+        return "contact-id";
+    });
+
+    my $create_case_payload;
+    $integration->mock('create_case_and_get_number', sub {
+        $create_case_payload = $_[1];
+        return "case-number";
+    });
+
+    my $attachment_upload_filename;
+    $integration->mock('upload_attachment_and_get_id', sub {
+        $attachment_upload_filename = $_[1];
+        return 'attachment-id',
+    });
+
+    my $photo_upload = Web::Dispatch::Upload->new(
+        tempname => path(__FILE__)->dirname . '/files/test_image.jpg',
+        filename => 'image.jpg',
     );
-    contains_string $res->content, "unimplemented";
+    my $req = POST '/requests.json',
+        Content_Type => 'form-data',
+        Content => [
+            api_key => 'api_key',
+            service_code => 'potholes',
+            address_string => 'address string',
+            email => 'test@example.com',
+            first_name => 'first',
+            last_name => 'last',
+            phone => '07700 900000',
+            description => "description",
+            uploads => [ $photo_upload ],
+            'attribute[easting]' => 100,
+            'attribute[northing]' => 101,
+            'attribute[fixmystreet_id]' => 10,
+            'attribute[NSGRef]' => 'USRN',
+            'attribute[UnitID]' => 'asset-id',
+            'attribute[report_url]' => 'url',
+        ];
+    my $res = $endpoint->run_test_request($req);
+    ok $res->is_success, 'valid request' or diag $res->content;
+    is_deeply decode_json($res->content), [
+        {
+            service_request_id => 'case-number',
+        },
+    ];
+
+    is $get_contact_email, 'test@example.com';
+
+    is $create_contact_email, 'test@example.com';
+    is $create_contact_first_name, 'first';
+    is $create_contact_last_name, 'last';
+    is $create_contact_number, '07700 900000';
+
+    is $attachment_upload_filename, 'test_image.jpg';
+
+    is_deeply $create_case_payload,
+        {
+            description => "description\n\nLocation query entered: address string\n\nView report on FixMyStreet: url",
+            externalReference => 'FMS10',
+            usrn => 'USRN',
+            contactId => 'contact-id',
+            attachments => [{
+                id => 'attachment-id',
+            }],
+            internalAssetId => 'asset-id',
+            caseTypeCode => 'P001',
+            easting => '100',
+            northing => '101',
+            assetTypeCode => 'A001'
+        };
+
+    $integration->unmock('get_contact_id_for_email_address');
+    $integration->unmock('create_contact_and_get_id');
+    $integration->unmock('upload_attachment_and_get_id');
+    $integration->unmock('create_case_and_get_number');
 };
 
 subtest "post_service_request_update" => sub {
