@@ -240,6 +240,32 @@ sub create_case_and_get_number {
     return $content->{caseNumber};
 }
 
+=head2 add_note_to_case
+
+Adds a note to the given case.
+
+=cut
+
+sub add_note_to_case {
+    my ($self, $case_number, $payload) = @_;
+
+    my $token = $self->access_token or die "Failed to get access token.";
+    my $request = HTTP::Request->new(
+        'POST',
+        $self->cases_api_base_url . "Cases/Case/AddNote?caseNumber=" . $case_number,
+        [
+            Authorization => "Bearer $token",
+            "Content-Type" => "application/json",
+        ],
+        encode_json($payload)
+    );
+    my $response = $self->ua->request($request);
+    if (!$response->is_success) {
+        $self->_fail("Failed to add note to case $case_number", $request, $response);
+    }
+    return;
+}
+
 sub _fail {
     my ($self, $message, $request, $response) = @_;
     my $request_string = $request->as_string;
