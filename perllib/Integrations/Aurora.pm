@@ -207,7 +207,10 @@ sub upload_attachment_and_get_id {
     if (!$response->is_success) {
         $self->_fail("Failed to upload attachment", $request, $response);
     }
-    return decode_json($response->content);
+
+    my $attachment_id = $response->content;
+    $attachment_id =~ s/^"(.*)"$/$1/;
+    return $attachment_id;
 }
 
 =head2 create_case_and_get_number
