@@ -160,16 +160,55 @@ subtest "post_service_request" => sub {
 };
 
 subtest "post_service_request_update" => sub {
-    my $res = $endpoint->run_test_request(
-        POST => '/servicerequestupdates.json',
-        api_key => 'api_key',
-        description => 'description',
-        service_request_id => 'service_request_id',
-        status => 'CLOSED',
-        update_id => 'update_id',
-        updated_datetime => '2025-11-05T23:00:00+00:00',
+    my $attachment_upload_filename;
+    $integration->mock('upload_attachment_and_get_id', sub {
+        $attachment_upload_filename = $_[1];
+        return 'attachment-id',
+    });
+
+    my $add_note_case_id;
+    my $add_note_payload;
+    $integration->mock('add_note_to_case', sub {
+        $add_note_case_id = $_[1];
+        $add_note_payload = $_[2];
+    });
+
+    my $photo_upload = Web::Dispatch::Upload->new(
+        tempname => path(__FILE__)->dirname . '/files/test_image.jpg',
+        filename => 'image.jpg',
     );
-    contains_string $res->content, "unimplemented";
+    my $req = POST '/servicerequestupdates.json',
+        Content_Type => 'form-data',
+        Content => [
+            service_request_id => 'case-number',
+            api_key => 'api_key',
+            description => "description",
+            uploads => [ $photo_upload ],
+            status => 'CLOSED',
+            update_id => 'update_id',
+            updated_datetime => '2025-11-05T23:00:00+00:00',
+        ];
+    my $res = $endpoint->run_test_request($req);
+    ok $res->is_success, 'valid request' or diag $res->content;
+    is_deeply decode_json($res->content), [
+        {
+            update_id => 'update_id',
+        },
+    ];
+
+    is $attachment_upload_filename, 'test_image.jpg';
+
+    is $add_note_case_id, 'case-number';
+    is_deeply $add_note_payload,
+        {
+            noteText => "description",
+            attachments => [{
+                id => 'attachment-id',
+            }],
+        };
+
+    $integration->unmock('upload_attachment_and_get_id');
+    $integration->unmock('add_note_to_case');
 };
 
 subtest "get_service_request_updates" => sub {

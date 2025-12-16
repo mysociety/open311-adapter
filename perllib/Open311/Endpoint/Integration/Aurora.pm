@@ -20,6 +20,7 @@ use Moo;
 use File::Temp qw(tempfile);
 use Integrations::Aurora;
 use Open311::Endpoint::Service::UKCouncil::Aurora;
+
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
 with 'Role::EndpointConfig';
@@ -143,13 +144,23 @@ sub post_service_request {
 
 =head2 post_service_request_update
 
-TODO
+Adds a note to the case with the update text, with
+any media also uploaded as attachments.
 
 =cut
 
 sub post_service_request_update {
-    my ( $self, $service, $args ) = @_;
-    die "unimplemented";
+    my ( $self, $args ) = @_;
+    my $case_number = $args->{service_request_id};
+    my $payload = {
+        noteText => $args->{description},
+    };
+    $payload->{attachments} = $self->_upload_media_as_attachments($args);
+    $self->aurora->add_note_to_case($case_number, $payload);
+    return Open311::Endpoint::Service::Request::Update->new(
+        status => lc $args->{status},
+        update_id => $args->{update_id},
+    );
 }
 
 =head2 get_service_request_updates
