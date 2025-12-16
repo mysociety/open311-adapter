@@ -77,7 +77,7 @@ test_multi(1, 'Open311::Endpoint::Integration::UK::Buckinghamshire',
 );
 
 test_multi(1, 'Open311::Endpoint::Integration::UK::CentralBedfordshire',
-    'Open311::Endpoint::Integration::UK::CentralBedfordshire::Symology' => 'centralbedfordshire_symology',
+    'Open311::Endpoint::Integration::UK::CentralBedfordshire::Aurora' => 'centralbedfordshire_aurora',
     'Open311::Endpoint::Integration::UK::CentralBedfordshire::Jadu' => 'centralbedfordshire_jadu',
 );
 

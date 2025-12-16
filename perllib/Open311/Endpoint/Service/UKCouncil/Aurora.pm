@@ -1,7 +1,6 @@
-package Open311::Endpoint::Service::UKCouncil::Symology::CentralBedfordshire;
-
+package Open311::Endpoint::Service::UKCouncil::Aurora;
 use Moo;
-extends 'Open311::Endpoint::Service::UKCouncil::Symology';
+extends 'Open311::Endpoint::Service::UKCouncil';
 
 use Open311::Endpoint::Service::Attribute;
 
@@ -12,18 +11,18 @@ sub _build_attributes {
         @{ $self->SUPER::_build_attributes() },
 
         Open311::Endpoint::Service::Attribute->new(
-            code => "title",
-            description => "Title",
+            code => "UnitID",
+            description => "Unit ID",
             datatype => "string",
             required => 0,
-            automated => 'server_set',
+            automated => 'hidden_field',
         ),
         Open311::Endpoint::Service::Attribute->new(
-            code => "description",
-            description => "Description",
+            code => "NSGRef",
+            description => "NSG reference",
             datatype => "string",
             required => 0,
-            automated => 'server_set',
+            automated => 'hidden_field',
         ),
         Open311::Endpoint::Service::Attribute->new(
             code => "report_url",
