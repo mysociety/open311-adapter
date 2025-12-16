@@ -171,7 +171,7 @@ TODO
 
 sub get_service_request_updates {
     my ( $self, $service, $args ) = @_;
-    die "unimplemented";
+    return ();
 }
 
 sub _upload_media_as_attachments {
