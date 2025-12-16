@@ -24,20 +24,6 @@ sub _build_attributes {
             required => 0,
             automated => 'hidden_field',
         ),
-        Open311::Endpoint::Service::Attribute->new(
-            code => "contributed_by",
-            description => "Contributed by",
-            datatype => "string",
-            required => 0,
-            automated => 'server_set',
-        ),
-        Open311::Endpoint::Service::Attribute->new(
-            code => "area_code",
-            description => "Area code",
-            datatype => "string",
-            required => 0,
-            automated => 'server_set',
-        ),
     );
 
     return \@attributes;
