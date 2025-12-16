@@ -24,6 +24,13 @@ sub _build_attributes {
             required => 0,
             automated => 'hidden_field',
         ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => "report_url",
+            description => "Report URL",
+            datatype => "string",
+            required => 0,
+            automated => 'server_set',
+        ),
     );
 
     return \@attributes;
