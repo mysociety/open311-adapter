@@ -1,0 +1,17 @@
+oauth:
+  username: username
+  password: password
+  client_id: client_id
+  client_secret: secret
+  access_token_url: url
+
+category_mapping:
+  potholes:
+    name: "Potholes"
+    group: "Roads"
+    parameters:
+      caseTypeCode: P001
+      assetTypeCode: A001
+
+  trees:
+    name: "Trees"
