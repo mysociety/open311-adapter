@@ -217,7 +217,7 @@ subtest "get_service_request_updates" => sub {
     my $res = $endpoint->run_test_request(
         GET => '/servicerequestupdates.json',
     );
-    contains_string $res->content, "unimplemented";
+    ok $res->is_success, 'valid request' or diag $res->content;
 };
 
 done_testing;
