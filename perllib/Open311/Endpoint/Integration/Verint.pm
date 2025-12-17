@@ -59,6 +59,9 @@ sub post_service_request {
             . "\n\nProblem details: " . $args->{attributes}->{description}
             . "\n\nLink: " . $args->{attributes}->{report_url};
     }
+    if ($service_cfg->{form_name} eq 'lbe_saftey_barrier_new') {
+        $extra{dt_date_noticed_problem} = $date->date;
+    }
 
     my $result = $integ->CreateRequest(
         $service_cfg->{form_name},
