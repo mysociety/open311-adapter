@@ -59,6 +59,12 @@ sub post_service_request {
             . "\n\nProblem details: " . $args->{attributes}->{description}
             . "\n\nLink: " . $args->{attributes}->{report_url};
     }
+    if ($service_cfg->{form_name} eq 'lbe_saftey_barrier_new') {
+        $extra{dt_date_noticed_problem} = $date->date;
+    }
+    if ($service_cfg->{form_name} eq 'lbe_illuminated_bollard') {
+        $extra{rad_which_sign_problem} = 'Report an unlit illuminated sign';
+    }
 
     my $result = $integ->CreateRequest(
         $service_cfg->{form_name},
