@@ -64,6 +64,8 @@ $soap_lite->mock(call => sub {
 
         if ($form_name eq 'lle_abandoned_vehicle') {
           push(@expected, [ 'm3_comments', "Tell us about the problem: Next to supermarket - FMS ID: 1\n\nProblem details: Car left on pavement\n\nLink: http://localhost/1" ] );
+        } else {
+            push @expected, [ 'txt_company_name', 'Company' ];
         }
 
         for my $field ($$data->value->value) {
@@ -260,6 +262,7 @@ my @standard = (
     'attribute[fixmystreet_id]' => 1,
     'attribute[usrn]' => '12345',
     'attribute[uprn]' => '67899',
+    'attribute[company_name]' => 'Company',
 );
 
 my @m3_data = (
