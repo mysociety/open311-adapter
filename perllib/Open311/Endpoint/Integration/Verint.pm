@@ -54,10 +54,16 @@ sub post_service_request {
     my $title = $args->{attributes}->{title} . ' - FMS ID: ' . $args->{attributes}->{fixmystreet_id};
     my %extra;
     if ($service_cfg->{lob_system} eq 'M3') {
-        $extra{m3_comments} =
+        my $comments =
             'Tell us about the problem: ' . $title
-            . "\n\nProblem details: " . $args->{attributes}->{description}
-            . "\n\nLink: " . $args->{attributes}->{report_url};
+            . "\n\nProblem details: " . $args->{attributes}->{description};
+        if ($args->{attributes}->{company_name}) {
+            $comments .= "\n\nIf applicable, provide the name of the company responsible: " . $args->{attributes}->{company_name};
+        }
+        $comments .= "\n\nLink: " . $args->{attributes}->{report_url};
+        $extra{m3_comments} = $comments;
+    } elsif ($args->{attributes}->{company_name}) {
+        $extra{txt_company_name} = $args->{attributes}->{company_name};
     }
     if ($service_cfg->{form_name} eq 'lbe_saftey_barrier_new') {
         $extra{dt_date_noticed_problem} = $date->date;
@@ -212,6 +218,13 @@ sub services {
                     required => 1,
                     values_sorted => [ 1, 0 ],
                     values => { 0 => 'No', 1 => 'Yes' },
+                });
+            } elsif ($_->{type} eq 'text') {
+                push @{$service->attributes}, Open311::Endpoint::Service::Attribute->new({
+                    code => $_->{code},
+                    description => $_->{description},
+                    datatype => 'string',
+                    required => 0,
                 });
             }
         }
