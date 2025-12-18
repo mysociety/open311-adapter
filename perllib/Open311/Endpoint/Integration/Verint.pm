@@ -154,7 +154,7 @@ sub get_service_request_updates {
         my $core = $_->{CoreDetails};
         my $closed = $core->{Closed};
         next unless $closed;
-        my $ref = $core->{CaseReference};
+        my $ref = $core->{ExternalReferences}{ExternalReference};
         my $reason = $core->{caseCloseureReason};
         my $status = 'closed';
         foreach (keys %$mapping) {
