@@ -91,13 +91,13 @@ $soap_lite->mock(call => sub {
         is $args[1]->value, 'all';
         return SOAP::Result->new(method => { FWTCaseFullDetails => [ {
             CoreDetails => {
-                CaseReference => 1,
+                ExternalReferences => { ExternalReference => 1 },
                 caseCloseureReason => '',
             },
         }, {
             CoreDetails => {
                 Closed => '2025-11-18T09:00:00Z',
-                CaseReference => 2,
+                ExternalReferences => { ExternalReference => 2 },
                 caseCloseureReason => 'Case Resolved (some text)',
             },
         } ] });
