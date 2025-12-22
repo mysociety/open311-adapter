@@ -52,7 +52,7 @@ sub post_service_request {
     my $integ = $self->get_integration;
 
     my $title = $args->{attributes}->{title} . ' - FMS ID: ' . $args->{attributes}->{fixmystreet_id};
-    my %extra;
+    tie my %extra, 'Tie::IxHash';
     if ($service_cfg->{lob_system} eq 'M3') {
         my $comments =
             'Tell us about the problem: ' . $title
@@ -62,8 +62,11 @@ sub post_service_request {
         }
         $comments .= "\n\nLink: " . $args->{attributes}->{report_url};
         $extra{m3_comments} = $comments;
-    } elsif ($args->{attributes}->{company_name}) {
-        $extra{txt_company_name} = $args->{attributes}->{company_name};
+    } else {
+        if ($args->{attributes}->{company_name}) {
+            $extra{txt_company_name} = $args->{attributes}->{company_name};
+        }
+        $extra{txt_map_full_address} = $args->{attributes}->{closest_address};
     }
     if ($service_cfg->{form_name} eq 'lbe_saftey_barrier_new') {
         $extra{dt_date_noticed_problem} = $date->date;
