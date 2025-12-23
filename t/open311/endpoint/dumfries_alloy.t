@@ -329,7 +329,7 @@ subtest 'inspection_status mapping' => sub {
         attributes_outcome => ['unknown_outcome'],
         attributes_hwyPriority => ['unknown_priority'],
     };
-    is $endpoint->_status_from_mapping($defect), 'IGNORE',
+    is $endpoint->inspection_status($defect), 'IGNORE',
         'Unmatched status combination returns IGNORE';
 
     # Test _skip_inspection_update returns true for IGNORE status
