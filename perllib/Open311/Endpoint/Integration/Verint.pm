@@ -204,6 +204,12 @@ sub services {
             $cfg->{group} ? (group => $cfg->{group}) : (),
             allow_any_attributes => 1,
         );
+        push @{$service->attributes}, Open311::Endpoint::Service::Attribute->new({
+            code => 'closest_address',
+            description => 'Closest address',
+            datatype => 'string',
+            automated => 'server_set',
+        }) if $cfg->{lob_system} eq 'EXOR';
         foreach (@{$cfg->{attributes} || []}) {
             if ($_->{type} eq 'notice') {
                 push @{$service->attributes}, Open311::Endpoint::Service::Attribute->new({
