@@ -51,6 +51,8 @@ inspection_attribute_mapping:
   outcome: attributes_outcome
   hwy_priority: attributes_hwyPriority
   se_priority: attributes_sePriority
+  extra_attributes:
+    priority: root.attributes_serviceEnquiryHWYPriority_652e86d3737fc1d2c84c720b.attributes_itemsTitle
 
 # How values from the above field get mapped to Open311 statuses.
 inspection_status_mapping:
