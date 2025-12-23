@@ -94,10 +94,10 @@ sub inspection_status {
     my $se_priority = $defect->{$mapping->{se_priority}} || '';
 
     # unwrap values if necessary
-    $status = shift @$status if ref $status eq 'ARRAY';
-    $outcome = shift @$outcome if ref $outcome eq 'ARRAY';
-    $hwy_priority = shift @$hwy_priority if ref $hwy_priority eq 'ARRAY';
-    $se_priority = shift @$se_priority if ref $se_priority eq 'ARRAY';
+    $status = $status->[0] if ref $status eq 'ARRAY';
+    $outcome = $outcome->[0] if ref $outcome eq 'ARRAY';
+    $hwy_priority = $hwy_priority->[0] if ref $hwy_priority eq 'ARRAY';
+    $se_priority = $se_priority->[0] if ref $se_priority eq 'ARRAY';
 
     # Enquiry only has one priority, take whichever has a value.
     my $priority = $hwy_priority || $se_priority;

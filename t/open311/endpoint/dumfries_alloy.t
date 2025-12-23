@@ -62,6 +62,12 @@ $integration->mock('api_call', sub {
         } elsif ( $call =~ m{^item$} ) {
             # Creating new report
             $content = '{ "item": { "itemId": "report_456" } }';
+        } elsif ( $call =~ m{aqs/join} ) {
+            my $dodi_code = $body->{aqs}->{properties}->{dodiCode} || '';
+            if ( $dodi_code eq 'designs_serviceEnquiry' ) {
+                # Fetching updates
+                $content = path(__FILE__)->sibling('json/alloyv2/dumfries/designs_serviceEnquiry_search.json')->slurp;
+            }
         } elsif ( $call =~ m{aqs/query} ) {
             my $dodi_code = $body->{aqs}->{properties}->{dodiCode} || '';
             if ( $dodi_code eq 'designs_contacts' ) {
@@ -85,6 +91,8 @@ $integration->mock('api_call', sub {
         } elsif ( $call =~ m{design/designs_seReportedIssueList} ) {
             # Getting service list design
             $content = '{ "design": { "code": "designs_seReportedIssueList" } }';
+        } elsif ( $call =~ 'item-log/item/(.*)$' ) {
+            $content = path(__FILE__)->sibling("json/alloyv2/dumfries/item_log_$1.json")->slurp;
         } else {
             die "No handler found for API call $call";
         }
@@ -339,6 +347,24 @@ subtest 'inspection_status mapping' => sub {
     # Test _skip_inspection_update returns false for other statuses
     ok !$endpoint->_skip_inspection_update('open'),
         '_skip_inspection_update returns false for open status';
+};
+
+subtest 'priority pulled through' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?start_date=2025-12-25T00:00:00Z&end_date=2025-12-26T00:00:00Z'
+    );
+    is_deeply decode_json($res->content), [ {
+      "status" => "planned",
+      "updated_datetime" => "2025-12-25T12:00:00Z",
+      "media_url" => "",
+      "update_id" => "63ee34826965f30390f01cda_20251225120000",
+      "extras" => {
+         "latest_data_only" => 1,
+         "priority" => "Critical Risk"
+      },
+      "description" => "",
+      "service_request_id" => "63ee34826965f30390f01cda"
+    } ];
 };
 
 done_testing;
