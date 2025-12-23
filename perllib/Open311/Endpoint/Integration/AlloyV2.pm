@@ -677,9 +677,9 @@ sub _get_inspection_updates_design {
     return () unless $mapping;
 
     my %join;
-    $join{joinAttributes}
-        = [ $mapping->{category_title}, $mapping->{group_title} ]
-        if $mapping->{category_title};
+    if (my $extra_mapping = $mapping->{extra_attributes}) {
+        push @{$join{joinAttributes}}, values %$extra_mapping;
+    }
 
     my $updates = $self->fetch_updated_resources($design, $args->{start_date}, $args->{end_date}, \%join);
 
@@ -735,14 +735,11 @@ sub _get_inspection_updates_design {
             }
         }
 
-        if ( $mapping->{category_title} ) {
-            $args{extras}{category}
-                = $attributes->{ $mapping->{category_title} }
-                if $attributes->{ $mapping->{category_title} };
-
-            $args{extras}{group}
-                = $attributes->{ $mapping->{group_title} }
-                if $attributes->{ $mapping->{group_title} };
+        if (my $extra_mapping = $mapping->{extra_attributes}) {
+            foreach (keys %$extra_mapping) {
+                $args{extras}{$_} = $attributes->{$extra_mapping->{$_}}
+                    if $extra_mapping->{$_};
+            }
         }
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );

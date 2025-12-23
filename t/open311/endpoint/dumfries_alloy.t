@@ -336,9 +336,37 @@ subtest 'defect_status mapping' => sub {
     ok $endpoint->_skip_job_update({}, 'IGNORE'),
         '_skip_job_update returns true for IGNORE status';
 
-    # Test _skip_job_update returns false for other statuses
-    ok !$endpoint->_skip_job_update({}, 'open'),
-        '_skip_job_update returns false for open status';
+    # Test _skip_inspection_update returns false for other statuses
+    ok !$endpoint->_skip_inspection_update('open'),
+        '_skip_inspection_update returns false for open status';
+};
+
+subtest 'priority pulled through' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?start_date=2025-12-25T00:00:00Z&end_date=2025-12-26T00:00:00Z'
+    );
+    is_deeply decode_json($res->content), [ {
+      "status" => "planned",
+      "updated_datetime" => "2025-12-25T12:00:00Z",
+      "media_url" => "",
+      "update_id" => "63ee34826965f30390f01cda_20251225120000",
+      "extras" => {
+         "latest_data_only" => 1,
+         "priority" => "Critical Risk"
+      },
+      "description" => "",
+      "service_request_id" => "63ee34826965f30390f01cda"
+    }, {
+      "status" => "fixed",
+      "updated_datetime" => "2025-12-25T12:00:00Z",
+      "media_url" => "",
+      "update_id" => "63ee34826965f30390f01cdc_20251225120000",
+      "extras" => {
+         "latest_data_only" => 1,
+      },
+      "description" => "",
+      "service_request_id" => "63ee34826965f30390f01cdc"
+    } ];
 };
 
 done_testing;
