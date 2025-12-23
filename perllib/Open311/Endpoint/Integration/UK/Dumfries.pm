@@ -57,28 +57,36 @@ sub _get_service_code {
     return $subcategory_config->{id};
 }
 
-=head2 defect_status
+=head2 _get_inspection_status
 
 The Open311 status of a defect in Alloy depends on multiple fields - status,
 priority, and outcome.
 
-Because it'd be better to not hardcode these dependencies, the `defect_status_mapping`
-config for Dumfries is a list of objects that we iterate through to find one
-that matches the values of those fields on this defect.
+Because it'd be better to not hardcode these dependencies, the
+`inspection_status_mapping` config for Dumfries is a list of objects that we
+iterate through to find one that matches the values of those fields on this
+defect.
 
-If any of status/outcome/priority are set to null in the defect_status_mapping
-list then those attributes are ignored when considering if that entry matches.
+If any of status/outcome/priority are set to null in the
+inspection_status_mapping list then those attributes are ignored when
+considering if that entry matches.
 
 If we fall off the end of the list with no matches we return 'IGNORE' so the
 defect/update is skipped.
 
 =cut
 
-sub defect_status {
+# Mapping is passed in here, but then ignored and looked up again - tidy up the ALloy 'external status code' code? TODO
+sub _get_inspection_status {
+    my ($self, $defect, $mapping) = @_;
+    return $self->inspection_status($defect);
+}
+
+sub inspection_status {
     my ($self, $defect) = @_;
 
-    my $mapping = $self->config->{defect_attribute_mapping};
-    my $options = $self->config->{defect_status_mapping};
+    my $mapping = $self->config->{inspection_attribute_mapping};
+    my $options = $self->config->{inspection_status_mapping};
 
     my $status = $defect->{$mapping->{status}} || '';
     my $outcome = $defect->{$mapping->{outcome}} || '';
@@ -96,7 +104,7 @@ sub defect_status {
 
     for my $opt (@$options) {
         unless (defined $opt->{result}) {
-            die "Missing 'result' value - please check defect_status_mapping in config";
+            die "Missing 'result' value - please check inspection_status_mapping in config";
         }
         # if the entry in config has some values undefined then consider those fields a match
         my $s = defined $opt->{status}   ? $opt->{status}   eq $status   : 1;
@@ -112,8 +120,8 @@ sub defect_status {
     return "IGNORE";
 }
 
-sub _skip_job_update {
-    my ($self, $defect, $status) = @_;
+sub _skip_inspection_update {
+    my ($self, $status) = @_;
 
     return 1 if $status eq 'IGNORE';
 }
