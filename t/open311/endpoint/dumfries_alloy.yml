@@ -46,14 +46,14 @@ service_whitelist:
       id: "567e567"
 
 # Mapping of Alloy attribute codes to status/outcome/priority fields
-defect_attribute_mapping:
+inspection_attribute_mapping:
   status: attributes_status
   outcome: attributes_outcome
   hwy_priority: attributes_hwyPriority
   se_priority: attributes_sePriority
 
 # How values from the above field get mapped to Open311 statuses.
-defect_status_mapping:
+inspection_status_mapping:
   # OPEN
   - status: 123abc # Awaiting Inspection
     outcome: null
