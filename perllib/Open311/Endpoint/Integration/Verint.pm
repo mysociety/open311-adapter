@@ -157,7 +157,6 @@ sub get_service_request_updates {
         my $core = $_->{CoreDetails};
         my $closed = $core->{Closed};
         next unless $closed;
-        my $ref = $core->{ExternalReferences}{ExternalReference};
         my $reason = $core->{caseCloseureReason};
         my $status = 'closed';
         foreach (keys %$mapping) {
@@ -165,17 +164,21 @@ sub get_service_request_updates {
                 $status = $mapping->{$_};
             }
         }
-
         my $digest = substr(md5_hex($reason), 0, 8);
-        my $update_id = $ref . '_' . $digest;
-        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
-            status => $status,
-            update_id => $update_id,
-            service_request_id => $ref,
-            description => '',
-            updated_datetime => DateTime::Format::W3CDTF->parse_datetime($closed),
-            extra => { latest_data_only => 1 },
-        );
+
+        my $refs = $core->{ExternalReferences}{ExternalReference};
+        $refs = [ $refs ] unless ref $refs eq 'ARRAY';
+        foreach my $ref (@$refs) {
+            my $update_id = $ref . '_' . $digest;
+            push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
+                status => $status,
+                update_id => $update_id,
+                service_request_id => $ref,
+                description => '',
+                updated_datetime => DateTime::Format::W3CDTF->parse_datetime($closed),
+                extra => { latest_data_only => 1 },
+            );
+        }
     }
     return @updates;
 }
