@@ -244,6 +244,60 @@ subtest "GET Service" => sub {
 XML
 };
 
+subtest "GET Service" => sub {
+    my $res = $enfield_endpoint->run_test_request( GET => '/services/bench_or_seat_problem.xml' );
+
+    ok $res->is_success, 'xml success';
+    is $res->decoded_content, <<XML;
+<?xml version="1.0" encoding="utf-8"?>
+<service_definition>
+  <attributes>
+    <attribute>
+      <automated>server_set</automated>
+      <code>easting</code>
+      <datatype>number</datatype>
+      <datatype_description></datatype_description>
+      <description>easting</description>
+      <order>1</order>
+      <required>true</required>
+      <variable>false</variable>
+    </attribute>
+    <attribute>
+      <automated>server_set</automated>
+      <code>northing</code>
+      <datatype>number</datatype>
+      <datatype_description></datatype_description>
+      <description>northing</description>
+      <order>2</order>
+      <required>true</required>
+      <variable>false</variable>
+    </attribute>
+    <attribute>
+      <automated>server_set</automated>
+      <code>fixmystreet_id</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>external system ID</description>
+      <order>3</order>
+      <required>true</required>
+      <variable>false</variable>
+    </attribute>
+    <attribute>
+      <automated>server_set</automated>
+      <code>closest_address</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>Closest address</description>
+      <order>4</order>
+      <required>false</required>
+      <variable>true</variable>
+    </attribute>
+  </attributes>
+  <service_code>bench_or_seat_problem</service_code>
+</service_definition>
+XML
+};
+
 my @standard = (
     api_key => 'api-key',
     service_code => 'bench_or_seat_problem',
