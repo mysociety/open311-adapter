@@ -696,6 +696,7 @@ sub _get_inspection_updates_design {
         my $attributes = $self->alloy->attributes_to_hash($report);
 
         my ($status, $reason_for_closure) = $self->_get_inspection_status($attributes, $mapping);
+        next if $self->_skip_inspection_update($status);
 
         my $description = '';
         if ($mapping->{inspector_comments}) {
@@ -747,6 +748,8 @@ sub _get_inspection_updates_design {
 
     return @updates;
 }
+
+sub _skip_inspection_update { }
 
 sub get_assigned_to_users {
     # Currently for Northumberland only
@@ -823,6 +826,7 @@ sub _get_defect_updates {
 
     my @updates;
     my $resources = $self->config->{defect_resource_name};
+    $resources = [] unless $resources;
     $resources = [ $resources ] unless ref $resources eq 'ARRAY';
     foreach (@$resources) {
         push @updates, $self->_get_defect_updates_resource($_, $args);
