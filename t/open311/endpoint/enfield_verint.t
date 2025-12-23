@@ -98,7 +98,7 @@ $soap_lite->mock(call => sub {
         }, {
             CoreDetails => {
                 Closed => '2025-11-18T09:00:00Z',
-                ExternalReferences => { ExternalReference => 2 },
+                ExternalReferences => { ExternalReference => [ 2, 46 ] },
                 caseCloseureReason => 'Case Resolved (some text)',
             },
         } ] });
@@ -331,6 +331,13 @@ subtest 'GET updates' => sub {
       'media_url' => '',
       'description' => '',
       'service_request_id' => 2,
+      'updated_datetime' => '2025-11-18T09:00:00Z'
+    }, {
+      'status' => 'fixed',
+      'update_id' => '46_f57de23c',
+      'media_url' => '',
+      'description' => '',
+      'service_request_id' => 46,
       'updated_datetime' => '2025-11-18T09:00:00Z'
     }];
 };
