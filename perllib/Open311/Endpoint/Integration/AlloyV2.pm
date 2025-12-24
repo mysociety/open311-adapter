@@ -738,7 +738,7 @@ sub _get_inspection_updates_design {
         if (my $extra_mapping = $mapping->{extra_attributes}) {
             foreach (keys %$extra_mapping) {
                 $args{extras}{$_} = $attributes->{$extra_mapping->{$_}}
-                    if $extra_mapping->{$_};
+                    if $extra_mapping->{$_} && $attributes->{$extra_mapping->{$_}};
             }
         }
 
