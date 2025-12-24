@@ -180,7 +180,7 @@ sub services {
 
             my $subcategory_name = $subcategory_alias || $subcategory;
 
-            (my $code = $subcategory) =~ s/ /_/g;
+            my $code = $self->_get_service_code($group, $subcategory, $subcategory_config);
             if ($subcategory_alias) {
                 $code .= '_' . ++$suffixes{$code};
             }
@@ -275,6 +275,24 @@ sub post_service_request {
         service_request_id => $item_id
     );
 
+}
+
+=head2 _get_service_code
+
+Used to determine the Open311 service code for a service.
+Takes the group, subcategory, and value (aka subcategory_config) from
+service_whitelist in the integration's config file.
+
+By default we use the subcategory name as the service code, replacing spaces
+with underscores.
+
+=cut
+
+sub _get_service_code {
+    my ($self, $group, $subcategory, $subcategory_config) = @_;
+
+    (my $code = $subcategory) =~ s/ /_/g;
+    return $code;
 }
 
 sub _munge_service_code {
@@ -659,9 +677,9 @@ sub _get_inspection_updates_design {
     return () unless $mapping;
 
     my %join;
-    $join{joinAttributes}
-        = [ $mapping->{category_title}, $mapping->{group_title} ]
-        if $mapping->{category_title};
+    if (my $extra_mapping = $mapping->{extra_attributes}) {
+        push @{$join{joinAttributes}}, values %$extra_mapping;
+    }
 
     my $updates = $self->fetch_updated_resources($design, $args->{start_date}, $args->{end_date}, \%join);
 
@@ -678,6 +696,7 @@ sub _get_inspection_updates_design {
         my $attributes = $self->alloy->attributes_to_hash($report);
 
         my ($status, $reason_for_closure) = $self->_get_inspection_status($attributes, $mapping);
+        next if $self->_skip_inspection_update($status);
 
         my $description = '';
         if ($mapping->{inspector_comments}) {
@@ -717,14 +736,11 @@ sub _get_inspection_updates_design {
             }
         }
 
-        if ( $mapping->{category_title} ) {
-            $args{extras}{category}
-                = $attributes->{ $mapping->{category_title} }
-                if $attributes->{ $mapping->{category_title} };
-
-            $args{extras}{group}
-                = $attributes->{ $mapping->{group_title} }
-                if $attributes->{ $mapping->{group_title} };
+        if (my $extra_mapping = $mapping->{extra_attributes}) {
+            foreach (keys %$extra_mapping) {
+                $args{extras}{$_} = $attributes->{$extra_mapping->{$_}}
+                    if $extra_mapping->{$_} && $attributes->{$extra_mapping->{$_}};
+            }
         }
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
@@ -732,6 +748,8 @@ sub _get_inspection_updates_design {
 
     return @updates;
 }
+
+sub _skip_inspection_update { }
 
 sub get_assigned_to_users {
     # Currently for Northumberland only
@@ -808,6 +826,7 @@ sub _get_defect_updates {
 
     my @updates;
     my $resources = $self->config->{defect_resource_name};
+    $resources = [] unless $resources;
     $resources = [ $resources ] unless ref $resources eq 'ARRAY';
     foreach (@$resources) {
         push @updates, $self->_get_defect_updates_resource($_, $args);
