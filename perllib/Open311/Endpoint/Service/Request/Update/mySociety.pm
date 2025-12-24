@@ -44,7 +44,7 @@ has fixmystreet_id => (
 
 has extras => (
     is => 'ro',
-    isa => HashRef[ Str ],
+    isa => HashRef[ Any ],
     default => sub{ {} },
 );
 
