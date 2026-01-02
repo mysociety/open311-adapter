@@ -16,11 +16,13 @@ use strict;
 use warnings;
 
 use HTTP::Request::Common;
+use XML::Simple;
 use JSON::MaybeXS;
 use LWP::UserAgent;
 use Moo;
 use MIME::Base64 qw(decode_base64);
 use URI::Escape;
+use Try::Tiny;
 
 with 'Role::Config';
 with 'Role::Logger';
@@ -56,6 +58,16 @@ has cases_api_base_url => (
         $url .= '/' unless $url =~ m{/$};
         return $url;
     }
+);
+
+has azure_api_base_url => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{azure_api_base_url} }
+);
+
+has azure_api_arguments => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{azure_api_arguments} }
 );
 
 has ua => (
@@ -323,6 +335,30 @@ sub add_note_to_case {
     }
     return;
 }
+
+sub fetch_update_names {
+    my ($self) = @_;
+
+    my $response = $self->ua->get($self->azure_api_base_url . $self->azure_api_arguments . '&comp=list&restype=container');
+    try {
+        my $data = XML::Simple->new->XMLin($response)->{Blobs}->{Blob};
+        return @$data;
+    } catch {
+        $self->_fail("Failed to fetch update names", '', $response);
+    }
+};
+
+sub fetch_update_file {
+    my ($self, $filename) = @_;
+
+    my $response = $self->ua->get($self->azure_api_base_url . "/$filename" . $self->azure_api_arguments);
+    try {
+        my $data = decode_json($response);
+        return $data;
+    } catch {
+        $self->_fail("Failed to fetch update file", $filename, $response);
+    }
+};
 
 sub _fail {
     my ($self, $message, $request, $response) = @_;
