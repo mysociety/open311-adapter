@@ -278,27 +278,33 @@ sub _skip_update_file {
     return 0;
 };
 
+
+# NOTE: Aurora silently fails if we upload an attachment to a case without a name.
 sub _upload_media_as_attachments {
     my ( $self, $args ) = @_;
-    my $attachment_ids = ();
+    my $attachments = ();
 
     my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
     foreach (@{$args->{media_url}}) {
         my $response = $ua->get($_);
         if ($response->is_success) {
-            push @$attachment_ids,
-                $self->aurora->upload_attachment_from_response_and_get_id($response);
+            push @$attachments, {
+                id => $self->aurora->upload_attachment_from_response_and_get_id($response),
+                name => $response->filename,
+            };
         } else {
             $self->logger->warn("Unable to download media " . $_);
         }
     }
 
     foreach (@{$args->{uploads}}) {
-        push @$attachment_ids,
-            $self->aurora->upload_attachment_from_file_and_get_id($_->filename);
+        push @$attachments, {
+            id => $self->aurora->upload_attachment_from_file_and_get_id($_->filename),
+            name => $_->filename,
+        };
     }
 
-    return [ map { { "id" => $_ } } @$attachment_ids ];
+    return $attachments;
 }
 
 1;
