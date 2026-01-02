@@ -297,7 +297,9 @@ sub _upload_media_as_attachments {
             $self->aurora->upload_attachment_from_file_and_get_id($_->filename);
     }
 
-    return [ map { { "id" => $_ } } @$attachment_ids ];
+    # Aurora silently fails if we upload an attachment without a name so
+    # just using the attachment ID as the name.
+    return [ map { { "id" => $_, "name" => $_ } } @$attachment_ids ];
 }
 
 1;
