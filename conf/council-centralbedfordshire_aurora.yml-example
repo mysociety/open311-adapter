@@ -5,6 +5,15 @@ oauth:
   client_secret: secret
   access_token_url: url
 
+cases_api_base_url: url
+updates_azure_container_base_url: url
+updates_azure_container_url_arguments: sas_token
+
+# A map from 'CaseTypeCode' to update status.
+reverse_status_mapping:
+  DR010: in_progress
+  DR020: closed
+
 # A map from service_code to:
 #
 #   name: The display name for the category
