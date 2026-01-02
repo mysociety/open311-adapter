@@ -158,6 +158,7 @@ subtest "post_service_request" => sub {
             contactId => 'contact-id',
             attachments => [{
                 id => 'attachment-id',
+                name => 'test_image.jpg',
             }],
             internalAssetId => 'asset-id',
             caseTypeCode => 'P001',
@@ -217,6 +218,7 @@ subtest "post_service_request_update" => sub {
             noteText => "description",
             attachments => [{
                 id => 'attachment-id',
+                name => 'test_image.jpg',
             }],
         };
 
