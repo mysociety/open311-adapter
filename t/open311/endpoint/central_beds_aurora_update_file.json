@@ -1,0 +1,54 @@
+{
+"TriggerSource": "Interactive Source",
+"TriggerType": "CS_CHANGE_QUEUE",
+"Date": "2025-12-02T09:46:56.84597Z",
+"Message": {
+  "ClearanceReasonPortalText": "Ignored unless CS_CLEAR_CASE",
+  "CaseTypeCode": "DR020",
+  "CaseNumber": "FMS-01",
+  "CaseEventHistory": [
+    {
+      "EventDateTime": "2025-11-26T09:24:46.1888937Z"
+    },
+    {
+      "EventDateTime": "2025-11-26T09:24:47.781172Z"
+    },
+    {
+      "EventDateTime": "2025-11-26T09:24:49.0594559Z"
+    },
+    {
+      "EventDateTime": "2025-11-26T09:25:03.2730396Z"
+    },
+    {
+      "EventDateTime": "2025-11-26T09:25:05.6145407Z"
+    },
+    {
+      "EventDateTime": "2025-11-26T14:34:24.5083228Z"
+    },
+    {
+      "EventDateTime": "2025-11-26T15:13:48.4809396Z"
+    },
+    {
+      "EventDateTime": "2025-12-02T09:29:57.0371007Z"
+    },
+    {
+      "EventDateTime": "2025-12-02T09:30:13.2900937Z"
+    },
+    {
+      "EventDateTime": "2025-12-02T09:39:54.4656494Z"
+    },
+    {
+      "EventDateTime": "2025-12-02T09:40:00.141027Z"
+    },
+    {
+      "EventDateTime": "2025-12-02T09:40:26.6437059Z"
+    },
+    {
+      "EventDateTime": "2025-12-02T09:40:28.2177866Z"
+    },
+    {
+      "EventDateTime": "2025-12-02T09:46:55.3308559Z"
+    }
+  ]
+}
+}

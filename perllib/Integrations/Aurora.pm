@@ -16,11 +16,13 @@ use strict;
 use warnings;
 
 use HTTP::Request::Common;
+use XML::Simple;
 use JSON::MaybeXS;
 use LWP::UserAgent;
 use Moo;
 use MIME::Base64 qw(decode_base64);
 use URI::Escape;
+use Try::Tiny;
 
 with 'Role::Config';
 with 'Role::Logger';
@@ -56,6 +58,29 @@ has cases_api_base_url => (
         $url .= '/' unless $url =~ m{/$};
         return $url;
     }
+);
+
+=head2 updates_azure_container_base_url
+
+The base URL of the Azure API hosting the Aurora 'return path updates' container.
+
+=cut
+
+has updates_azure_container_base_url => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{updates_azure_container_base_url} }
+);
+
+=head2 updates_azure_container_url_arguments
+
+Arguments to use in a query string when making requests using c<updates_azure_container_base_url>.
+Can be used for things like setting the SAS token for auth.
+
+=cut
+
+has updates_azure_container_url_arguments => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{updates_azure_container_url_arguments} }
 );
 
 has ua => (
@@ -324,10 +349,55 @@ sub add_note_to_case {
     return;
 }
 
+=head2 fetch_update_filenames
+
+Queries for filenames in the 'return path updates' Azure storage container.
+
+=cut
+
+sub fetch_update_filenames {
+    my ($self) = @_;
+
+    my $request = GET($self->updates_azure_container_base_url . '?' . $self->updates_azure_container_url_arguments . '&comp=list&restype=container');
+    my $response = $self->ua->request($request);
+    if (!$response->is_success) {
+        $self->_fail("Failed to fetch update filenames", $request, $response);
+    }
+    try {
+        my $data = XML::Simple->new->XMLin($response->content)->{Blobs}->{Blob};
+        return @$data;
+    } catch {
+        $self->_fail("Failed to parsed fetched update filenames as XML", $request, $response);
+    };
+};
+
+=head2 fetch_update_file
+
+Return the parsed contents of the given file in the 'return path updates' Azure storage container.
+
+=cut
+
+sub fetch_update_file {
+    my ($self, $filename) = @_;
+
+    my $request = GET($self->updates_azure_container_base_url . "/$filename" . '?' . $self->updates_azure_container_url_arguments);
+    my $response = $self->ua->request($request);
+    if (!$response->is_success) {
+        $self->_fail("Failed to fetch update file", $request, $response);
+    }
+    try {
+        my $data = decode_json($response->content);
+        return $data;
+    } catch {
+        $self->_fail("Failed to parse fetched update file as JSON", $request, $response);
+    };
+};
+
 sub _fail {
     my ($self, $message, $request, $response) = @_;
     my $request_string = $request->as_string;
-    $request_string =~ s/(Authorization: ).+/$1\[REDACTED\]/;
+    $request_string =~ s/(Authorization: ).+/$1\[REDACTED\]/;  # Redact Aurora token.
+    $request_string =~ s/(sig=)[^&\s]+/$1\[REDACTED\]/g;  # Redact Azure SAS token signature.
     $self->logger->error(sprintf(
         "%s\n\nRequested:\n\n%s\n\nGot:\n\n%s",
         $message, $request_string, $response->as_string
