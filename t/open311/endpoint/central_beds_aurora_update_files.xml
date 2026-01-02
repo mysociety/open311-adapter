@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<EnumerationResults ServiceEndpoint="https://my_api.example.com/"
+    ContainerName="azure-container">
+    <Blobs>
+        <Blob>
+            <Name>20251202_08402699_9664_CS_RE_QUEUE.json</Name>
+        </Blob>
+        <Blob>
+            <Name>20251202_09402699_9664_CS_CLEAR_CASE.json</Name>
+        </Blob>
+        <Blob>
+            <Name>20251202_094656333_9664_CS_CHANGE_QUEUE.json</Name>
+        </Blob>
+        <Blob>
+            <Name>20251203_09402699_9664_CS_INSPECTION_PROMPTED.json</Name>
+        </Blob>
+    </Blobs>
+    <NextMarker />
+</EnumerationResults>
