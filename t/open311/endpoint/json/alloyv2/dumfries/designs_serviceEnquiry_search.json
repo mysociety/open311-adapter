@@ -56,6 +56,14 @@
       "attributes": [
       ],
       "signature": "63ee3490b016c303ae032113"
+    },
+    {
+      "itemId": "63ee34826965f30390f01cdc",
+      "designCode": "designs_serviceEnquiry",
+      "attributes": [
+          { "attributeCode": "attributes_status", "value": ["91827eea"] }
+      ],
+      "signature": "63ee3490b016c303ae032113"
     }
   ]
 }
