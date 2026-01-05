@@ -364,6 +364,16 @@ subtest 'priority pulled through' => sub {
       },
       "description" => "",
       "service_request_id" => "63ee34826965f30390f01cda"
+    }, {
+      "status" => "fixed",
+      "updated_datetime" => "2025-12-25T12:00:00Z",
+      "media_url" => "",
+      "update_id" => "63ee34826965f30390f01cdc_20251225120000",
+      "extras" => {
+         "latest_data_only" => 1,
+      },
+      "description" => "",
+      "service_request_id" => "63ee34826965f30390f01cdc"
     } ];
 };
 
