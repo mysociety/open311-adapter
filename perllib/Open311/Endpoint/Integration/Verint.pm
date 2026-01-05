@@ -173,6 +173,7 @@ sub get_service_request_updates {
         my $refs = $core->{ExternalReferences}{ExternalReference};
         $refs = [ $refs ] unless ref $refs eq 'ARRAY';
         foreach my $ref (@$refs) {
+            $ref =~ s/[^:\w_\-]//g;
             my $update_id = $ref . '_' . $digest;
             push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new(
                 status => $status,
