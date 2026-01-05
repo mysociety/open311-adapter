@@ -98,8 +98,8 @@ sub post_service_request {
             eml_cust_info_email => $args->{email},
             tel_cust_info_phone => $args->{phone},
             # Report
-            txta_problem => $title,
-            txta_problem_details => $args->{attributes}->{description},
+            txta_problem_details => $title,
+            txta_problem => $args->{attributes}->{description},
             %extra,
         ),
         "Y"
