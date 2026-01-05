@@ -58,8 +58,8 @@ $soap_lite->mock(call => sub {
             [ 'txt_cust_info_first_name', 'Bob' ],
             [ 'txt_cust_info_last_name', 'Mould' ],
             [ 'eml_cust_info_email', 'test@example.com' ],
-            [ 'txta_problem', $form_data->{title} . ' - FMS ID: 1' ],
-            [ 'txta_problem_details', $form_data->{description} ],
+            [ 'txta_problem_details', $form_data->{title} . ' - FMS ID: 1' ],
+            [ 'txta_problem', $form_data->{description} ],
         );
 
         if ($form_name eq 'lle_abandoned_vehicle') {
