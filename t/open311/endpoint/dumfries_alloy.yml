@@ -44,3 +44,97 @@ service_whitelist:
       id: "456d456"
     Cracked/Damaged Paving Slab:
       id: "567e567"
+
+# Mapping of Alloy attribute codes to status/outcome/priority fields
+inspection_attribute_mapping:
+  status: attributes_status
+  outcome: attributes_outcome
+  hwy_priority: attributes_hwyPriority
+  se_priority: attributes_sePriority
+  extra_attributes:
+    priority: root.attributes_serviceEnquiryHWYPriority_652e86d3737fc1d2c84c720b.attributes_itemsTitle
+
+# How values from the above field get mapped to Open311 statuses.
+inspection_status_mapping:
+  # OPEN
+  - status: 123abc # Awaiting Inspection
+    outcome: null
+    priority: null
+    result: open
+
+  - status: 456def # Reported
+    outcome: null
+    priority: 987ffa # 1 - 24 Hours
+    result: open
+
+  - status: 456def # Reported
+    outcome: null
+    priority: 12ef34a # 2 - 5 Working Days
+    result: open
+
+  # INVESTIGATING
+  - status: 456def # Reported
+    outcome: 981bbe # RD - Further Investigation Required
+    priority: 987ffa # 1 - 24 Hours
+    result: investigating
+
+  - status: 456def # Reported
+    outcome: 981bbe # RD - Further Investigation Required
+    priority: 12ef34a # 2 - 5 Working Days
+    result: investigating
+
+  # PLANNED
+  - status: 1212aad # Job Raised
+    outcome: 1234ade # RD - Report to Private/Land Owner/3rd Party
+    priority: 987ffa # 1 - 24 Hours
+    result: planned
+
+  - status: 1212aad # Job Raised
+    outcome: null
+    priority: 987ffa # 1 - 24 Hours
+    result: planned
+
+  - status: 1212aad # Job Raised
+    outcome: null
+    priority: 12ef34a # 2 - 5 Working Days
+    result: planned
+
+  # FIXED
+  - status: 91827eea # Remedied
+    outcome: 1234ade # RD - Report to Private/Land Owner/3rd Party
+    priority: 987ffa # 1 - 24 Hours
+    result: fixed
+
+  - status: 91827eea # Remedied
+    outcome: null
+    priority: null
+    result: fixed
+
+  # DUPLICATE
+  - status: 11aa22cc # No Action Required
+    outcome: 1133cc11 # RD - No Action Required
+    priority: null
+    result: duplicate
+
+  # NO FURTHER ACTION
+  - status: 11aa22cc # No Action Required
+    outcome: 98ae11 # STL - Defect Identified but no action required
+    priority: null
+    result: no_further_action
+
+  # NOT COUNCILS RESPONSIBILITY
+  - status: 91827eea # Remedied
+    outcome: 123a9ea # STL -Passed to 3rd Party
+    priority: null
+    result: not_councils_responsibility
+
+  # CLOSED
+  - status: null
+    outcome: null
+    priority: 9a9a9a # Low Risk
+    result: closed
+
+  - status: null
+    outcome: null
+    priority: 9b9b9baa # No Response
+    result: closed
