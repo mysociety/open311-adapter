@@ -35,7 +35,7 @@ sub process_attributes {
 
     push @$attributes, {
         attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{service_code},
-        value => [ $args->{service_code} ],
+        value => [ $args->{service_code_alloy} ],
     };
 
     return $attributes;
