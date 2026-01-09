@@ -45,29 +45,9 @@ The required fields in the config under 'oauth' are:
 
 =cut
 
-has oauth_username => (
+has oauth => (
     is => 'lazy',
-    default => sub { $_[0]->config->{oauth}->{username} }
-);
-
-has oauth_password => (
-    is => 'lazy',
-    default => sub { $_[0]->config->{oauth}->{password} }
-);
-
-has oauth_client_id => (
-    is => 'lazy',
-    default => sub { $_[0]->config->{oauth}->{client_id} }
-);
-
-has oauth_client_secret => (
-    is => 'lazy',
-    default => sub { $_[0]->config->{oauth}->{client_secret} }
-);
-
-has oauth_access_token_url => (
-    is => 'lazy',
-    default => sub { $_[0]->config->{oauth}->{access_token_url} }
+    default => sub { $_[0]->config->{oauth} }
 );
 
 has cases_api_base_url => (
@@ -92,14 +72,14 @@ has access_token => (
         my $self = shift;
         my $token = $self->memcache->get('access_token');
         unless ($token) {
-            my $response = $self->ua->request(POST $self->oauth_access_token_url,
+            my $response = $self->ua->request(POST $self->oauth->{access_token_url},
                  [
                     grant_type => 'password',
                     scope => "Symology.Aurora.Customer.Api.User",
-                    username => $self->oauth_username,
-                    password => $self->oauth_password,
-                    client_id => $self->oauth_client_id,
-                    client_secret => $self->oauth_client_secret,
+                    username => $self->oauth->{username},
+                    password => $self->oauth->{password},
+                    client_id => $self->oauth->{client_id},
+                    client_secret => $self->oauth->{client_secret},
                 ]
             );
             unless ($response->is_success) {
