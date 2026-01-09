@@ -166,14 +166,11 @@ sub create_contact_and_get_id {
             $payload->{homePhone} = $number;
         }
     }
-    my $request = HTTP::Request->new(
-        'POST',
+    my $request = POST(
         $self->cases_api_base_url . "Cases/Contact/CreateContact",
-        [
-            Authorization => "Bearer $token",
-            "Content-Type" => "application/json",
-        ],
-        encode_json($payload)
+        Authorization => "Bearer $token",
+        "Content-Type" => "application/json",
+        Content => encode_json($payload),
     );
     my $response = $self->ua->request($request);
     if (!$response->is_success) {
