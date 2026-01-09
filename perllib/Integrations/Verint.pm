@@ -38,6 +38,15 @@ my %methods = (
       SOAP::Data->new(name => 'Option', type => 'xs:string', attr => {}),
     ], # end parameters
   }, # end searchAndRetrieveCaseDetails
+
+'updateCase' => {
+    soapaction => 'http://www.lagan.com/wsdl/FLService',
+    namespace => 'http://www.lagan.com/wsdl/FLService',
+    parameters => [
+      SOAP::Data->new(name => 'flt:CaseReference', type => 'sch:nonEmptyString', attr => {}),
+      SOAP::Data->new(name => 'Title', type => 'sch:nonEmptyString', attr => {}),
+    ], # end parameters
+  },
 );
 
 use vars qw(@ISA $AUTOLOAD @EXPORT_OK %EXPORT_TAGS);
