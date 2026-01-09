@@ -86,22 +86,35 @@ $soap_lite->mock(call => sub {
         is $args[3]->value, 'image/jpeg';
         is $args[4]->value, 'txt_filename';
     } elsif ($call eq 'searchAndRetrieveCaseDetails') {
-        my @dates = ${$args[0]->value}->value;
-        is $dates[0]->value, '2025-11-18T12:00:00Z';
-        is $dates[1]->value, '2025-11-18T13:00:00Z';
-        is $args[1]->value, 'all';
-        return SOAP::Result->new(method => { FWTCaseFullDetails => [ {
-            CoreDetails => {
-                ExternalReferences => { ExternalReference => 1 },
-                caseCloseureReason => '',
-            },
-        }, {
-            CoreDetails => {
-                Closed => '2025-11-18T09:00:00Z',
-                ExternalReferences => { ExternalReference => [ 2, '46/W' ] },
-                caseCloseureReason => 'Case Resolved (some text)',
-            },
-        } ] });
+        my @data = ${$args[0]->value}->value;
+        if ($data[0]->name eq 'CaseReference') {
+            is $data[0]->value, '12345';
+            return SOAP::Result->new(result => {
+                CoreDetails => {
+                    CaseReference => 'CaseRef',
+                    Title => "Title",
+                },
+            });
+        } else { # Dates
+            is $data[0]->value, '2025-11-18T12:00:00Z';
+            is $data[1]->value, '2025-11-18T13:00:00Z';
+            is $args[1]->value, 'all';
+            return SOAP::Result->new(method => { FWTCaseFullDetails => [ {
+                CoreDetails => {
+                    ExternalReferences => { ExternalReference => 1 },
+                    caseCloseureReason => '',
+                },
+            }, {
+                CoreDetails => {
+                    Closed => '2025-11-18T09:00:00Z',
+                    ExternalReferences => { ExternalReference => [ 2, '46/W' ] },
+                    caseCloseureReason => 'Case Resolved (some text)',
+                },
+            } ] });
+        }
+    } elsif ($call eq 'updateCase') {
+        is $args[0]->value, 'CaseRef';
+        is $args[1]->value, 'Title - FMS ID: 1';
     } else {
         die "Unknown call $call made";
     }
