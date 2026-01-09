@@ -192,7 +192,7 @@ sub upload_attachment_and_get_id {
     die "File not readable: $filename" unless -r $filename;
 
     my $token = $self->access_token or die "Failed to get access token.";
-    my $request = HTTP::Request::Common::POST(
+    my $request = POST(
         $self->cases_api_base_url . "Attachments",
         Authorization => "Bearer $token",
         Content_Type => "form-data",
