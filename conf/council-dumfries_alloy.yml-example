@@ -60,3 +60,12 @@ service_whitelist:
       id: ''
     Potentially Diseased Tree:
       id: ''
+
+
+## Update posting
+
+# Mapping from incoming Open311 update parameters to inspection attributes
+# Used when creating new inspections via post_service_request_update
+update_to_inspection_attribute_mapping:
+  updated_datetime: ''  # Attribute for the inspection raised time
+  description: ''       # Attribute for the customer description field
