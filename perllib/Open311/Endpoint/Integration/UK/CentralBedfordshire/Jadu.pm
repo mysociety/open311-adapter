@@ -62,7 +62,7 @@ has flytipping_service => (
     default => sub {
         Open311::Endpoint::Service::UKCouncil::CentralBedfordshireFlytipping->new(
             service_name => "Fly Tipping",
-            group => "Flytipping, Bins and Graffiti",
+            group => "Flytipping and Bins",
             service_code => "fly-tipping",
             description => "Fly Tipping",
         );
