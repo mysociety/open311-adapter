@@ -220,14 +220,11 @@ sub create_case_and_get_number {
     my ($self, $payload) = @_;
 
     my $token = $self->access_token or die "Failed to get access token.";
-    my $request = HTTP::Request->new(
-        'POST',
+    my $request = POST(
         $self->cases_api_base_url . "Cases/Case/CreateCase",
-        [
-            Authorization => "Bearer $token",
-            "Content-Type" => "application/json",
-        ],
-        encode_json($payload)
+        Authorization => "Bearer $token",
+        "Content-Type" => "application/json",
+        Content => encode_json($payload),
     );
     my $response = $self->ua->request($request);
     if (!$response->is_success) {
