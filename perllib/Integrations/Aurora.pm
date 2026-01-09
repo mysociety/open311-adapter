@@ -72,7 +72,11 @@ has oauth_access_token_url => (
 
 has cases_api_base_url => (
     is => 'lazy',
-    default => sub { $_[0]->config->{cases_api_base_url} }
+    default => sub {
+        my $url = $_[0]->config->{cases_api_base_url};
+        $url .= '/' unless $url =~ m{/$};
+        return $url;
+    }
 );
 
 has ua => (
