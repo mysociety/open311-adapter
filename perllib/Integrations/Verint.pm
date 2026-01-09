@@ -38,6 +38,15 @@ my %methods = (
       SOAP::Data->new(name => 'Option', type => 'xs:string', attr => {}),
     ], # end parameters
   }, # end searchAndRetrieveCaseDetails
+
+'updateCase' => {
+    soapaction => 'http://www.lagan.com/wsdl/FLService',
+    namespace => 'http://www.lagan.com/wsdl/FLService',
+    parameters => [
+      SOAP::Data->new(name => 'flt:CaseReference', type => 'sch:nonEmptyString', attr => {}),
+      SOAP::Data->new(name => 'Title', type => 'sch:nonEmptyString', attr => {}),
+    ], # end parameters
+  },
 );
 
 use vars qw(@ISA $AUTOLOAD @EXPORT_OK %EXPORT_TAGS);
@@ -107,6 +116,7 @@ sub SOAP::Serializer::as_stringBoolean {
 
 sub SOAP::Serializer::as_FWTCaseReference {
     my ($self, $value, $name, $type, $attr) = @_;
+
     return [$name, {'type' => $type, %$attr}, $value];
 }
 
