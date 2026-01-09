@@ -159,7 +159,7 @@ sub create_contact_and_get_id {
     };
     if ($number) {
         $number =~ s/\D//g;  # remove non-digits
-        $number = "0$number" if $number =~ /^44/;  # replace country code with 0
+        $number =~ s/^44/0/;  # replace country code with 0
         if ($number =~ /^07/) {
             $payload->{mobilePhone} = $number;
         } else {
