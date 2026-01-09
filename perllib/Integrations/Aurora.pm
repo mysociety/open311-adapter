@@ -244,14 +244,11 @@ sub add_note_to_case {
     my ($self, $case_number, $payload) = @_;
 
     my $token = $self->access_token or die "Failed to get access token.";
-    my $request = HTTP::Request->new(
-        'POST',
+    my $request = POST(
         $self->cases_api_base_url . "Cases/Case/AddNote?caseNumber=" . $case_number,
-        [
-            Authorization => "Bearer $token",
-            "Content-Type" => "application/json",
-        ],
-        encode_json($payload)
+        Authorization => "Bearer $token",
+        "Content-Type" => "application/json",
+        Content => encode_json($payload),
     );
     my $response = $self->ua->request($request);
     if (!$response->is_success) {
