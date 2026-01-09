@@ -135,9 +135,30 @@ sub post_service_request {
         # Log if failure? Nothing really can do at this point
     }
 
+    $self->update_case_title($ref, $args->{attributes}->{fixmystreet_id});
+
     return $self->new_request(
         service_request_id => $ref,
     )
+}
+
+sub update_case_title {
+    my ($self, $ref, $id) = @_;
+
+    my $integ = $self->get_integration;
+    my $result = $integ->searchAndRetrieveCaseDetails(
+        ixhash(
+            'flt:CaseReference' => $ref,
+        ),
+        'all',
+    );
+    if ($result) {
+        $result = $result->result;
+        my $case = $result->{CoreDetails}{CaseReference};
+        my $title = $result->{CoreDetails}{Title};
+        $title .= " - FMS ID: $id";
+        $integ->updateCase($case, $title);
+    }
 }
 
 sub get_service_request_updates {
