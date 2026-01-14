@@ -108,13 +108,13 @@ sub SOAP::Serializer::as_nonEmptyString {
     return [$name, {'type' => $type, %$attr}, $value];
 }
 
-sub SOAP::Serializer::as_stringBoolean {
+sub SOAP::Serializer::as_FWTCaseReference {
     my ($self, $value, $name, $type, $attr) = @_;
 
     return [$name, {'type' => $type, %$attr}, $value];
 }
 
-sub SOAP::Serializer::as_FWTCaseReference {
+sub SOAP::Serializer::as_stringBoolean {
     my ($self, $value, $name, $type, $attr) = @_;
 
     return [$name, {'type' => $type, %$attr}, $value];
