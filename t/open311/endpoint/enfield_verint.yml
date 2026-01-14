@@ -9,6 +9,11 @@
     'form_name': 'lle_benches_form'
     'typekey': 'bench_or_seat_problem'
     'lob_system': 'EXOR'
+  lbe_scaffolding:
+    name: Scaffolding
+    form_name: lbe_scaffolding
+    typekey: dangerous_scaffolding
+    lob_system: EXOR
   abandoned_vehicle:
     name: 'Abandoned vehicle'
     form_name: 'lle_abandoned_vehicle'

@@ -4,7 +4,6 @@ use Moo;
 use DateTime::Format::W3CDTF;
 use Integrations::Verint;
 use Digest::MD5 qw(md5_hex);
-use MIME::Base64 qw(encode_base64);
 use Path::Tiny;
 use Tie::IxHash;
 use URI::Split qw(uri_split);
@@ -79,6 +78,11 @@ sub post_service_request {
         $extra{rad_which_sign_problem} = 'Report an unlit illuminated sign';
     }
 
+    if (@{$args->{media_url}}) {
+        $extra{txt_sharepoint_link_one} = $args->{media_url}[0];
+        $extra{txt_sharepoint_link_two} = $args->{media_url}[1] if $args->{media_url}[1];
+    }
+
     my $result = $integ->CreateRequest(
         $service_cfg->{form_name},
         ixhash(
@@ -113,27 +117,6 @@ sub post_service_request {
     my $status = $result->{status};
     my $ref = $result->{ref};
     die "$status $ref" unless $status eq 'success';
-
-    my @photos;
-    if (@{$args->{media_url}}) {
-        foreach (@{$args->{media_url}}) {
-            my $photo = $self->ua->get($_);
-            my (undef, undef, $path) = uri_split($_);
-            my $filename = path($path)->basename;
-            my ($ext) = $filename =~ /\.([^.]*)$/;
-            push @photos, [$filename, $photo->content, "image/$ext"];
-        }
-    } elsif (@{$args->{uploads}}) {
-        foreach (@{$args->{uploads}}) {
-            my $photo = path($_)->slurp;
-            push @photos, [$_->basename, $photo, $_->content_type];
-        }
-    }
-    foreach (@photos) {
-        my $encoded = encode_base64($_->[1], '');
-        my $result = $integ->AttachFileRequest($ref, $_->[0], $encoded, $_->[2], "txt_filename");
-        # Log if failure? Nothing really can do at this point
-    }
 
     $self->update_case_title($ref, $args->{attributes}->{fixmystreet_id});
 
