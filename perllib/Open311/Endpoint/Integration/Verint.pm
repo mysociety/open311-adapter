@@ -152,6 +152,7 @@ sub get_service_request_updates {
 
     my $result = $integ->searchAndRetrieveCaseDetails(
         ixhash(
+            RaisedByUser => { UserID => 'service_fixmystreet' },
             'LastModifiedDateFrom' => $args->{start_date},
             'LastModifiedDateTo' => $args->{end_date},
         ),
