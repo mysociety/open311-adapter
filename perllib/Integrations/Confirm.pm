@@ -395,10 +395,14 @@ sub perform_request_graphql {
         'POST',
         $uri,
     );
-    $request->header(
-        Authorization => 'Basic '
-            . $self->config->{graphql_key}
-    );
+
+    my $bearer;
+    if ($self->config->{graphql_pass}) {
+        $bearer = base64_encode(sprintf("%s:%s", $self->config->{username}, $self->config->{graphql_pass}));
+    } else {
+        $bearer = $self->config->{graphql_key};
+    }
+    $request->header(Authorization => "Basic $bearer");
     $request->content_type('application/json; charset=UTF-8');
 
     $args{type} //= '';
