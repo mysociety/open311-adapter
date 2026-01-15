@@ -101,8 +101,9 @@ $soap_lite->mock(call => sub {
                 },
             });
         } else { # Dates
-            is $data[0]->value, '2025-11-18T12:00:00Z';
-            is $data[1]->value, '2025-11-18T13:00:00Z';
+            is ${$data[0]->value}->value->value, 'service_fixmystreet';
+            is $data[1]->value, '2025-11-18T12:00:00Z';
+            is $data[2]->value, '2025-11-18T13:00:00Z';
             is $args[1]->value, 'all';
             return SOAP::Result->new(method => { FWTCaseFullDetails => [ {
                 CoreDetails => {
