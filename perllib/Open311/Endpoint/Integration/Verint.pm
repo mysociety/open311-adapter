@@ -177,7 +177,9 @@ sub get_service_request_updates {
         }
         my $digest = substr(md5_hex($reason), 0, 8);
 
-        my $refs = $core->{ExternalReferences}{ExternalReference};
+        my $refs = $core->{ExternalReferences} or next;
+        $refs = $refs->{ExternalReference};
+
         $refs = [ $refs ] unless ref $refs eq 'ARRAY';
         foreach my $ref (@$refs) {
             $ref =~ s/[^:\w_\-]//g;
