@@ -1,3 +1,4 @@
 web_url: "http://example.org/web/api"
+username: FMS
 tenant_id: "123"
-graphql_key: "key"
+graphql_pass: "key"

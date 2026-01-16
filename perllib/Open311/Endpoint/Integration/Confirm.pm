@@ -125,7 +125,8 @@ has use_graphql_for_enquiries => (
     is => 'lazy',
     default => sub {
         my $integ = $_[0]->get_integration;
-        return ($integ->graphql_url && $integ->config->{graphql_key}) ? 1 : 0;
+        my $auth = $integ->config->{graphql_key} || $integ->config->{graphql_pass};
+        return ($integ->graphql_url && $auth) ? 1 : 0;
     }
 );
 
