@@ -97,6 +97,30 @@ has access_token => (
 
 =cut
 
+=head2 _normalise_phone_number
+
+Remove any non-digits and replace leading '44' country code with '0'.
+
+=cut
+
+sub _normalise_phone_number {
+    my ($self, $number) = @_;
+    $number =~ s/\D//g;  # remove non-digits
+    $number =~ s/^44/0/;  # replace country code with 0
+    return $number;
+}
+
+=head2 _is_phone_number_mobile
+
+Returns true if the number appears to be a mobile number.
+
+=cut
+
+sub _is_phone_number_mobile {
+    my ($self, $number) = @_;
+    return $number =~ /^07/;
+}
+
 =head2 get_contact_id_for_email_address
 
 Returns, the ID of the first contact found with a matching email,
@@ -125,6 +149,45 @@ sub get_contact_id_for_email_address {
     return undef;
 }
 
+=head2 get_contact_id_for_phone_number
+
+Returns, the ID of the first contact found with a matching phone number,
+or undef if no match is found.
+Assumes any match will always be in the first page of results.
+
+=cut
+
+sub get_contact_id_for_phone_number {
+    my ($self, $number) = @_;
+    my $token = $self->access_token or die "Failed to get access token.";
+
+    my $normalised_number = $self->_normalise_phone_number($number);
+    my $aurora_field;
+    if ($self->_is_phone_number_mobile($normalised_number)) {
+        $aurora_field = "mobilePhone";
+    } else {
+        $aurora_field = "homePhone";
+    }
+
+    my $query_string = "?$aurora_field=$normalised_number";
+    my $request = GET $self->cases_api_base_url .
+        "Cases/Contact" . $query_string,
+        Authorization => "Bearer $token",
+    ;
+    my $response = $self->ua->request($request);
+    if (!$response->is_success) {
+        $self->_fail("Failed to query contacts", $request, $response);
+    }
+    my $content = decode_json($response->content);
+    foreach (@{$content->{contacts}}) {
+        my $normalised_contact_number = $self->_normalise_phone_number($_->{$aurora_field});
+        if ($normalised_contact_number eq $normalised_number) {
+            return $_->{id};
+        }
+    };
+    return undef;
+}
+
 =head2 create_contact_and_get_id
 
 Creates a contact with the given email, first name, last name and
@@ -141,12 +204,11 @@ sub create_contact_and_get_id {
         emailAddress => $email_address,
     };
     if ($number) {
-        $number =~ s/\D//g;  # remove non-digits
-        $number =~ s/^44/0/;  # replace country code with 0
-        if ($number =~ /^07/) {
-            $payload->{mobilePhone} = $number;
+        my $normalised_number = $self->_normalise_phone_number($number);
+        if ($self->_is_phone_number_mobile($normalised_number)) {
+            $payload->{mobilePhone} = $normalised_number;
         } else {
-            $payload->{homePhone} = $number;
+            $payload->{homePhone} = $normalised_number;
         }
     }
     my $request = POST(
