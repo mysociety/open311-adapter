@@ -94,7 +94,7 @@ sub services {
 
 =head2 post_service_request
 
-Creates a contact if one doesn't already exist for the reporter's email.
+Creates a contact if one doesn't already exist for the reporter's email, or phone number.
 Uploads media provided as uploads or URLs as attachments.
 Creates a case using these and also the default parameters set in
 the C<category_mapping>.
@@ -122,15 +122,21 @@ sub post_service_request {
         $payload->{description} .= "\n\nView report on FixMyStreet: $args->{attributes}->{report_url}";
     }
 
-
+    my $contact_id;
     my $email = $args->{email};
-    my $contact_id = $self->aurora->get_contact_id_for_email_address($email);
+    my $phone = $args->{phone};
+    if ($email) {
+        $contact_id = $self->aurora->get_contact_id_for_email_address($email);
+    }
+    if (!$contact_id && $phone) {
+        $contact_id = $self->aurora->get_contact_id_for_phone_number($phone);
+    }
     if (!$contact_id) {
         $contact_id = $self->aurora->create_contact_and_get_id(
             $email,
             $args->{first_name},
             $args->{last_name},
-            $args->{phone},
+            $phone,
         );
     }
     $payload->{contactId} = $contact_id;

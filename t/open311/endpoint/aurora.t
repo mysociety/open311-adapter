@@ -72,6 +72,11 @@ subtest "post_service_request" => sub {
         $get_contact_email = $_[1];
         return undef;
     });
+    my $get_contact_phone;
+    $integration->mock('get_contact_id_for_phone_number', sub {
+        $get_contact_phone = $_[1];
+        return undef;
+    });
 
     my $create_contact_email;
     my $create_contact_first_name;
@@ -131,6 +136,7 @@ subtest "post_service_request" => sub {
     ];
 
     is $get_contact_email, 'test@example.com';
+    is $get_contact_phone, '07700 900000';
 
     is $create_contact_email, 'test@example.com';
     is $create_contact_first_name, 'first';
