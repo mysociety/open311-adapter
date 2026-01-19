@@ -188,24 +188,8 @@ sub _upload_media_as_attachments {
     foreach (@{$args->{media_url}}) {
         my $response = $ua->get($_);
         if ($response->is_success) {
-            # Extract file extension from URL
-            my $file_ext = '';
-            if ($_ =~ /(\.\w+)(?:\?.*)?$/) {
-                $file_ext = $1;
-            }
-
-            # Create temporary file and save downloaded content
-            my (undef, $tmp_file) = tempfile( SUFFIX => $file_ext );
-            open my $fh, '>', $tmp_file or do {
-                $self->logger->warn("Unable to create temp file for media " . $_);
-                next;
-            };
-            binmode $fh;
-            print $fh $response->content;
-            close $fh;
-
             push @$attachment_ids,
-                $self->aurora->upload_attachment_and_get_id($tmp_file);
+                $self->aurora->upload_attachment_from_response_and_get_id($response);
         } else {
             $self->logger->warn("Unable to download media " . $_);
         }
@@ -213,7 +197,7 @@ sub _upload_media_as_attachments {
 
     foreach (@{$args->{uploads}}) {
         push @$attachment_ids,
-            $self->aurora->upload_attachment_and_get_id($_->filename);
+            $self->aurora->upload_attachment_from_file_and_get_id($_->filename);
     }
 
     return [ map { { "id" => $_ } } @$attachment_ids ];

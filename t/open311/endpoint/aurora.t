@@ -97,9 +97,9 @@ subtest "post_service_request" => sub {
     });
 
     my $attachment_upload_filename;
-    $integration->mock('upload_attachment_and_get_id', sub {
+    $integration->mock('upload_attachment_from_file_and_get_id', sub {
         $attachment_upload_filename = $_[1];
-        return 'attachment-id',
+        return 'attachment-id';
     });
 
     my $photo_upload = Web::Dispatch::Upload->new(
@@ -163,15 +163,15 @@ subtest "post_service_request" => sub {
 
     $integration->unmock('get_contact_id_for_email_address');
     $integration->unmock('create_contact_and_get_id');
-    $integration->unmock('upload_attachment_and_get_id');
+    $integration->unmock('upload_attachment_from_file_and_get_id');
     $integration->unmock('create_case_and_get_number');
 };
 
 subtest "post_service_request_update" => sub {
     my $attachment_upload_filename;
-    $integration->mock('upload_attachment_and_get_id', sub {
+    $integration->mock('upload_attachment_from_file_and_get_id', sub {
         $attachment_upload_filename = $_[1];
-        return 'attachment-id',
+        return 'attachment-id';
     });
 
     my $add_note_case_id;
@@ -215,7 +215,7 @@ subtest "post_service_request_update" => sub {
             }],
         };
 
-    $integration->unmock('upload_attachment_and_get_id');
+    $integration->unmock('upload_attachment_from_file_and_get_id');
     $integration->unmock('add_note_to_case');
 };
 
