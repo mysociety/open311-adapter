@@ -225,25 +225,14 @@ sub create_contact_and_get_id {
     return $content->{contactId};
 }
 
-=head2 upload_attachment_and_get_id
-
-Takes the path to a local file, uploads it as an attachment and returns the ID.
-
-=cut
-
-sub upload_attachment_and_get_id {
-    my ($self, $filename) = @_;
-    die "File not found: $filename" unless -f $filename;
-    die "File not readable: $filename" unless -r $filename;
-
+sub _upload_attachment_and_get_id {
+    my ($self, $content) = @_;
     my $token = $self->access_token or die "Failed to get access token.";
     my $request = POST(
         $self->cases_api_base_url . "Attachments",
         Authorization => "Bearer $token",
         Content_Type => "form-data",
-        Content => [
-            file => [ $filename ],
-        ],
+        Content => $content,
     );
     my $response = $self->ua->request($request);
     if (!$response->is_success) {
@@ -253,6 +242,39 @@ sub upload_attachment_and_get_id {
     my $attachment_id = $response->content;
     $attachment_id =~ s/^"(.*)"$/$1/;
     return $attachment_id;
+}
+
+=head2 upload_attachment_from_file_and_get_id
+
+Takes the path to a local file, uploads it as an attachment and returns the ID.
+
+=cut
+
+sub upload_attachment_from_file_and_get_id {
+    my ($self, $filename) = @_;
+    die "File not found: $filename" unless -f $filename;
+    die "File not readable: $filename" unless -r $filename;
+    return $self->_upload_attachment_and_get_id([
+        file => [ $filename ],
+    ]);
+}
+
+=head2 upload_attachment_response_and_get_id
+
+Takes a HTTP::Response object containing media, uploads it as an attachment and returns the ID.
+
+=cut
+
+sub upload_attachment_from_response_and_get_id {
+    my ($self, $response) = @_;
+    return $self->_upload_attachment_and_get_id([
+        file => [
+            undef,  # From memory, not a local file.
+            $response->filename,
+            Content_Type => $response->header('Content_Type') || 'application/octet-stream',
+            Content => $response->content,
+        ],
+    ]);
 }
 
 =head2 create_case_and_get_number
