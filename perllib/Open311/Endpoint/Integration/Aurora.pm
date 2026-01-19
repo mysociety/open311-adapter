@@ -20,6 +20,7 @@ use Moo;
 use File::Temp qw(tempfile);
 use Integrations::Aurora;
 use Open311::Endpoint::Service::UKCouncil::Aurora;
+use Try::Tiny;
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
@@ -142,7 +143,15 @@ sub post_service_request {
     $payload->{contactId} = $contact_id;
     $payload->{attachments} = $self->_upload_media_as_attachments($args);
 
-    my $case_number = $self->aurora->create_case_and_get_number($payload);
+    # We have seen case creation fail the first time when an attachment is included
+    # so always try once more in case of this or similar bugs.
+    my $case_number;
+    try {
+        $case_number = $self->aurora->create_case_and_get_number($payload);
+    } catch {
+        $self->logger->error("First case create call failed with the following error, trying once more.\n" . $_);
+        $case_number = $self->aurora->create_case_and_get_number($payload);
+    };
     return $self->new_request(
         service_request_id => $case_number
     );
@@ -162,7 +171,15 @@ sub post_service_request_update {
         noteText => $args->{description},
     };
     $payload->{attachments} = $self->_upload_media_as_attachments($args);
-    $self->aurora->add_note_to_case($case_number, $payload);
+
+    # We have seen add note fail the first time when an attachment is included
+    # so always try once more in case of this or similar bugs.
+    try {
+        $self->aurora->add_note_to_case($case_number, $payload);
+    } catch {
+        $self->logger->error("First add note call failed with the following error, trying once more.\n" . $_);
+        $self->aurora->add_note_to_case($case_number, $payload);
+    };
     return Open311::Endpoint::Service::Request::Update->new(
         status => lc $args->{status},
         update_id => $args->{update_id},
