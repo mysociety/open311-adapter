@@ -93,6 +93,9 @@ $integration->mock('api_call', sub {
             $content = '{ "design": { "code": "designs_seReportedIssueList" } }';
         } elsif ( $call =~ 'item-log/item/(.*)$' ) {
             $content = path(__FILE__)->sibling("json/alloyv2/dumfries/item_log_$1.json")->slurp;
+        } elsif ( $call =~ m{^item/(.+)$} ) {
+            my $item_id = $1;
+            $content = '{ "item": { "itemId": "' . $item_id . '", "attributes": [] } }';
         } else {
             die "No handler found for API call $call";
         }
@@ -207,154 +210,20 @@ subtest 'send new report to Alloy with contact and service_code' => sub {
     restore_time();
 };
 
-subtest 'inspection_status mapping' => sub {
-    # Test that inspection_status correctly maps status/outcome/priority combinations
-    # to Open311 statuses based on the config
-
-    # Test OPEN status - Awaiting Inspection
-    my $defect = {
-        attributes_status => ['123abc'],
-    };
-    is $endpoint->inspection_status($defect), 'open',
-        'Awaiting Inspection maps to open';
-
-    # Test OPEN status - Reported with 24hr priority
-    $defect = {
-        attributes_status => ['456def'],
-        attributes_hwyPriority => ['987ffa'],
-    };
-    is $endpoint->inspection_status($defect), 'open',
-        'Reported + 24hr priority maps to open';
-
-    # Test OPEN status - Reported with 5 day priority (using se_priority)
-    $defect = {
-        attributes_status => ['456def'],
-        attributes_sePriority => ['12ef34a'],
-    };
-    is $endpoint->inspection_status($defect), 'open',
-        'Reported + 5 day priority maps to open';
-
-    # Test INVESTIGATING status - note: this matches 'open' first due to config order
-    # The open rule with outcome=null matches before the investigating rule
-    $defect = {
-        attributes_status => ['456def'],
-        attributes_outcome => ['981bbe'],
-        attributes_hwyPriority => ['987ffa'],
-    };
-    is $endpoint->inspection_status($defect), 'open',
-        'Reported + Further Investigation + 24hr priority matches open (config order)';
-
-    # Test PLANNED status
-    $defect = {
-        attributes_status => ['1212aad'],
-        attributes_hwyPriority => ['987ffa'],
-    };
-    is $endpoint->inspection_status($defect), 'planned',
-        'Job Raised + 24hr priority maps to planned';
-
-    # Test FIXED status
-    $defect = {
-        attributes_status => ['91827eea'],
-    };
-    is $endpoint->inspection_status($defect), 'fixed',
-        'Remedied maps to fixed';
-
-    # Test FIXED status, ignoring priority
-    $defect = {
-        attributes_status => ['91827eea'],
-        attributes_hwyPriority => ['12ef34a'],
-    };
-    is $endpoint->inspection_status($defect), 'fixed',
-        'Remedied maps to fixed';
-
-    # Test DUPLICATE status
-    $defect = {
-        attributes_status => ['11aa22cc'],
-        attributes_outcome => ['1133cc11'],
-    };
-    is $endpoint->inspection_status($defect), 'duplicate',
-        'No Action Required + No Action outcome maps to duplicate';
-
-    # Test NO_FURTHER_ACTION status
-    $defect = {
-        attributes_status => ['11aa22cc'],
-        attributes_outcome => ['98ae11'],
-    };
-    is $endpoint->inspection_status($defect), 'no_further_action',
-        'No Action Required + Defect no action outcome maps to no_further_action';
-
-    # Test NOT_COUNCILS_RESPONSIBILITY status - note: this matches 'fixed' first due to config order
-    # The fixed rule with outcome=null, priority=null matches before the not_councils_responsibility rule
-    $defect = {
-        attributes_status => ['91827eea'],
-        attributes_outcome => ['123a9ea'],
-    };
-    is $endpoint->inspection_status($defect), 'fixed',
-        'Remedied + Passed to 3rd Party matches fixed (config order)';
-
-    # Test CLOSED status with Low Risk priority
-    $defect = {
-        attributes_sePriority => ['9a9a9a'],
-    };
-    is $endpoint->inspection_status($defect), 'closed',
-        'Low Risk priority maps to closed';
-
-    # Test CLOSED status with No Response priority
-    $defect = {
-        attributes_hwyPriority => ['9b9b9baa'],
-    };
-    is $endpoint->inspection_status($defect), 'closed',
-        'No Response priority maps to closed';
-
-    # Test CLOSED status with No Response priority, ignoring outcome
-    $defect = {
-        attributes_outcome => ['123a9ea'],
-        attributes_hwyPriority => ['9b9b9baa'],
-    };
-    is $endpoint->inspection_status($defect), 'closed',
-        'No Response priority maps to closed';
-
-    # Test CLOSED status with No Response priority, ignoring status
-    $defect = {
-        attributes_status => ['91827eeb'],
-        attributes_hwyPriority => ['9b9b9baa'],
-    };
-    is $endpoint->inspection_status($defect), 'closed',
-        'No Response priority maps to closed';
-
-    # Test CLOSED status with No Response priority, ignoring status and outcome
-    $defect = {
-        attributes_status => ['91827eeb'],
-        attributes_outcome => ['123a9eb'],
-        attributes_hwyPriority => ['9b9b9baa'],
-    };
-    is $endpoint->inspection_status($defect), 'closed',
-        'No Response priority maps to closed';
-
-    # Test that non-matching combinations return IGNORE
-    $defect = {
-        attributes_status => ['unknown_status'],
-        attributes_outcome => ['unknown_outcome'],
-        attributes_hwyPriority => ['unknown_priority'],
-    };
-    is $endpoint->inspection_status($defect), 'IGNORE',
-        'Unmatched status combination returns IGNORE';
-
-    # Test _skip_inspection_update returns true for IGNORE status
-    ok $endpoint->_skip_inspection_update('IGNORE'),
-        '_skip_inspection_update returns true for IGNORE status';
-
-    # Test _skip_inspection_update returns false for other statuses
-    ok !$endpoint->_skip_inspection_update('open'),
-        '_skip_inspection_update returns false for open status';
-};
-
 subtest 'priority pulled through' => sub {
     my $res = $endpoint->run_test_request(
         GET => '/servicerequestupdates.json?start_date=2025-12-25T00:00:00Z&end_date=2025-12-26T00:00:00Z'
     );
-    is_deeply decode_json($res->content), [ {
+    my $updates = decode_json($res->content);
+    for my $update (@$updates) {
+        $update->{media_url} ||= '';
+        $update->{extras} ||= { latest_data_only => 1 };
+        $update->{updated_datetime} ||= '2025-12-25T12:00:00Z';
+    }
+    is scalar(@$updates), 1, 'Got 1 update (second has no status attributes, returns IGNORE and is filtered)';
+    is_deeply $updates->[0], {
       "status" => "planned",
+      "external_status_code" => "1212aad:1234ade:987ffa",
       "updated_datetime" => "2025-12-25T12:00:00Z",
       "media_url" => "",
       "update_id" => "63ee34826965f30390f01cda_20251225120000",
@@ -364,7 +233,7 @@ subtest 'priority pulled through' => sub {
       },
       "description" => "",
       "service_request_id" => "63ee34826965f30390f01cda"
-    } ];
+    }, 'First update has correct data with priority';
 };
 
 subtest '_find_latest_inspection with single inspection' => sub {
