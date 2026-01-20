@@ -209,30 +209,33 @@ subtest 'send new report to Alloy with contact and service_code' => sub {
 
 subtest 'inspection_status mapping' => sub {
     # Test that inspection_status correctly maps status/outcome/priority combinations
-    # to Open311 statuses based on the config
+    # to Open311 statuses based on the config, and returns external_status_code
 
     # Test OPEN status - Awaiting Inspection
     my $defect = {
         attributes_status => ['123abc'],
     };
-    is $endpoint->inspection_status($defect), 'open',
-        'Awaiting Inspection maps to open';
+    my ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'open', 'Awaiting Inspection maps to open';
+    is $ext, '123abc::', 'external_status_code contains status only';
 
     # Test OPEN status - Reported with 24hr priority
     $defect = {
         attributes_status => ['456def'],
         attributes_hwyPriority => ['987ffa'],
     };
-    is $endpoint->inspection_status($defect), 'open',
-        'Reported + 24hr priority maps to open';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'open', 'Reported + 24hr priority maps to open';
+    is $ext, '456def::987ffa', 'external_status_code contains status and priority';
 
     # Test OPEN status - Reported with 5 day priority (using se_priority)
     $defect = {
         attributes_status => ['456def'],
         attributes_sePriority => ['12ef34a'],
     };
-    is $endpoint->inspection_status($defect), 'open',
-        'Reported + 5 day priority maps to open';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'open', 'Reported + 5 day priority maps to open';
+    is $ext, '456def::12ef34a', 'external_status_code contains status and se_priority';
 
     # Test INVESTIGATING status - note: this matches 'open' first due to config order
     # The open rule with outcome=null matches before the investigating rule
@@ -241,47 +244,53 @@ subtest 'inspection_status mapping' => sub {
         attributes_outcome => ['981bbe'],
         attributes_hwyPriority => ['987ffa'],
     };
-    is $endpoint->inspection_status($defect), 'open',
-        'Reported + Further Investigation + 24hr priority matches open (config order)';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'open', 'Reported + Further Investigation + 24hr priority matches open (config order)';
+    is $ext, '456def:981bbe:987ffa', 'external_status_code contains all three values';
 
     # Test PLANNED status
     $defect = {
         attributes_status => ['1212aad'],
         attributes_hwyPriority => ['987ffa'],
     };
-    is $endpoint->inspection_status($defect), 'planned',
-        'Job Raised + 24hr priority maps to planned';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'planned', 'Job Raised + 24hr priority maps to planned';
+    is $ext, '1212aad::987ffa', 'external_status_code contains status and priority';
 
     # Test FIXED status
     $defect = {
         attributes_status => ['91827eea'],
     };
-    is $endpoint->inspection_status($defect), 'fixed',
-        'Remedied maps to fixed';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'fixed', 'Remedied maps to fixed';
+    is $ext, '91827eea::', 'external_status_code contains status only';
 
     # Test FIXED status, ignoring priority
     $defect = {
         attributes_status => ['91827eea'],
         attributes_hwyPriority => ['12ef34a'],
     };
-    is $endpoint->inspection_status($defect), 'fixed',
-        'Remedied maps to fixed';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'fixed', 'Remedied maps to fixed';
+    is $ext, '91827eea::12ef34a', 'external_status_code still captures actual priority';
 
     # Test DUPLICATE status
     $defect = {
         attributes_status => ['11aa22cc'],
         attributes_outcome => ['1133cc11'],
     };
-    is $endpoint->inspection_status($defect), 'duplicate',
-        'No Action Required + No Action outcome maps to duplicate';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'duplicate', 'No Action Required + No Action outcome maps to duplicate';
+    is $ext, '11aa22cc:1133cc11:', 'external_status_code contains status and outcome';
 
     # Test NO_FURTHER_ACTION status
     $defect = {
         attributes_status => ['11aa22cc'],
         attributes_outcome => ['98ae11'],
     };
-    is $endpoint->inspection_status($defect), 'no_further_action',
-        'No Action Required + Defect no action outcome maps to no_further_action';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'no_further_action', 'No Action Required + Defect no action outcome maps to no_further_action';
+    is $ext, '11aa22cc:98ae11:', 'external_status_code contains status and outcome';
 
     # Test NOT_COUNCILS_RESPONSIBILITY status - note: this matches 'fixed' first due to config order
     # The fixed rule with outcome=null, priority=null matches before the not_councils_responsibility rule
@@ -289,38 +298,43 @@ subtest 'inspection_status mapping' => sub {
         attributes_status => ['91827eea'],
         attributes_outcome => ['123a9ea'],
     };
-    is $endpoint->inspection_status($defect), 'fixed',
-        'Remedied + Passed to 3rd Party matches fixed (config order)';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'fixed', 'Remedied + Passed to 3rd Party matches fixed (config order)';
+    is $ext, '91827eea:123a9ea:', 'external_status_code contains status and outcome';
 
     # Test CLOSED status with Low Risk priority
     $defect = {
         attributes_sePriority => ['9a9a9a'],
     };
-    is $endpoint->inspection_status($defect), 'closed',
-        'Low Risk priority maps to closed';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'closed', 'Low Risk priority maps to closed';
+    is $ext, '::9a9a9a', 'external_status_code contains priority only';
 
     # Test CLOSED status with No Response priority
     $defect = {
         attributes_hwyPriority => ['9b9b9baa'],
     };
-    is $endpoint->inspection_status($defect), 'closed',
-        'No Response priority maps to closed';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'closed', 'No Response priority maps to closed';
+    is $ext, '::9b9b9baa', 'external_status_code contains priority only';
 
     # Test CLOSED status with No Response priority, ignoring outcome
     $defect = {
         attributes_outcome => ['123a9ea'],
         attributes_hwyPriority => ['9b9b9baa'],
     };
-    is $endpoint->inspection_status($defect), 'closed',
-        'No Response priority maps to closed';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'closed', 'No Response priority maps to closed';
+    is $ext, ':123a9ea:9b9b9baa', 'external_status_code contains outcome and priority';
 
     # Test CLOSED status with No Response priority, ignoring status
     $defect = {
         attributes_status => ['91827eeb'],
         attributes_hwyPriority => ['9b9b9baa'],
     };
-    is $endpoint->inspection_status($defect), 'closed',
-        'No Response priority maps to closed';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'closed', 'No Response priority maps to closed';
+    is $ext, '91827eeb::9b9b9baa', 'external_status_code contains status and priority';
 
     # Test CLOSED status with No Response priority, ignoring status and outcome
     $defect = {
@@ -328,10 +342,11 @@ subtest 'inspection_status mapping' => sub {
         attributes_outcome => ['123a9eb'],
         attributes_hwyPriority => ['9b9b9baa'],
     };
-    is $endpoint->inspection_status($defect), 'closed',
-        'No Response priority maps to closed';
+    ($status, $ext) = $endpoint->inspection_status($defect);
+    is $status, 'closed', 'No Response priority maps to closed';
+    is $ext, '91827eeb:123a9eb:9b9b9baa', 'external_status_code contains all three values';
 
-    # Test that non-matching combinations return IGNORE
+    # Test that non-matching combinations return IGNORE (scalar, not list)
     $defect = {
         attributes_status => ['unknown_status'],
         attributes_outcome => ['unknown_outcome'],
@@ -355,6 +370,7 @@ subtest 'priority pulled through' => sub {
     );
     is_deeply decode_json($res->content), [ {
       "status" => "planned",
+      "external_status_code" => "1212aad:1234ade:987ffa",
       "updated_datetime" => "2025-12-25T12:00:00Z",
       "media_url" => "",
       "update_id" => "63ee34826965f30390f01cda_20251225120000",
@@ -366,6 +382,7 @@ subtest 'priority pulled through' => sub {
       "service_request_id" => "63ee34826965f30390f01cda"
     }, {
       "status" => "fixed",
+      "external_status_code" => "91827eea::",
       "updated_datetime" => "2025-12-25T12:00:00Z",
       "media_url" => "",
       "update_id" => "63ee34826965f30390f01cdc_20251225120000",
