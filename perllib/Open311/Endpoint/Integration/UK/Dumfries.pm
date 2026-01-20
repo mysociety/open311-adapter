@@ -114,7 +114,9 @@ sub inspection_status {
 
         # choose this status iff all three things match
         if ($s && $o && $p) {
-            return $opt->{result};
+            # construct an external status code based on the three attribute values
+            my $ext = join ":", $status, $outcome, $priority;
+            return ($opt->{result}, $ext);
         }
     }
 
