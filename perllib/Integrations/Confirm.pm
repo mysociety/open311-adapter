@@ -398,7 +398,7 @@ sub perform_request_graphql {
 
     my $bearer;
     if ($self->config->{graphql_pass}) {
-        $bearer = base64_encode(sprintf("%s:%s", $self->config->{username}, $self->config->{graphql_pass}));
+        $bearer = encode_base64(sprintf("%s:%s", $self->config->{username}, $self->config->{graphql_pass}));
     } else {
         $bearer = $self->config->{graphql_key};
     }

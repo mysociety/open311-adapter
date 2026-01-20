@@ -238,11 +238,21 @@ subtest "GET Service" => sub {
       <variable>false</variable>
     </attribute>
     <attribute>
+      <automated>server_set</automated>
+      <code>closest_address</code>
+      <datatype>string</datatype>
+      <datatype_description></datatype_description>
+      <description>Closest address</description>
+      <order>4</order>
+      <required>false</required>
+      <variable>true</variable>
+    </attribute>
+    <attribute>
       <code>emergency</code>
       <datatype>string</datatype>
       <datatype_description></datatype_description>
       <description>Ring us</description>
-      <order>4</order>
+      <order>5</order>
       <required>false</required>
       <variable>false</variable>
     </attribute>
@@ -251,7 +261,7 @@ subtest "GET Service" => sub {
       <datatype>singlevaluelist</datatype>
       <datatype_description></datatype_description>
       <description>Park?</description>
-      <order>5</order>
+      <order>6</order>
       <required>true</required>
       <values>
         <value>

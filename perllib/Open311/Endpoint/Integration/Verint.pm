@@ -228,7 +228,7 @@ sub services {
             description => 'Closest address',
             datatype => 'string',
             automated => 'server_set',
-        }) if $cfg->{lob_system} eq 'EXOR';
+        });
         foreach (@{$cfg->{attributes} || []}) {
             if ($_->{type} eq 'notice') {
                 push @{$service->attributes}, Open311::Endpoint::Service::Attribute->new({
