@@ -20,6 +20,7 @@ use Moo;
 use File::Temp qw(tempfile);
 use Integrations::Aurora;
 use Open311::Endpoint::Service::UKCouncil::Aurora;
+use Try::Tiny;
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
@@ -94,7 +95,7 @@ sub services {
 
 =head2 post_service_request
 
-Creates a contact if one doesn't already exist for the reporter's email.
+Creates a contact if one doesn't already exist for the reporter's email, or phone number.
 Uploads media provided as uploads or URLs as attachments.
 Creates a case using these and also the default parameters set in
 the C<category_mapping>.
@@ -114,7 +115,7 @@ sub post_service_request {
     $payload->{internalAssetId} = $args->{attributes}->{UnitID};
     $payload->{externalReference} = "FMS" . $args->{attributes}->{fixmystreet_id};
 
-    $payload->{description} = $args->{description};
+    $payload->{description} = $args->{attributes}->{title} . "\n\n" . $args->{attributes}->{description};
     if ($args->{address_string}) {
         $payload->{description} .= "\n\nLocation query entered: " . $args->{address_string};
     }
@@ -122,21 +123,35 @@ sub post_service_request {
         $payload->{description} .= "\n\nView report on FixMyStreet: $args->{attributes}->{report_url}";
     }
 
-
+    my $contact_id;
     my $email = $args->{email};
-    my $contact_id = $self->aurora->get_contact_id_for_email_address($email);
+    my $phone = $args->{phone};
+    if ($email) {
+        $contact_id = $self->aurora->get_contact_id_for_email_address($email);
+    }
+    if (!$contact_id && $phone) {
+        $contact_id = $self->aurora->get_contact_id_for_phone_number($phone);
+    }
     if (!$contact_id) {
         $contact_id = $self->aurora->create_contact_and_get_id(
             $email,
             $args->{first_name},
             $args->{last_name},
-            $args->{phone},
+            $phone,
         );
     }
     $payload->{contactId} = $contact_id;
     $payload->{attachments} = $self->_upload_media_as_attachments($args);
 
-    my $case_number = $self->aurora->create_case_and_get_number($payload);
+    # We have seen case creation fail the first time when an attachment is included
+    # so always try once more in case of this or similar bugs.
+    my $case_number;
+    try {
+        $case_number = $self->aurora->create_case_and_get_number($payload);
+    } catch {
+        $self->logger->error("First case create call failed with the following error, trying once more.\n" . $_);
+        $case_number = $self->aurora->create_case_and_get_number($payload);
+    };
     return $self->new_request(
         service_request_id => $case_number
     );
@@ -156,7 +171,15 @@ sub post_service_request_update {
         noteText => $args->{description},
     };
     $payload->{attachments} = $self->_upload_media_as_attachments($args);
-    $self->aurora->add_note_to_case($case_number, $payload);
+
+    # We have seen add note fail the first time when an attachment is included
+    # so always try once more in case of this or similar bugs.
+    try {
+        $self->aurora->add_note_to_case($case_number, $payload);
+    } catch {
+        $self->logger->error("First add note call failed with the following error, trying once more.\n" . $_);
+        $self->aurora->add_note_to_case($case_number, $payload);
+    };
     return Open311::Endpoint::Service::Request::Update->new(
         status => lc $args->{status},
         update_id => $args->{update_id},
@@ -182,24 +205,8 @@ sub _upload_media_as_attachments {
     foreach (@{$args->{media_url}}) {
         my $response = $ua->get($_);
         if ($response->is_success) {
-            # Extract file extension from URL
-            my $file_ext = '';
-            if ($_ =~ /(\.\w+)(?:\?.*)?$/) {
-                $file_ext = $1;
-            }
-
-            # Create temporary file and save downloaded content
-            my (undef, $tmp_file) = tempfile( SUFFIX => $file_ext );
-            open my $fh, '>', $tmp_file or do {
-                $self->logger->warn("Unable to create temp file for media " . $_);
-                next;
-            };
-            binmode $fh;
-            print $fh $response->content;
-            close $fh;
-
             push @$attachment_ids,
-                $self->aurora->upload_attachment_and_get_id($tmp_file);
+                $self->aurora->upload_attachment_from_response_and_get_id($response);
         } else {
             $self->logger->warn("Unable to download media " . $_);
         }
@@ -207,7 +214,7 @@ sub _upload_media_as_attachments {
 
     foreach (@{$args->{uploads}}) {
         push @$attachment_ids,
-            $self->aurora->upload_attachment_and_get_id($_->filename);
+            $self->aurora->upload_attachment_from_file_and_get_id($_->filename);
     }
 
     return [ map { { "id" => $_ } } @$attachment_ids ];

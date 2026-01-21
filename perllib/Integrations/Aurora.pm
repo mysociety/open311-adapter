@@ -15,7 +15,6 @@ package Integrations::Aurora;
 use strict;
 use warnings;
 
-use HTTP::Request;
 use HTTP::Request::Common;
 use JSON::MaybeXS;
 use LWP::UserAgent;
@@ -45,34 +44,18 @@ The required fields in the config under 'oauth' are:
 
 =cut
 
-has oauth_username => (
+has oauth => (
     is => 'lazy',
-    default => sub { $_[0]->config->{oauth}->{username} }
-);
-
-has oauth_password => (
-    is => 'lazy',
-    default => sub { $_[0]->config->{oauth}->{password} }
-);
-
-has oauth_client_id => (
-    is => 'lazy',
-    default => sub { $_[0]->config->{oauth}->{client_id} }
-);
-
-has oauth_client_secret => (
-    is => 'lazy',
-    default => sub { $_[0]->config->{oauth}->{client_secret} }
-);
-
-has oauth_access_token_url => (
-    is => 'lazy',
-    default => sub { $_[0]->config->{oauth}->{access_token_url} }
+    default => sub { $_[0]->config->{oauth} }
 );
 
 has cases_api_base_url => (
     is => 'lazy',
-    default => sub { $_[0]->config->{cases_api_base_url} }
+    default => sub {
+        my $url = $_[0]->config->{cases_api_base_url};
+        $url .= '/' unless $url =~ m{/$};
+        return $url;
+    }
 );
 
 has ua => (
@@ -88,14 +71,14 @@ has access_token => (
         my $self = shift;
         my $token = $self->memcache->get('access_token');
         unless ($token) {
-            my $response = $self->ua->request(POST $self->oauth_access_token_url,
+            my $response = $self->ua->request(POST $self->oauth->{access_token_url},
                  [
                     grant_type => 'password',
                     scope => "Symology.Aurora.Customer.Api.User",
-                    username => $self->oauth_username,
-                    password => $self->oauth_password,
-                    client_id => $self->oauth_client_id,
-                    client_secret => $self->oauth_client_secret,
+                    username => $self->oauth->{username},
+                    password => $self->oauth->{password},
+                    client_id => $self->oauth->{client_id},
+                    client_secret => $self->oauth->{client_secret},
                 ]
             );
             unless ($response->is_success) {
@@ -113,6 +96,30 @@ has access_token => (
 =head1 METHODS
 
 =cut
+
+=head2 _normalise_phone_number
+
+Remove any non-digits and replace leading '44' country code with '0'.
+
+=cut
+
+sub _normalise_phone_number {
+    my ($self, $number) = @_;
+    $number =~ s/\D//g;  # remove non-digits
+    $number =~ s/^44/0/;  # replace country code with 0
+    return $number;
+}
+
+=head2 _is_phone_number_mobile
+
+Returns true if the number appears to be a mobile number.
+
+=cut
+
+sub _is_phone_number_mobile {
+    my ($self, $number) = @_;
+    return $number =~ /^07/;
+}
 
 =head2 get_contact_id_for_email_address
 
@@ -142,6 +149,45 @@ sub get_contact_id_for_email_address {
     return undef;
 }
 
+=head2 get_contact_id_for_phone_number
+
+Returns, the ID of the first contact found with a matching phone number,
+or undef if no match is found.
+Assumes any match will always be in the first page of results.
+
+=cut
+
+sub get_contact_id_for_phone_number {
+    my ($self, $number) = @_;
+    my $token = $self->access_token or die "Failed to get access token.";
+
+    my $normalised_number = $self->_normalise_phone_number($number);
+    my $aurora_field;
+    if ($self->_is_phone_number_mobile($normalised_number)) {
+        $aurora_field = "mobilePhone";
+    } else {
+        $aurora_field = "homePhone";
+    }
+
+    my $query_string = "?$aurora_field=$normalised_number";
+    my $request = GET $self->cases_api_base_url .
+        "Cases/Contact" . $query_string,
+        Authorization => "Bearer $token",
+    ;
+    my $response = $self->ua->request($request);
+    if (!$response->is_success) {
+        $self->_fail("Failed to query contacts", $request, $response);
+    }
+    my $content = decode_json($response->content);
+    foreach (@{$content->{contacts}}) {
+        my $normalised_contact_number = $self->_normalise_phone_number($_->{$aurora_field});
+        if ($normalised_contact_number eq $normalised_number) {
+            return $_->{id};
+        }
+    };
+    return undef;
+}
+
 =head2 create_contact_and_get_id
 
 Creates a contact with the given email, first name, last name and
@@ -158,22 +204,18 @@ sub create_contact_and_get_id {
         emailAddress => $email_address,
     };
     if ($number) {
-        $number =~ s/\D//g;  # remove non-digits
-        $number = "0$number" if $number =~ /^44/;  # replace country code with 0
-        if ($number =~ /^07/) {
-            $payload->{mobilePhone} = $number;
+        my $normalised_number = $self->_normalise_phone_number($number);
+        if ($self->_is_phone_number_mobile($normalised_number)) {
+            $payload->{mobilePhone} = $normalised_number;
         } else {
-            $payload->{homePhone} = $number;
+            $payload->{homePhone} = $normalised_number;
         }
     }
-    my $request = HTTP::Request->new(
-        'POST',
+    my $request = POST(
         $self->cases_api_base_url . "Cases/Contact/CreateContact",
-        [
-            Authorization => "Bearer $token",
-            "Content-Type" => "application/json",
-        ],
-        encode_json($payload)
+        Authorization => "Bearer $token",
+        "Content-Type" => "application/json",
+        Content => encode_json($payload),
     );
     my $response = $self->ua->request($request);
     if (!$response->is_success) {
@@ -183,25 +225,14 @@ sub create_contact_and_get_id {
     return $content->{contactId};
 }
 
-=head2 upload_attachment_and_get_id
-
-Takes the path to a local file, uploads it as an attachment and returns the ID.
-
-=cut
-
-sub upload_attachment_and_get_id {
-    my ($self, $filename) = @_;
-    die "File not found: $filename" unless -f $filename;
-    die "File not readable: $filename" unless -r $filename;
-
+sub _upload_attachment_and_get_id {
+    my ($self, $content) = @_;
     my $token = $self->access_token or die "Failed to get access token.";
-    my $request = HTTP::Request::Common::POST(
+    my $request = POST(
         $self->cases_api_base_url . "Attachments",
         Authorization => "Bearer $token",
         Content_Type => "form-data",
-        Content => [
-            file => [ $filename ],
-        ],
+        Content => $content,
     );
     my $response = $self->ua->request($request);
     if (!$response->is_success) {
@@ -211,6 +242,39 @@ sub upload_attachment_and_get_id {
     my $attachment_id = $response->content;
     $attachment_id =~ s/^"(.*)"$/$1/;
     return $attachment_id;
+}
+
+=head2 upload_attachment_from_file_and_get_id
+
+Takes the path to a local file, uploads it as an attachment and returns the ID.
+
+=cut
+
+sub upload_attachment_from_file_and_get_id {
+    my ($self, $filename) = @_;
+    die "File not found: $filename" unless -f $filename;
+    die "File not readable: $filename" unless -r $filename;
+    return $self->_upload_attachment_and_get_id([
+        file => [ $filename ],
+    ]);
+}
+
+=head2 upload_attachment_response_and_get_id
+
+Takes a HTTP::Response object containing media, uploads it as an attachment and returns the ID.
+
+=cut
+
+sub upload_attachment_from_response_and_get_id {
+    my ($self, $response) = @_;
+    return $self->_upload_attachment_and_get_id([
+        file => [
+            undef,  # From memory, not a local file.
+            $response->filename,
+            Content_Type => $response->header('Content_Type') || 'application/octet-stream',
+            Content => $response->content,
+        ],
+    ]);
 }
 
 =head2 create_case_and_get_number
@@ -223,14 +287,11 @@ sub create_case_and_get_number {
     my ($self, $payload) = @_;
 
     my $token = $self->access_token or die "Failed to get access token.";
-    my $request = HTTP::Request->new(
-        'POST',
+    my $request = POST(
         $self->cases_api_base_url . "Cases/Case/CreateCase",
-        [
-            Authorization => "Bearer $token",
-            "Content-Type" => "application/json",
-        ],
-        encode_json($payload)
+        Authorization => "Bearer $token",
+        "Content-Type" => "application/json",
+        Content => encode_json($payload),
     );
     my $response = $self->ua->request($request);
     if (!$response->is_success) {
@@ -250,14 +311,11 @@ sub add_note_to_case {
     my ($self, $case_number, $payload) = @_;
 
     my $token = $self->access_token or die "Failed to get access token.";
-    my $request = HTTP::Request->new(
-        'POST',
+    my $request = POST(
         $self->cases_api_base_url . "Cases/Case/AddNote?caseNumber=" . $case_number,
-        [
-            Authorization => "Bearer $token",
-            "Content-Type" => "application/json",
-        ],
-        encode_json($payload)
+        Authorization => "Bearer $token",
+        "Content-Type" => "application/json",
+        Content => encode_json($payload),
     );
     my $response = $self->ua->request($request);
     if (!$response->is_success) {

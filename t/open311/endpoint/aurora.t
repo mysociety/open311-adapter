@@ -72,6 +72,11 @@ subtest "post_service_request" => sub {
         $get_contact_email = $_[1];
         return undef;
     });
+    my $get_contact_phone;
+    $integration->mock('get_contact_id_for_phone_number', sub {
+        $get_contact_phone = $_[1];
+        return undef;
+    });
 
     my $create_contact_email;
     my $create_contact_first_name;
@@ -92,9 +97,9 @@ subtest "post_service_request" => sub {
     });
 
     my $attachment_upload_filename;
-    $integration->mock('upload_attachment_and_get_id', sub {
+    $integration->mock('upload_attachment_from_file_and_get_id', sub {
         $attachment_upload_filename = $_[1];
-        return 'attachment-id',
+        return 'attachment-id';
     });
 
     my $photo_upload = Web::Dispatch::Upload->new(
@@ -113,6 +118,8 @@ subtest "post_service_request" => sub {
             phone => '07700 900000',
             description => "description",
             uploads => [ $photo_upload ],
+            'attribute[title]' => 'title',
+            'attribute[description]' => 'description',
             'attribute[easting]' => 100,
             'attribute[northing]' => 101,
             'attribute[fixmystreet_id]' => 10,
@@ -129,6 +136,7 @@ subtest "post_service_request" => sub {
     ];
 
     is $get_contact_email, 'test@example.com';
+    is $get_contact_phone, '07700 900000';
 
     is $create_contact_email, 'test@example.com';
     is $create_contact_first_name, 'first';
@@ -139,7 +147,7 @@ subtest "post_service_request" => sub {
 
     is_deeply $create_case_payload,
         {
-            description => "description\n\nLocation query entered: address string\n\nView report on FixMyStreet: url",
+            description => "title\n\ndescription\n\nLocation query entered: address string\n\nView report on FixMyStreet: url",
             externalReference => 'FMS10',
             usrn => 'USRN',
             contactId => 'contact-id',
@@ -155,15 +163,15 @@ subtest "post_service_request" => sub {
 
     $integration->unmock('get_contact_id_for_email_address');
     $integration->unmock('create_contact_and_get_id');
-    $integration->unmock('upload_attachment_and_get_id');
+    $integration->unmock('upload_attachment_from_file_and_get_id');
     $integration->unmock('create_case_and_get_number');
 };
 
 subtest "post_service_request_update" => sub {
     my $attachment_upload_filename;
-    $integration->mock('upload_attachment_and_get_id', sub {
+    $integration->mock('upload_attachment_from_file_and_get_id', sub {
         $attachment_upload_filename = $_[1];
-        return 'attachment-id',
+        return 'attachment-id';
     });
 
     my $add_note_case_id;
@@ -207,7 +215,7 @@ subtest "post_service_request_update" => sub {
             }],
         };
 
-    $integration->unmock('upload_attachment_and_get_id');
+    $integration->unmock('upload_attachment_from_file_and_get_id');
     $integration->unmock('add_note_to_case');
 };
 
