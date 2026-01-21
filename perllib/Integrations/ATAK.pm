@@ -30,8 +30,14 @@ has token => (
     default => sub {
         my ($self) = @_;
 
+        my $url;
+        if ($self->config->{token_url}) {
+            $url = $self->config->{token_url};
+        } else {
+            $url = $self->config->{api_url} . '/login';
+        }
         my $response = $self->ua->post(
-            $self->config->{api_url} . '/login',
+            $url,
             Content_Type => 'form-data',
             Content      => [ username => $self->config->{username}, password => $self->config->{password} ]
         );
