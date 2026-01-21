@@ -38,6 +38,22 @@ has '+attributes' => (
             automated => 'server_set',
             description => 'closest_address',
         ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'easting',
+            variable => 0, # set by server
+            datatype => 'number',
+            required => 1,
+            automated => 'server_set',
+            description => 'easting',
+        ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'northing',
+            variable => 0, # set by server
+            datatype => 'number',
+            required => 1,
+            automated => 'server_set',
+            description => 'northing',
+        ),
     ] },
 );
 
@@ -50,6 +66,8 @@ has internal_attributes => (
       closest_address => 1,
       group_hint => 1,
       hint => 1,
+      easting => 1,
+      northing => 1,
   } },
 );
 

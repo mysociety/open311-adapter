@@ -56,6 +56,8 @@ sub post_request {
             Service_Area__c => $args->{service_code},
             title__c => $args->{attributes}->{title},
             service_request_id__c => $args->{attributes}->{external_id} + 0,
+            easting__c => $args->{attributes}->{easting},
+            northing__c => $args->{attributes}->{northing},
     };
 
     # add category specific attributes
