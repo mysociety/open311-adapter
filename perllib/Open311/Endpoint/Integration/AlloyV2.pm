@@ -266,8 +266,7 @@ sub post_service_request {
     # Upload any photos to Alloy and link them to the new resource
     # via the appropriate attribute
     if (@$files) {
-        my $attributes = [{ attributeCode => $self->config->{resource_attachment_attribute_id}, value => $files }];
-        $self->_update_item($item_id, $attributes);
+        $self->_attach_files_to_service_request($item_id, $files);
     }
 
     # create a new Request and return it
@@ -275,6 +274,13 @@ sub post_service_request {
         service_request_id => $item_id
     );
 
+}
+
+sub _attach_files_to_service_request {
+    my ($self, $item_id, $files) = @_;
+
+    my $attributes = [{ attributeCode => $self->config->{resource_attachment_attribute_id}, value => $files }];
+    $self->_update_item($item_id, $attributes);
 }
 
 =head2 _get_service_code
