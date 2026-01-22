@@ -213,6 +213,12 @@ sub post_service_request_update {
         };
     }
 
+    # when raising new inspections we need to set them to the 'Issued' status.
+    push @new_attributes, {
+        attributeCode => 'attributes_tasksStatus',
+        value => ['5bc5bdd281d088d177342c73'], # XXX move to config
+    };
+
     # Apply mappings from the incoming update to inspection attributes
     # Only apply if the template inspection has these attributes (schema compatibility)
     if (my $raised_time_attr = $update_to_inspection_mapping->{updated_datetime}) {
