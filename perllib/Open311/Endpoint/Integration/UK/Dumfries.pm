@@ -158,6 +158,11 @@ sub post_service_request_update {
     # Look up the inspection using one of the mentioned processes
     my $inspection_ref = $self->_find_latest_inspection($defect);
 
+    unless ($inspection_ref) {
+        $self->logger->error("No inspection found for defect $resource_id during POST Service Request Update");
+        die "No inspection found for defect $resource_id";
+    }
+
     # Fetch the full inspection details
     my $inspection = $self->alloy->api_call(call => "item/$inspection_ref->{itemId}")->{item};
 
@@ -212,6 +217,12 @@ sub post_service_request_update {
             value => $attr->{value},
         };
     }
+
+    # when raising new inspections we need to set them to the 'Issued' status.
+    push @new_attributes, {
+        attributeCode => 'attributes_tasksStatus',
+        value => ['5bc5bdd281d088d177342c73'], # XXX move to config
+    };
 
     # Apply mappings from the incoming update to inspection attributes
     # Only apply if the template inspection has these attributes (schema compatibility)
@@ -374,7 +385,7 @@ sub _find_latest_inspection {
         @inspections = grep { $_->{designCode} =~ /inspection/i } @$parents;
     }
 
-    die "No inspection found for defect $defect_id" unless @inspections;
+    return unless @inspections;
 
     # Sort by lastEditDate to get the most recent, with fallback to createdDate
     my @sorted = sort {
@@ -384,6 +395,29 @@ sub _find_latest_inspection {
     } @inspections;
 
     return $sorted[0];
+}
+
+sub _attach_files_to_service_request {
+    my ($self, $item_id, $files) = @_;
+
+    $self->SUPER::_attach_files_to_service_request($item_id, $files);
+
+
+    # now we need to find the inspection for this defect (waiting up to 60
+    # seconds for it) and then attach these files to that too.
+    my $inspection_ref;
+    my $defect;
+    for (1..6) {
+        sleep 10; # might as well sleep now rather than at end of loop as workflow will definitely not have created inspection yet.
+        $defect = $self->alloy->api_call(call => "item/$item_id")->{item};
+        $inspection_ref = $self->_find_latest_inspection($defect);
+        last if $inspection_ref;
+    }
+    if ($inspection_ref) {
+        $self->SUPER::_attach_files_to_service_request($inspection_ref->{itemId}, $files);
+    } else {
+        $self->logger->warn("No inspection found for defect $item_id during POST Service Request");
+    }
 }
 
 1;
