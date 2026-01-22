@@ -195,6 +195,8 @@ sub post_service_request_update {
         attributes_itemsSubtitle => 1,
         attributes_inspectionsInspectionNumber => 1,  # Auto-generated
         attributes_tasksIssuedTime => 1,  # Should not be set on new inspections
+        attributes_tasksCompletionTime => 1,
+        attributes_tasksStatus => 1,
     );
 
     # Add any attributes from the mapping to the skip list, as we'll set them separately
