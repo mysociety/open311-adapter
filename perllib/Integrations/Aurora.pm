@@ -367,6 +367,12 @@ sub fetch_update_filenames {
     }
 };
 
+=head2 fetch_update_file
+
+Return the parsed contents of the given file in the 'return path updates' Azure storage container.
+
+=cut
+
 sub fetch_update_file {
     my ($self, $filename) = @_;
 
