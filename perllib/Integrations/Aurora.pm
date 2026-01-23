@@ -60,14 +60,27 @@ has cases_api_base_url => (
     }
 );
 
-has azure_api_base_url => (
+=head2 updates_azure_container_base_url
+
+The base URL of the Azure API hosting the Aurora 'return path updates' container.
+
+=cut
+
+has updates_azure_container_base_url => (
     is => 'lazy',
-    default => sub { $_[0]->config->{azure_api_base_url} }
+    default => sub { $_[0]->config->{updates_azure_container_base_url} }
 );
 
-has azure_api_arguments => (
+=head2 updates_azure_container_url_arguments
+
+A query string to append to the c<updates_azure_container_base_url> when
+making requests. Can be used for things like setting the SAS token for auth.
+
+=cut
+
+has updates_azure_container_url_arguments => (
     is => 'lazy',
-    default => sub { $_[0]->config->{azure_api_arguments} }
+    default => sub { $_[0]->config->{updates_azure_container_url_arguments} }
 );
 
 has ua => (
@@ -339,7 +352,7 @@ sub add_note_to_case {
 sub fetch_update_names {
     my ($self) = @_;
 
-    my $response = $self->ua->get($self->azure_api_base_url . $self->azure_api_arguments . '&comp=list&restype=container');
+    my $response = $self->ua->get($self->updates_azure_container_base_url . $self->updates_azure_container_url_arguments . '&comp=list&restype=container');
     try {
         my $data = XML::Simple->new->XMLin($response)->{Blobs}->{Blob};
         return @$data;
@@ -351,7 +364,7 @@ sub fetch_update_names {
 sub fetch_update_file {
     my ($self, $filename) = @_;
 
-    my $response = $self->ua->get($self->azure_api_base_url . "/$filename" . $self->azure_api_arguments);
+    my $response = $self->ua->get($self->updates_azure_container_base_url . "/$filename" . $self->updates_azure_container_url_arguments);
     try {
         my $data = decode_json($response);
         return $data;
