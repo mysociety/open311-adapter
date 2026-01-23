@@ -396,7 +396,8 @@ sub fetch_update_file {
 sub _fail {
     my ($self, $message, $request, $response) = @_;
     my $request_string = $request->as_string;
-    $request_string =~ s/(Authorization: ).+/$1\[REDACTED\]/;
+    $request_string =~ s/(Authorization: ).+/$1\[REDACTED\]/;  # Redact Aurora token.
+    $request_string =~ s/(sig=)[^&\s]+/$1\[REDACTED\]/g;  # Redact Azure SAS token signature.
     $self->logger->error(sprintf(
         "%s\n\nRequested:\n\n%s\n\nGot:\n\n%s",
         $message, $request_string, $response->as_string
