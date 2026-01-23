@@ -364,7 +364,7 @@ sub fetch_update_filenames {
         return @$data;
     } catch {
         $self->_fail("Failed to fetch update names", '', $response);
-    }
+    };
 };
 
 =head2 fetch_update_file
@@ -382,7 +382,7 @@ sub fetch_update_file {
         return $data;
     } catch {
         $self->_fail("Failed to fetch update file", $filename, $response);
-    }
+    };
 };
 
 sub _fail {
