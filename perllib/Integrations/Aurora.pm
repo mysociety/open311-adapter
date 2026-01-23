@@ -360,11 +360,14 @@ sub fetch_update_filenames {
 
     my $request = GET($self->updates_azure_container_base_url . '?' . $self->updates_azure_container_url_arguments . '&comp=list&restype=container');
     my $response = $self->ua->request($request);
+    if (!$response->is_success) {
+        $self->_fail("Failed to fetch update filenames", $request, $response);
+    }
     try {
         my $data = XML::Simple->new->XMLin($response->content)->{Blobs}->{Blob};
         return @$data;
     } catch {
-        $self->_fail("Failed to fetch update names", $request, $response);
+        $self->_fail("Failed to parsed fetched update filenames as XML", $request, $response);
     };
 };
 
@@ -379,11 +382,14 @@ sub fetch_update_file {
 
     my $request = GET($self->updates_azure_container_base_url . "/$filename" . '?' . $self->updates_azure_container_url_arguments);
     my $response = $self->ua->request($request);
+    if (!$response->is_success) {
+        $self->_fail("Failed to fetch update file", $request, $response);
+    }
     try {
         my $data = decode_json($response->content);
         return $data;
     } catch {
-        $self->_fail("Failed to fetch update file", $request, $response);
+        $self->_fail("Failed to parse fetched update file as JSON", $request, $response);
     };
 };
 
