@@ -358,12 +358,13 @@ Queries for filenames in the 'return path updates' Azure storage container.
 sub fetch_update_filenames {
     my ($self) = @_;
 
-    my $response = $self->ua->get($self->updates_azure_container_base_url . '?' . $self->updates_azure_container_url_arguments . '&comp=list&restype=container');
+    my $request = GET($self->updates_azure_container_base_url . '?' . $self->updates_azure_container_url_arguments . '&comp=list&restype=container');
+    my $response = $self->ua->request($request);
     try {
-        my $data = XML::Simple->new->XMLin($response)->{Blobs}->{Blob};
+        my $data = XML::Simple->new->XMLin($response->content)->{Blobs}->{Blob};
         return @$data;
     } catch {
-        $self->_fail("Failed to fetch update names", '', $response);
+        $self->_fail("Failed to fetch update names", $request, $response);
     };
 };
 
@@ -376,12 +377,13 @@ Return the parsed contents of the given file in the 'return path updates' Azure 
 sub fetch_update_file {
     my ($self, $filename) = @_;
 
-    my $response = $self->ua->get($self->updates_azure_container_base_url . "/$filename" . '?' . $self->updates_azure_container_url_arguments);
+    my $request = GET($self->updates_azure_container_base_url . "/$filename" . '?' . $self->updates_azure_container_url_arguments);
+    my $response = $self->ua->request($request);
     try {
-        my $data = decode_json($response);
+        my $data = decode_json($response->content);
         return $data;
     } catch {
-        $self->_fail("Failed to fetch update file", $filename, $response);
+        $self->_fail("Failed to fetch update file", $request, $response);
     };
 };
 

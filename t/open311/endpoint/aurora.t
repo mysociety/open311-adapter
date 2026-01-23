@@ -24,6 +24,7 @@ use strict;
 use warnings;
 
 use HTTP::Request::Common;
+use HTTP::Response;
 use JSON::MaybeXS;
 use Path::Tiny;
 use Test::MockModule;
@@ -225,11 +226,12 @@ subtest "post_service_request_update" => sub {
 
 subtest "Filter get updates by date" => sub {
     my $mock_ua = Test::MockModule->new('LWP::UserAgent');
-    $mock_ua->mock('get', sub {
-        if ($_[1] =~ /restype/) {
-            return $updates_list;
+    $mock_ua->mock('request', sub {
+        my $uri = "" . $_[1]->uri;  # Concatting with empty string to force string context.
+        if ($uri =~ /restype/) {
+            return HTTP::Response->new(200, 'OK', [], $updates_list);
         } else {
-            return $update_file;
+            return HTTP::Response->new(200, 'OK', [], $update_file);
         }
     });
     my $res = $endpoint->run_test_request(
@@ -253,11 +255,12 @@ subtest "Filter get updates by date" => sub {
 
 subtest "Get updates mapping" => sub {
     my $mock_ua = Test::MockModule->new('LWP::UserAgent');
-    $mock_ua->mock('get', sub {
-        if ($_[1] =~ /restype/) {
-            return $updates_list;
+    $mock_ua->mock('request', sub {
+        my $uri = "" . $_[1]->uri;  # Concatting with empty string to force string context.
+        if ($uri =~ /restype/) {
+            return HTTP::Response->new(200, 'OK', [], $updates_list);
         } else {
-            return _edit_update_file($_[1]);
+            return HTTP::Response->new(200, 'OK', [], _edit_update_file($uri));
         }
     });
 
