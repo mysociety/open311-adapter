@@ -250,7 +250,7 @@ sub get_service_request_updates {
 sub _skip_update_file {
     my ($start, $end, $file_name) = @_;
 
-    return 1 unless $file_name =~ /_(CS_INSPECTION_PROMPTED||CS_CLEAR_CASE||CS_RECORD_CONTACT_EVENT||CS_MAINTENANCE_COMPLETED||CS_CHANGE_QUEUE||CS_RE_QUEUE)\.json/;
+    return 1 unless $file_name =~ /_(CS_INSPECTION_PROMPTED|CS_CLEAR_CASE|CS_RECORD_CONTACT_EVENT|CS_MAINTENANCE_COMPLETED|CS_CHANGE_QUEUE|CS_RE_QUEUE)\.json/;
 
     return unless $start || $end;
 
