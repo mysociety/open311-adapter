@@ -217,7 +217,7 @@ sub get_service_request_updates {
         $end = DateTime::Format::W3CDTF->parse_datetime($args->{end_date});
     };
 
-    my @update_files = $self->aurora->fetch_update_names;
+    my @update_files = $self->aurora->fetch_update_filenames;
     my @updates = ();
     for (@update_files) {
         next if _skip_update_file($start, $end, $_->{Name});

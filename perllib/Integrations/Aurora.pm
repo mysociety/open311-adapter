@@ -349,7 +349,13 @@ sub add_note_to_case {
     return;
 }
 
-sub fetch_update_names {
+=head2 fetch_update_filenames
+
+Queries for filenames in the 'return path updates' Azure storage container.
+
+=cut
+
+sub fetch_update_filenames {
     my ($self) = @_;
 
     my $response = $self->ua->get($self->updates_azure_container_base_url . '?' . $self->updates_azure_container_url_arguments . '&comp=list&restype=container');
