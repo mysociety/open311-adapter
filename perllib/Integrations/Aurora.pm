@@ -73,8 +73,8 @@ has updates_azure_container_base_url => (
 
 =head2 updates_azure_container_url_arguments
 
-A query string to append to the c<updates_azure_container_base_url> when
-making requests. Can be used for things like setting the SAS token for auth.
+Arguments to use in a query string when making requests using c<updates_azure_container_base_url>.
+Can be used for things like setting the SAS token for auth.
 
 =cut
 
@@ -352,7 +352,7 @@ sub add_note_to_case {
 sub fetch_update_names {
     my ($self) = @_;
 
-    my $response = $self->ua->get($self->updates_azure_container_base_url . $self->updates_azure_container_url_arguments . '&comp=list&restype=container');
+    my $response = $self->ua->get($self->updates_azure_container_base_url . '?' . $self->updates_azure_container_url_arguments . '&comp=list&restype=container');
     try {
         my $data = XML::Simple->new->XMLin($response)->{Blobs}->{Blob};
         return @$data;
@@ -364,7 +364,7 @@ sub fetch_update_names {
 sub fetch_update_file {
     my ($self, $filename) = @_;
 
-    my $response = $self->ua->get($self->updates_azure_container_base_url . "/$filename" . $self->updates_azure_container_url_arguments);
+    my $response = $self->ua->get($self->updates_azure_container_base_url . "/$filename" . '?' . $self->updates_azure_container_url_arguments);
     try {
         my $data = decode_json($response);
         return $data;

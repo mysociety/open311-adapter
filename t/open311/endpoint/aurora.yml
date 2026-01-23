@@ -6,7 +6,7 @@ oauth:
   access_token_url: url
 
 updates_azure_container_base_url: 'https://my_api.example.com/azure-container'
-updates_azure_container_url_arguments: '?etc1=1&etc2=2'
+updates_azure_container_url_arguments: 'etc1=1&etc2=2'
 
 category_mapping:
   potholes:
