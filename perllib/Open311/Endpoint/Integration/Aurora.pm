@@ -262,6 +262,7 @@ sub _skip_update_file {
         return 1;
     };
 
+    return 0;
 };
 
 sub _upload_media_as_attachments {
