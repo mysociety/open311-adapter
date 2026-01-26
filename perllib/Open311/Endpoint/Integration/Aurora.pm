@@ -21,6 +21,8 @@ use File::Temp qw(tempfile);
 use Integrations::Aurora;
 use Open311::Endpoint::Service::UKCouncil::Aurora;
 use Try::Tiny;
+use Open311::Endpoint::Service::Request::Update::mySociety;
+use DateTime::Format::Strptime;
 
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
@@ -68,6 +70,17 @@ A map from service_code to:
 has category_mapping => (
     is => 'lazy',
     default => sub { $_[0]->endpoint_config->{category_mapping} }
+);
+
+=head2 reverse_status_mapping
+
+Table of statuses sent by Aurora and how they map to FMS statuses
+
+=cut
+
+has reverse_status_mapping => (
+    is => 'ro',
+    default => sub { $_[0]->endpoint_config->{reverse_status_mapping} }
 );
 
 =head1 BEHAVIOUR
@@ -188,14 +201,81 @@ sub post_service_request_update {
 
 =head2 get_service_request_updates
 
-TODO
+Fetches files from Aurora's 'return path update' Azure storage container which contains a
+snapshot of a case after one of the configured 'triggers' fires.
+
+The C<CaseTypeCode> is mapped to an update status via the C<reverse_status_mapping>, with the
+exception of updates via the C<CS_INSPECTION_PROMPTED> trigger which always map to 'investigating'.
+
+Updates via the C<CS_CLEAR_CASE> trigger have their description populated from the
+C<ClearanceReasonPortalText> field, all others are blank.
 
 =cut
 
 sub get_service_request_updates {
-    my ( $self, $service, $args ) = @_;
-    return ();
+    my ( $self, $args ) = @_;
+
+    my $start;
+    my $end;
+    if ($args->{start_date}) {
+        $start = DateTime::Format::W3CDTF->parse_datetime($args->{start_date});
+    };
+    if ($args->{end_date}) {
+        $end = DateTime::Format::W3CDTF->parse_datetime($args->{end_date});
+    };
+
+    my @update_files = $self->aurora->fetch_update_filenames;
+    my @updates = ();
+    for (@update_files) {
+        next if _skip_update_file($start, $end, $_->{Name});
+        my $data = $self->aurora->fetch_update_file($_->{Name});
+        next unless %{$self->reverse_status_mapping}{$data->{Message}->{CaseTypeCode}} || $_->{Name} =~ /CS_INSPECTION_PROMPTED/;
+
+        my $id_no = @{$data->{Message}->{CaseEventHistory}};
+        my $external_update = pop @{$data->{Message}->{CaseEventHistory}};
+        my $update_date = DateTime::Format::W3CDTF->parse_datetime($external_update->{EventDateTime})
+                            ->set_nanosecond(0)
+                            ->set_time_zone('UTC');
+        my %update_args = (
+            status => $_->{Name} =~ /CS_INSPECTION_PROMPTED/ ? 'investigating' : $self->reverse_status_mapping->{ $data->{Message}->{CaseTypeCode} },
+            external_status_code => $data->{Message}->{CaseTypeCode},
+            description => $_->{Name} =~ /CS_CLEAR_CASE/ ? $data->{Message}->{ClearanceReasonPortalText} : '',
+            service_request_id => $data->{Message}->{CaseNumber},
+            update_id => $data->{Message}->{CaseNumber} . '_' . $id_no,
+            updated_datetime => $update_date,
+        );
+
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %update_args );
+    }
+
+    return @updates;
 }
+
+sub _skip_update_file {
+    my ($start, $end, $file_name) = @_;
+
+    return 1 unless $file_name =~ /_(CS_INSPECTION_PROMPTED|CS_CLEAR_CASE|CS_RECORD_CONTACT_EVENT|CS_MAINTENANCE_COMPLETED|CS_CHANGE_QUEUE|CS_RE_QUEUE)\.json/;
+
+    return unless $start || $end;
+
+    my ($year, $month, $day, $hour, $min, $sec) = $file_name =~ /^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/;
+    my $file_date = DateTime->new(
+        year => $year,
+        month => $month,
+        day => $day,
+        hour => $hour,
+        minute => $min,
+        second => $sec,
+    );
+
+    if ($start && $file_date < $start) {
+        return 1;
+    } elsif ($end && $file_date > $end) {
+        return 1;
+    };
+
+    return 0;
+};
 
 sub _upload_media_as_attachments {
     my ( $self, $args ) = @_;

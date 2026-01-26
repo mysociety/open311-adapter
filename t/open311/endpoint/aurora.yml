@@ -5,6 +5,9 @@ oauth:
   client_secret: secret
   access_token_url: url
 
+updates_azure_container_base_url: 'https://my_api.example.com/azure-container'
+updates_azure_container_url_arguments: 'etc1=1&etc2=2'
+
 category_mapping:
   potholes:
     name: "Potholes"
@@ -15,3 +18,8 @@ category_mapping:
 
   trees:
     name: "Trees"
+
+reverse_status_mapping:
+  DR020: in_progress
+  GN090: internal_referral
+  GN100: closed
