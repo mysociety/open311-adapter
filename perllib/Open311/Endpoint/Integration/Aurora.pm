@@ -226,12 +226,9 @@ sub get_service_request_updates {
 
         my $id_no = @{$data->{Message}->{CaseEventHistory}};
         my $external_update = pop @{$data->{Message}->{CaseEventHistory}};
-        my $update_date = DateTime::Format::W3CDTF->parse_datetime($external_update->{EventDateTime});
-        my $formatter = DateTime::Format::Strptime->new(pattern => "%FT%T");
-        $update_date =~ s/\.\d+$//;
-        $update_date = $formatter->parse_datetime($update_date);
-        $update_date->set_time_zone('Europe/London')->set_time_zone('UTC');
-
+        my $update_date = DateTime::Format::W3CDTF->parse_datetime($external_update->{EventDateTime})
+                            ->set_nanosecond(0)
+                            ->set_time_zone('UTC');
         my %update_args = (
             status => $_->{Name} =~ /CS_INSPECTION_PROMPTED/ ? 'investigating' : $self->reverse_status_mapping->{ $data->{Message}->{CaseTypeCode} },
             external_status_code => $data->{Message}->{CaseTypeCode},
