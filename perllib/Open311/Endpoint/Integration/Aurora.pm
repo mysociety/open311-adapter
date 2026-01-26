@@ -201,7 +201,14 @@ sub post_service_request_update {
 
 =head2 get_service_request_updates
 
-Fetch updates list from Azure and filter to the relevant files.
+Fetches files from Aurora's 'return path update' Azure storage container which contains a
+snapshot of a case after one of the configured 'triggers' fires.
+
+The C<CaseTypeCode> is mapped to an update status via the C<reverse_status_mapping>, with the
+exception of updates via the C<CS_INSPECTION_PROMPTED> trigger which always map to 'investigating'.
+
+Updates via the C<CS_CLEAR_CASE> trigger have their description populated from the
+C<ClearanceReasonPortalText> field, all others are blank.
 
 =cut
 
