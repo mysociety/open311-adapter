@@ -859,7 +859,7 @@ sub _get_defect_updates_resource {
         ($linked_defect, $service_request_id) = $self->_get_defect_inspection($report, $service_request_id);
 
         # we don't care about linked defects until they have been scheduled
-        my $status = $self->defect_status($attributes);
+        my ($status, $external_status_code) = $self->defect_status($attributes, $report, $linked_defect);
         next if $self->_skip_job_update($linked_defect, $status);
 
         my $date = $self->get_latest_version_date($report->{itemId});
@@ -874,6 +874,7 @@ sub _get_defect_updates_resource {
             service_request_id => $service_request_id,
             description => '',
             updated_datetime => $update_dt,
+            external_status_code => $external_status_code,
             extras => { latest_data_only => 1 },
         );
 
@@ -962,7 +963,7 @@ sub _get_service_requests_resource {
 
         my $attributes = $self->alloy->attributes_to_hash($request);
         $args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
-        $args{status} = $self->defect_status($attributes);
+        ( $args{status}, $args{external_status_code} ) = $self->defect_status($attributes);
 
         #XXX check this no longer required
         next if grep { $_ =~ /_FIXMYSTREET_ID$/ && $attributes->{$_} } keys %{ $attributes };
