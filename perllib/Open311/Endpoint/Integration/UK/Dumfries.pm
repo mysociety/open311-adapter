@@ -83,8 +83,18 @@ sub _get_inspection_status {
     return $self->inspection_status($defect);
 }
 
+sub _get_defect_status {
+    my ($self, $defect, $mapping) = @_;
+    return $self->inspection_status($defect);
+}
+
+sub defect_status {
+    my ($self, $attribs, $report, $linked_defect) = @_;
+    return $self->inspection_status($attribs, $report, $linked_defect);
+}
+
 sub inspection_status {
-    my ($self, $defect) = @_;
+    my ($self, $defect, $report, $linked_defect) = @_;
 
     my $mapping = $self->config->{inspection_attribute_mapping};
     my $options = $self->config->{inspection_status_mapping};
@@ -93,15 +103,17 @@ sub inspection_status {
     my $outcome = $defect->{$mapping->{outcome}} || '';
     my $hwy_priority = $defect->{$mapping->{hwy_priority}} || '';
     my $se_priority = $defect->{$mapping->{se_priority}} || '';
+    my $triage_priority = $defect->{$mapping->{triage_priority}} || '';
 
     # unwrap values if necessary
     $status = $status->[0] if ref $status eq 'ARRAY';
     $outcome = $outcome->[0] if ref $outcome eq 'ARRAY';
     $hwy_priority = $hwy_priority->[0] if ref $hwy_priority eq 'ARRAY';
     $se_priority = $se_priority->[0] if ref $se_priority eq 'ARRAY';
+    $triage_priority = $triage_priority->[0] if ref $triage_priority eq 'ARRAY';
 
     # Enquiry only has one priority, take whichever has a value.
-    my $priority = $hwy_priority || $se_priority;
+    my $priority = $hwy_priority || $se_priority || $triage_priority;
 
     for my $opt (@$options) {
         unless (defined $opt->{result}) {
@@ -120,11 +132,19 @@ sub inspection_status {
         }
     }
 
+    my $item_id = $report->{itemId} || '';
+    $self->logger->warn("Ignoring update for $item_id with status: $status outcome: $outcome priority: $priority");
     return "IGNORE";
 }
 
 sub _skip_inspection_update {
     my ($self, $status) = @_;
+
+    return 1 if $status eq 'IGNORE';
+}
+
+sub _skip_job_update {
+    my ($self, $defect, $status) = @_;
 
     return 1 if $status eq 'IGNORE';
 }
