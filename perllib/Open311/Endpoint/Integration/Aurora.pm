@@ -255,7 +255,15 @@ sub _skip_update_file {
     return unless $start || $end;
 
     my ($year, $month, $day, $hour, $min, $sec) = $file_name =~ /^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/;
-    my $file_date =  DateTime::Format::W3CDTF->parse_datetime($year . '-' . $month . '-' . $day . 'T' . $hour . ':' . $min . ':' . $sec);
+    my $file_date = DateTime->new(
+        year => $year,
+        month => $month,
+        day => $day,
+        hour => $hour,
+        minute => $min,
+        second => $sec,
+    );
+
     if ($start && $file_date < $start) {
         return 1;
     } elsif ($end && $file_date > $end) {
