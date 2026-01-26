@@ -315,15 +315,15 @@ sub _edit_update_file {
 
     my $file = decode_json($update_file);
     if ($url =~ /CS_CHANGE_QUEUE/) {
-        $file->{Message}->{ExternalReference} = 'FMS-02';
+        $file->{Message}->{CaseNumber} = 'FMS-02';
         $file->{Message}->{CaseTypeCode} = 'GN090';
         splice(@{$file->{Message}->{CaseEventHistory}}, -1);
     } elsif ($url =~ /CS_CLEAR_CASE/) {
-        $file->{Message}->{ExternalReference} = 'FMS-03';
+        $file->{Message}->{CaseNumber} = 'FMS-03';
         $file->{Message}->{CaseTypeCode} = 'GN100';
         splice(@{$file->{Message}->{CaseEventHistory}}, -2);
     } elsif ($url =~ /CS_INSPECTION_PROMPTED/) {
-        $file->{Message}->{ExternalReference} = 'FMS-04';
+        $file->{Message}->{CaseNumber} = 'FMS-04';
         $file->{Message}->{CaseTypeCode} = 'RANDOM';
         splice(@{$file->{Message}->{CaseEventHistory}}, -3);
     };

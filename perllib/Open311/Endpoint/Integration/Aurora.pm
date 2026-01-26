@@ -240,8 +240,8 @@ sub get_service_request_updates {
             status => $_->{Name} =~ /CS_INSPECTION_PROMPTED/ ? 'investigating' : $self->reverse_status_mapping->{ $data->{Message}->{CaseTypeCode} },
             external_status_code => $data->{Message}->{CaseTypeCode},
             description => $_->{Name} =~ /CS_CLEAR_CASE/ ? $data->{Message}->{ClearanceReasonPortalText} : '',
-            service_request_id => $data->{Message}->{ExternalReference},
-            update_id => $data->{Message}->{ExternalReference} . '_' . $id_no,
+            service_request_id => $data->{Message}->{CaseNumber},
+            update_id => $data->{Message}->{CaseNumber} . '_' . $id_no,
             updated_datetime => $update_date,
         );
 

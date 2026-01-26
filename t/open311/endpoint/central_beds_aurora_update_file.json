@@ -5,7 +5,7 @@
 "Message": {
   "ClearanceReasonPortalText": "Ignored unless CS_CLEAR_CASE",
   "CaseTypeCode": "DR020",
-  "ExternalReference": "FMS-01",
+  "CaseNumber": "FMS-01",
   "CaseEventHistory": [
     {
       "EventDateTime": "2025-11-26T09:24:46.1888937Z"
