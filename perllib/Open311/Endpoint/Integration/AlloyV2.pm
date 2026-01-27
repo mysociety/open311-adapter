@@ -906,6 +906,201 @@ sub _skip_job_update {
     return $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
 }
 
+=head2 get_service_request
+
+Fetches a single service request by ID.
+
+=cut
+
+sub get_service_request {
+    my ($self, $service_request_id, $args) = @_;
+
+    # Fetch the item from Alloy
+    my $response = $self->alloy->api_call(call => "item/$service_request_id");
+    my $request = $response->{item};
+
+    unless ($request) {
+        return;
+    }
+
+    # Check if this is a defect we should process
+    return if $self->skip_fetch_defect($request);
+
+    my $mapping = $self->config->{defect_attribute_mapping};
+    my $attributes = $self->alloy->attributes_to_hash($request);
+
+    my $category = $self->get_defect_category($request);
+    return unless $category;
+    $category =~ s/ /_/g;
+    my $service_obj = $self->service($category);
+
+    return unless $service_obj;
+
+    my $latlong = $self->get_latlong_from_request($request);
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
+    unless ($latlong) {
+        my $geometry = $request->{geometry}{type} || 'unknown';
+        $self->logger->error("Defect $request->{itemId} ($title): don't know how to handle geometry: $geometry");
+        return;
+    }
+
+    my $description = $self->get_request_description($attributes->{$mapping->{description}}, $request);
+    my ($status, $external_status_code) = $self->defect_status($attributes);
+
+    my %request_args = (
+        latlong => $latlong,
+        description => $description,
+        status => $status,
+        external_status_code => $external_status_code,
+        title => $attributes->{attributes_itemsTitle},
+        service => $service_obj,
+        service_request_id => $request->{itemId},
+        requested_datetime => $self->date_to_truncated_dt($attributes->{$mapping->{requested_datetime}}),
+        updated_datetime => $self->date_to_truncated_dt($attributes->{$mapping->{requested_datetime}}),
+    );
+
+    my $request_obj = $self->new_request(%request_args);
+    $self->_get_service_request_post_process($request_obj, $request, $args);
+    return $request_obj;
+}
+
+=head2 _get_service_request_post_process
+
+Hook for subclasses to enrich a service request after creation.
+Called with the request object, the raw Alloy item, and the original args hash.
+Does nothing by default.
+
+=cut
+
+sub _get_service_request_post_process { }
+
+=head2 _build_attachment_cache
+
+Build a cache of all valid file attachments created within the given date range.
+Uses AQS to query for files efficiently, filtering by:
+- Creation date within start_date to end_date
+- Filename NOT matching FMS pattern
+
+Merges any extra search properties from C<_extra_search_properties> into the
+query (e.g. collectionCode for Dumfries).
+
+Returns a hashref: { attachment_id => { itemId, filename, createdDate } }
+
+=cut
+
+sub _build_attachment_cache {
+    my ($self, $args) = @_;
+
+    return {} unless $args && $args->{start_date} && $args->{end_date};
+
+    my $start_date = $args->{start_date};
+    my $end_date = $args->{end_date};
+
+    $self->logger->debug("Building attachment cache for date range: $start_date to $end_date");
+
+    my $extra = $self->_extra_search_properties();
+
+    # Build AQS query to find all files with lastEditDate in the range
+    my $body = {
+        properties => {
+            dodiCode => "designs_files",
+            attributes => ["attributes_filesOriginalName"],
+            %$extra,
+        },
+        children => [{
+            type => "And",
+            children => [
+                {
+                    type => "GreaterThan",
+                    children => [{
+                        type => "ItemProperty",
+                        properties => { itemPropertyName => "lastEditDate" }
+                    }, {
+                        type => "DateTime",
+                        properties => { value => [$start_date] }
+                    }]
+                },
+                {
+                    type => "LessThan",
+                    children => [{
+                        type => "ItemProperty",
+                        properties => { itemPropertyName => "lastEditDate" }
+                    }, {
+                        type => "DateTime",
+                        properties => { value => [$end_date] }
+                    }]
+                }
+            ]
+        }]
+    };
+
+    my $files = $self->alloy->search($body);
+
+    my %cache;
+    for my $file (@$files) {
+        my $attrs = $self->alloy->attributes_to_hash($file);
+        my $filename = $attrs->{attributes_filesOriginalName} || '';
+
+        # Skip FMS photos
+        next if $filename =~ /^\d+\.\d+\.full\./;
+
+        $cache{$file->{itemId}} = {
+            itemId => $file->{itemId},
+            filename => $filename,
+            createdDate => $file->{createdDate},
+        };
+    }
+
+    my $count = scalar(keys %cache);
+    $self->logger->debug("Attachment cache built: $count file(s) found in date range");
+
+    return \%cache;
+}
+
+=head2 _get_linked_item_media_urls
+
+For a given defect, fetch linked items (jobs, inspections, etc.) via the
+specified link attribute code and return media URLs for their attachments.
+
+Accepts an optional cache (from C<_build_attachment_cache>) to avoid individual
+API calls per attachment, and an optional skip_ids hashref of attachment IDs to
+exclude from results.
+
+=cut
+
+sub _get_linked_item_media_urls {
+    my ($self, $defect, $link_attr_code, $args, $cache, $skip_ids) = @_;
+
+    my @media_urls;
+    my $defect_id = $defect->{itemId};
+
+    my $attributes = $self->alloy->attributes_to_hash($defect);
+    my $linked_ids = $attributes->{$link_attr_code};
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
+
+    unless ($linked_ids) {
+        $self->logger->debug("Defect $defect_id ($title) has no linked items for $link_attr_code");
+        return \@media_urls;
+    }
+
+    # Normalize to array
+    $linked_ids = [ $linked_ids ] unless ref $linked_ids eq 'ARRAY';
+    $self->logger->debug("Defect $defect_id ($title) has " . scalar(@$linked_ids) . " linked item(s) for $link_attr_code");
+
+    for my $id (@$linked_ids) {
+        my $item = $self->alloy->api_call(call => "item/$id");
+        unless ($item && $item->{item}) {
+            $self->logger->warn("Failed to fetch linked item $id for defect $defect_id ($title)");
+            next;
+        }
+
+        my $item_urls = $self->_media_urls_for_item($item, $cache, $args, $skip_ids);
+        push @media_urls, @$item_urls;
+    }
+
+    return \@media_urls;
+}
+
 =head2 get_service_requests
 
 This also uses the C<defect_resource_name>, either a string or an array, to
