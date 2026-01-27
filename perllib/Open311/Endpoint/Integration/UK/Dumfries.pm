@@ -274,6 +274,186 @@ sub _skip_job_update {
     return 1 if $status eq 'IGNORE';
 }
 
+=head2 get_service_request
+
+Override to add media_url support for jobs attached to the defect.
+
+=cut
+
+sub get_service_request {
+    my ($self, $service_request_id, $args) = @_;
+
+    # Call parent implementation to get the basic service request
+    my $request_obj = $self->SUPER::get_service_request($service_request_id, $args);
+    return unless $request_obj;
+
+    # Fetch the defect item to get job media URLs
+    my $response = $self->alloy->api_call(call => "item/$service_request_id");
+    my $defect = $response->{item};
+    return $request_obj unless $defect;
+
+    # Add media URLs from associated jobs
+    my $media_urls = $self->_get_job_media_urls($defect);
+    if (@$media_urls) {
+        $request_obj->{media_url} = $media_urls;
+    }
+
+    return $request_obj;
+}
+
+=head2 _get_job_media_urls
+
+For a given defect, fetch any associated jobs and return media URLs for their attachments.
+
+=cut
+
+sub _get_job_media_urls {
+    my ($self, $defect) = @_;
+
+    my @media_urls;
+    my $defect_id = $defect->{itemId};
+
+    # Get the job IDs from the defect's RaisedJobs attribute
+    my $attributes = $self->alloy->attributes_to_hash($defect);
+    my $job_ids = $attributes->{attributes_defectsRaisingJobsRaisedJobs};
+
+    unless ($job_ids) {
+        $self->logger->debug("Defect $defect_id has no raised jobs");
+        return \@media_urls;
+    }
+
+    # Get inspection attachments to exclude from job attachments
+    my %inspection_attachment_ids;
+    my $inspection_ids = $attributes->{attributes_defectsWithInspectionsDefectInspection};
+    if ($inspection_ids) {
+        $inspection_ids = [ $inspection_ids ] unless ref $inspection_ids eq 'ARRAY';
+        for my $inspection_id (@$inspection_ids) {
+            my $inspection = $self->alloy->api_call(call => "item/$inspection_id");
+            if ($inspection && $inspection->{item}) {
+                my $inspection_attrs = $self->alloy->attributes_to_hash($inspection->{item});
+                my $inspection_attachments = $inspection_attrs->{attributes_filesAttachableAttachments};
+                if ($inspection_attachments) {
+                    $inspection_attachments = [ $inspection_attachments ] unless ref $inspection_attachments eq 'ARRAY';
+                    $inspection_attachment_ids{$_} = 1 for @$inspection_attachments;
+                }
+            }
+        }
+        if (%inspection_attachment_ids) {
+            $self->logger->debug("Defect $defect_id has " . scalar(keys %inspection_attachment_ids) . " inspection attachment(s) to exclude");
+        }
+    }
+
+    # Normalize to array
+    $job_ids = [ $job_ids ] unless ref $job_ids eq 'ARRAY';
+    $self->logger->debug("Defect $defect_id has " . scalar(@$job_ids) . " raised job(s)");
+
+    # For each job, fetch it and get any attachments
+    for my $job_id (@$job_ids) {
+        my $job = $self->alloy->api_call(call => "item/$job_id");
+        unless ($job && $job->{item}) {
+            $self->logger->warn("Failed to fetch job $job_id for defect $defect_id");
+            next;
+        }
+
+        my $job_attributes = $self->alloy->attributes_to_hash($job->{item});
+        my $attachment_ids = $job_attributes->{attributes_filesAttachableAttachments};
+        unless ($attachment_ids) {
+            $self->logger->debug("Job $job_id has no attachments");
+            next;
+        }
+
+        # Normalize to array
+        $attachment_ids = [ $attachment_ids ] unless ref $attachment_ids eq 'ARRAY';
+        $self->logger->debug("Job $job_id has " . scalar(@$attachment_ids) . " attachment(s)");
+
+        # Build media URLs for each attachment
+        my $api_url = $self->config->{api_url};
+        for my $attachment_id (@$attachment_ids) {
+            # Skip attachments that are also on the inspection
+            if ($inspection_attachment_ids{$attachment_id}) {
+                $self->logger->debug("Skipping attachment $attachment_id (already on inspection)");
+                next;
+            }
+
+            # Fetch the file item to check its filename
+            my $file = $self->alloy->api_call(call => "item/$attachment_id");
+            unless ($file && $file->{item}) {
+                $self->logger->warn("Failed to fetch file $attachment_id for job $job_id");
+                next;
+            }
+
+            my $file_attrs = $self->alloy->attributes_to_hash($file->{item});
+            my $filename = $file_attrs->{attributes_filesOriginalName} || '';
+            
+            # Skip files that match the pattern \d+\.\d\.full\.*
+            # These are auto-generated copies from FixMyStreet
+            if ($filename =~ /^\d+\.\d+\.full\./) {
+                $self->logger->debug("Skipping auto-generated file: $filename");
+                next;
+            }
+
+            # Build media URL using base_url and photo endpoint pattern
+            my $base_url = $self->config->{base_url};
+            unless ($base_url) {
+                $self->logger->warn("No base_url configured, skipping media_url for attachment $attachment_id");
+                next;
+            }
+            my $jurisdiction_id = $self->jurisdiction_id;
+            my $media_url = "${base_url}photos?jurisdiction_id=${jurisdiction_id}&item=${attachment_id}";
+            push @media_urls, $media_url;
+            $self->logger->debug("Added media_url: $media_url (filename: $filename)");
+        }
+    }
+
+    return \@media_urls;
+}
+
+=head2 _get_inspection_updates_design
+
+Override to add media_url support for jobs attached to the inspection/defect.
+
+=cut
+
+sub _get_inspection_updates_design {
+    my ($self, $design, $args) = @_;
+
+    # Call parent to get the base updates
+    my @updates = $self->SUPER::_get_inspection_updates_design($design, $args);
+
+    # For each update, fetch the associated resource and add media URLs
+    for my $update (@updates) {
+        my $service_request_id = $update->service_request_id;
+        
+        # Fetch the resource to get job media URLs
+        my $response = $self->alloy->api_call(call => "item/$service_request_id");
+        my $report = $response->{item};
+
+        if ($report) {
+            my $media_urls = $self->_get_job_media_urls($report);
+            if (@$media_urls) {
+                # Note: media_url is read-only, so we need to recreate the update object
+                # with the media_url included
+                $update->{media_url} = $media_urls;
+            }
+        }
+    }
+
+    return @updates;
+}
+
+=head2 _get_defect_updates
+
+For Dumfries, defects are the same as inspections (both use rfs_design).
+We get all updates via _get_inspection_updates_design, so skip defect updates
+to avoid duplicates.
+
+=cut
+
+sub _get_defect_updates {
+    my ($self, $args) = @_;
+    return ();
+}
+
 
 =head2 post_service_request_update
 
@@ -560,6 +740,57 @@ sub _find_latest_inspection {
     } @inspections;
 
     return $sorted[0];
+}
+
+=head2 get_photo
+
+Fetch a photo from Alloy by its file item ID.
+
+=cut
+
+sub get_photo {
+    my ($self, $args) = @_;
+
+    my $item_id = $args->{item};
+    unless ($item_id) {
+        $self->logger->error("get_photo called without item parameter");
+        return [ 400, [ 'Content-type', 'text/plain' ], [ 'Missing item parameter' ] ];
+    }
+
+    # Fetch the file from Alloy
+    my $content;
+    my $content_type = 'image/jpeg'; # default
+
+    # First, get the file metadata to determine content type
+    try {
+        my $file_item = $self->alloy->api_call(call => "item/$item_id");
+        if ($file_item && $file_item->{item}) {
+            my $attrs = $self->alloy->attributes_to_hash($file_item->{item});
+            my $filename = $attrs->{attributes_filesOriginalName} || '';
+            if ($filename =~ /\.png$/i) {
+                $content_type = 'image/png';
+            } elsif ($filename =~ /\.gif$/i) {
+                $content_type = 'image/gif';
+            } elsif ($filename =~ /\.jpe?g$/i) {
+                $content_type = 'image/jpeg';
+            }
+        }
+    } catch {
+        $self->logger->warn("Failed to fetch file metadata for $item_id: $_");
+    };
+
+    # Now fetch the actual file content
+    try {
+        $content = $self->alloy->api_call_raw(
+            call => "file/$item_id",
+        );
+    } catch {
+        $self->logger->error("Failed to fetch photo $item_id: $_");
+        return [ 404, [ 'Content-type', 'text/plain' ], [ 'Photo not found' ] ];
+    };
+
+    return [ 404, [ 'Content-type', 'text/plain' ], [ 'Photo not found' ] ] unless $content;
+    return [ 200, [ 'Content-type', $content_type ], [ $content ] ];
 }
 
 sub _attach_files_to_service_request {

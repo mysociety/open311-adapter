@@ -1,6 +1,9 @@
 api_url: https://localhost/api/
 api_key: api_key
 
+# Base URL for constructing photo URLs (for media_url in responses)
+base_url: https://www.example.com/
+
 ## Problem creation
 
 # The design we use to submit reports to
