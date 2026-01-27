@@ -689,4 +689,220 @@ subtest 'post_service_request_update with parent-type inspection (no description
         'update created successfully even when template lacks description field';
 };
 
+
+subtest 'photo fetching without cache (fallback behavior)' => sub {
+    # Test the fallback path when no cache is provided
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    my %mock_responses = (
+        'item/defect_simple' => {
+            item => {
+                itemId => 'defect_simple',
+                designCode => 'designs_defects',
+                attributes => [
+                    { attributeCode => 'attributes_defectsRaisingJobsRaisedJobs', value => 'job_002' },
+                ],
+            }
+        },
+        'item/job_002' => {
+            item => {
+                itemId => 'job_002',
+                designCode => 'designs_jobs',
+                attributes => [
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => 'file_004' },
+                ],
+            }
+        },
+        'item/file_004' => {
+            item => {
+                itemId => 'file_004',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'valid_photo.jpg' },
+                ],
+            }
+        },
+        'item-log/item/file_004' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T14:00:00.000Z' },
+            ],
+        },
+    );
+
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+        return $mock_responses{$call} if exists $mock_responses{$call};
+        die "Unmocked API call: $call";
+    });
+
+    # Call without cache (should fall back to individual API calls)
+    my $defect = $mock_responses{'item/defect_simple'}{item};
+    my $urls = $endpoint->_get_linked_item_media_urls($defect,
+        'attributes_defectsRaisingJobsRaisedJobs', {
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    });
+
+    is(scalar(@$urls), 1, 'Got 1 media URL via fallback path');
+    like($urls->[0], qr/photos.*item=file_004/, 'URL contains file_004');
+};
+
+subtest 'FMS file filtering' => sub {
+    # Test that FMS auto-generated files are excluded
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    my %mock_responses = (
+        'item/defect_fms' => {
+            item => {
+                itemId => 'defect_fms',
+                designCode => 'designs_defects',
+                attributes => [
+                    { attributeCode => 'attributes_defectsRaisingJobsRaisedJobs', value => 'job_003' },
+                ],
+            }
+        },
+        'item/job_003' => {
+            item => {
+                itemId => 'job_003',
+                designCode => 'designs_jobs',
+                attributes => [
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => ['file_fms', 'file_valid'] },
+                ],
+            }
+        },
+        'item/file_fms' => {
+            item => {
+                itemId => 'file_fms',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => '12345.67890.full.original.jpg' },
+                ],
+            }
+        },
+        'item/file_valid' => {
+            item => {
+                itemId => 'file_valid',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'user_photo.jpg' },
+                ],
+            }
+        },
+        'item-log/item/file_fms' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T15:00:00.000Z' },
+            ],
+        },
+        'item-log/item/file_valid' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T16:00:00.000Z' },
+            ],
+        },
+    );
+
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+        return $mock_responses{$call} if exists $mock_responses{$call};
+        die "Unmocked API call: $call";
+    });
+
+    my $defect = $mock_responses{'item/defect_fms'}{item};
+    my $urls = $endpoint->_get_linked_item_media_urls($defect,
+        'attributes_defectsRaisingJobsRaisedJobs', {
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    });
+
+    # Should only get the valid file, FMS file should be filtered out
+    is(scalar(@$urls), 1, 'Got only 1 URL (FMS file excluded)');
+    like($urls->[0], qr/photos.*item=file_valid/, 'URL is for valid file');
+    unlike($urls->[0], qr/file_fms/, 'FMS file not included');
+};
+
+subtest 'date range filtering' => sub {
+    # Test that photos outside date range are excluded
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    my %mock_responses = (
+        'item/defect_dates' => {
+            item => {
+                itemId => 'defect_dates',
+                designCode => 'designs_defects',
+                attributes => [
+                    { attributeCode => 'attributes_defectsRaisingJobsRaisedJobs', value => 'job_004' },
+                ],
+            }
+        },
+        'item/job_004' => {
+            item => {
+                itemId => 'job_004',
+                designCode => 'designs_jobs',
+                attributes => [
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => ['file_old', 'file_new', 'file_future'] },
+                ],
+            }
+        },
+        'item/file_old' => {
+            item => {
+                itemId => 'file_old',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'old.jpg' },
+                ],
+            }
+        },
+        'item/file_new' => {
+            item => {
+                itemId => 'file_new',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'new.jpg' },
+                ],
+            }
+        },
+        'item/file_future' => {
+            item => {
+                itemId => 'file_future',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'future.jpg' },
+                ],
+            }
+        },
+        'item-log/item/file_old' => {
+            results => [
+                { action => 'Create', date => '2025-12-20T10:00:00.000Z' }, # Before range
+            ],
+        },
+        'item-log/item/file_new' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T10:00:00.000Z' }, # In range
+            ],
+        },
+        'item-log/item/file_future' => {
+            results => [
+                { action => 'Create', date => '2025-12-30T10:00:00.000Z' }, # After range
+            ],
+        },
+    );
+
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+        return $mock_responses{$call} if exists $mock_responses{$call};
+        die "Unmocked API call: $call";
+    });
+
+    my $defect = $mock_responses{'item/defect_dates'}{item};
+    my $urls = $endpoint->_get_linked_item_media_urls($defect,
+        'attributes_defectsRaisingJobsRaisedJobs', {
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    });
+
+    # Should only get file_new (in range), not file_old or file_future
+    is(scalar(@$urls), 1, 'Got only 1 URL (date filtered)');
+    like($urls->[0], qr/photos.*item=file_new/, 'URL is for file in date range');
+};
+
+
 done_testing;
