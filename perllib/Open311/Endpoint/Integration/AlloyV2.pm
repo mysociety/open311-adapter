@@ -1004,9 +1004,9 @@ sub _get_service_requests_resource {
 }
 
 sub get_request_description {
-    my ($self, $desc) = @_;
+    my ($self, $desc, $request) = @_;
 
-    return $desc;
+    return $desc || '';
 }
 
 sub fetch_updated_resources {
