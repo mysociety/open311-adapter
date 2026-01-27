@@ -27,6 +27,32 @@ sub detect_type {
     return '';
 }
 
+sub api_call_raw {
+    my ($self, %args) = @_;
+    my $call = $args{call};
+
+    my $ua = LWP::UserAgent->new(
+        agent => "FixMyStreet/open311-adapter",
+        timeout => 5*60,
+    );
+    my $uri = URI->new( $self->config->{api_url} . $call );
+    $uri->query_form(%{ $args{params} }) if $args{params};
+
+    my $request = HTTP::Request->new('GET', $uri);
+    $request->header(Authorization => 'Bearer ' . $self->config->{api_key});
+    
+    $self->logger->debug($call);
+    my $response = $ua->request($request);
+    
+    if ($response->is_success) {
+        return $response->content;
+    } else {
+        $self->logger->error($call);
+        $self->logger->error($response->content);
+        die "Alloy API call failed: " . $response->status_line;
+    }
+}
+
 sub api_call {
     my ($self, %args) = @_;
     my $call = $args{call};
