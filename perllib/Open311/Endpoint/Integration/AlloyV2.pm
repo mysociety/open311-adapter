@@ -684,7 +684,14 @@ sub _get_inspection_updates_design {
 
     my %join;
     if (my $extra_mapping = $mapping->{extra_attributes}) {
-        push @{$join{joinAttributes}}, values %$extra_mapping;
+        # Collect all attribute paths, flattening arrays
+        foreach my $attr_paths (values %$extra_mapping) {
+            if (ref $attr_paths eq 'ARRAY') {
+                push @{$join{joinAttributes}}, @$attr_paths;
+            } else {
+                push @{$join{joinAttributes}}, $attr_paths;
+            }
+        }
     }
 
     my $updates = $self->fetch_updated_resources($design, $args->{start_date}, $args->{end_date}, \%join);
@@ -743,9 +750,18 @@ sub _get_inspection_updates_design {
         }
 
         if (my $extra_mapping = $mapping->{extra_attributes}) {
-            foreach (keys %$extra_mapping) {
-                $args{extras}{$_} = $attributes->{$extra_mapping->{$_}}
-                    if $extra_mapping->{$_} && $attributes->{$extra_mapping->{$_}};
+            foreach my $key (keys %$extra_mapping) {
+                my $attr_paths = $extra_mapping->{$key};
+                # Support both single string and array of attribute paths
+                $attr_paths = [ $attr_paths ] unless ref $attr_paths eq 'ARRAY';
+                
+                # Try each attribute path until we find one with a value
+                foreach my $attr_path (@$attr_paths) {
+                    if ($attr_path && $attributes->{$attr_path}) {
+                        $args{extras}{$key} = $attributes->{$attr_path};
+                        last;
+                    }
+                }
             }
         }
 
