@@ -15,6 +15,10 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
+sub service_request_content {
+    '/open311/service_request_extended'
+}
+
 =head2 process_attributes
 
 In addition to the default new request processing, this function:
@@ -56,6 +60,127 @@ sub _get_service_code {
     my ($self, $group, $subcategory, $subcategory_config) = @_;
 
     return $subcategory_config->{id};
+}
+
+=head2 get_service_code_from_defect
+
+For Dumfries, extract the service code directly from the defect's reported issue attribute.
+
+=cut
+
+sub get_service_code_from_defect {
+    my ($self, $defect) = @_;
+
+    my $mapping = $self->config->{defect_attribute_mapping};
+    return unless $mapping && $mapping->{service_code};
+
+    my $attributes = $self->alloy->attributes_to_hash($defect);
+    my $service_code = $attributes->{$mapping->{service_code}};
+    
+    $service_code = $service_code->[0] if ref $service_code eq 'ARRAY';
+    
+    return $service_code;
+}
+
+=head2 service
+
+For Dumfries, we need to handle the case where the service_code from Alloy
+is a base ID (e.g., 64f1dc207e262328e7cf803a) but our service_whitelist has
+IDs with suffixes (e.g., 64f1dc207e262328e7cf803a_1, 64f1dc207e262328e7cf803a_2)
+because the same subcategory is reused across multiple categories.
+
+We match the base ID and return the first matching service.
+
+=cut
+
+sub service {
+    my ($self, $service_code) = @_;
+
+    # Try exact match first (standard behavior)
+    my @services = $self->services;
+    for my $service (@services) {
+        return $service if $service->service_code eq $service_code;
+    }
+
+    # If no exact match, try prefix match (for IDs with _1, _2 suffixes)
+    for my $service (@services) {
+        my $whitelist_code = $service->service_code;
+        # Check if whitelist code starts with the service_code followed by underscore and digit
+        if ($whitelist_code =~ /^\Q$service_code\E_\d+$/) {
+            return $service;
+        }
+    }
+
+    return;
+}
+
+=head2 _get_service_requests_resource
+
+For Dumfries, we override the defect fetching to use the service_code directly
+from the defect attributes instead of relying on category mapping.
+
+=cut
+
+sub _get_service_requests_resource {
+    my ($self, $resource_name, $args) = @_;
+
+    my $requests = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date});
+    my @requests;
+    my $mapping = $self->config->{defect_attribute_mapping};
+
+    for my $request (@$requests) {
+        my %request_args;
+
+        next if $self->skip_fetch_defect( $request );
+
+        # Get service_code directly from the defect
+        my $service_code = $self->get_service_code_from_defect($request);
+        unless ($service_code) {
+            $self->logger->warn("No service_code found for defect $request->{itemId} in " . $self->jurisdiction_id);
+            next;
+        }
+
+        # Look up the service (this will handle _1, _2 suffix matching)
+        my $service_obj = $self->service($service_code);
+        unless ($service_obj) {
+            $self->logger->warn("No service found for defect $request->{itemId}, service_code $service_code in " . $self->jurisdiction_id);
+            next;
+        }
+
+        $request_args{latlong} = $self->get_latlong_from_request($request);
+
+        unless ($request_args{latlong}) {
+            my $geometry = $request->{geometry}{type} || 'unknown';
+            $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry");
+            next;
+        }
+
+        my $attributes = $self->alloy->attributes_to_hash($request);
+
+        # Get description if mapping exists
+        if ($mapping->{description}) {
+            $request_args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
+        }
+
+        ( $request_args{status}, $request_args{external_status_code} ) = $self->defect_status($attributes);
+
+        # Skip defects with IGNORE status
+        if ($request_args{status} && $request_args{status} eq 'IGNORE') {
+            next;
+        }
+
+        $request_args{title} = $attributes->{attributes_itemsTitle};
+        $request_args{service} = $service_obj;
+        $request_args{service_request_id} = $request->{itemId};
+        $request_args{requested_datetime} = $self->date_to_truncated_dt( $attributes->{$mapping->{requested_datetime}} ) if $mapping->{requested_datetime};
+        $request_args{updated_datetime} = $self->date_to_truncated_dt( $attributes->{$mapping->{requested_datetime}} ) if $mapping->{requested_datetime};
+
+        my $service_request = $self->new_request( %request_args );
+
+        push @requests, $service_request;
+    }
+
+    return @requests;
 }
 
 =head2 _get_inspection_status
