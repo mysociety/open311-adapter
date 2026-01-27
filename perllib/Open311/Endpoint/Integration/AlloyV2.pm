@@ -906,6 +906,70 @@ sub _skip_job_update {
     return $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
 }
 
+=head2 get_service_request
+
+Fetches a single service request by ID.
+
+=cut
+
+sub get_service_request {
+    my ($self, $service_request_id, $args) = @_;
+
+    # Fetch the item from Alloy
+    my $response = $self->alloy->api_call(call => "item/$service_request_id");
+    my $request = $response->{item};
+
+    unless ($request) {
+        return;
+    }
+
+    # Check if this is a defect we should process
+    return if $self->skip_fetch_defect($request);
+
+    my $mapping = $self->config->{defect_attribute_mapping};
+    my $attributes = $self->alloy->attributes_to_hash($request);
+
+    # Get service code/category
+    my $service_code = $self->get_service_code_from_defect($request);
+    my $service_obj;
+    
+    if ($service_code) {
+        $service_obj = $self->service($service_code);
+    } else {
+        # Fall back to category-based lookup
+        my $category = $self->get_defect_category($request);
+        return unless $category;
+        $category =~ s/ /_/g;
+        $service_obj = $self->service($category);
+    }
+
+    return unless $service_obj;
+
+    my $latlong = $self->get_latlong_from_request($request);
+    unless ($latlong) {
+        my $geometry = $request->{geometry}{type} || 'unknown';
+        $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry");
+        return;
+    }
+
+    my $description = $self->get_request_description($attributes->{$mapping->{description}}, $request);
+    my ($status, $external_status_code) = $self->defect_status($attributes);
+
+    my %request_args = (
+        latlong => $latlong,
+        description => $description,
+        status => $status,
+        external_status_code => $external_status_code,
+        title => $attributes->{attributes_itemsTitle},
+        service => $service_obj,
+        service_request_id => $request->{itemId},
+        requested_datetime => $self->date_to_truncated_dt($attributes->{$mapping->{requested_datetime}}),
+        updated_datetime => $self->date_to_truncated_dt($attributes->{$mapping->{requested_datetime}}),
+    );
+
+    return $self->new_request(%request_args);
+}
+
 =head2 get_service_requests
 
 This also uses the C<defect_resource_name>, either a string or an array, to
