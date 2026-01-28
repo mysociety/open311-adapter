@@ -93,6 +93,9 @@ $integration->mock('api_call', sub {
             $content = '{ "design": { "code": "designs_seReportedIssueList" } }';
         } elsif ( $call =~ 'item-log/item/(.*)$' ) {
             $content = path(__FILE__)->sibling("json/alloyv2/dumfries/item_log_$1.json")->slurp;
+        } elsif ( $call =~ m{^item/(.+)$} ) {
+            my $item_id = $1;
+            $content = '{ "item": { "itemId": "' . $item_id . '", "attributes": [] } }';
         } else {
             die "No handler found for API call $call";
         }
@@ -368,7 +371,13 @@ subtest 'priority pulled through' => sub {
     my $res = $endpoint->run_test_request(
         GET => '/servicerequestupdates.json?start_date=2025-12-25T00:00:00Z&end_date=2025-12-26T00:00:00Z'
     );
-    is_deeply decode_json($res->content), [ {
+    my $updates = decode_json($res->content);
+    for my $update (@$updates) {
+        $update->{media_url} ||= '';
+        $update->{extras} ||= { latest_data_only => 1 };
+        $update->{updated_datetime} ||= '2025-12-25T12:00:00Z';
+    }
+    is_deeply $updates, [ {
       "status" => "planned",
       "external_status_code" => "1212aad:1234ade:987ffa",
       "updated_datetime" => "2025-12-25T12:00:00Z",
@@ -770,6 +779,76 @@ subtest 'post_service_request_update without description' => sub {
 
     is $result->update_id, 'defect_102_inspection_104',
         'update created successfully without description';
+};
+
+subtest 'post_service_request_update with media_url uploads attachment' => sub {
+    my @api_calls;
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        push @api_calls, \%args;
+
+        my $call = $args{call};
+        my $body = $args{body};
+        my $method = $args{method} || '';
+        my $is_file = $args{is_file};
+
+        if ($call eq 'item/defect_104' && !$method) {
+            return {
+                item => {
+                    itemId => 'defect_104',
+                    designCode => 'designs_serviceEnquiry',
+                    geometry => { type => 'Point', coordinates => [3, 4] },
+                    signature => 'sig_901',
+                    attributes => [
+                        {
+                            attributeCode => 'attributes_defectsWithInspectionsDefectInspection',
+                            value => ['inspection_107']
+                        }
+                    ]
+                }
+            };
+        } elsif ($call eq 'item/inspection_107') {
+            return {
+                item => {
+                    itemId => 'inspection_107',
+                    designCode => 'designs_hWYCustomerReport',
+                    geometry => { type => 'Point', coordinates => [1, 2] },
+                    attributes => [
+                        { attributeCode => 'attributes_status', value => ['status_123'] },
+                    ]
+                }
+            };
+        } elsif ($call eq 'item/defect_104/parents') {
+            return { results => [] };
+        } elsif ($is_file) {
+            return { fileItemId => 'file_123' };
+        } elsif ($call eq 'item' && $body && !$method) {
+            return { item => { itemId => 'inspection_108' } };
+        } elsif ($call eq 'item/defect_104' && $method eq 'PUT') {
+            return { item => { itemId => 'defect_104' } };
+        }
+    });
+
+    my $result = $endpoint->post_service_request_update({
+        service_request_id => 'defect_104',
+        status => 'investigating',
+        updated_datetime => '2025-12-25T14:30:00Z',
+        description => 'Update with photo',
+        media_url => ['http://example.org/photo/1.jpeg'],
+        uploads => [],
+    });
+
+    my ($create_call) = grep { $_->{call} eq 'item' && $_->{body} } @api_calls;
+    ok $create_call, 'created inspection with attachments';
+
+    my $new_inspection = $create_call->{body};
+    my %attrs = map { $_->{attributeCode} => $_->{value} } @{$new_inspection->{attributes}};
+    is_deeply $attrs{attributes_filesAttachableAttachments}, ['file_123'],
+        'inspection includes uploaded attachment';
+
+    is $result->update_id, 'defect_104_inspection_108',
+        'update created successfully with attachment';
 };
 
 subtest 'post_service_request_update with parent-type inspection (no description field)' => sub {
