@@ -629,6 +629,15 @@ sub get_service_request_updates {
             _normalise_service_code($_->{service_code}) => $_
         } reverse @services;
 
+        my $job_photos = @{ $integ->enquiry_update_job_photo_statuses };
+        my $defect_photos = @{ $integ->enquiry_update_defect_photo_statuses };
+
+        my $documents = 'documents { url documentName documentDate }';
+        my $job_documents = $job_photos ? $documents : "";
+        my $defect_documents = $defect_photos ? $documents : "";
+
+        my $extra_defect_attributes = $self->update_extra_defect_attributes || "";
+
         my $query = <<GRAPHQL;
 {
   enquiryStatusLogs(
@@ -650,28 +659,13 @@ sub get_service_request_updates {
       enquiryLink {
         job {
           estimatedStartDate
-          documents {
-            url
-            documentName
-            documentDate
-          }
+          $job_documents
         }
         defect {
           defectNumber
           targetDate
-          documents {
-            url
-            documentName
-            documentDate
-          }
-          feature {
-            attribute_CCAT {
-              attributeValueCode
-            }
-            attribute_SPD {
-              attributeValueCode
-            }
-          }
+          $defect_documents
+          $extra_defect_attributes
         }
       }
     }
@@ -697,7 +691,7 @@ GRAPHQL
             # The enquiry's service/subject codes may have changed with this
             # update, so find the corresponding Open311 service code to allow
             # FMS to handle this.
-            my $extras;
+            my $extras = {};
             my $service_code = $status_log->{centralEnquiry}->{serviceCode} . "_" . $status_log->{centralEnquiry}->{subjectCode};
             my $service = $services{$service_code} || $self->_find_wrapping_service($service_code, \%services);
             if ( $service ) {
@@ -713,30 +707,19 @@ GRAPHQL
 
             # If there is an attached defect with a targetDate set, include that in extras too
             if ( my $targetDate = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{targetDate} ) {
-                $extras ||= {};
                 $extras->{targetDate} = $targetDate;
             }
             # similarly for estimatedStartDate on an attached job
             if ( my $jobStartDate = $status_log->{centralEnquiry}{enquiryLink}{job}{estimatedStartDate} ) {
-                $extras ||= {};
                 $extras->{jobStartDate} = $jobStartDate;
             }
 
-            # There might be some feature attribute values we want too
-            if ( my $featureCCAT = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{feature}->{attribute_CCAT}->{attributeValueCode} ) {
-                $extras ||= {};
-                $extras->{featureCCAT} = $featureCCAT;
-            }
-            if ( my $featureSPD = $status_log->{centralEnquiry}->{enquiryLink}->{defect}->{feature}->{attribute_SPD}->{attributeValueCode} ) {
-                $extras ||= {};
-                $extras->{featureSPD} = $featureSPD;
-            }
+            $self->enquiry_update_extra_data($status_log, $extras);
 
             # Add defect attributes from web API if there's a linked defect
             if ( my $defect = $status_log->{centralEnquiry}->{enquiryLink}->{defect} ) {
                 my $attributes = $self->_fetch_defect_web_api_attributes($defect);
                 if (@$attributes) {
-                    $extras ||= {};
                     foreach my $attr (@$attributes) {
                         my ($code, $name, $value) = @$attr;
                         $extras->{"defectAttrib_$code"} = $value;
@@ -771,6 +754,10 @@ GRAPHQL
 
     return @updates;
 }
+
+sub enquiry_update_extra_data { }
+
+sub update_extra_defect_attributes { }
 
 sub _get_service_request_updates_for_jobs {
     my ($self, $integ, $args, $updates) = @_;
