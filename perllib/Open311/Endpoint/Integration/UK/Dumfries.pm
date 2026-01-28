@@ -114,6 +114,18 @@ sub service {
     return;
 }
 
+=head2 _extra_search_properties
+
+For Dumfries, we need to include both Live and Archive collections when
+fetching updated resources from Alloy.
+
+=cut
+
+sub _extra_search_properties {
+    my ($self) = @_;
+    return { collectionCode => ["Live", "Archive"] };
+}
+
 =head2 _get_service_requests_resource
 
 For Dumfries, we override the defect fetching to use the service_code directly
