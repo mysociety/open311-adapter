@@ -114,73 +114,16 @@ sub service {
     return;
 }
 
-=head2 _get_service_requests_resource
+=head2 _extra_search_properties
 
-For Dumfries, we override the defect fetching to use the service_code directly
-from the defect attributes instead of relying on category mapping.
+For Dumfries, we need to include both Live and Archive collections when
+fetching updated resources from Alloy.
 
 =cut
 
-sub _get_service_requests_resource {
-    my ($self, $resource_name, $args) = @_;
-
-    my $requests = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date});
-    my @requests;
-    my $mapping = $self->config->{defect_attribute_mapping};
-
-    for my $request (@$requests) {
-        my %request_args;
-
-        next if $self->skip_fetch_defect( $request );
-
-        # Get service_code directly from the defect
-        my $service_code = $self->get_service_code_from_defect($request);
-        unless ($service_code) {
-            $self->logger->warn("No service_code found for defect $request->{itemId} in " . $self->jurisdiction_id);
-            next;
-        }
-
-        # Look up the service (this will handle _1, _2 suffix matching)
-        my $service_obj = $self->service($service_code);
-        unless ($service_obj) {
-            $self->logger->warn("No service found for defect $request->{itemId}, service_code $service_code in " . $self->jurisdiction_id);
-            next;
-        }
-
-        $request_args{latlong} = $self->get_latlong_from_request($request);
-
-        unless ($request_args{latlong}) {
-            my $geometry = $request->{geometry}{type} || 'unknown';
-            $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry");
-            next;
-        }
-
-        my $attributes = $self->alloy->attributes_to_hash($request);
-
-        # Get description if mapping exists
-        if ($mapping->{description}) {
-            $request_args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
-        }
-
-        ( $request_args{status}, $request_args{external_status_code} ) = $self->defect_status($attributes);
-
-        # Skip defects with IGNORE status
-        if ($request_args{status} && $request_args{status} eq 'IGNORE') {
-            next;
-        }
-
-        $request_args{title} = $attributes->{attributes_itemsTitle};
-        $request_args{service} = $service_obj;
-        $request_args{service_request_id} = $request->{itemId};
-        $request_args{requested_datetime} = $self->date_to_truncated_dt( $attributes->{$mapping->{requested_datetime}} ) if $mapping->{requested_datetime};
-        $request_args{updated_datetime} = $self->date_to_truncated_dt( $attributes->{$mapping->{requested_datetime}} ) if $mapping->{requested_datetime};
-
-        my $service_request = $self->new_request( %request_args );
-
-        push @requests, $service_request;
-    }
-
-    return @requests;
+sub _extra_search_properties {
+    my ($self) = @_;
+    return { collectionCode => ["Live", "Archive"] };
 }
 
 =head2 _get_inspection_status
