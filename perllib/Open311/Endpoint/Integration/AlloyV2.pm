@@ -1284,6 +1284,18 @@ sub get_request_description {
     return $desc || '';
 }
 
+=head2 _extra_search_properties
+
+Hook for subclasses to add extra properties to the search body.
+Returns a hashref of additional properties to merge into the search.
+
+=cut
+
+sub _extra_search_properties {
+    my ($self) = @_;
+    return {};
+}
+
 sub fetch_updated_resources {
     my ($self, $code, $start_date, $end_date, $join) = @_;
 
@@ -1293,6 +1305,7 @@ sub fetch_updated_resources {
         properties =>  {
             dodiCode => $code,
             attributes => ["all"],
+            %{ $self->_extra_search_properties() },
             %{ $join || {} },
         },
         children => [{
