@@ -684,7 +684,14 @@ sub _get_inspection_updates_design {
 
     my %join;
     if (my $extra_mapping = $mapping->{extra_attributes}) {
-        push @{$join{joinAttributes}}, values %$extra_mapping;
+        # Collect all attribute paths, flattening arrays
+        foreach my $attr_paths (values %$extra_mapping) {
+            if (ref $attr_paths eq 'ARRAY') {
+                push @{$join{joinAttributes}}, @$attr_paths;
+            } else {
+                push @{$join{joinAttributes}}, $attr_paths;
+            }
+        }
     }
 
     my $updates = $self->fetch_updated_resources($design, $args->{start_date}, $args->{end_date}, \%join);
@@ -743,9 +750,18 @@ sub _get_inspection_updates_design {
         }
 
         if (my $extra_mapping = $mapping->{extra_attributes}) {
-            foreach (keys %$extra_mapping) {
-                $args{extras}{$_} = $attributes->{$extra_mapping->{$_}}
-                    if $extra_mapping->{$_} && $attributes->{$extra_mapping->{$_}};
+            foreach my $key (keys %$extra_mapping) {
+                my $attr_paths = $extra_mapping->{$key};
+                # Support both single string and array of attribute paths
+                $attr_paths = [ $attr_paths ] unless ref $attr_paths eq 'ARRAY';
+                
+                # Try each attribute path until we find one with a value
+                foreach my $attr_path (@$attr_paths) {
+                    if ($attr_path && $attributes->{$attr_path}) {
+                        $args{extras}{$key} = $attributes->{$attr_path};
+                        last;
+                    }
+                }
             }
         }
 
@@ -890,6 +906,70 @@ sub _skip_job_update {
     return $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
 }
 
+=head2 get_service_request
+
+Fetches a single service request by ID.
+
+=cut
+
+sub get_service_request {
+    my ($self, $service_request_id, $args) = @_;
+
+    # Fetch the item from Alloy
+    my $response = $self->alloy->api_call(call => "item/$service_request_id");
+    my $request = $response->{item};
+
+    unless ($request) {
+        return;
+    }
+
+    # Check if this is a defect we should process
+    return if $self->skip_fetch_defect($request);
+
+    my $mapping = $self->config->{defect_attribute_mapping};
+    my $attributes = $self->alloy->attributes_to_hash($request);
+
+    # Get service code/category
+    my $service_code = $self->get_service_code_from_defect($request);
+    my $service_obj;
+    
+    if ($service_code) {
+        $service_obj = $self->service($service_code);
+    } else {
+        # Fall back to category-based lookup
+        my $category = $self->get_defect_category($request);
+        return unless $category;
+        $category =~ s/ /_/g;
+        $service_obj = $self->service($category);
+    }
+
+    return unless $service_obj;
+
+    my $latlong = $self->get_latlong_from_request($request);
+    unless ($latlong) {
+        my $geometry = $request->{geometry}{type} || 'unknown';
+        $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry");
+        return;
+    }
+
+    my $description = $self->get_request_description($attributes->{$mapping->{description}}, $request);
+    my ($status, $external_status_code) = $self->defect_status($attributes);
+
+    my %request_args = (
+        latlong => $latlong,
+        description => $description,
+        status => $status,
+        external_status_code => $external_status_code,
+        title => $attributes->{attributes_itemsTitle},
+        service => $service_obj,
+        service_request_id => $request->{itemId},
+        requested_datetime => $self->date_to_truncated_dt($attributes->{$mapping->{requested_datetime}}),
+        updated_datetime => $self->date_to_truncated_dt($attributes->{$mapping->{requested_datetime}}),
+    );
+
+    return $self->new_request(%request_args);
+}
+
 =head2 get_service_requests
 
 This also uses the C<defect_resource_name>, either a string or an array, to
@@ -987,9 +1067,9 @@ sub _get_service_requests_resource {
 }
 
 sub get_request_description {
-    my ($self, $desc) = @_;
+    my ($self, $desc, $request) = @_;
 
-    return $desc;
+    return $desc || '';
 }
 
 sub fetch_updated_resources {
