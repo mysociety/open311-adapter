@@ -411,60 +411,50 @@ sub _get_job_media_urls {
     return \@media_urls;
 }
 
-=head2 _get_defect_updates_resource
+=head2 _get_inspection_updates_design
 
-Override to add media_url support for jobs attached to defects.
+Override to add media_url support for jobs attached to the inspection/defect.
 
 =cut
 
-sub _get_defect_updates_resource {
-    my ($self, $resource_name, $args) = @_;
+sub _get_inspection_updates_design {
+    my ($self, $design, $args) = @_;
 
-    my $start_time = $self->date_to_dt($args->{start_date});
-    my $end_time = $self->date_to_dt($args->{end_date});
+    # Call parent to get the base updates
+    my @updates = $self->SUPER::_get_inspection_updates_design($design, $args);
 
-    my @updates;
-    my $updates = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date});
-    for my $report (@$updates) {
-        next if $self->is_ignored_category( $report );
-
-        my $linked_defect;
-        my $attributes = $self->alloy->attributes_to_hash($report);
-
-        my $service_request_id = $report->{itemId};
-
-        ($linked_defect, $service_request_id) = $self->_get_defect_inspection($report, $service_request_id);
-
-        # we don't care about linked defects until they have been scheduled
-        my ($status, $external_status_code) = $self->defect_status($attributes, $report, $linked_defect);
-        next if $self->_skip_job_update($linked_defect, $status);
-
-        my $date = $self->get_latest_version_date($report->{itemId});
-        my $update_dt = $self->date_to_truncated_dt($date);
-        next unless $update_dt >= $start_time && $update_dt <= $end_time;
-
-        (my $id_date = $date) =~ s/\D//g;
-        my $id = $report->{itemId} . "_$id_date";
-        my %args = (
-            status => $status,
-            update_id => $id,
-            service_request_id => $service_request_id,
-            description => '',
-            updated_datetime => $update_dt,
-            external_status_code => $external_status_code,
-            extras => { latest_data_only => 1 },
-        );
-
-        # Add media URLs from associated jobs
-        my $media_urls = $self->_get_job_media_urls($report);
-        if (@$media_urls) {
-            $args{media_url} = $media_urls;
+    # For each update, fetch the associated resource and add media URLs
+    for my $update (@updates) {
+        my $service_request_id = $update->service_request_id;
+        
+        # Fetch the resource to get job media URLs
+        my $response = $self->alloy->api_call(call => "item/$service_request_id");
+        my $report = $response->{item};
+        
+        if ($report) {
+            my $media_urls = $self->_get_job_media_urls($report);
+            if (@$media_urls) {
+                # Note: media_url is read-only, so we need to recreate the update object
+                # with the media_url included
+                $update->{media_url} = $media_urls;
+            }
         }
-
-        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
 
     return @updates;
+}
+
+=head2 _get_defect_updates
+
+For Dumfries, defects are the same as inspections (both use rfs_design).
+We get all updates via _get_inspection_updates_design, so skip defect updates
+to avoid duplicates.
+
+=cut
+
+sub _get_defect_updates {
+    my ($self, $args) = @_;
+    return ();
 }
 
 
