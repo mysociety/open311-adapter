@@ -572,6 +572,26 @@ sub post_service_request_update {
         }
     }
 
+    if ($self->config->{resource_attachment_attribute_id}
+        && ($args->{media_url} || $args->{uploads})) {
+        my $attachment_code = $self->config->{resource_attachment_attribute_id};
+        my $new_attachments = $self->upload_media($args);
+        if ($new_attachments && @$new_attachments) {
+            my ($existing) = grep { $_->{attributeCode} eq $attachment_code } @new_attributes;
+            if ($existing) {
+                my $existing_value = $existing->{value};
+                $existing_value = [ $existing_value ] unless ref $existing_value eq 'ARRAY';
+                push @$existing_value, @$new_attachments;
+                $existing->{value} = $existing_value;
+            } else {
+                push @new_attributes, {
+                    attributeCode => $attachment_code,
+                    value => $new_attachments,
+                };
+            }
+        }
+    }
+
     $new_inspection->{attributes} = \@new_attributes;
 
     # Create the new inspection in Alloy
