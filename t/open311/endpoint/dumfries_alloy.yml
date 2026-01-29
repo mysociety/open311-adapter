@@ -2,6 +2,8 @@ api_url: https://localhost/api/
 
 api_key: api_key
 
+base_url: http://localhost:5000/
+
 rfs_design: designs_serviceEnquiry
 resource_attachment_attribute_id: attributes_filesAttachableAttachments
 created_datetime_attribute_id: attributes_defectsReportedDate
