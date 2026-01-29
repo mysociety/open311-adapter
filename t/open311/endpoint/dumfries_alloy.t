@@ -1732,4 +1732,149 @@ subtest 'post_service_request_update with parent-type inspection (no description
         'update created successfully even when template lacks description field';
 };
 
+# Tests for commit 56bc3177: [Dumfries] Fall back to sourcetype mapping if service_code attribute not set
+
+subtest 'service code fallback to sourcetype mapping' => sub {
+    # When service_code attribute is not set, fall back to sourcetype mapping
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    # Mock get_defect_category to return "Pothole"
+    my $dumfries = Test::MockModule->new('Open311::Endpoint::Integration::UK::Dumfries');
+    $dumfries->mock('get_defect_category', sub {
+        my ($self, $defect) = @_;
+        return 'Pothole';
+    });
+
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+
+        if ($call eq 'item/defect_no_service_code') {
+            return {
+                item => {
+                    itemId => 'defect_no_service_code',
+                    designCode => 'designs_defects',
+                    attributes => [
+                        # No service_code attribute
+                        { attributeCode => 'attributes_defectsSourceType', value => 'some_sourcetype' },
+                    ],
+                }
+            };
+        }
+    });
+
+    my $defect = {
+        itemId => 'defect_no_service_code',
+        designCode => 'designs_defects',
+        attributes => [
+            { attributeCode => 'attributes_defectsSourceType', value => 'some_sourcetype' },
+        ],
+    };
+
+    my $service_code = $endpoint->get_service_code_from_defect($defect);
+    # Should match "Pothole" under either "Roads" or "Pavements" category
+    # (hash ordering is not guaranteed, could be 123a123 or 456d456)
+    ok($service_code eq '123a123' || $service_code eq '456d456',
+       'Service code from sourcetype mapping fallback (Pothole)');
+};
+
+subtest 'service code fallback case insensitive' => sub {
+    # Test that case-insensitive matching works
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    my $dumfries = Test::MockModule->new('Open311::Endpoint::Integration::UK::Dumfries');
+    $dumfries->mock('get_defect_category', sub {
+        my ($self, $defect) = @_;
+        return 'POTHOLE';  # Uppercase
+    });
+
+    my $defect = {
+        itemId => 'defect_uppercase',
+        designCode => 'designs_defects',
+        attributes => [
+            { attributeCode => 'attributes_defectsSourceType', value => 'some_sourcetype' },
+        ],
+    };
+
+    my $service_code = $endpoint->get_service_code_from_defect($defect);
+    # Should still match despite case difference (could be either ID)
+    ok($service_code eq '123a123' || $service_code eq '456d456',
+       'Service code fallback is case-insensitive');
+};
+
+subtest 'service code fallback returns first match' => sub {
+    # When subcategory appears in multiple categories, return first match
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    my $dumfries = Test::MockModule->new('Open311::Endpoint::Integration::UK::Dumfries');
+    $dumfries->mock('get_defect_category', sub {
+        my ($self, $defect) = @_;
+        return 'Pothole';  # Appears in both Roads and Pavements
+    });
+
+    my $defect = {
+        itemId => 'defect_duplicate',
+        designCode => 'designs_defects',
+        attributes => [],
+    };
+
+    my $service_code = $endpoint->get_service_code_from_defect($defect);
+    # Should return one of the two IDs (123a123 or 456d456)
+    ok($service_code eq '123a123' || $service_code eq '456d456',
+       'Service code fallback returns a match from one of the duplicate subcategories');
+};
+
+# Tests for commit d978d3eb: [Alloy/Dumfries] Improve inspection handling and join processing
+
+subtest '_find_latest_inspection uses attributes_tasksRaisedTime' => sub {
+    # Test that attributes_tasksRaisedTime takes precedence over lastEditDate
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+
+        if ($call eq 'item/inspection_raised_early') {
+            return {
+                item => {
+                    itemId => 'inspection_raised_early',
+                    designCode => 'designs_hWYCustomerReport',
+                    lastEditDate => '2025-12-25T15:00:00.000Z',  # Later edit
+                    createdDate => '2025-12-20T10:00:00.000Z',
+                    attributes => [
+                        { attributeCode => 'attributes_tasksRaisedTime', value => '2025-12-20T10:00:00.000Z' }
+                    ],
+                }
+            };
+        } elsif ($call eq 'item/inspection_raised_late') {
+            return {
+                item => {
+                    itemId => 'inspection_raised_late',
+                    designCode => 'designs_hWYCustomerReport',
+                    lastEditDate => '2025-12-20T10:00:00.000Z',  # Earlier edit
+                    createdDate => '2025-12-19T10:00:00.000Z',
+                    attributes => [
+                        { attributeCode => 'attributes_tasksRaisedTime', value => '2025-12-26T10:00:00.000Z' }
+                    ],
+                }
+            };
+        } elsif ($call eq 'item/defect_with_raised_times/parents') {
+            return { results => [] };
+        }
+    });
+
+    my $defect = {
+        itemId => 'defect_with_raised_times',
+        attributes => [
+            {
+                attributeCode => 'attributes_defectsWithInspectionsDefectInspection',
+                value => ['inspection_raised_early', 'inspection_raised_late']
+            }
+        ]
+    };
+
+    my $inspection = $endpoint->_find_latest_inspection($defect);
+    is $inspection->{itemId}, 'inspection_raised_late',
+        'uses attributes_tasksRaisedTime for sorting (not lastEditDate)';
+};
+
 done_testing;
