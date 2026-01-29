@@ -1062,4 +1062,57 @@ subtest 'date range filtering' => sub {
 };
 
 
+# Tests for commit d978d3eb: [Alloy/Dumfries] Improve inspection handling and join processing
+
+subtest '_find_latest_inspection uses attributes_tasksRaisedTime' => sub {
+    # Test that attributes_tasksRaisedTime takes precedence over lastEditDate
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+
+        if ($call eq 'item/inspection_raised_early') {
+            return {
+                item => {
+                    itemId => 'inspection_raised_early',
+                    designCode => 'designs_hWYCustomerReport',
+                    lastEditDate => '2025-12-25T15:00:00.000Z',  # Later edit
+                    createdDate => '2025-12-20T10:00:00.000Z',
+                    attributes => [
+                        { attributeCode => 'attributes_tasksRaisedTime', value => '2025-12-20T10:00:00.000Z' }
+                    ],
+                }
+            };
+        } elsif ($call eq 'item/inspection_raised_late') {
+            return {
+                item => {
+                    itemId => 'inspection_raised_late',
+                    designCode => 'designs_hWYCustomerReport',
+                    lastEditDate => '2025-12-20T10:00:00.000Z',  # Earlier edit
+                    createdDate => '2025-12-19T10:00:00.000Z',
+                    attributes => [
+                        { attributeCode => 'attributes_tasksRaisedTime', value => '2025-12-26T10:00:00.000Z' }
+                    ],
+                }
+            };
+        } elsif ($call eq 'item/defect_with_raised_times/parents') {
+            return { results => [] };
+        }
+    });
+
+    my $defect = {
+        itemId => 'defect_with_raised_times',
+        attributes => [
+            {
+                attributeCode => 'attributes_defectsWithInspectionsDefectInspection',
+                value => ['inspection_raised_early', 'inspection_raised_late']
+            }
+        ]
+    };
+
+    my $inspection = $endpoint->_find_latest_inspection($defect);
+    is $inspection->{itemId}, 'inspection_raised_late',
+        'uses attributes_tasksRaisedTime for sorting (not lastEditDate)';
+};
+
 done_testing;

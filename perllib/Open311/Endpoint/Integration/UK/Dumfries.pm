@@ -3,7 +3,6 @@ package Open311::Endpoint::Integration::UK::Dumfries;
 use Moo;
 extends 'Open311::Endpoint::Integration::AlloyV2';
 with 'Role::Memcached';
-with 'Open311::Endpoint::Role::Photos';
 
 use Encode;
 use JSON::MaybeXS;
@@ -44,18 +43,6 @@ sub process_attributes {
         value => [ $args->{service_code_alloy} ],
     };
 
-    my $desc = sprintf(
-        "Category: %s/%s\nSummary: %s\nDescription: %s",
-        $args->{attributes}{group},
-        $args->{attributes}{category},
-        $args->{attributes}{title},
-        $args->{attributes}{description}
-    );
-    push @$attributes, {
-        attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{customer_description},
-        value => $desc,
-    };
-
     return $attributes;
 }
 
@@ -73,6 +60,48 @@ sub _get_service_code {
     my ($self, $group, $subcategory, $subcategory_config) = @_;
 
     return $subcategory_config->{id};
+}
+
+=head2 get_service_code_from_defect
+
+For Dumfries, extract the service code directly from the defect's reported issue attribute.
+If that's not set, fall back to using the sourcetype mapping from the config.
+
+=cut
+
+sub get_service_code_from_defect {
+    my ($self, $defect) = @_;
+
+    my $mapping = $self->config->{defect_attribute_mapping};
+
+    # Try to get service_code from attribute first
+    if ($mapping && $mapping->{service_code}) {
+        my $attributes = $self->alloy->attributes_to_hash($defect);
+        my $service_code = $attributes->{$mapping->{service_code}};
+        $service_code = $service_code->[0] if ref $service_code eq 'ARRAY';
+        return $service_code if $service_code;
+    }
+
+    # Fall back to using sourcetype category mapping
+    my $subcategory_name = $self->get_defect_category($defect);
+    $self->logger->debug("get_defect_category returned: '" . ($subcategory_name // 'undef') . "' for defect " . $defect->{itemId} . " (design: " . $defect->{designCode} . ")");
+    return unless $subcategory_name;
+
+    # Find the service_code for this subcategory name in the service_whitelist
+    # Since subcategories can appear under multiple parent categories,
+    # we'll return the first match
+    # Do case-insensitive comparison to handle naming variations
+    my $whitelist = $self->config->{service_whitelist};
+    for my $category (keys %$whitelist) {
+        my $subcategories = $whitelist->{$category};
+        for my $subcat_name (keys %$subcategories) {
+            if (lc($subcat_name) eq lc($subcategory_name)) {
+                return $subcategories->{$subcat_name}->{id};
+            }
+        }
+    }
+
+    return;
 }
 
 =head2 service
@@ -138,17 +167,23 @@ defect/update is skipped.
 
 =cut
 
+# Mapping is passed in here, but then ignored and looked up again - tidy up the ALloy 'external status code' code? TODO
 sub _get_inspection_status {
     my ($self, $defect, $mapping) = @_;
-    return $self->_status_from_mapping($defect);
+    return $self->inspection_status($defect);
+}
+
+sub _get_defect_status {
+    my ($self, $defect, $mapping) = @_;
+    return $self->inspection_status($defect);
 }
 
 sub defect_status {
     my ($self, $attribs, $report, $linked_defect) = @_;
-    return $self->_status_from_mapping($attribs, $report, $linked_defect);
+    return $self->inspection_status($attribs, $report, $linked_defect);
 }
 
-sub _status_from_mapping {
+sub inspection_status {
     my ($self, $defect, $report, $linked_defect) = @_;
 
     my $mapping = $self->config->{inspection_attribute_mapping};
@@ -206,23 +241,57 @@ sub _skip_job_update {
     return 1 if $status eq 'IGNORE';
 }
 
-=head2 _get_service_request_post_process
+=head2 get_service_request
 
-Override to add media_url support for jobs and inspections attached to the defect.
-Builds an attachment cache for the date range, collects inspection attachment IDs
-to exclude from job results (avoiding duplicates), then merges media URLs from
-both jobs and inspections.
+Override to add media_url support for jobs attached to the defect.
 
 =cut
 
-sub _get_service_request_post_process {
-    my ($self, $request_obj, $item, $args) = @_;
+sub get_service_request {
+    my ($self, $service_request_id, $args) = @_;
+
+    # Call parent implementation to get the basic service request
+    my $request_obj = $self->SUPER::get_service_request($service_request_id, $args);
+    return unless $request_obj;
+
+    # Fetch the defect item to get job media URLs
+    my $response = $self->alloy->api_call(call => "item/$service_request_id");
+    my $defect = $response->{item};
+    return $request_obj unless $defect;
 
     # Add media URLs from associated jobs
-    my $media_urls = $self->_get_job_media_urls($item, $args);
-    # Build a set of inspection attachment IDs so we can exclude them from job results
-    my $cache = $self->_build_attachment_cache($args);
-    my $attributes = $self->alloy->attributes_to_hash($item);
+    my $media_urls = $self->_get_job_media_urls($defect);
+    if (@$media_urls) {
+        $request_obj->{media_url} = $media_urls;
+    }
+
+    return $request_obj;
+}
+
+=head2 _get_job_media_urls
+
+For a given defect, fetch any associated jobs and return media URLs for their attachments.
+
+=cut
+
+sub _get_job_media_urls {
+    my ($self, $defect) = @_;
+
+    my @media_urls;
+    my $defect_id = $defect->{itemId};
+
+    # Get the job IDs from the defect's RaisedJobs attribute
+    my $attributes = $self->alloy->attributes_to_hash($defect);
+    my $job_ids = $attributes->{attributes_defectsRaisingJobsRaisedJobs};
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
+
+    unless ($job_ids) {
+        $self->logger->debug("Defect $defect_id ($title) has no raised jobs");
+        return \@media_urls;
+    }
+
+    # Get inspection attachments to exclude from job attachments
+    my %inspection_attachment_ids;
     my $inspection_ids = $attributes->{attributes_defectsWithInspectionsDefectInspection};
     if ($inspection_ids) {
         $inspection_ids = [ $inspection_ids ] unless ref $inspection_ids eq 'ARRAY';
@@ -238,8 +307,6 @@ sub _get_service_request_post_process {
             }
         }
         if (%inspection_attachment_ids) {
-            my $defect_id = $item->{itemId};
-            my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
             $self->logger->debug("Defect $defect_id ($title) has " . scalar(keys %inspection_attachment_ids) . " inspection attachment(s) to exclude");
         }
     }
@@ -250,80 +317,92 @@ sub _get_service_request_post_process {
 
     # For each job, fetch it and get any attachments
     for my $job_id (@$job_ids) {
-    my @all_media_urls;
-        unless ($inspection && $inspection->{item}) {
-            $self->logger->warn("Failed to fetch inspection $inspection_id for defect $defect_id ($title)");
+        my $job = $self->alloy->api_call(call => "item/$job_id");
+        unless ($job && $job->{item}) {
+            $self->logger->warn("Failed to fetch job $job_id for defect $defect_id ($title)");
             next;
         }
 
-        my $item_urls = $self->_media_urls_for_item($inspection, $cache, $args);
-        push @media_urls, @$item_urls;
-    }
-}
-    if (@all_media_urls) {
-        $request_obj->{media_url} = \@all_media_urls;
+        my $job_attributes = $self->alloy->attributes_to_hash($job->{item});
+        my $attachment_ids = $job_attributes->{attributes_filesAttachableAttachments};
+        unless ($attachment_ids) {
+            $self->logger->debug("Job $job_id has no attachments");
+            next;
+        }
 
-Override to add media_url support for jobs and inspections attached to the defect.
+        # Normalize to array
+        $attachment_ids = [ $attachment_ids ] unless ref $attachment_ids eq 'ARRAY';
+        $self->logger->debug("Job $job_id has " . scalar(@$attachment_ids) . " attachment(s)");
+
+        # Build media URLs for each attachment
+        my $api_url = $self->config->{api_url};
+        for my $attachment_id (@$attachment_ids) {
+            # Skip attachments that are also on the inspection
+            if ($inspection_attachment_ids{$attachment_id}) {
+                $self->logger->debug("Skipping attachment $attachment_id (already on inspection)");
+                next;
+            }
+
+            # Fetch the file item to check its filename
+            my $file = $self->alloy->api_call(call => "item/$attachment_id");
+            unless ($file && $file->{item}) {
+                $self->logger->warn("Failed to fetch file $attachment_id for job $job_id");
+                next;
+            }
+
+            my $file_attrs = $self->alloy->attributes_to_hash($file->{item});
+            my $filename = $file_attrs->{attributes_filesOriginalName} || '';
+            
+            # Skip files that match the pattern \d+\.\d\.full\.*
+            # These are auto-generated copies from FixMyStreet
+            if ($filename =~ /^\d+\.\d+\.full\./) {
+                $self->logger->debug("Skipping auto-generated file: $filename");
+                next;
+            }
+
+            # Build media URL using base_url and photo endpoint pattern
+            my $base_url = $self->config->{base_url};
+            unless ($base_url) {
+                $self->logger->warn("No base_url configured, skipping media_url for attachment $attachment_id");
+                next;
+            }
+            my $jurisdiction_id = $self->jurisdiction_id;
+            my $media_url = "${base_url}photos?jurisdiction_id=${jurisdiction_id}&item=${attachment_id}";
+            push @media_urls, $media_url;
+            $self->logger->debug("Added media_url: $media_url (filename: $filename)");
+        }
+    }
+
+    return \@media_urls;
+}
+
+=head2 _get_inspection_updates_design
+
+Override to add media_url support for jobs attached to the inspection/defect.
 
 =cut
 
 sub _get_inspection_updates_design {
     my ($self, $design, $args) = @_;
 
-            my $job_media_urls = $self->_get_linked_item_media_urls(
-                $report, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache
-            );
+    # Call parent to get the base updates
     my @updates = $self->SUPER::_get_inspection_updates_design($design, $args);
-
-    # Build attachment cache once for all updates
-    # This avoids making individual API calls for each attachment
-            my $inspection_media_urls = $self->_get_linked_item_media_urls(
-                $report, 'attributes_defectsWithInspectionsDefectInspection', $args, $cache
-            );
 
     # For each update, fetch the associated resource and add media URLs
     # Also handle special case for latest_inspection_time
     for my $update (@updates) {
         my $service_request_id = $update->service_request_id;
-
-        # Fetch the resource to get job and inspection media URLs
+        
+        # Fetch the resource to get job media URLs
         my $response = $self->alloy->api_call(call => "item/$service_request_id");
         my $report = $response->{item};
 
         if ($report) {
-            my @all_media_urls;
-
-            # Get media URLs from jobs (filtered by date range)
-            # Pass the cache to avoid individual API calls
-            my $job_media_urls = $self->_get_job_media_urls($report, $args, $cache);
-            push @all_media_urls, @$job_media_urls if @$job_media_urls;
-
-            # Get media URLs from inspections (filtered by date range)
-            # Pass the cache to avoid individual API calls
-            my $inspection_media_urls = $self->_get_inspection_media_urls($report, $args, $cache);
-            push @all_media_urls, @$inspection_media_urls if @$inspection_media_urls;
-
-            if (@all_media_urls) {
-                $update->{media_url} = \@all_media_urls;
-            }
-
-            # Handle special case for latest_inspection_time
-            # The join may return data from any inspection, not necessarily the latest
-            # So we always fetch the latest inspection ourselves to get the correct completion time
-            my $mapping = $self->config->{inspection_attribute_mapping};
-            if ($mapping && $mapping->{extra_attributes} && $mapping->{extra_attributes}{latest_inspection_time}) {
-                my $latest_inspection = $self->_find_latest_inspection($report);
-                if ($latest_inspection) {
-                    my $inspection_attrs = $self->alloy->attributes_to_hash($latest_inspection);
-                    my $completion_time = $inspection_attrs->{attributes_tasksCompletionTime};
-
-                    if ($completion_time) {
-                        $completion_time = $completion_time->[0] if ref $completion_time eq 'ARRAY';
-                        $update->{extras}{latest_inspection_time} = $completion_time;
-                    } else {
-                        $update->{extras}{latest_inspection_time} = 'NOT COMPLETE';
-                    }
-                }
+            my $media_urls = $self->_get_job_media_urls($report);
+            if (@$media_urls) {
+                # Note: media_url is read-only, so we need to recreate the update object
+                # with the media_url included
+                $update->{media_url} = $media_urls;
             }
 
             # Handle special case for latest_inspection_time
@@ -441,14 +520,10 @@ sub post_service_request_update {
     }
 
     # when raising new inspections we need to set them to the 'Issued' status.
-    my $status_map = $self->config->{inspection_status_update} || {};
-    my $default_status = $status_map->{default};
-    if ($default_status) {
-        push @new_attributes, {
-            attributeCode => 'attributes_tasksStatus',
-            value => [$default_status],
-        };
-    }
+    push @new_attributes, {
+        attributeCode => 'attributes_tasksStatus',
+        value => ['5bc5bdd281d088d177342c73'], # XXX move to config
+    };
 
     # Apply mappings from the incoming update to inspection attributes
     # Only apply if the template inspection has these attributes (schema compatibility)
@@ -470,14 +545,11 @@ sub post_service_request_update {
         }
     }
 
-    # Handle photo uploads - we need to attach them to both the new inspection AND the original defect
-    my $new_attachments;
     if ($self->config->{resource_attachment_attribute_id}
         && ($args->{media_url} || $args->{uploads})) {
         my $attachment_code = $self->config->{resource_attachment_attribute_id};
-        $new_attachments = $self->upload_media($args);
+        my $new_attachments = $self->upload_media($args);
         if ($new_attachments && @$new_attachments) {
-            # Add to new inspection attributes
             my ($existing) = grep { $_->{attributeCode} eq $attachment_code } @new_attributes;
             if ($existing) {
                 my $existing_value = $existing->{value};
@@ -507,11 +579,6 @@ sub post_service_request_update {
     # Add the new inspection ID to the defect's inspection list attribute
     $self->_link_inspection_to_defect($defect, $new_inspection_id);
 
-    # Also attach the uploaded photos to the original defect
-    if ($new_attachments && @$new_attachments) {
-        $self->_append_attachments_to_defect($defect, $new_attachments);
-    }
-
     # Return the update with the combined ID
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
         status => lc $args->{status},
@@ -521,39 +588,89 @@ sub post_service_request_update {
 
 =head2 _link_inspection_to_defect
 
-Updates the defect to add the new inspection ID to its inspection list attribute.
+Updates the defect to add the new inspection ID to its
+attributes_defectsWithInspectionsDefectInspection attribute.
 
 =cut
 
 sub _link_inspection_to_defect {
     my ($self, $defect, $new_inspection_id) = @_;
-    $self->_append_to_item_attribute(
-        $defect,
-        'attributes_defectsWithInspectionsDefectInspection',
-        [$new_inspection_id],
-    );
-}
-
-=head2 _append_attachments_to_defect
-
-Appends new attachment IDs to a defect's existing attachments.
-Delegates to _append_to_item_attribute with error logging.
-
-=cut
-
-sub _append_attachments_to_defect {
-    my ($self, $defect, $new_attachment_ids) = @_;
 
     my $defect_id = $defect->{itemId};
-    my $attachment_code = $self->config->{resource_attachment_attribute_id};
 
-    return unless $attachment_code && $new_attachment_ids && @$new_attachment_ids;
+    # Find the current inspection IDs on the defect
+    my $inspection_attr_code = 'attributes_defectsWithInspectionsDefectInspection';
+    my @current_inspection_ids;
 
+    for my $attr (@{$defect->{attributes}}) {
+        if ($attr->{attributeCode} eq $inspection_attr_code) {
+            @current_inspection_ids = ref $attr->{value} eq 'ARRAY'
+                ? @{$attr->{value}}
+                : ($attr->{value});
+            last;
+        }
+    }
+
+    # Add the new inspection ID to the list
+    push @current_inspection_ids, $new_inspection_id;
+
+    # For Alloy PUT, we only need to send the attributes we're changing
+    # plus the signature for optimistic locking
+    my $updated_defect = {
+        attributes => [
+            {
+                attributeCode => $inspection_attr_code,
+                value => \@current_inspection_ids,
+            }
+        ],
+        signature => $defect->{signature},
+    };
+
+    # Update the defect in Alloy
     try {
-        $self->_append_to_item_attribute($defect, $attachment_code, $new_attachment_ids);
-        $self->logger->info("Attached " . scalar(@$new_attachment_ids) . " photo(s) to defect $defect_id");
+        $self->alloy->api_call(
+            call => "item/$defect_id",
+            method => 'PUT',
+            body => $updated_defect
+        );
     } catch {
-        $self->logger->error("Failed to attach photos to defect $defect_id: $_");
+        # If we get a signature mismatch, refetch and retry
+        if ( $_ =~ /ItemSignatureMismatch/ ) {
+            my $fresh_defect = $self->alloy->api_call(call => "item/$defect_id")->{item};
+
+            # Get the fresh inspection list and add our new inspection
+            my @fresh_inspection_ids;
+            for my $attr (@{$fresh_defect->{attributes}}) {
+                if ($attr->{attributeCode} eq $inspection_attr_code) {
+                    @fresh_inspection_ids = ref $attr->{value} eq 'ARRAY'
+                        ? @{$attr->{value}}
+                        : ($attr->{value});
+                    last;
+                }
+            }
+            push @fresh_inspection_ids, $new_inspection_id;
+
+            # Retry with fresh signature and updated inspection list
+            try {
+                $self->alloy->api_call(
+                    call => "item/$defect_id",
+                    method => 'PUT',
+                    body => {
+                        attributes => [
+                            {
+                                attributeCode => $inspection_attr_code,
+                                value => \@fresh_inspection_ids,
+                            }
+                        ],
+                        signature => $fresh_defect->{signature},
+                    }
+                );
+            } catch {
+                die "Failed to link inspection $new_inspection_id to defect $defect_id: $_";
+            }
+        } else {
+            die "Failed to link inspection $new_inspection_id to defect $defect_id: $_";
+        }
     };
 }
 
@@ -618,7 +735,7 @@ sub get_photo {
     my $item_id = $args->{item};
     unless ($item_id) {
         $self->logger->error("get_photo called without item parameter");
-        return [ 400, [ 'Content-Type', 'text/plain' ], [ 'Missing item parameter' ] ];
+        return [ 400, [ 'Content-type', 'text/plain' ], [ 'Missing item parameter' ] ];
     }
 
     # Fetch the file from Alloy
@@ -645,66 +762,38 @@ sub get_photo {
 
     # Now fetch the actual file content
     try {
-        $content = $self->alloy->api_call(
+        $content = $self->alloy->api_call_raw(
             call => "file/$item_id",
-            raw => 1,
         );
     } catch {
         $self->logger->error("Failed to fetch photo $item_id: $_");
-        return [ 404, [ 'Content-Type', 'text/plain' ], [ 'Photo not found' ] ];
+        return [ 404, [ 'Content-type', 'text/plain' ], [ 'Photo not found' ] ];
     };
 
-    return [ 404, [ 'Content-Type', 'text/plain' ], [ 'Photo not found' ] ] unless $content;
-    return [ 200, [ 'Content-Type', $content_type ], [ $content ] ];
+    return [ 404, [ 'Content-type', 'text/plain' ], [ 'Photo not found' ] ] unless $content;
+    return [ 200, [ 'Content-type', $content_type ], [ $content ] ];
 }
 
-=head2 _post_creation_processing
+sub _attach_files_to_service_request {
+    my ($self, $item_id, $files) = @_;
 
-After a defect is created, we need to wait for Alloy's workflow to create an
-inspection, then:
-- Attach any uploaded files to the inspection
-- Update the inspection status to "Issued" for service codes where the workflow
-  doesn't do this automatically
+    $self->SUPER::_attach_files_to_service_request($item_id, $files);
 
-=cut
 
-sub _post_creation_processing {
-    my ($self, $item_id, $files, $args) = @_;
-
-    my $service_code = $args->{service_code_alloy} || '';
-    my $status_map = $self->config->{inspection_status_update} || {};
-    my $status_id = $status_map->{$service_code};
-
-    return unless @$files || $status_id;
-
-    # Wait for inspection (up to 3 minutes) - Alloy workflow creates it asynchronously
+    # now we need to find the inspection for this defect (waiting up to 60
+    # seconds for it) and then attach these files to that too.
     my $inspection_ref;
     my $defect;
-    for (1..18) {
-        # Sleep at the start of the loop because the Alloy workflow
-        # needs a few seconds to create the inspection.
-        sleep 10 unless $ENV{TEST_MODE};
+    for (1..6) {
+        sleep 10; # might as well sleep now rather than at end of loop as workflow will definitely not have created inspection yet.
         $defect = $self->alloy->api_call(call => "item/$item_id")->{item};
         $inspection_ref = $self->_find_latest_inspection($defect);
         last if $inspection_ref;
     }
-    my $attributes = $self->alloy->attributes_to_hash($defect);
-    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
-
-    unless ($inspection_ref) {
-        $self->logger->warn("No inspection found for defect $item_id ($title) during POST Service Request");
-        return;
-    }
-
-    if (@$files) {
-        $self->_attach_files_to_service_request($inspection_ref->{itemId}, $files);
-    }
-
-    if ($status_id) {
-        $self->_update_item($inspection_ref->{itemId}, [{
-            attributeCode => 'attributes_tasksStatus',
-            value => [$status_id],
-        }]);
+    if ($inspection_ref) {
+        $self->SUPER::_attach_files_to_service_request($inspection_ref->{itemId}, $files);
+    } else {
+        $self->logger->warn("No inspection found for defect $item_id during POST Service Request");
     }
 }
 
