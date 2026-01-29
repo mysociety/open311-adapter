@@ -28,7 +28,7 @@ around dispatch_request => sub {
 sub get_photo {
     my ($self, $args) = @_;
     $self->_call('get_photo', $args->{jurisdiction_id}, $args)
-        or [ 400, [ 'Content-type', 'text/plain' ], [ 'Bad request' ] ];
+        or [ 400, [ 'Content-Type', 'text/plain' ], [ 'Bad request' ] ];
 }
 
 
