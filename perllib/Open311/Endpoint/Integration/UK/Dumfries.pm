@@ -65,6 +65,7 @@ sub _get_service_code {
 =head2 get_service_code_from_defect
 
 For Dumfries, extract the service code directly from the defect's reported issue attribute.
+If that's not set, fall back to using the sourcetype mapping from the config.
 
 =cut
 
@@ -72,14 +73,35 @@ sub get_service_code_from_defect {
     my ($self, $defect) = @_;
 
     my $mapping = $self->config->{defect_attribute_mapping};
-    return unless $mapping && $mapping->{service_code};
 
-    my $attributes = $self->alloy->attributes_to_hash($defect);
-    my $service_code = $attributes->{$mapping->{service_code}};
-    
-    $service_code = $service_code->[0] if ref $service_code eq 'ARRAY';
-    
-    return $service_code;
+    # Try to get service_code from attribute first
+    if ($mapping && $mapping->{service_code}) {
+        my $attributes = $self->alloy->attributes_to_hash($defect);
+        my $service_code = $attributes->{$mapping->{service_code}};
+        $service_code = $service_code->[0] if ref $service_code eq 'ARRAY';
+        return $service_code if $service_code;
+    }
+
+    # Fall back to using sourcetype category mapping
+    my $subcategory_name = $self->get_defect_category($defect);
+    $self->logger->debug("get_defect_category returned: '" . ($subcategory_name // 'undef') . "' for defect " . $defect->{itemId} . " (design: " . $defect->{designCode} . ")");
+    return unless $subcategory_name;
+
+    # Find the service_code for this subcategory name in the service_whitelist
+    # Since subcategories can appear under multiple parent categories,
+    # we'll return the first match
+    # Do case-insensitive comparison to handle naming variations
+    my $whitelist = $self->config->{service_whitelist};
+    for my $category (keys %$whitelist) {
+        my $subcategories = $whitelist->{$category};
+        for my $subcat_name (keys %$subcategories) {
+            if (lc($subcat_name) eq lc($subcategory_name)) {
+                return $subcategories->{$subcat_name}->{id};
+            }
+        }
+    }
+
+    return;
 }
 
 =head2 service
