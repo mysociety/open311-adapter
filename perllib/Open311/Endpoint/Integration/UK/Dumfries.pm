@@ -813,7 +813,7 @@ sub get_photo {
     my $item_id = $args->{item};
     unless ($item_id) {
         $self->logger->error("get_photo called without item parameter");
-        return [ 400, [ 'Content-type', 'text/plain' ], [ 'Missing item parameter' ] ];
+        return [ 400, [ 'Content-Type', 'text/plain' ], [ 'Missing item parameter' ] ];
     }
 
     # Fetch the file from Alloy
@@ -845,11 +845,11 @@ sub get_photo {
         );
     } catch {
         $self->logger->error("Failed to fetch photo $item_id: $_");
-        return [ 404, [ 'Content-type', 'text/plain' ], [ 'Photo not found' ] ];
+        return [ 404, [ 'Content-Type', 'text/plain' ], [ 'Photo not found' ] ];
     };
 
-    return [ 404, [ 'Content-type', 'text/plain' ], [ 'Photo not found' ] ] unless $content;
-    return [ 200, [ 'Content-type', $content_type ], [ $content ] ];
+    return [ 404, [ 'Content-Type', 'text/plain' ], [ 'Photo not found' ] ] unless $content;
+    return [ 200, [ 'Content-Type', $content_type ], [ $content ] ];
 }
 
 sub _attach_files_to_service_request {
