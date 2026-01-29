@@ -256,12 +256,20 @@ sub search {
                     # if it is referring to a request, category, group, etc.
                     # joinAttributes contains full code 'path' so we use this
                     # instead.
-                    my $attr = @{ $jq->{item}{attributes} }[0];
-                    my $attr_code = $jq->{joinAttributes}[0];
-                    $attr->{attributeCode} = $attr_code;
-
-                    # Append to top-level attribute list
-                    push @{ $id_to_res{$item_id}{attributes} }, $attr;
+                    
+                    # Process all attributes from the joined item, not just the first
+                    for my $attr ( @{ $jq->{item}{attributes} } ) {
+                        # Find the matching joinAttribute path for this attribute
+                        my $attr_base_code = $attr->{attributeCode};
+                        my ($matching_join_path) = grep { /\.$attr_base_code$/ } @{ $jq->{joinAttributes} };
+                        
+                        if ($matching_join_path) {
+                            my $attr_copy = { %$attr };  # Make a copy to avoid modifying the original
+                            $attr_copy->{attributeCode} = $matching_join_path;
+                            # Append to top-level attribute list
+                            push @{ $id_to_res{$item_id}{attributes} }, $attr_copy;
+                        }
+                    }
 
                 }
 
