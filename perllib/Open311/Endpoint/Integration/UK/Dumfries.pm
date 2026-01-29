@@ -325,6 +325,25 @@ sub _get_inspection_updates_design {
                     }
                 }
             }
+
+            # Handle special case for latest_inspection_time
+            # The join may return data from any inspection, not necessarily the latest
+            # So we always fetch the latest inspection ourselves to get the correct completion time
+            my $mapping = $self->config->{inspection_attribute_mapping};
+            if ($mapping && $mapping->{extra_attributes} && $mapping->{extra_attributes}{latest_inspection_time}) {
+                my $latest_inspection = $self->_find_latest_inspection($report);
+                if ($latest_inspection) {
+                    my $inspection_attrs = $self->alloy->attributes_to_hash($latest_inspection);
+                    my $completion_time = $inspection_attrs->{attributes_tasksCompletionTime};
+
+                    if ($completion_time) {
+                        $completion_time = $completion_time->[0] if ref $completion_time eq 'ARRAY';
+                        $update->{extras}{latest_inspection_time} = $completion_time;
+                    } else {
+                        $update->{extras}{latest_inspection_time} = 'NOT COMPLETE';
+                    }
+                }
+            }
         }
     }
 
