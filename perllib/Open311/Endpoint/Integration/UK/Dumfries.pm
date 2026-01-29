@@ -65,6 +65,7 @@ sub _get_service_code {
 =head2 get_service_code_from_defect
 
 For Dumfries, extract the service code directly from the defect's reported issue attribute.
+If that's not set, fall back to using the sourcetype mapping from the config.
 
 =cut
 
@@ -72,14 +73,35 @@ sub get_service_code_from_defect {
     my ($self, $defect) = @_;
 
     my $mapping = $self->config->{defect_attribute_mapping};
-    return unless $mapping && $mapping->{service_code};
-
-    my $attributes = $self->alloy->attributes_to_hash($defect);
-    my $service_code = $attributes->{$mapping->{service_code}};
     
-    $service_code = $service_code->[0] if ref $service_code eq 'ARRAY';
+    # Try to get service_code from attribute first
+    if ($mapping && $mapping->{service_code}) {
+        my $attributes = $self->alloy->attributes_to_hash($defect);
+        my $service_code = $attributes->{$mapping->{service_code}};
+        $service_code = $service_code->[0] if ref $service_code eq 'ARRAY';
+        return $service_code if $service_code;
+    }
     
-    return $service_code;
+    # Fall back to using sourcetype category mapping
+    my $subcategory_name = $self->get_defect_category($defect);
+    $self->logger->debug("get_defect_category returned: '" . ($subcategory_name // 'undef') . "' for defect " . $defect->{itemId} . " (design: " . $defect->{designCode} . ")");
+    return unless $subcategory_name;
+    
+    # Find the service_code for this subcategory name in the service_whitelist
+    # Since subcategories can appear under multiple parent categories,
+    # we'll return the first match
+    # Do case-insensitive comparison to handle naming variations
+    my $whitelist = $self->config->{service_whitelist};
+    for my $category (keys %$whitelist) {
+        my $subcategories = $whitelist->{$category};
+        for my $subcat_name (keys %$subcategories) {
+            if (lc($subcat_name) eq lc($subcategory_name)) {
+                return $subcategories->{$subcat_name}->{id};
+            }
+        }
+    }
+    
+    return;
 }
 
 =head2 service
@@ -436,6 +458,7 @@ sub _get_inspection_updates_design {
     my @updates = $self->SUPER::_get_inspection_updates_design($design, $args);
 
     # For each update, fetch the associated resource and add media URLs
+    # Also handle special case for latest_inspection_time
     for my $update (@updates) {
         my $service_request_id = $update->service_request_id;
         
@@ -449,6 +472,25 @@ sub _get_inspection_updates_design {
                 # Note: media_url is read-only, so we need to recreate the update object
                 # with the media_url included
                 $update->{media_url} = $media_urls;
+            }
+
+            # Handle special case for latest_inspection_time
+            # The join may return data from any inspection, not necessarily the latest
+            # So we always fetch the latest inspection ourselves to get the correct completion time
+            my $mapping = $self->config->{inspection_attribute_mapping};
+            if ($mapping && $mapping->{extra_attributes} && $mapping->{extra_attributes}{latest_inspection_time}) {
+                my $latest_inspection = $self->_find_latest_inspection($report);
+                if ($latest_inspection) {
+                    my $inspection_attrs = $self->alloy->attributes_to_hash($latest_inspection);
+                    my $completion_time = $inspection_attrs->{attributes_tasksCompletionTime};
+                    
+                    if ($completion_time) {
+                        $completion_time = $completion_time->[0] if ref $completion_time eq 'ARRAY';
+                        $update->{extras}{latest_inspection_time} = $completion_time;
+                    } else {
+                        $update->{extras}{latest_inspection_time} = 'NOT COMPLETE';
+                    }
+                }
             }
         }
     }
@@ -747,11 +789,16 @@ sub _find_latest_inspection {
 
     return unless @inspections;
 
-    # Sort by lastEditDate to get the most recent, with fallback to createdDate
+    # Sort by attributes_tasksRaisedTime to get the most recent inspection
+    # Fall back to lastEditDate, then createdDate, then itemId
     my @sorted = sort {
-        my $date_a = $a->{lastEditDate} || $a->{createdDate} || '';
-        my $date_b = $b->{lastEditDate} || $b->{createdDate} || '';
-        $date_b cmp $date_a;
+        my $attrs_a = $self->alloy->attributes_to_hash($a);
+        my $attrs_b = $self->alloy->attributes_to_hash($b);
+        
+        my $time_a = $attrs_a->{attributes_tasksRaisedTime} || $a->{lastEditDate} || $a->{createdDate} || $a->{itemId};
+        my $time_b = $attrs_b->{attributes_tasksRaisedTime} || $b->{lastEditDate} || $b->{createdDate} || $b->{itemId};
+        
+        $time_b cmp $time_a;
     } @inspections;
 
     return $sorted[0];
@@ -769,7 +816,7 @@ sub get_photo {
     my $item_id = $args->{item};
     unless ($item_id) {
         $self->logger->error("get_photo called without item parameter");
-        return [ 400, [ 'Content-type', 'text/plain' ], [ 'Missing item parameter' ] ];
+        return [ 400, [ 'Content-Type', 'text/plain' ], [ 'Missing item parameter' ] ];
     }
 
     # Fetch the file from Alloy
@@ -801,11 +848,11 @@ sub get_photo {
         );
     } catch {
         $self->logger->error("Failed to fetch photo $item_id: $_");
-        return [ 404, [ 'Content-type', 'text/plain' ], [ 'Photo not found' ] ];
+        return [ 404, [ 'Content-Type', 'text/plain' ], [ 'Photo not found' ] ];
     };
 
-    return [ 404, [ 'Content-type', 'text/plain' ], [ 'Photo not found' ] ] unless $content;
-    return [ 200, [ 'Content-type', $content_type ], [ $content ] ];
+    return [ 404, [ 'Content-Type', 'text/plain' ], [ 'Photo not found' ] ] unless $content;
+    return [ 200, [ 'Content-Type', $content_type ], [ $content ] ];
 }
 
 sub _attach_files_to_service_request {
