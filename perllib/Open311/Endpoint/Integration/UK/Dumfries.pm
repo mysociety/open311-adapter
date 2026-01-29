@@ -3,6 +3,7 @@ package Open311::Endpoint::Integration::UK::Dumfries;
 use Moo;
 extends 'Open311::Endpoint::Integration::AlloyV2';
 with 'Role::Memcached';
+with 'Open311::Endpoint::Role::Photos';
 
 use Encode;
 use JSON::MaybeXS;
@@ -327,7 +328,7 @@ sub get_service_request {
     return $request_obj unless $defect;
 
     # Add media URLs from associated jobs
-    my $media_urls = $self->_get_job_media_urls($defect);
+    my $media_urls = $self->_get_job_media_urls($defect, $args);
     if (@$media_urls) {
         $request_obj->{media_url} = $media_urls;
     }
@@ -335,14 +336,182 @@ sub get_service_request {
     return $request_obj;
 }
 
+=head2 _build_attachment_cache
+
+Build a cache of all valid file attachments created within the given date range.
+Uses AQS to query for files efficiently, filtering by:
+- Creation date within start_date to end_date
+- Filename NOT matching FMS pattern
+
+Returns a hashref: { attachment_id => { itemId, filename, createdDate } }
+
+=cut
+
+sub _build_attachment_cache {
+    my ($self, $args) = @_;
+
+    return {} unless $args && $args->{start_date} && $args->{end_date};
+
+    my $start_date = $args->{start_date};
+    my $end_date = $args->{end_date};
+
+    $self->logger->debug("Building attachment cache for date range: $start_date to $end_date");
+
+    # Build AQS query to find all files with lastEditDate in the range
+    my $body = {
+        properties => {
+            dodiCode => "designs_files",
+            collectionCode => ["Live", "Archive"],
+            attributes => ["attributes_filesOriginalName"],
+        },
+        children => [{
+            type => "And",
+            children => [
+                {
+                    type => "GreaterThan",
+                    children => [{
+                        type => "ItemProperty",
+                        properties => { itemPropertyName => "lastEditDate" }
+                    }, {
+                        type => "DateTime",
+                        properties => { value => [$start_date] }
+                    }]
+                },
+                {
+                    type => "LessThan",
+                    children => [{
+                        type => "ItemProperty",
+                        properties => { itemPropertyName => "lastEditDate" }
+                    }, {
+                        type => "DateTime",
+                        properties => { value => [$end_date] }
+                    }]
+                }
+            ]
+        }]
+    };
+
+    my $files = $self->alloy->search($body);
+
+    my %cache;
+    for my $file (@$files) {
+        my $attrs = $self->alloy->attributes_to_hash($file);
+        my $filename = $attrs->{attributes_filesOriginalName} || '';
+
+        # Skip FMS photos
+        next if $filename =~ /^\d+\.\d+\.full\./;
+
+        $cache{$file->{itemId}} = {
+            itemId => $file->{itemId},
+            filename => $filename,
+            createdDate => $file->{createdDate},
+        };
+    }
+
+    my $count = scalar(keys %cache);
+    $self->logger->debug("Attachment cache built: $count file(s) found in date range");
+
+    return \%cache;
+}
+
+=head2 _process_attachment
+
+Process a single attachment and return its media URL if it passes all filters.
+Returns undef if the attachment should be skipped.
+
+Filters applied:
+- Excludes FMS files (pattern \d+\.\d+\.full\.)
+- Excludes photos outside the date range (if args provided)
+
+If a cache is provided (from _build_attachment_cache), uses it to avoid individual API calls.
+
+=cut
+
+sub _process_attachment {
+    my ($self, $attachment_id, $args, $context, $cache) = @_;
+
+    my $filename;
+
+    if ($cache) {
+        my $cached = $cache->{$attachment_id};
+        if ($cached) {
+            # it already passed all filters so we can use it
+            $filename = $cached->{filename};
+            $self->logger->debug("Using cached file data for $attachment_id: $filename");
+        } else {
+            $self->logger->debug("Attachment $attachment_id not in cache, skipping");
+            return;
+        }
+    } else {
+        # XXX is this still needed?
+        # No cache provided - fall back to individual API calls
+        # Fetch the file item to check its filename
+        my $file = $self->alloy->api_call(call => "item/$attachment_id");
+        unless ($file && $file->{item}) {
+            $self->logger->warn("Failed to fetch file $attachment_id for $context");
+            return;
+        }
+
+        my $file_attrs = $self->alloy->attributes_to_hash($file->{item});
+        $filename = $file_attrs->{attributes_filesOriginalName} || '';
+
+        # These are FMS photos
+        if ($filename =~ /^\d+\.\d+\.full\./) {
+            $self->logger->debug("Skipping FMS file: $filename");
+            return;
+        }
+
+        # Check if photo was created within the date range
+        # Use item-log to get the actual creation date from Alloy
+        if ($args && $args->{start_date} && $args->{end_date}) {
+            my $photo_log = $self->alloy->api_call(call => "item-log/item/$attachment_id");
+            my ($create_action) = grep { $_->{action} eq 'Create' } @{$photo_log->{results}};
+
+            if ($create_action && $create_action->{date}) {
+                my $created = $create_action->{date};
+                my $created_dt = $self->date_to_dt($created);
+                my $start_time = $self->date_to_dt($args->{start_date});
+                my $end_time = $self->date_to_dt($args->{end_date});
+
+                $self->logger->debug("Checking photo $attachment_id date filter: created=$created, range=$args->{start_date} to $args->{end_date}");
+
+                if ($created_dt < $start_time || $created_dt > $end_time) {
+                    $self->logger->debug("Skipping photo $attachment_id created at $created (outside range)");
+                    return;
+                } else {
+                    $self->logger->debug("Including photo $attachment_id created at $created (within range)");
+                }
+            } else {
+                $self->logger->debug("No creation date found for photo $attachment_id, including it");
+            }
+        }
+    }
+
+    # Build media URL using base_url and photo endpoint pattern
+    my $base_url = $self->config->{base_url};
+    unless ($base_url) {
+        $self->logger->warn("No base_url configured, skipping media_url for attachment $attachment_id");
+        return;
+    }
+
+    my $jurisdiction_id = $self->jurisdiction_id;
+    my $media_url = "${base_url}photos?jurisdiction_id=${jurisdiction_id}&item=${attachment_id}";
+    $self->logger->debug("Added media_url for $context: $media_url (filename: $filename)");
+
+    return $media_url;
+}
+
 =head2 _get_job_media_urls
 
 For a given defect, fetch any associated jobs and return media URLs for their attachments.
+Only includes photos created within the specified start_date and end_date range.
+
+Accepts an optional cache parameter to avoid individual API calls per attachment.
 
 =cut
 
 sub _get_job_media_urls {
-    my ($self, $defect) = @_;
+    my ($self, $defect, $args, $cache) = @_;
 
     my @media_urls;
     my $defect_id = $defect->{itemId};
@@ -400,8 +569,7 @@ sub _get_job_media_urls {
         $attachment_ids = [ $attachment_ids ] unless ref $attachment_ids eq 'ARRAY';
         $self->logger->debug("Job $job_id has " . scalar(@$attachment_ids) . " attachment(s)");
 
-        # Build media URLs for each attachment
-        my $api_url = $self->config->{api_url};
+        # Process each attachment
         for my $attachment_id (@$attachment_ids) {
             # Skip attachments that are also on the inspection
             if ($inspection_attachment_ids{$attachment_id}) {
@@ -409,33 +577,66 @@ sub _get_job_media_urls {
                 next;
             }
 
-            # Fetch the file item to check its filename
-            my $file = $self->alloy->api_call(call => "item/$attachment_id");
-            unless ($file && $file->{item}) {
-                $self->logger->warn("Failed to fetch file $attachment_id for job $job_id");
-                next;
-            }
+            my $media_url = $self->_process_attachment($attachment_id, $args, "job $job_id", $cache);
+            push @media_urls, $media_url if $media_url;
+        }
+    }
 
-            my $file_attrs = $self->alloy->attributes_to_hash($file->{item});
-            my $filename = $file_attrs->{attributes_filesOriginalName} || '';
-            
-            # Skip files that match the pattern \d+\.\d\.full\.*
-            # These are auto-generated copies from FixMyStreet
-            if ($filename =~ /^\d+\.\d+\.full\./) {
-                $self->logger->debug("Skipping auto-generated file: $filename");
-                next;
-            }
+    return \@media_urls;
+}
 
-            # Build media URL using base_url and photo endpoint pattern
-            my $base_url = $self->config->{base_url};
-            unless ($base_url) {
-                $self->logger->warn("No base_url configured, skipping media_url for attachment $attachment_id");
-                next;
-            }
-            my $jurisdiction_id = $self->jurisdiction_id;
-            my $media_url = "${base_url}photos?jurisdiction_id=${jurisdiction_id}&item=${attachment_id}";
-            push @media_urls, $media_url;
-            $self->logger->debug("Added media_url: $media_url (filename: $filename)");
+=head2 _get_inspection_media_urls
+
+For a given defect, fetch any associated inspections and return media URLs for their attachments.
+Excludes photos that originated from FMS.
+Only includes photos created within the specified start_date and end_date range.
+
+Accepts an optional cache parameter to avoid individual API calls per attachment.
+
+=cut
+
+sub _get_inspection_media_urls {
+    my ($self, $defect, $args, $cache) = @_;
+
+    my @media_urls;
+    my $defect_id = $defect->{itemId};
+
+    # Get the inspection IDs from the defect's attributes
+    my $attributes = $self->alloy->attributes_to_hash($defect);
+    my $inspection_ids = $attributes->{attributes_defectsWithInspectionsDefectInspection};
+
+    unless ($inspection_ids) {
+        $self->logger->debug("Defect $defect_id has no inspections");
+        return \@media_urls;
+    }
+
+    # Normalize to array
+    $inspection_ids = [ $inspection_ids ] unless ref $inspection_ids eq 'ARRAY';
+    $self->logger->debug("Defect $defect_id has " . scalar(@$inspection_ids) . " inspection(s)");
+
+    # For each inspection, fetch it and get any attachments
+    for my $inspection_id (@$inspection_ids) {
+        my $inspection = $self->alloy->api_call(call => "item/$inspection_id");
+        unless ($inspection && $inspection->{item}) {
+            $self->logger->warn("Failed to fetch inspection $inspection_id for defect $defect_id");
+            next;
+        }
+
+        my $inspection_attributes = $self->alloy->attributes_to_hash($inspection->{item});
+        my $attachment_ids = $inspection_attributes->{attributes_filesAttachableAttachments};
+        unless ($attachment_ids) {
+            $self->logger->debug("Inspection $inspection_id has no attachments");
+            next;
+        }
+
+        # Normalize to array
+        $attachment_ids = [ $attachment_ids ] unless ref $attachment_ids eq 'ARRAY';
+        $self->logger->debug("Inspection $inspection_id has " . scalar(@$attachment_ids) . " attachment(s)");
+
+        # Process each attachment
+        for my $attachment_id (@$attachment_ids) {
+            my $media_url = $self->_process_attachment($attachment_id, $args, "inspection $inspection_id", $cache);
+            push @media_urls, $media_url if $media_url;
         }
     }
 
@@ -444,7 +645,7 @@ sub _get_job_media_urls {
 
 =head2 _get_inspection_updates_design
 
-Override to add media_url support for jobs attached to the inspection/defect.
+Override to add media_url support for jobs and inspections attached to the defect.
 
 =cut
 
@@ -454,21 +655,34 @@ sub _get_inspection_updates_design {
     # Call parent to get the base updates
     my @updates = $self->SUPER::_get_inspection_updates_design($design, $args);
 
+    # Build attachment cache once for all updates
+    # This avoids making individual API calls for each attachment
+    my $cache = $self->_build_attachment_cache($args);
+
     # For each update, fetch the associated resource and add media URLs
     # Also handle special case for latest_inspection_time
     for my $update (@updates) {
         my $service_request_id = $update->service_request_id;
-        
-        # Fetch the resource to get job media URLs
+
+        # Fetch the resource to get job and inspection media URLs
         my $response = $self->alloy->api_call(call => "item/$service_request_id");
         my $report = $response->{item};
 
         if ($report) {
-            my $media_urls = $self->_get_job_media_urls($report);
-            if (@$media_urls) {
-                # Note: media_url is read-only, so we need to recreate the update object
-                # with the media_url included
-                $update->{media_url} = $media_urls;
+            my @all_media_urls;
+
+            # Get media URLs from jobs (filtered by date range)
+            # Pass the cache to avoid individual API calls
+            my $job_media_urls = $self->_get_job_media_urls($report, $args, $cache);
+            push @all_media_urls, @$job_media_urls if @$job_media_urls;
+
+            # Get media URLs from inspections (filtered by date range)
+            # Pass the cache to avoid individual API calls
+            my $inspection_media_urls = $self->_get_inspection_media_urls($report, $args, $cache);
+            push @all_media_urls, @$inspection_media_urls if @$inspection_media_urls;
+
+            if (@all_media_urls) {
+                $update->{media_url} = \@all_media_urls;
             }
 
             # Handle special case for latest_inspection_time
