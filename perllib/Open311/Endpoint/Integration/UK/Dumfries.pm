@@ -433,6 +433,7 @@ sub _get_inspection_updates_design {
     my @updates = $self->SUPER::_get_inspection_updates_design($design, $args);
 
     # For each update, fetch the associated resource and add media URLs
+    # Also handle special case for latest_inspection_time
     for my $update (@updates) {
         my $service_request_id = $update->service_request_id;
         
@@ -446,6 +447,25 @@ sub _get_inspection_updates_design {
                 # Note: media_url is read-only, so we need to recreate the update object
                 # with the media_url included
                 $update->{media_url} = $media_urls;
+            }
+
+            # Handle special case for latest_inspection_time
+            # The join may return data from any inspection, not necessarily the latest
+            # So we always fetch the latest inspection ourselves to get the correct completion time
+            my $mapping = $self->config->{inspection_attribute_mapping};
+            if ($mapping && $mapping->{extra_attributes} && $mapping->{extra_attributes}{latest_inspection_time}) {
+                my $latest_inspection = $self->_find_latest_inspection($report);
+                if ($latest_inspection) {
+                    my $inspection_attrs = $self->alloy->attributes_to_hash($latest_inspection);
+                    my $completion_time = $inspection_attrs->{attributes_tasksCompletionTime};
+
+                    if ($completion_time) {
+                        $completion_time = $completion_time->[0] if ref $completion_time eq 'ARRAY';
+                        $update->{extras}{latest_inspection_time} = $completion_time;
+                    } else {
+                        $update->{extras}{latest_inspection_time} = 'NOT COMPLETE';
+                    }
+                }
             }
         }
     }
@@ -744,11 +764,16 @@ sub _find_latest_inspection {
 
     return unless @inspections;
 
-    # Sort by lastEditDate to get the most recent, with fallback to createdDate
+    # Sort by attributes_tasksRaisedTime to get the most recent inspection
+    # Fall back to lastEditDate, then createdDate, then itemId
     my @sorted = sort {
-        my $date_a = $a->{lastEditDate} || $a->{createdDate} || '';
-        my $date_b = $b->{lastEditDate} || $b->{createdDate} || '';
-        $date_b cmp $date_a;
+        my $attrs_a = $self->alloy->attributes_to_hash($a);
+        my $attrs_b = $self->alloy->attributes_to_hash($b);
+
+        my $time_a = $attrs_a->{attributes_tasksRaisedTime} || $a->{lastEditDate} || $a->{createdDate} || $a->{itemId};
+        my $time_b = $attrs_b->{attributes_tasksRaisedTime} || $b->{lastEditDate} || $b->{createdDate} || $b->{itemId};
+
+        $time_b cmp $time_a;
     } @inspections;
 
     return $sorted[0];
