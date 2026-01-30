@@ -1066,26 +1066,51 @@ sub get_photo {
     return [ 200, [ 'Content-Type', $content_type ], [ $content ] ];
 }
 
-sub _attach_files_to_service_request {
-    my ($self, $item_id, $files) = @_;
+=head2 _post_creation_processing
 
-    $self->SUPER::_attach_files_to_service_request($item_id, $files);
+After a defect is created, we need to wait for Alloy's workflow to create an
+inspection, then:
+- Attach any uploaded files to the inspection
+- Update the inspection status to "Issued" for service codes where the workflow
+  doesn't do this automatically
 
+=cut
 
-    # now we need to find the inspection for this defect (waiting up to 60
-    # seconds for it) and then attach these files to that too.
+sub _post_creation_processing {
+    my ($self, $item_id, $files, $args) = @_;
+
+    my $service_code = $args->{service_code_alloy} || '';
+    my $status_map = $self->config->{inspection_status_update} || {};
+    my $status_id = $status_map->{$service_code};
+
+    return unless @$files || $status_id;
+
+    # Wait for inspection (up to 60 seconds) - Alloy workflow creates it asynchronously
     my $inspection_ref;
     my $defect;
     for (1..6) {
-        sleep 10; # might as well sleep now rather than at end of loop as workflow will definitely not have created inspection yet.
+        # Sleep at the start of the loop because the Alloy workflow
+        # needs a few seconds to create the inspection.
+        sleep 10 unless $ENV{TEST_MODE};
         $defect = $self->alloy->api_call(call => "item/$item_id")->{item};
         $inspection_ref = $self->_find_latest_inspection($defect);
         last if $inspection_ref;
     }
-    if ($inspection_ref) {
-        $self->SUPER::_attach_files_to_service_request($inspection_ref->{itemId}, $files);
-    } else {
+
+    unless ($inspection_ref) {
         $self->logger->warn("No inspection found for defect $item_id during POST Service Request");
+        return;
+    }
+
+    if (@$files) {
+        $self->_attach_files_to_service_request($inspection_ref->{itemId}, $files);
+    }
+
+    if ($status_id) {
+        $self->_update_item($inspection_ref->{itemId}, [{
+            attributeCode => 'attributes_tasksStatus',
+            value => [$status_id],
+        }]);
     }
 }
 
