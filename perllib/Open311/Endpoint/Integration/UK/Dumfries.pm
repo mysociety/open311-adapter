@@ -44,6 +44,18 @@ sub process_attributes {
         value => [ $args->{service_code_alloy} ],
     };
 
+    my $desc = sprintf(
+        "Category: %s/%s\nSummary: %s\nDescription: %s",
+        $args->{attributes}{group},
+        $args->{attributes}{category},
+        $args->{attributes}{title},
+        $args->{attributes}{description}
+    );
+    push @$attributes, {
+        attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{customer_description},
+        value => [ $desc ],
+    };
+
     return $attributes;
 }
 

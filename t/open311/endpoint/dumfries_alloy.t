@@ -163,7 +163,8 @@ subtest 'send new report to Alloy with contact and service_code' => sub {
         'attribute[description]' => 'There is a large pothole',
         'attribute[title]' => 'Pothole on High Street',
         'attribute[report_url]' => 'http://localhost/123',
-        'attribute[category]' => 'Roads_Pothole',
+        'attribute[group]' => 'Roads',
+        'attribute[category]' => 'Pothole',
         'attribute[fixmystreet_id]' => 123,
         'attribute[easting]' => 300000,
         'attribute[northing]' => 600000,
@@ -202,6 +203,15 @@ subtest 'send new report to Alloy with contact and service_code' => sub {
     ok $service_code_attr, 'service_code attribute present';
     is_deeply $service_code_attr->{value}, ['123a123'],
         'service_code attribute contains the Alloy ID';
+
+    # Find the customer_description attribute
+    my ($customer_desc_attr) = grep {
+        $_->{attributeCode} eq 'attributes_seCustomerDescription'
+    } @{$report_sent->{attributes}};
+
+    ok $customer_desc_attr, 'customer_description attribute present';
+    is_deeply $customer_desc_attr->{value}, ["Category: Roads/Pothole\nSummary: Pothole on High Street\nDescription: There is a large pothole"],
+        'customer_description attribute contains formatted category/summary/description';
 
     is_deeply decode_json($res->content),
         [ { service_request_id => 'report_456' } ],
