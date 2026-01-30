@@ -170,8 +170,10 @@
     "inspector_comments": "attributes_customerRequestInspectorsComments_638629fcfb3d97038c4e5d5a",
     "extra_details": "attributes_customerRequestFMSExtraDetails_646e07533726d8036a7a4022",
     "assigned_to_user": "attributes_customerRequestAssignedTo_653664b0557119eef53a97e1",
-    "category_title": "root.attributes_customerRequestRequestCategory_63862851fb3d97038c4e1cfc.attributes_itemsTitle",
-    "group_title": "root.attributes_customerRequestRequestGroup_638627f005cb250393c1705a.attributes_itemsTitle",
+    "extra_attributes": {
+      "category": "root.attributes_customerRequestRequestCategory_63862851fb3d97038c4e1cfc.attributes_itemsTitle",
+      "group": "root.attributes_customerRequestRequestGroup_638627f005cb250393c1705a.attributes_itemsTitle",
+    }
   },
 
   "assigned_to_user_mapping": {

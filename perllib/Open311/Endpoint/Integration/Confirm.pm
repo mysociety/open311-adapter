@@ -1801,8 +1801,8 @@ sub get_photo {
         ($content_type, $content) = $self->get_integration->get_photo_by_doc_url($args->{doc_url});
     }
 
-    return [ 404, [ 'Content-type', 'text/plain' ], [ 'Not found' ] ] unless $content;
-    return [ 200, [ 'Content-type', $content_type ], [ $content ] ];
+    return [ 404, [ 'Content-Type', 'text/plain' ], [ 'Not found' ] ] unless $content;
+    return [ 200, [ 'Content-Type', $content_type ], [ $content ] ];
 }
 
 sub _normalise_service_code {

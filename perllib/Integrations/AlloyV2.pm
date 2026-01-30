@@ -27,6 +27,32 @@ sub detect_type {
     return '';
 }
 
+sub api_call_raw {
+    my ($self, %args) = @_;
+    my $call = $args{call};
+
+    my $ua = LWP::UserAgent->new(
+        agent => "FixMyStreet/open311-adapter",
+        timeout => 5*60,
+    );
+    my $uri = URI->new( $self->config->{api_url} . $call );
+    $uri->query_form(%{ $args{params} }) if $args{params};
+
+    my $request = HTTP::Request->new('GET', $uri);
+    $request->header(Authorization => 'Bearer ' . $self->config->{api_key});
+    
+    $self->logger->debug($call);
+    my $response = $ua->request($request);
+    
+    if ($response->is_success) {
+        return $response->content;
+    } else {
+        $self->logger->error($call);
+        $self->logger->error($response->content);
+        die "Alloy API call failed: " . $response->status_line;
+    }
+}
+
 sub api_call {
     my ($self, %args) = @_;
     my $call = $args{call};
@@ -230,12 +256,20 @@ sub search {
                     # if it is referring to a request, category, group, etc.
                     # joinAttributes contains full code 'path' so we use this
                     # instead.
-                    my $attr = @{ $jq->{item}{attributes} }[0];
-                    my $attr_code = $jq->{joinAttributes}[0];
-                    $attr->{attributeCode} = $attr_code;
-
-                    # Append to top-level attribute list
-                    push @{ $id_to_res{$item_id}{attributes} }, $attr;
+                    
+                    # Process all attributes from the joined item, not just the first
+                    for my $attr ( @{ $jq->{item}{attributes} } ) {
+                        # Find the matching joinAttribute path for this attribute
+                        my $attr_base_code = $attr->{attributeCode};
+                        my ($matching_join_path) = grep { /\.$attr_base_code$/ } @{ $jq->{joinAttributes} };
+                        
+                        if ($matching_join_path) {
+                            my $attr_copy = { %$attr };  # Make a copy to avoid modifying the original
+                            $attr_copy->{attributeCode} = $matching_join_path;
+                            # Append to top-level attribute list
+                            push @{ $id_to_res{$item_id}{attributes} }, $attr_copy;
+                        }
+                    }
 
                 }
 

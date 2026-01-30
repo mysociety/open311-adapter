@@ -1,0 +1,61 @@
+{
+  "joinResults": [
+    {
+      "itemId": "63ee34826965f30390f01cda",
+      "joinQueries": [
+        {
+          "item": {
+            "attributes": [
+              {
+                "attributeCode": "attributes_itemsTitle",
+                "value": "Critical Risk"
+              }
+            ]
+          },
+          "joinAttributes": [
+            "root.attributes_serviceEnquiryHWYPriority_652e86d3737fc1d2c84c720b.attributes_itemsTitle"
+          ]
+        }
+      ]
+    },
+    {
+      "itemId": "63ee34826965f30390f01cdb",
+      "joinQueries": [
+        {
+          "item": {
+            "attributes": [
+              {
+                "attributeCode": "attributes_itemsTitle",
+                "value": "Low Risk"
+              }
+            ]
+          },
+          "joinAttributes": [
+            "root.attributes_serviceEnquiryHWYPriority_652e86d3737fc1d2c84c720b.attributes_itemsTitle"
+          ]
+        }
+      ]
+    }
+  ],
+  "page": 1,
+  "pageSize": 20,
+  "results": [
+    {
+      "itemId": "63ee34826965f30390f01cda",
+      "designCode": "designs_serviceEnquiry",
+      "attributes": [
+          { "attributeCode": "attributes_status", "value": ["1212aad"] },
+          { "attributeCode": "attributes_outcome", "value": ["1234ade"] },
+          { "attributeCode": "attributes_hwyPriority", "value": ["987ffa"] }
+      ],
+      "signature": "63ee3490b016c303ae032113"
+    },
+    {
+      "itemId": "63ee34826965f30390f01cdb",
+      "designCode": "designs_serviceEnquiry",
+      "attributes": [
+      ],
+      "signature": "63ee3490b016c303ae032113"
+    }
+  ]
+}
