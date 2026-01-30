@@ -46,6 +46,9 @@ service_whitelist:
       id: "456d456"
     Cracked/Damaged Paving Slab:
       id: "567e567"
+  Street Lighting:
+    Other:
+      id: "678f678"
 
 # Mapping of Alloy attribute codes to status/outcome/priority fields
 inspection_attribute_mapping:
@@ -61,6 +64,12 @@ inspection_attribute_mapping:
 update_to_inspection_attribute_mapping:
   updated_datetime: attributes_tasksRaisedTime
   description: attributes_hWYCustomerReportCustomerDescriptionField
+
+# Map of service code to the inspection status ID to set after creation.
+# Needed for categories where Alloy's workflow doesn't automatically
+# set the correct inspection status.
+inspection_status_update:
+  '678f678': 'aa11bb22' # Street Lighting -> Other => Issued
 
 # How values from the above field get mapped to Open311 statuses.
 inspection_status_mapping:

@@ -72,3 +72,11 @@ service_whitelist:
 update_to_inspection_attribute_mapping:
   updated_datetime: ''  # Attribute for the inspection raised time
   description: ''       # Attribute for the customer description field
+
+## Inspection status update
+
+# Map of service code to the inspection status ID to set after creation.
+# Needed for categories where Alloy's workflow doesn't automatically
+# set the correct inspection status.
+inspection_status_update:
+  'service_code': 'status_id'

@@ -269,6 +269,8 @@ sub post_service_request {
         $self->_attach_files_to_service_request($item_id, $files);
     }
 
+    $self->_post_creation_processing($item_id, $files, $args);
+
     # create a new Request and return it
     return $self->new_request(
         service_request_id => $item_id
@@ -282,6 +284,16 @@ sub _attach_files_to_service_request {
     my $attributes = [{ attributeCode => $self->config->{resource_attachment_attribute_id}, value => $files }];
     $self->_update_item($item_id, $attributes);
 }
+
+=head2 _post_creation_processing
+
+Hook for subclasses to perform additional processing after a service request
+item has been created. Called with the item ID, uploaded files array, and
+the original args hash. Does nothing by default.
+
+=cut
+
+sub _post_creation_processing { }
 
 =head2 _get_service_code
 
