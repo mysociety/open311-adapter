@@ -766,11 +766,14 @@ sub post_service_request_update {
         }
     }
 
+    # Handle photo uploads - we need to attach them to both the new inspection AND the original defect
+    my $new_attachments;
     if ($self->config->{resource_attachment_attribute_id}
         && ($args->{media_url} || $args->{uploads})) {
         my $attachment_code = $self->config->{resource_attachment_attribute_id};
-        my $new_attachments = $self->upload_media($args);
+        $new_attachments = $self->upload_media($args);
         if ($new_attachments && @$new_attachments) {
+            # Add to new inspection attributes
             my ($existing) = grep { $_->{attributeCode} eq $attachment_code } @new_attributes;
             if ($existing) {
                 my $existing_value = $existing->{value};
@@ -799,6 +802,11 @@ sub post_service_request_update {
     # Update the defect to link to the new inspection
     # Add the new inspection ID to the defect's inspection list attribute
     $self->_link_inspection_to_defect($defect, $new_inspection_id);
+
+    # Also attach the uploaded photos to the original defect
+    if ($new_attachments && @$new_attachments) {
+        $self->_append_attachments_to_defect($defect, $new_attachments);
+    }
 
     # Return the update with the combined ID
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
@@ -891,6 +899,92 @@ sub _link_inspection_to_defect {
             }
         } else {
             die "Failed to link inspection $new_inspection_id to defect $defect_id: $_";
+        }
+    };
+}
+
+=head2 _append_attachments_to_defect
+
+Appends new attachment IDs to a defect's existing attachments.
+Handles signature mismatch by refetching and retrying.
+
+=cut
+
+sub _append_attachments_to_defect {
+    my ($self, $defect, $new_attachment_ids) = @_;
+
+    my $defect_id = $defect->{itemId};
+    my $attachment_code = $self->config->{resource_attachment_attribute_id};
+
+    return unless $attachment_code && $new_attachment_ids && @$new_attachment_ids;
+
+    # Get current attachments from the defect
+    my @current_attachments;
+    for my $attr (@{$defect->{attributes}}) {
+        if ($attr->{attributeCode} eq $attachment_code) {
+            @current_attachments = ref $attr->{value} eq 'ARRAY'
+                ? @{$attr->{value}}
+                : ($attr->{value});
+            last;
+        }
+    }
+
+    # Add the new attachments
+    push @current_attachments, @$new_attachment_ids;
+
+    my $updated_defect = {
+        attributes => [
+            {
+                attributeCode => $attachment_code,
+                value => \@current_attachments,
+            }
+        ],
+        signature => $defect->{signature},
+    };
+
+    try {
+        $self->alloy->api_call(
+            call => "item/$defect_id",
+            method => 'PUT',
+            body => $updated_defect
+        );
+        $self->logger->info("Attached " . scalar(@$new_attachment_ids) . " photo(s) to defect $defect_id");
+    } catch {
+        if ( $_ =~ /ItemSignatureMismatch/ ) {
+            # Refetch and retry
+            my $fresh_defect = $self->alloy->api_call(call => "item/$defect_id")->{item};
+
+            my @fresh_attachments;
+            for my $attr (@{$fresh_defect->{attributes}}) {
+                if ($attr->{attributeCode} eq $attachment_code) {
+                    @fresh_attachments = ref $attr->{value} eq 'ARRAY'
+                        ? @{$attr->{value}}
+                        : ($attr->{value});
+                    last;
+                }
+            }
+            push @fresh_attachments, @$new_attachment_ids;
+
+            try {
+                $self->alloy->api_call(
+                    call => "item/$defect_id",
+                    method => 'PUT',
+                    body => {
+                        attributes => [
+                            {
+                                attributeCode => $attachment_code,
+                                value => \@fresh_attachments,
+                            }
+                        ],
+                        signature => $fresh_defect->{signature},
+                    }
+                );
+                $self->logger->info("Attached " . scalar(@$new_attachment_ids) . " photo(s) to defect $defect_id (after retry)");
+            } catch {
+                $self->logger->error("Failed to attach photos to defect $defect_id: $_");
+            };
+        } else {
+            $self->logger->error("Failed to attach photos to defect $defect_id: $_");
         }
     };
 }

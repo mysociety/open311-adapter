@@ -804,6 +804,10 @@ subtest 'post_service_request_update with media_url uploads attachment' => sub {
                         {
                             attributeCode => 'attributes_defectsWithInspectionsDefectInspection',
                             value => ['inspection_107']
+                        },
+                        {
+                            attributeCode => 'attributes_filesAttachableAttachments',
+                            value => ['existing_file_001']
                         }
                     ]
                 }
@@ -846,6 +850,22 @@ subtest 'post_service_request_update with media_url uploads attachment' => sub {
     my %attrs = map { $_->{attributeCode} => $_->{value} } @{$new_inspection->{attributes}};
     is_deeply $attrs{attributes_filesAttachableAttachments}, ['file_123'],
         'inspection includes uploaded attachment';
+
+    # Verify defect was updated with attachments (should have 2 PUT calls - one for inspection link, one for attachments)
+    my @defect_put_calls = grep { $_->{call} eq 'item/defect_104' && ($_->{method} || '') eq 'PUT' } @api_calls;
+    is scalar(@defect_put_calls), 2, 'defect was updated twice (inspection link + attachments)';
+
+    # Find the attachment update (the one with attributes_filesAttachableAttachments)
+    my ($attachment_put) = grep {
+        my $attrs = $_->{body}{attributes};
+        grep { $_->{attributeCode} eq 'attributes_filesAttachableAttachments' } @$attrs;
+    } @defect_put_calls;
+    ok $attachment_put, 'found PUT call to update defect attachments';
+
+    my ($attachment_attr) = grep { $_->{attributeCode} eq 'attributes_filesAttachableAttachments' }
+        @{$attachment_put->{body}{attributes}};
+    is_deeply $attachment_attr->{value}, ['existing_file_001', 'file_123'],
+        'defect attachments include both existing and new files';
 
     is $result->update_id, 'defect_104_inspection_108',
         'update created successfully with attachment';
