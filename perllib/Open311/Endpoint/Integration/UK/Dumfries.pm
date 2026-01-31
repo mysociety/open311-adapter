@@ -138,17 +138,23 @@ defect/update is skipped.
 
 =cut
 
+# Mapping is passed in here, but then ignored and looked up again - tidy up the ALloy 'external status code' code? TODO
 sub _get_inspection_status {
     my ($self, $defect, $mapping) = @_;
-    return $self->_status_from_mapping($defect);
+    return $self->inspection_status($defect);
+}
+
+sub _get_defect_status {
+    my ($self, $defect, $mapping) = @_;
+    return $self->inspection_status($defect);
 }
 
 sub defect_status {
     my ($self, $attribs, $report, $linked_defect) = @_;
-    return $self->_status_from_mapping($attribs, $report, $linked_defect);
+    return $self->inspection_status($attribs, $report, $linked_defect);
 }
 
-sub _status_from_mapping {
+sub inspection_status {
     my ($self, $defect, $report, $linked_defect) = @_;
 
     my $mapping = $self->config->{inspection_attribute_mapping};
@@ -206,19 +212,139 @@ sub _skip_job_update {
     return 1 if $status eq 'IGNORE';
 }
 
-=head2 _get_service_request_post_process
+=head2 get_service_request
 
 Override to add media_url support for jobs attached to the defect.
 
 =cut
 
-sub _get_service_request_post_process {
-    my ($self, $request_obj, $item, $args) = @_;
+sub get_service_request {
+    my ($self, $service_request_id, $args) = @_;
+
+    # Call parent implementation to get the basic service request
+    my $request_obj = $self->SUPER::get_service_request($service_request_id, $args);
+    return unless $request_obj;
+
+    # Fetch the defect item to get job media URLs
+    my $response = $self->alloy->api_call(call => "item/$service_request_id");
+    my $defect = $response->{item};
+    return $request_obj unless $defect;
 
     # Add media URLs from associated jobs
-    my $media_urls = $self->_get_job_media_urls($item, $args);
+    my $media_urls = $self->_get_job_media_urls($defect, $args);
     if (@$media_urls) {
-    my $cache = $self->_build_attachment_cache($args);
+        $request_obj->{media_url} = $media_urls;
+    }
+
+    return $request_obj;
+}
+
+=head2 _build_attachment_cache
+
+Build a cache of all valid file attachments created within the given date range.
+Uses AQS to query for files efficiently, filtering by:
+- Creation date within start_date to end_date
+- Filename NOT matching FMS pattern
+
+Returns a hashref: { attachment_id => { itemId, filename, createdDate } }
+
+=cut
+
+sub _build_attachment_cache {
+    my ($self, $args) = @_;
+
+    return {} unless $args && $args->{start_date} && $args->{end_date};
+
+    my $start_date = $args->{start_date};
+    my $end_date = $args->{end_date};
+
+    $self->logger->debug("Building attachment cache for date range: $start_date to $end_date");
+
+    # Build AQS query to find all files with lastEditDate in the range
+    my $body = {
+        properties => {
+            dodiCode => "designs_files",
+            collectionCode => ["Live", "Archive"],
+            attributes => ["attributes_filesOriginalName"],
+        },
+        children => [{
+            type => "And",
+            children => [
+                {
+                    type => "GreaterThan",
+                    children => [{
+                        type => "ItemProperty",
+                        properties => { itemPropertyName => "lastEditDate" }
+                    }, {
+                        type => "DateTime",
+                        properties => { value => [$start_date] }
+                    }]
+                },
+                {
+                    type => "LessThan",
+                    children => [{
+                        type => "ItemProperty",
+                        properties => { itemPropertyName => "lastEditDate" }
+                    }, {
+                        type => "DateTime",
+                        properties => { value => [$end_date] }
+                    }]
+                }
+            ]
+        }]
+    };
+
+    my $files = $self->alloy->search($body);
+
+    my %cache;
+    for my $file (@$files) {
+        my $attrs = $self->alloy->attributes_to_hash($file);
+        my $filename = $attrs->{attributes_filesOriginalName} || '';
+
+        # Skip FMS photos
+        next if $filename =~ /^\d+\.\d+\.full\./;
+
+        $cache{$file->{itemId}} = {
+            itemId => $file->{itemId},
+            filename => $filename,
+            createdDate => $file->{createdDate},
+        };
+    }
+
+    my $count = scalar(keys %cache);
+    $self->logger->debug("Attachment cache built: $count file(s) found in date range");
+
+    return \%cache;
+}
+
+
+=head2 _get_job_media_urls
+
+For a given defect, fetch any associated jobs and return media URLs for their attachments.
+Only includes photos created within the specified start_date and end_date range.
+
+Accepts an optional cache parameter to avoid individual API calls per attachment.
+
+=cut
+
+sub _get_job_media_urls {
+    my ($self, $defect, $args, $cache) = @_;
+
+    my @media_urls;
+    my $defect_id = $defect->{itemId};
+
+    # Get the job IDs from the defect's RaisedJobs attribute
+    my $attributes = $self->alloy->attributes_to_hash($defect);
+    my $job_ids = $attributes->{attributes_defectsRaisingJobsRaisedJobs};
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
+
+    unless ($job_ids) {
+        $self->logger->debug("Defect $defect_id ($title) has no raised jobs");
+        return \@media_urls;
+    }
+
+    # Get inspection attachments to exclude from job attachments
+    my %inspection_attachment_ids;
     my $inspection_ids = $attributes->{attributes_defectsWithInspectionsDefectInspection};
     if ($inspection_ids) {
         $inspection_ids = [ $inspection_ids ] unless ref $inspection_ids eq 'ARRAY';
@@ -246,15 +372,35 @@ sub _get_service_request_post_process {
     for my $job_id (@$job_ids) {
         my $job = $self->alloy->api_call(call => "item/$job_id");
         unless ($job && $job->{item}) {
-    my $job_media_urls = $self->_get_linked_item_media_urls(
-        $item, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache, \%inspection_attachment_ids
-    );
-    push @all_media_urls, @$job_media_urls if @$job_media_urls;
+            $self->logger->warn("Failed to fetch job $job_id for defect $defect_id ($title)");
+            next;
+        }
+
+        my $item_urls = $self->_media_urls_for_item($job, $cache, $args, \%inspection_attachment_ids);
+        push @media_urls, @$item_urls;
+    }
+
+    return \@media_urls;
+}
+
+=head2 _get_inspection_media_urls
+
+For a given defect, fetch any associated inspections and return media URLs for their attachments.
+Excludes photos that originated from FMS.
+Only includes photos created within the specified start_date and end_date range.
+
+Accepts an optional cache parameter to avoid individual API calls per attachment.
+
+=cut
+
 sub _get_inspection_media_urls {
-    my $inspection_media_urls = $self->_get_linked_item_media_urls(
-        $item, 'attributes_defectsWithInspectionsDefectInspection', $args, $cache
-    );
-    push @all_media_urls, @$inspection_media_urls if @$inspection_media_urls;
+    my ($self, $defect, $args, $cache) = @_;
+
+    my @media_urls;
+    my $defect_id = $defect->{itemId};
+
+    # Get the inspection IDs from the defect's attributes
+    my $attributes = $self->alloy->attributes_to_hash($defect);
     my $inspection_ids = $attributes->{attributes_defectsWithInspectionsDefectInspection};
     my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
 
@@ -291,16 +437,12 @@ Override to add media_url support for jobs and inspections attached to the defec
 sub _get_inspection_updates_design {
     my ($self, $design, $args) = @_;
 
-            my $job_media_urls = $self->_get_linked_item_media_urls(
-                $report, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache
-            );
+    # Call parent to get the base updates
     my @updates = $self->SUPER::_get_inspection_updates_design($design, $args);
 
     # Build attachment cache once for all updates
     # This avoids making individual API calls for each attachment
-            my $inspection_media_urls = $self->_get_linked_item_media_urls(
-                $report, 'attributes_defectsWithInspectionsDefectInspection', $args, $cache
-            );
+    my $cache = $self->_build_attachment_cache($args);
 
     # For each update, fetch the associated resource and add media URLs
     # Also handle special case for latest_inspection_time
@@ -443,14 +585,10 @@ sub post_service_request_update {
     }
 
     # when raising new inspections we need to set them to the 'Issued' status.
-    my $status_map = $self->config->{inspection_status_update} || {};
-    my $default_status = $status_map->{default};
-    if ($default_status) {
-        push @new_attributes, {
-            attributeCode => 'attributes_tasksStatus',
-            value => [$default_status],
-        };
-    }
+    push @new_attributes, {
+        attributeCode => 'attributes_tasksStatus',
+        value => ['5bc5bdd281d088d177342c73'], # XXX move to config
+    };
 
     # Apply mappings from the incoming update to inspection attributes
     # Only apply if the template inspection has these attributes (schema compatibility)
@@ -647,9 +785,8 @@ sub get_photo {
 
     # Now fetch the actual file content
     try {
-        $content = $self->alloy->api_call(
+        $content = $self->alloy->api_call_raw(
             call => "file/$item_id",
-            raw => 1,
         );
     } catch {
         $self->logger->error("Failed to fetch photo $item_id: $_");
