@@ -941,19 +941,10 @@ sub get_service_request {
     my $mapping = $self->config->{defect_attribute_mapping};
     my $attributes = $self->alloy->attributes_to_hash($request);
 
-    # Get service code/category
-    my $service_code = $self->get_service_code_from_defect($request);
-    my $service_obj;
-    
-    if ($service_code) {
-        $service_obj = $self->service($service_code);
-    } else {
-        # Fall back to category-based lookup
-        my $category = $self->get_defect_category($request);
-        return unless $category;
-        $category =~ s/ /_/g;
-        $service_obj = $self->service($category);
-    }
+    my $category = $self->get_defect_category($request);
+    return unless $category;
+    $category =~ s/ /_/g;
+    my $service_obj = $self->service($category);
 
     return unless $service_obj;
 
@@ -1054,7 +1045,9 @@ sub _get_service_requests_resource {
         }
 
         my $attributes = $self->alloy->attributes_to_hash($request);
-        $args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
+        if ($mapping->{description}) {
+            $args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
+        }
         ( $args{status}, $args{external_status_code} ) = $self->defect_status($attributes);
 
         #XXX check this no longer required
@@ -1281,7 +1274,7 @@ sub get_defect_category {
         my $type;
 
         for my $att (@attributes) {
-            if ($att->{attributeCode} =~ /DefectType|DefectFaultType|lightingJobJobType/) {
+            if ($att->{attributeCode} =~ /DefectType|DefectFaultType|lightingJobJobType|SpecificDefect|FaultType/) {
                 $type = $att->{value}->[0];
             }
         }

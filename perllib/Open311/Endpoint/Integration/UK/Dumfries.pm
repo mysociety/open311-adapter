@@ -75,48 +75,6 @@ sub _get_service_code {
     return $subcategory_config->{id};
 }
 
-=head2 get_service_code_from_defect
-
-For Dumfries, extract the service code directly from the defect's reported issue attribute.
-If that's not set, fall back to using the sourcetype mapping from the config.
-
-=cut
-
-sub get_service_code_from_defect {
-    my ($self, $defect) = @_;
-
-    my $mapping = $self->config->{defect_attribute_mapping};
-
-    # Try to get service_code from attribute first
-    if ($mapping && $mapping->{service_code}) {
-        my $attributes = $self->alloy->attributes_to_hash($defect);
-        my $service_code = $attributes->{$mapping->{service_code}};
-        $service_code = $service_code->[0] if ref $service_code eq 'ARRAY';
-        return $service_code if $service_code;
-    }
-
-    # Fall back to using sourcetype category mapping
-    my $subcategory_name = $self->get_defect_category($defect);
-    $self->logger->debug("get_defect_category returned: '" . ($subcategory_name // 'undef') . "' for defect " . $defect->{itemId} . " (design: " . $defect->{designCode} . ")");
-    return unless $subcategory_name;
-
-    # Find the service_code for this subcategory name in the service_whitelist
-    # Since subcategories can appear under multiple parent categories,
-    # we'll return the first match
-    # Do case-insensitive comparison to handle naming variations
-    my $whitelist = $self->config->{service_whitelist};
-    for my $category (keys %$whitelist) {
-        my $subcategories = $whitelist->{$category};
-        for my $subcat_name (keys %$subcategories) {
-            if (lc($subcat_name) eq lc($subcategory_name)) {
-                return $subcategories->{$subcat_name}->{id};
-            }
-        }
-    }
-
-    return;
-}
-
 =head2 service
 
 For Dumfries, we need to handle the case where the service_code from Alloy
@@ -159,75 +117,6 @@ fetching updated resources from Alloy.
 sub _extra_search_properties {
     my ($self) = @_;
     return { collectionCode => ["Live", "Archive"] };
-}
-
-=head2 _get_service_requests_resource
-
-For Dumfries, we override the defect fetching to use the service_code directly
-from the defect attributes instead of relying on category mapping.
-
-=cut
-
-sub _get_service_requests_resource {
-    my ($self, $resource_name, $args) = @_;
-
-    my $requests = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date});
-    my @requests;
-    my $mapping = $self->config->{defect_attribute_mapping};
-
-    for my $request (@$requests) {
-        my %request_args;
-
-        next if $self->skip_fetch_defect( $request );
-
-        # Get service_code directly from the defect
-        my $service_code = $self->get_service_code_from_defect($request);
-        unless ($service_code) {
-            $self->logger->warn("No service_code found for defect $request->{itemId} in " . $self->jurisdiction_id);
-            next;
-        }
-
-        # Look up the service (this will handle _1, _2 suffix matching)
-        my $service_obj = $self->service($service_code);
-        unless ($service_obj) {
-            $self->logger->warn("No service found for defect $request->{itemId}, service_code $service_code in " . $self->jurisdiction_id);
-            next;
-        }
-
-        $request_args{latlong} = $self->get_latlong_from_request($request);
-
-        unless ($request_args{latlong}) {
-            my $geometry = $request->{geometry}{type} || 'unknown';
-            $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry");
-            next;
-        }
-
-        my $attributes = $self->alloy->attributes_to_hash($request);
-
-        # Get description if mapping exists
-        if ($mapping->{description}) {
-            $request_args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
-        }
-
-        ( $request_args{status}, $request_args{external_status_code} ) = $self->defect_status($attributes);
-
-        # Skip defects with IGNORE status
-        if ($request_args{status} && $request_args{status} eq 'IGNORE') {
-            next;
-        }
-
-        $request_args{title} = $attributes->{attributes_itemsTitle};
-        $request_args{service} = $service_obj;
-        $request_args{service_request_id} = $request->{itemId};
-        $request_args{requested_datetime} = $self->date_to_truncated_dt( $attributes->{$mapping->{requested_datetime}} ) if $mapping->{requested_datetime};
-        $request_args{updated_datetime} = $self->date_to_truncated_dt( $attributes->{$mapping->{requested_datetime}} ) if $mapping->{requested_datetime};
-
-        my $service_request = $self->new_request( %request_args );
-
-        push @requests, $service_request;
-    }
-
-    return @requests;
 }
 
 =head2 _get_inspection_status
@@ -720,20 +609,6 @@ sub _get_inspection_updates_design {
 
     return @updates;
 }
-
-=head2 _get_defect_updates
-
-For Dumfries, defects are the same as inspections (both use rfs_design).
-We get all updates via _get_inspection_updates_design, so skip defect updates
-to avoid duplicates.
-
-=cut
-
-sub _get_defect_updates {
-    my ($self, $args) = @_;
-    return ();
-}
-
 
 =head2 post_service_request_update
 
