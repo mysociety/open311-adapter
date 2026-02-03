@@ -53,7 +53,7 @@ sub process_attributes {
     );
     push @$attributes, {
         attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{customer_description},
-        value => [ $desc ],
+        value => $desc,
     };
 
     return $attributes;
