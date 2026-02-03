@@ -228,7 +228,7 @@ subtest 'send new report to Alloy with contact and service_code' => sub {
     } @{$report_sent->{attributes}};
 
     ok $customer_desc_attr, 'customer_description attribute present';
-    is_deeply $customer_desc_attr->{value}, ["Category: Roads/Pothole\nSummary: Pothole on High Street\nDescription: There is a large pothole"],
+    is_deeply $customer_desc_attr->{value}, "Category: Roads/Pothole\nSummary: Pothole on High Street\nDescription: There is a large pothole",
         'customer_description attribute contains formatted category/summary/description';
 
     is_deeply decode_json($res->content),
