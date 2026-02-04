@@ -1085,10 +1085,10 @@ sub _post_creation_processing {
 
     return unless @$files || $status_id;
 
-    # Wait for inspection (up to 60 seconds) - Alloy workflow creates it asynchronously
+    # Wait for inspection (up to 3 minutes) - Alloy workflow creates it asynchronously
     my $inspection_ref;
     my $defect;
-    for (1..6) {
+    for (1..18) {
         # Sleep at the start of the loop because the Alloy workflow
         # needs a few seconds to create the inspection.
         sleep 10 unless $ENV{TEST_MODE};
