@@ -1037,6 +1037,7 @@ sub _get_service_requests_resource {
             $args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
         }
         ( $args{status}, $args{external_status_code} ) = $self->defect_status($attributes);
+        next if $args{status} eq 'IGNORE';
 
         #XXX check this no longer required
         next if grep { $_ =~ /_FIXMYSTREET_ID$/ && $attributes->{$_} } keys %{ $attributes };
@@ -1050,6 +1051,7 @@ sub _get_service_requests_resource {
         $args{service_request_id} = $request->{itemId};
         $args{requested_datetime} = $self->date_to_truncated_dt( $attributes->{$mapping->{requested_datetime}} );
         $args{updated_datetime} = $self->date_to_truncated_dt( $attributes->{$mapping->{requested_datetime}} );
+        $args{media_url} = $self->_media_urls_for_item({ item => $request });
 
         my $request = $self->new_request( %args );
 
@@ -1351,6 +1353,126 @@ sub _get_defect_inspection_parents {
     }
 
     return @linked_defects;
+}
+
+=head2 _process_attachment
+
+Process a single attachment and return its media URL if it passes all filters.
+Returns undef if the attachment should be skipped.
+
+Filters applied:
+- Excludes FMS files (pattern \d+\.\d+\.full\.)
+- Excludes photos outside the date range (if args provided)
+
+If a cache is provided (from _build_attachment_cache), uses it to avoid individual API calls.
+
+=cut
+
+sub _process_attachment {
+    my ($self, $attachment_id, $args, $item_id, $cache) = @_;
+
+    my $filename;
+
+    if ($cache) {
+        my $cached = $cache->{$attachment_id};
+        if ($cached) {
+            # it already passed all filters so we can use it
+            $filename = $cached->{filename};
+            $self->logger->debug("Using cached file data for $attachment_id: $filename");
+        } else {
+            $self->logger->debug("Attachment $attachment_id not in cache, skipping");
+            return;
+        }
+    } else {
+        # XXX is this still needed?
+        # No cache provided - fall back to individual API calls
+        # Fetch the file item to check its filename
+        my $file = $self->alloy->api_call(call => "item/$attachment_id");
+        unless ($file && $file->{item}) {
+            $self->logger->warn("Failed to fetch file $attachment_id for item $item_id");
+            return;
+        }
+
+        my $file_attrs = $self->alloy->attributes_to_hash($file->{item});
+        $filename = $file_attrs->{attributes_filesOriginalName} || '';
+
+        # These are FMS photos
+        if ($filename =~ /^\d+\.\d+\.full\./) {
+            $self->logger->debug("Skipping FMS file: $filename");
+            return;
+        }
+
+        # Check if photo was created within the date range
+        # Use item-log to get the actual creation date from Alloy
+        if ($args && $args->{start_date} && $args->{end_date}) {
+            my $photo_log = $self->alloy->api_call(call => "item-log/item/$attachment_id");
+            my ($create_action) = grep { $_->{action} eq 'Create' } @{$photo_log->{results}};
+
+            if ($create_action && $create_action->{date}) {
+                my $created = $create_action->{date};
+                my $created_dt = $self->date_to_dt($created);
+                my $start_time = $self->date_to_dt($args->{start_date});
+                my $end_time = $self->date_to_dt($args->{end_date});
+
+                $self->logger->debug("Checking photo $attachment_id date filter: created=$created, range=$args->{start_date} to $args->{end_date}");
+
+                if ($created_dt < $start_time || $created_dt > $end_time) {
+                    $self->logger->debug("Skipping photo $attachment_id created at $created (outside range)");
+                    return;
+                } else {
+                    $self->logger->debug("Including photo $attachment_id created at $created (within range)");
+                }
+            } else {
+                $self->logger->debug("No creation date found for photo $attachment_id, including it");
+            }
+        }
+    }
+
+    # Build media URL using base_url and photo endpoint pattern
+    my $base_url = $self->config->{base_url};
+    unless ($base_url) {
+        $self->logger->warn("No base_url configured, skipping media_url for attachment $attachment_id");
+        return;
+    }
+
+    my $jurisdiction_id = $self->jurisdiction_id;
+    my $media_url = "${base_url}photos?jurisdiction_id=${jurisdiction_id}&item=${attachment_id}";
+    $self->logger->debug("Added media_url for item $item_id: $media_url (filename: $filename)");
+
+    return $media_url;
+}
+
+sub _media_urls_for_item {
+    my ($self, $item, $cache, $args, $skip_ids) = @_;
+
+    my @media_urls;
+    my $attributes = $self->alloy->attributes_to_hash($item->{item});
+    my $item_id = $item->{item}->{itemId};
+    my $attachment_ids = $attributes->{attributes_filesAttachableAttachments};
+
+    unless ($attachment_ids) {
+        $self->logger->debug("item $item_id has no attachments");
+        return [];
+    }
+
+    # Normalize to array
+    $attachment_ids = [ $attachment_ids ] unless ref $attachment_ids eq 'ARRAY';
+    $self->logger->debug("item $item_id has " . scalar(@$attachment_ids) . " attachment(s)");
+
+    # Process each attachment
+    for my $attachment_id (@$attachment_ids) {
+        # Skip attachments we don't want
+        if ($skip_ids && $skip_ids->{$attachment_id}) {
+            $self->logger->debug("Skipping attachment $attachment_id (already on inspection?)");
+            next;
+        }
+
+        my $media_url = $self->_process_attachment($attachment_id, $args, $item_id, $cache);
+        push @media_urls, $media_url if $media_url;
+    }
+
+    return \@media_urls;
+
 }
 
 sub _get_attachments {
