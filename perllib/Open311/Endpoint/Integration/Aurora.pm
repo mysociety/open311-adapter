@@ -127,6 +127,7 @@ sub post_service_request {
     $payload->{usrn} = $args->{attributes}->{NSGRef};
     $payload->{internalAssetId} = $args->{attributes}->{UnitID};
     $payload->{externalReference} = "FMS" . $args->{attributes}->{fixmystreet_id};
+    $payload->{locationText} = $args->{attributes}->{title};
 
     $payload->{description} = $args->{attributes}->{title} . "\n\n" . $args->{attributes}->{description};
     if ($args->{address_string}) {
