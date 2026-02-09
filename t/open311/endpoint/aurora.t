@@ -163,7 +163,8 @@ subtest "post_service_request" => sub {
             caseTypeCode => 'P001',
             easting => '100',
             northing => '101',
-            assetTypeCode => 'A001'
+            assetTypeCode => 'A001',
+            locationText => 'title'
         };
 
     $integration->unmock('get_contact_id_for_email_address');
