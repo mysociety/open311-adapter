@@ -842,7 +842,7 @@ subtest "check fetch problem" => sub {
             GET => '/requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
         );
     }
-    qr/No category found for defect 3027031, source type designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6/,
+    qr/No category found for defect 3027031 \(DEF-10101\), source type designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6/,
     "Correct warnings generated";
 
     my $sent = pop @sent;
