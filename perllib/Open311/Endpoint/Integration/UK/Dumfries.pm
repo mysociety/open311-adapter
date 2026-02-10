@@ -193,7 +193,7 @@ sub inspection_status {
         }
     }
 
-    my $item_id = $report->{itemId} || '';
+    my $item_id = $report->{itemId} || 'Unknown item ID';
     my $title = $defect->{attributes_itemsTitle} || 'Unknown title';
     $self->logger->warn("Ignoring update for $item_id ($title) with status: $status outcome: $outcome priority: $priority");
     return "IGNORE";
