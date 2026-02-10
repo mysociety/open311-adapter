@@ -401,21 +401,22 @@ sub _get_inspection_media_urls {
     # Get the inspection IDs from the defect's attributes
     my $attributes = $self->alloy->attributes_to_hash($defect);
     my $inspection_ids = $attributes->{attributes_defectsWithInspectionsDefectInspection};
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
 
     unless ($inspection_ids) {
-        $self->logger->debug("Defect $defect_id has no inspections");
+        $self->logger->debug("Defect $defect_id ($title) has no inspections");
         return \@media_urls;
     }
 
     # Normalize to array
     $inspection_ids = [ $inspection_ids ] unless ref $inspection_ids eq 'ARRAY';
-    $self->logger->debug("Defect $defect_id has " . scalar(@$inspection_ids) . " inspection(s)");
+    $self->logger->debug("Defect $defect_id ($title) has " . scalar(@$inspection_ids) . " inspection(s)");
 
     # For each inspection, fetch it and get any attachments
     for my $inspection_id (@$inspection_ids) {
         my $inspection = $self->alloy->api_call(call => "item/$inspection_id");
         unless ($inspection && $inspection->{item}) {
-            $self->logger->warn("Failed to fetch inspection $inspection_id for defect $defect_id");
+            $self->logger->warn("Failed to fetch inspection $inspection_id for defect $defect_id ($title)");
             next;
         }
 
