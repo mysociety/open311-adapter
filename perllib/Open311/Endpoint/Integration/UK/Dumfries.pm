@@ -517,6 +517,8 @@ sub post_service_request_update {
 
     # Fetch the defect from Alloy
     my $defect = $self->alloy->api_call(call => "item/$resource_id")->{item};
+    my $attributes = $self->alloy->attributes_to_hash($defect);
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
 
     # Look up the inspection using one of the mentioned processes
     my $inspection_ref = $self->_find_latest_inspection($defect);
