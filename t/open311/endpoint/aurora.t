@@ -272,7 +272,7 @@ subtest "Get updates mapping" => sub {
 <service_request_updates>
   <request_update>
     <description></description>
-    <external_status_code>DR020</external_status_code>
+    <external_status_code>DR02</external_status_code>
     <media_url></media_url>
     <service_request_id>FMS-01</service_request_id>
     <status>in_progress</status>
@@ -281,7 +281,7 @@ subtest "Get updates mapping" => sub {
   </request_update>
   <request_update>
     <description>Ignored unless CS_CLEAR_CASE</description>
-    <external_status_code>GN100</external_status_code>
+    <external_status_code>GN10</external_status_code>
     <media_url></media_url>
     <service_request_id>FMS-03</service_request_id>
     <status>closed</status>
@@ -290,7 +290,7 @@ subtest "Get updates mapping" => sub {
   </request_update>
   <request_update>
     <description></description>
-    <external_status_code>GN090</external_status_code>
+    <external_status_code>GN09</external_status_code>
     <media_url></media_url>
     <service_request_id>FMS-02</service_request_id>
     <status>internal_referral</status>
@@ -316,15 +316,15 @@ sub _edit_update_file {
     my $file = decode_json($update_file);
     if ($url =~ /CS_CHANGE_QUEUE/) {
         $file->{Message}->{CaseNumber} = 'FMS-02';
-        $file->{Message}->{CaseTypeCode} = 'GN090';
+        $file->{Message}->{ClearanceReasonCode} = 'GN09';
         splice(@{$file->{Message}->{CaseEventHistory}}, -1);
     } elsif ($url =~ /CS_CLEAR_CASE/) {
         $file->{Message}->{CaseNumber} = 'FMS-03';
-        $file->{Message}->{CaseTypeCode} = 'GN100';
+        $file->{Message}->{ClearanceReasonCode} = 'GN10';
         splice(@{$file->{Message}->{CaseEventHistory}}, -2);
     } elsif ($url =~ /CS_INSPECTION_PROMPTED/) {
         $file->{Message}->{CaseNumber} = 'FMS-04';
-        $file->{Message}->{CaseTypeCode} = 'RANDOM';
+        $file->{Message}->{ClearanceReasonCode} = 'RANDOM';
         splice(@{$file->{Message}->{CaseEventHistory}}, -3);
     };
 

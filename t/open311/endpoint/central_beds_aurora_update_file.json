@@ -4,7 +4,7 @@
 "Date": "2025-12-02T09:46:56.84597Z",
 "Message": {
   "ClearanceReasonPortalText": "Ignored unless CS_CLEAR_CASE",
-  "CaseTypeCode": "DR020",
+  "ClearanceReasonCode": "DR02",
   "CaseNumber": "FMS-01",
   "CaseEventHistory": [
     {

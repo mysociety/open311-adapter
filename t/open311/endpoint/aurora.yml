@@ -20,6 +20,6 @@ category_mapping:
     name: "Trees"
 
 reverse_status_mapping:
-  DR020: in_progress
-  GN090: internal_referral
-  GN100: closed
+  DR02: in_progress
+  GN09: internal_referral
+  GN10: closed
