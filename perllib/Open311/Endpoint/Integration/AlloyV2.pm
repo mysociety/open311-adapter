@@ -1045,7 +1045,6 @@ sub _get_service_requests_resource {
             next;
         }
 
-        my $attributes = $self->alloy->attributes_to_hash($request);
         if ($mapping->{description}) {
             $args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
         }
