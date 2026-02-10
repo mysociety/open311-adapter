@@ -194,7 +194,8 @@ sub inspection_status {
     }
 
     my $item_id = $report->{itemId} || '';
-    $self->logger->warn("Ignoring update for $item_id with status: $status outcome: $outcome priority: $priority");
+    my $title = $defect->{attributes_itemsTitle} || 'Unknown title';
+    $self->logger->warn("Ignoring update for $item_id ($title) with status: $status outcome: $outcome priority: $priority");
     return "IGNORE";
 }
 
@@ -334,9 +335,10 @@ sub _get_job_media_urls {
     # Get the job IDs from the defect's RaisedJobs attribute
     my $attributes = $self->alloy->attributes_to_hash($defect);
     my $job_ids = $attributes->{attributes_defectsRaisingJobsRaisedJobs};
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
 
     unless ($job_ids) {
-        $self->logger->debug("Defect $defect_id has no raised jobs");
+        $self->logger->debug("Defect $defect_id ($title) has no raised jobs");
         return \@media_urls;
     }
 
@@ -357,19 +359,19 @@ sub _get_job_media_urls {
             }
         }
         if (%inspection_attachment_ids) {
-            $self->logger->debug("Defect $defect_id has " . scalar(keys %inspection_attachment_ids) . " inspection attachment(s) to exclude");
+            $self->logger->debug("Defect $defect_id ($title) has " . scalar(keys %inspection_attachment_ids) . " inspection attachment(s) to exclude");
         }
     }
 
     # Normalize to array
     $job_ids = [ $job_ids ] unless ref $job_ids eq 'ARRAY';
-    $self->logger->debug("Defect $defect_id has " . scalar(@$job_ids) . " raised job(s)");
+    $self->logger->debug("Defect $defect_id ($title) has " . scalar(@$job_ids) . " raised job(s)");
 
     # For each job, fetch it and get any attachments
     for my $job_id (@$job_ids) {
         my $job = $self->alloy->api_call(call => "item/$job_id");
         unless ($job && $job->{item}) {
-            $self->logger->warn("Failed to fetch job $job_id for defect $defect_id");
+            $self->logger->warn("Failed to fetch job $job_id for defect $defect_id ($title)");
             next;
         }
 
@@ -399,21 +401,22 @@ sub _get_inspection_media_urls {
     # Get the inspection IDs from the defect's attributes
     my $attributes = $self->alloy->attributes_to_hash($defect);
     my $inspection_ids = $attributes->{attributes_defectsWithInspectionsDefectInspection};
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
 
     unless ($inspection_ids) {
-        $self->logger->debug("Defect $defect_id has no inspections");
+        $self->logger->debug("Defect $defect_id ($title) has no inspections");
         return \@media_urls;
     }
 
     # Normalize to array
     $inspection_ids = [ $inspection_ids ] unless ref $inspection_ids eq 'ARRAY';
-    $self->logger->debug("Defect $defect_id has " . scalar(@$inspection_ids) . " inspection(s)");
+    $self->logger->debug("Defect $defect_id ($title) has " . scalar(@$inspection_ids) . " inspection(s)");
 
     # For each inspection, fetch it and get any attachments
     for my $inspection_id (@$inspection_ids) {
         my $inspection = $self->alloy->api_call(call => "item/$inspection_id");
         unless ($inspection && $inspection->{item}) {
-            $self->logger->warn("Failed to fetch inspection $inspection_id for defect $defect_id");
+            $self->logger->warn("Failed to fetch inspection $inspection_id for defect $defect_id ($title)");
             next;
         }
 
@@ -514,13 +517,15 @@ sub post_service_request_update {
 
     # Fetch the defect from Alloy
     my $defect = $self->alloy->api_call(call => "item/$resource_id")->{item};
+    my $attributes = $self->alloy->attributes_to_hash($defect);
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
 
     # Look up the inspection using one of the mentioned processes
     my $inspection_ref = $self->_find_latest_inspection($defect);
 
     unless ($inspection_ref) {
-        $self->logger->error("No inspection found for defect $resource_id during POST Service Request Update");
-        die "No inspection found for defect $resource_id";
+        $self->logger->error("No inspection found for defect $resource_id ($title) during POST Service Request Update");
+        die "No inspection found for defect $resource_id ($title)";
     }
 
     # Fetch the full inspection details
@@ -957,9 +962,11 @@ sub _post_creation_processing {
         $inspection_ref = $self->_find_latest_inspection($defect);
         last if $inspection_ref;
     }
+    my $attributes = $self->alloy->attributes_to_hash($defect);
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
 
     unless ($inspection_ref) {
-        $self->logger->warn("No inspection found for defect $item_id during POST Service Request");
+        $self->logger->warn("No inspection found for defect $item_id ($title) during POST Service Request");
         return;
     }
 

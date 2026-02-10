@@ -949,9 +949,10 @@ sub get_service_request {
     return unless $service_obj;
 
     my $latlong = $self->get_latlong_from_request($request);
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
     unless ($latlong) {
         my $geometry = $request->{geometry}{type} || 'unknown';
-        $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry");
+        $self->logger->error("Defect $request->{itemId} ($title): don't know how to handle geometry: $geometry");
         return;
     }
 
@@ -1022,17 +1023,19 @@ sub _get_service_requests_resource {
         my %args;
 
         next if $self->skip_fetch_defect( $request );
+        my $attributes = $self->alloy->attributes_to_hash($request);
+        my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
 
         my $category = $self->get_defect_category( $request );
         unless ($category) {
-            $self->logger->warn("No category found for defect $request->{itemId}, source type $request->{designCode} in " . $self->jurisdiction_id);
+            $self->logger->warn("No category found for defect $request->{itemId} ($title), source type $request->{designCode} in " . $self->jurisdiction_id);
             next;
         }
         $category =~ s/ /_/g;
 
         my $cat_service = $self->service($category);
         unless ($cat_service) {
-            $self->logger->warn("No service found for defect $request->{itemId}, category $category in " . $self->jurisdiction_id);
+            $self->logger->warn("No service found for defect $request->{itemId} ($title), category $category in " . $self->jurisdiction_id);
             next;
         }
 
@@ -1040,11 +1043,10 @@ sub _get_service_requests_resource {
 
         unless ($args{latlong}) {
             my $geometry = $request->{geometry}{type} || 'unknown';
-            $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry");
+            $self->logger->error("Defect $request->{itemId} ($title): don't know how to handle geometry: $geometry");
             next;
         }
 
-        my $attributes = $self->alloy->attributes_to_hash($request);
         if ($mapping->{description}) {
             $args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
         }
@@ -1461,15 +1463,16 @@ sub _media_urls_for_item {
     my $attributes = $self->alloy->attributes_to_hash($item->{item});
     my $item_id = $item->{item}->{itemId};
     my $attachment_ids = $attributes->{attributes_filesAttachableAttachments};
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
 
     unless ($attachment_ids) {
-        $self->logger->debug("item $item_id has no attachments");
+        $self->logger->debug("item $item_id ($title) has no attachments");
         return [];
     }
 
     # Normalize to array
     $attachment_ids = [ $attachment_ids ] unless ref $attachment_ids eq 'ARRAY';
-    $self->logger->debug("item $item_id has " . scalar(@$attachment_ids) . " attachment(s)");
+    $self->logger->debug("item $item_id ($title) has " . scalar(@$attachment_ids) . " attachment(s)");
 
     # Process each attachment
     for my $attachment_id (@$attachment_ids) {
