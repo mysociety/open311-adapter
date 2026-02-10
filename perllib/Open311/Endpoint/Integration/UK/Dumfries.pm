@@ -962,9 +962,11 @@ sub _post_creation_processing {
         $inspection_ref = $self->_find_latest_inspection($defect);
         last if $inspection_ref;
     }
+    my $attributes = $self->alloy->attributes_to_hash($defect);
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
 
     unless ($inspection_ref) {
-        $self->logger->warn("No inspection found for defect $item_id during POST Service Request");
+        $self->logger->warn("No inspection found for defect $item_id ($title) during POST Service Request");
         return;
     }
 
