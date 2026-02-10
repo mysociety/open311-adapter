@@ -1461,15 +1461,16 @@ sub _media_urls_for_item {
     my $attributes = $self->alloy->attributes_to_hash($item->{item});
     my $item_id = $item->{item}->{itemId};
     my $attachment_ids = $attributes->{attributes_filesAttachableAttachments};
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
 
     unless ($attachment_ids) {
-        $self->logger->debug("item $item_id has no attachments");
+        $self->logger->debug("item $item_id ($title) has no attachments");
         return [];
     }
 
     # Normalize to array
     $attachment_ids = [ $attachment_ids ] unless ref $attachment_ids eq 'ARRAY';
-    $self->logger->debug("item $item_id has " . scalar(@$attachment_ids) . " attachment(s)");
+    $self->logger->debug("item $item_id ($title) has " . scalar(@$attachment_ids) . " attachment(s)");
 
     # Process each attachment
     for my $attachment_id (@$attachment_ids) {
