@@ -335,9 +335,10 @@ sub _get_job_media_urls {
     # Get the job IDs from the defect's RaisedJobs attribute
     my $attributes = $self->alloy->attributes_to_hash($defect);
     my $job_ids = $attributes->{attributes_defectsRaisingJobsRaisedJobs};
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
 
     unless ($job_ids) {
-        $self->logger->debug("Defect $defect_id has no raised jobs");
+        $self->logger->debug("Defect $defect_id ($title) has no raised jobs");
         return \@media_urls;
     }
 
@@ -358,19 +359,19 @@ sub _get_job_media_urls {
             }
         }
         if (%inspection_attachment_ids) {
-            $self->logger->debug("Defect $defect_id has " . scalar(keys %inspection_attachment_ids) . " inspection attachment(s) to exclude");
+            $self->logger->debug("Defect $defect_id ($title) has " . scalar(keys %inspection_attachment_ids) . " inspection attachment(s) to exclude");
         }
     }
 
     # Normalize to array
     $job_ids = [ $job_ids ] unless ref $job_ids eq 'ARRAY';
-    $self->logger->debug("Defect $defect_id has " . scalar(@$job_ids) . " raised job(s)");
+    $self->logger->debug("Defect $defect_id ($title) has " . scalar(@$job_ids) . " raised job(s)");
 
     # For each job, fetch it and get any attachments
     for my $job_id (@$job_ids) {
         my $job = $self->alloy->api_call(call => "item/$job_id");
         unless ($job && $job->{item}) {
-            $self->logger->warn("Failed to fetch job $job_id for defect $defect_id");
+            $self->logger->warn("Failed to fetch job $job_id for defect $defect_id ($title)");
             next;
         }
 
