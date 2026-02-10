@@ -524,8 +524,8 @@ sub post_service_request_update {
     my $inspection_ref = $self->_find_latest_inspection($defect);
 
     unless ($inspection_ref) {
-        $self->logger->error("No inspection found for defect $resource_id during POST Service Request Update");
-        die "No inspection found for defect $resource_id";
+        $self->logger->error("No inspection found for defect $resource_id ($title) during POST Service Request Update");
+        die "No inspection found for defect $resource_id ($title)";
     }
 
     # Fetch the full inspection details
