@@ -1251,14 +1251,14 @@ sub _get_service_requests_resource {
 
         my $category = $self->get_defect_category( $request );
         unless ($category) {
-            $self->logger->warn("No category found for defect $request->{itemId}, source type $request->{designCode} in " . $self->jurisdiction_id);
+            $self->logger->warn("No category found for defect $request->{itemId} ($title), source type $request->{designCode} in " . $self->jurisdiction_id);
             next;
         }
         $category =~ s/ /_/g;
 
         my $cat_service = $self->service($category);
         unless ($cat_service) {
-            $self->logger->warn("No service found for defect $request->{itemId}, category $category in " . $self->jurisdiction_id);
+            $self->logger->warn("No service found for defect $request->{itemId} ($title), category $category in " . $self->jurisdiction_id);
             next;
         }
 
@@ -1266,7 +1266,7 @@ sub _get_service_requests_resource {
 
         unless ($args{latlong}) {
             my $geometry = $request->{geometry}{type} || 'unknown';
-            $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry");
+            $self->logger->error("Defect $request->{itemId} ($title): don't know how to handle geometry: $geometry");
             next;
         }
 
