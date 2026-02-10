@@ -204,7 +204,7 @@ sub post_service_request_update {
 Fetches files from Aurora's 'return path update' Azure storage container which contains a
 snapshot of a case after one of the configured 'triggers' fires.
 
-The C<CaseTypeCode> is mapped to an update status via the C<reverse_status_mapping>, with the
+The C<ClearanceReasonCode> is mapped to an update status via the C<reverse_status_mapping>, with the
 exception of updates via the C<CS_INSPECTION_PROMPTED> trigger which always map to 'investigating'.
 
 Updates via the C<CS_CLEAR_CASE> trigger have their description populated from the
@@ -229,7 +229,7 @@ sub get_service_request_updates {
     for (@update_files) {
         next if _skip_update_file($start, $end, $_->{Name});
         my $data = $self->aurora->fetch_update_file($_->{Name});
-        next unless $self->reverse_status_mapping->{$data->{Message}->{CaseTypeCode}} || $_->{Name} =~ /CS_INSPECTION_PROMPTED/;
+        next unless $self->reverse_status_mapping->{$data->{Message}->{ClearanceReasonCode}} || $_->{Name} =~ /CS_INSPECTION_PROMPTED/;
 
         my $id_no = @{$data->{Message}->{CaseEventHistory}};
         my $external_update = pop @{$data->{Message}->{CaseEventHistory}};
@@ -237,8 +237,8 @@ sub get_service_request_updates {
                             ->set_nanosecond(0)
                             ->set_time_zone('UTC');
         my %update_args = (
-            status => $_->{Name} =~ /CS_INSPECTION_PROMPTED/ ? 'investigating' : $self->reverse_status_mapping->{ $data->{Message}->{CaseTypeCode} },
-            external_status_code => $data->{Message}->{CaseTypeCode},
+            status => $_->{Name} =~ /CS_INSPECTION_PROMPTED/ ? 'investigating' : $self->reverse_status_mapping->{ $data->{Message}->{ClearanceReasonCode} },
+            external_status_code => $data->{Message}->{ClearanceReasonCode},
             description => $_->{Name} =~ /CS_CLEAR_CASE/ ? $data->{Message}->{ClearanceReasonPortalText} : '',
             service_request_id => $data->{Message}->{CaseNumber},
             update_id => $data->{Message}->{CaseNumber} . '_' . $id_no,

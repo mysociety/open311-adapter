@@ -9,10 +9,10 @@ cases_api_base_url: url
 updates_azure_container_base_url: url
 updates_azure_container_url_arguments: sas_token
 
-# A map from 'CaseTypeCode' to update status.
+# A map from 'ClearanceReasonCode' to update status.
 reverse_status_mapping:
-  DR010: in_progress
-  DR020: closed
+  DR01: in_progress
+  DR02: closed
 
 # A map from service_code to:
 #
