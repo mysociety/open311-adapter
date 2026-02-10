@@ -949,9 +949,10 @@ sub get_service_request {
     return unless $service_obj;
 
     my $latlong = $self->get_latlong_from_request($request);
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
     unless ($latlong) {
         my $geometry = $request->{geometry}{type} || 'unknown';
-        $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry");
+        $self->logger->error("Defect $request->{itemId} ($title): don't know how to handle geometry: $geometry");
         return;
     }
 
