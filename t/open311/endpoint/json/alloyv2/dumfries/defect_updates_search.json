@@ -1,0 +1,49 @@
+{
+    "joinResults": [
+        {
+            "itemId": "defect_item_1",
+            "joinQueries": [
+                {
+                    "item": {
+                        "attributes": [
+                            {
+                                "attributeCode": "attributes_itemsTitle",
+                                "value": "3 - 60 Working Days"
+                            }
+                        ]
+                    },
+                    "joinAttributes": [
+                        "root.attributes_defectTriagePriority.attributes_itemsTitle"
+                    ]
+                }
+            ]
+        }
+    ],
+    "page": 1,
+    "pageSize": 20,
+    "results": [
+        {
+            "itemId": "defect_item_1",
+            "designCode": "designs_testDefect",
+            "attributes": [
+                {
+                    "attributeCode": "attributes_status",
+                    "value": ["1212aad"]
+                },
+                {
+                    "attributeCode": "attributes_outcome",
+                    "value": ["1234ade"]
+                },
+                {
+                    "attributeCode": "attributes_hwyPriority",
+                    "value": ["987ffa"]
+                },
+                {
+                    "attributeCode": "attributes_defectsReportedDate",
+                    "value": "2025-12-25T10:00:00.000Z"
+                }
+            ],
+            "signature": "sig123"
+        }
+    ]
+}

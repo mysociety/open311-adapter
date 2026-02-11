@@ -775,17 +775,7 @@ sub _get_inspection_updates_design {
     my $mapping = $self->config->{inspection_attribute_mapping};
     return ([], {}) unless $mapping;
 
-    my %join;
-    if (my $extra_mapping = $mapping->{extra_attributes}) {
-        # Collect all attribute paths, flattening arrays
-        foreach my $attr_paths (values %$extra_mapping) {
-            if (ref $attr_paths eq 'ARRAY') {
-                push @{$join{joinAttributes}}, @$attr_paths;
-            } else {
-                push @{$join{joinAttributes}}, $attr_paths;
-            }
-        }
-    }
+    my %join = $self->_build_extra_attributes_join($mapping->{extra_attributes});
 
     my $updates = $self->fetch_updated_resources($design, $args->{start_date}, $args->{end_date}, \%join);
 
@@ -843,21 +833,7 @@ sub _get_inspection_updates_design {
             }
         }
 
-        if (my $extra_mapping = $mapping->{extra_attributes}) {
-            foreach my $key (keys %$extra_mapping) {
-                my $attr_paths = $extra_mapping->{$key};
-                # Support both single string and array of attribute paths
-                $attr_paths = [ $attr_paths ] unless ref $attr_paths eq 'ARRAY';
-                
-                # Try each attribute path until we find one with a value
-                foreach my $attr_path (@$attr_paths) {
-                    if ($attr_path && $attributes->{$attr_path}) {
-                        $args{extras}{$key} = $attributes->{$attr_path};
-                        last;
-                    }
-                }
-            }
-        }
+        $self->_apply_extra_attributes($mapping->{extra_attributes}, $attributes, $args{extras});
 
         $items_by_id{$report->{itemId}} = $report;
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
@@ -957,8 +933,13 @@ sub _get_defect_updates_resource {
     my $start_time = $self->date_to_dt($args->{start_date});
     my $end_time = $self->date_to_dt($args->{end_date});
 
+    my $mapping = $self->config->{defect_attribute_mapping};
+    my %skip = map { $_ => 1 } @{ $self->config->{defect_extra_attributes_skip_designs} || [] };
+    my $extra_mapping = $skip{$resource_name} ? undef : $mapping->{extra_attributes};
+    my %join = $self->_build_extra_attributes_join($extra_mapping);
+
     my @updates;
-    my $updates = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date});
+    my $updates = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date}, \%join);
     for my $report (@$updates) {
         next if $self->is_ignored_category( $report );
 
@@ -988,6 +969,8 @@ sub _get_defect_updates_resource {
             external_status_code => $external_status_code,
             extras => { latest_data_only => 1 },
         );
+
+        $self->_apply_extra_attributes($extra_mapping, $attributes, $args{extras});
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
@@ -1216,6 +1199,35 @@ sub service_request_id_for_resource {
     # This default behaviour just uses the resource ID which will always
     # be present.
     return $resource->{item}->{itemId};
+}
+
+sub _build_extra_attributes_join {
+    my ($self, $extra_mapping) = @_;
+    my %join;
+    return %join unless $extra_mapping;
+    foreach my $attr_paths (values %$extra_mapping) {
+        if (ref $attr_paths eq 'ARRAY') {
+            push @{$join{joinAttributes}}, @$attr_paths;
+        } else {
+            push @{$join{joinAttributes}}, $attr_paths;
+        }
+    }
+    return %join;
+}
+
+sub _apply_extra_attributes {
+    my ($self, $extra_mapping, $attributes, $extras) = @_;
+    return unless $extra_mapping;
+    foreach my $key (keys %$extra_mapping) {
+        my $attr_paths = $extra_mapping->{$key};
+        $attr_paths = [ $attr_paths ] unless ref $attr_paths eq 'ARRAY';
+        foreach my $attr_path (@$attr_paths) {
+            if ($attr_path && $attributes->{$attr_path}) {
+                $extras->{$key} = $attributes->{$attr_path};
+                last;
+            }
+        }
+    }
 }
 
 sub get_latest_version_date {
