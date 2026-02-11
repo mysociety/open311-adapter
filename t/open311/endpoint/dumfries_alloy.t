@@ -81,6 +81,8 @@ $integration->mock('api_call', sub {
             if ( $dodi_code eq 'designs_serviceEnquiry' ) {
                 # Fetching updates
                 $content = path(__FILE__)->sibling('json/alloyv2/dumfries/designs_serviceEnquiry_search.json')->slurp;
+            } elsif ( $dodi_code eq 'designs_testDefect' ) {
+                $content = path(__FILE__)->sibling('json/alloyv2/dumfries/defect_updates_search.json')->slurp;
             }
         } elsif ( $call =~ m{aqs/query} ) {
             my $dodi_code = $body->{aqs}->{properties}->{dodiCode} || '';
@@ -94,8 +96,13 @@ $integration->mock('api_call', sub {
                 $content = '{ "page": 1, "results": [] }';
             }
         } elsif ( $call =~ m{aqs/statistics} ) {
-            # Statistics query - return count
-            $content = '{ "page": 1, "pageSize": 20, "results": [{"value":{"attributeCode":"fake","value":5.0}}] }';
+            my $dodi_code = $body->{aqs}->{properties}->{dodiCode} || '';
+            if ( $dodi_code eq 'designs_testDefect' ) {
+                $content = '{ "results": [ { "value": { "value": 1 } } ] }';
+            } else {
+                # Statistics query - return count
+                $content = '{ "page": 1, "pageSize": 20, "results": [{"value":{"attributeCode":"fake","value":5.0}}] }';
+            }
         }
 
     } else {
@@ -107,6 +114,8 @@ $integration->mock('api_call', sub {
             $content = '{ "design": { "code": "designs_seReportedIssueList" } }';
         } elsif ( $call =~ 'item-log/item/(.*)$' ) {
             $content = path(__FILE__)->sibling("json/alloyv2/dumfries/item_log_$1.json")->slurp;
+        } elsif ( $call =~ m{item/defect_item_1/parents} ) {
+            $content = '{ "page": 1, "results": [] }';
         } elsif ( $call =~ m{^item/(.+)$} ) {
             my $item_id = $1;
             if (my $data = $item_data{$item_id}) {
@@ -405,8 +414,9 @@ subtest 'priority pulled through' => sub {
         $update->{extras} ||= { latest_data_only => 1 };
         $update->{updated_datetime} ||= '2025-12-25T12:00:00Z';
     }
-    is scalar(@$updates), 1, 'Got 1 update (second has no status attributes, returns IGNORE and is filtered)';
-    is_deeply $updates->[0], {
+    is scalar(@$updates), 2, 'Got 2 updates (one inspection, one defect; second inspection has no status attributes, returns IGNORE and is filtered)';
+    my ($inspection_update) = grep { $_->{service_request_id} eq '63ee34826965f30390f01cda' } @$updates;
+    is_deeply $inspection_update, {
       "status" => "planned",
       "external_status_code" => "1212aad:1234ade:987ffa",
       "updated_datetime" => "2025-12-25T12:00:00Z",
@@ -418,7 +428,23 @@ subtest 'priority pulled through' => sub {
       },
       "description" => "",
       "service_request_id" => "63ee34826965f30390f01cda"
-    }, 'First update has correct data with priority';
+    }, 'Inspection update has correct data with priority';
+};
+
+subtest 'defect updates include priority from extra_attributes' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?start_date=2025-12-25T00:00:00Z&end_date=2025-12-26T00:00:00Z'
+    );
+    my $updates = decode_json($res->content);
+
+    # Find the defect update (from designs_testDefect)
+    my @defect_updates = grep { $_->{service_request_id} eq 'defect_item_1' } @$updates;
+    is scalar(@defect_updates), 1, 'Got defect update';
+
+    my $defect_update = $defect_updates[0];
+    is $defect_update->{status}, 'planned', 'Defect status is planned';
+    is $defect_update->{extras}{priority}, '3 - 60 Working Days', 'Defect update includes priority from extra_attributes';
+    is $defect_update->{extras}{latest_data_only}, 1, 'latest_data_only flag present';
 };
 
 %item_data = (

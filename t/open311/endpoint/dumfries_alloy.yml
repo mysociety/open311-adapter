@@ -157,3 +157,20 @@ inspection_status_mapping:
     outcome: null
     priority: 9b9b9baa # No Response
     result: closed
+
+defect_resource_name:
+  - designs_testDefect
+
+defect_attribute_mapping:
+  requested_datetime: attributes_defectsReportedDate
+  status: attributes_defectsStatus
+  extra_attributes:
+    priority:
+      - root.attributes_defectTriagePriority.attributes_itemsTitle
+
+defect_extra_attributes_skip_designs:
+  - designs_testDefectNoExtras
+
+defect_status_mapping:
+  status_open: open
+  status_planned: planned
