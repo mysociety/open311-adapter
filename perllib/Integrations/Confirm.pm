@@ -550,7 +550,7 @@ sub jobs_graphql_query {
             name
         }
 
-        statusLogs (
+        currentStatusLog (
             filter: {
                 statusCode: {
                     inList: [ "$status_codes_str" ]

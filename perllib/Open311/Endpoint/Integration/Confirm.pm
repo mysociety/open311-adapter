@@ -1448,8 +1448,8 @@ sub _get_service_requests_for_jobs {
             next;
         }
 
-        my $last_status_log = $job->{statusLogs}[-1];
-        unless ($last_status_log) {
+        my $last_status_log = $job->{currentStatusLog};
+        unless ($last_status_log && %$last_status_log) {
             $self->logger->warn( "no status logs for job type code "
                     . $job->{jobType}{code}
                     . " for job $job_id" );
