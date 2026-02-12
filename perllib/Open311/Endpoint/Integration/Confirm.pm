@@ -772,6 +772,7 @@ sub _get_service_request_updates_for_jobs {
     for my $log ( @{$status_logs} ) {
         my $status
             = $self->job_reverse_status_mapping->{ $log->{statusCode} };
+        next if $status && $status eq 'IGNORE';
 
         if (!$status) {
             # This shouldn't happen given that we filter by status code
@@ -1457,6 +1458,7 @@ sub _get_service_requests_for_jobs {
 
         my $status = $self->job_reverse_status_mapping
             ->{ $last_status_log->{statusCode} };
+        next if $status && $status eq 'IGNORE';
         unless ($status) {
             # This shouldn't happen given that we filter by status code
             # in graphql. But just in case, default to open.
