@@ -208,17 +208,21 @@ sub _skip_job_update {
 
 =head2 _get_service_request_post_process
 
-Override to add media_url support for jobs attached to the defect.
+Override to add media_url support for jobs and inspections attached to the defect.
+Builds an attachment cache for the date range, collects inspection attachment IDs
+to exclude from job results (avoiding duplicates), then merges media URLs from
+both jobs and inspections.
 
 =cut
 
 sub _get_service_request_post_process {
     my ($self, $request_obj, $item, $args) = @_;
 
-    # Add media URLs from associated jobs
-    my $media_urls = $self->_get_job_media_urls($item, $args);
-    if (@$media_urls) {
     my $cache = $self->_build_attachment_cache($args);
+
+    # Build a set of inspection attachment IDs so we can exclude them from job results
+    my %inspection_attachment_ids;
+    my $attributes = $self->alloy->attributes_to_hash($item);
     my $inspection_ids = $attributes->{attributes_defectsWithInspectionsDefectInspection};
     if ($inspection_ids) {
         $inspection_ids = [ $inspection_ids ] unless ref $inspection_ids eq 'ARRAY';
@@ -234,30 +238,30 @@ sub _get_service_request_post_process {
             }
         }
         if (%inspection_attachment_ids) {
+            my $defect_id = $item->{itemId};
+            my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
             $self->logger->debug("Defect $defect_id ($title) has " . scalar(keys %inspection_attachment_ids) . " inspection attachment(s) to exclude");
         }
     }
 
-    # Normalize to array
-    $job_ids = [ $job_ids ] unless ref $job_ids eq 'ARRAY';
-    $self->logger->debug("Defect $defect_id ($title) has " . scalar(@$job_ids) . " raised job(s)");
-
-    # For each job, fetch it and get any attachments
-    for my $job_id (@$job_ids) {
     my @all_media_urls;
-        unless ($inspection && $inspection->{item}) {
-            $self->logger->warn("Failed to fetch inspection $inspection_id for defect $defect_id ($title)");
-            next;
-        }
 
-        my $item_urls = $self->_media_urls_for_item($inspection, $cache, $args);
-        push @media_urls, @$item_urls;
-    }
+    my $job_media_urls = $self->_get_linked_item_media_urls(
+        $item, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache, \%inspection_attachment_ids
+    );
+    push @all_media_urls, @$job_media_urls if @$job_media_urls;
 
-    return \@media_urls;
-}
+    my $inspection_media_urls = $self->_get_linked_item_media_urls(
+        $item, 'attributes_defectsWithInspectionsDefectInspection', $args, $cache
+    );
+    push @all_media_urls, @$inspection_media_urls if @$inspection_media_urls;
+
     if (@all_media_urls) {
         $request_obj->{media_url} = \@all_media_urls;
+    }
+}
+
+=head2 _get_inspection_updates_design
 
 Override to add media_url support for jobs and inspections attached to the defect.
 
@@ -266,16 +270,12 @@ Override to add media_url support for jobs and inspections attached to the defec
 sub _get_inspection_updates_design {
     my ($self, $design, $args) = @_;
 
-            my $job_media_urls = $self->_get_linked_item_media_urls(
-                $report, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache
-            );
+    # Call parent to get the base updates
     my @updates = $self->SUPER::_get_inspection_updates_design($design, $args);
 
     # Build attachment cache once for all updates
     # This avoids making individual API calls for each attachment
-            my $inspection_media_urls = $self->_get_linked_item_media_urls(
-                $report, 'attributes_defectsWithInspectionsDefectInspection', $args, $cache
-            );
+    my $cache = $self->_build_attachment_cache($args);
 
     # For each update, fetch the associated resource and add media URLs
     # Also handle special case for latest_inspection_time
@@ -291,12 +291,16 @@ sub _get_inspection_updates_design {
 
             # Get media URLs from jobs (filtered by date range)
             # Pass the cache to avoid individual API calls
-            my $job_media_urls = $self->_get_job_media_urls($report, $args, $cache);
+            my $job_media_urls = $self->_get_linked_item_media_urls(
+                $report, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache
+            );
             push @all_media_urls, @$job_media_urls if @$job_media_urls;
 
             # Get media URLs from inspections (filtered by date range)
             # Pass the cache to avoid individual API calls
-            my $inspection_media_urls = $self->_get_inspection_media_urls($report, $args, $cache);
+            my $inspection_media_urls = $self->_get_linked_item_media_urls(
+                $report, 'attributes_defectsWithInspectionsDefectInspection', $args, $cache
+            );
             push @all_media_urls, @$inspection_media_urls if @$inspection_media_urls;
 
             if (@all_media_urls) {
