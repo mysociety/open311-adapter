@@ -1371,7 +1371,8 @@ sub defect_status {
     my $status = $defect->{$mapping->{status}};
 
     $status = $status->[0] if ref $status eq 'ARRAY';
-    return $self->config->{defect_status_mapping}->{$status} || 'open';
+    my $result = $self->config->{defect_status_mapping}->{$status} || 'open';
+    return wantarray ? ($result, undef) : $result;
 }
 
 sub skip_fetch_defect {
