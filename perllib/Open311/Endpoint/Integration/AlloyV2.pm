@@ -363,6 +363,86 @@ sub _update_item {
     return $update;
 }
 
+=head2 _append_to_item_attribute
+
+Appends new values to an existing list attribute on an Alloy item.
+Handles ItemSignatureMismatch by refetching the item and retrying once.
+
+=cut
+
+sub _append_to_item_attribute {
+    my ($self, $item, $attr_code, $new_values) = @_;
+
+    my $item_id = $item->{itemId};
+
+    # Find the current values for this attribute
+    my @current_values;
+    for my $attr (@{$item->{attributes}}) {
+        if ($attr->{attributeCode} eq $attr_code) {
+            @current_values = ref $attr->{value} eq 'ARRAY'
+                ? @{$attr->{value}}
+                : ($attr->{value});
+            last;
+        }
+    }
+
+    push @current_values, @$new_values;
+
+    my $updated = {
+        attributes => [
+            {
+                attributeCode => $attr_code,
+                value => \@current_values,
+            }
+        ],
+        signature => $item->{signature},
+    };
+
+    try {
+        $self->alloy->api_call(
+            call => "item/$item_id",
+            method => 'PUT',
+            body => $updated
+        );
+    } catch {
+        if ( $_ =~ /ItemSignatureMismatch/ ) {
+            my $fresh_item = $self->alloy->api_call(call => "item/$item_id")->{item};
+
+            # Rebuild the list from the fresh item's attributes
+            my @fresh_values;
+            for my $attr (@{$fresh_item->{attributes}}) {
+                if ($attr->{attributeCode} eq $attr_code) {
+                    @fresh_values = ref $attr->{value} eq 'ARRAY'
+                        ? @{$attr->{value}}
+                        : ($attr->{value});
+                    last;
+                }
+            }
+            push @fresh_values, @$new_values;
+
+            try {
+                $self->alloy->api_call(
+                    call => "item/$item_id",
+                    method => 'PUT',
+                    body => {
+                        attributes => [
+                            {
+                                attributeCode => $attr_code,
+                                value => \@fresh_values,
+                            }
+                        ],
+                        signature => $fresh_item->{signature},
+                    }
+                );
+            } catch {
+                die "Failed to update attribute $attr_code on item $item_id: $_";
+            }
+        } else {
+            die "Failed to update attribute $attr_code on item $item_id: $_";
+        }
+    };
+}
+
 sub set_parent_attribute {
     my ($self, $args) = @_;
 
