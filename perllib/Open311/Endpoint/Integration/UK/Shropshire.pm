@@ -39,4 +39,16 @@ around process_service_request_args => sub {
     return $ret;
 };
 
+sub jobs_extra_filter {
+    return <<"GRAPHQL";
+        contractCode: { equals: "ZVC18" }
+        statusFlag: { equals: "C" }
+        actualCompletionDate: { hasValue: false }
+GRAPHQL
+}
+
+sub jobs_status_filter {
+    return 'notEquals: "X020"';
+}
+
 1;
