@@ -363,6 +363,86 @@ sub _update_item {
     return $update;
 }
 
+=head2 _append_to_item_attribute
+
+Appends new values to an existing list attribute on an Alloy item.
+Handles ItemSignatureMismatch by refetching the item and retrying once.
+
+=cut
+
+sub _append_to_item_attribute {
+    my ($self, $item, $attr_code, $new_values) = @_;
+
+    my $item_id = $item->{itemId};
+
+    # Find the current values for this attribute
+    my @current_values;
+    for my $attr (@{$item->{attributes}}) {
+        if ($attr->{attributeCode} eq $attr_code) {
+            @current_values = ref $attr->{value} eq 'ARRAY'
+                ? @{$attr->{value}}
+                : ($attr->{value});
+            last;
+        }
+    }
+
+    push @current_values, @$new_values;
+
+    my $updated = {
+        attributes => [
+            {
+                attributeCode => $attr_code,
+                value => \@current_values,
+            }
+        ],
+        signature => $item->{signature},
+    };
+
+    try {
+        $self->alloy->api_call(
+            call => "item/$item_id",
+            method => 'PUT',
+            body => $updated
+        );
+    } catch {
+        if ( $_ =~ /ItemSignatureMismatch/ ) {
+            my $fresh_item = $self->alloy->api_call(call => "item/$item_id")->{item};
+
+            # Rebuild the list from the fresh item's attributes
+            my @fresh_values;
+            for my $attr (@{$fresh_item->{attributes}}) {
+                if ($attr->{attributeCode} eq $attr_code) {
+                    @fresh_values = ref $attr->{value} eq 'ARRAY'
+                        ? @{$attr->{value}}
+                        : ($attr->{value});
+                    last;
+                }
+            }
+            push @fresh_values, @$new_values;
+
+            try {
+                $self->alloy->api_call(
+                    call => "item/$item_id",
+                    method => 'PUT',
+                    body => {
+                        attributes => [
+                            {
+                                attributeCode => $attr_code,
+                                value => \@fresh_values,
+                            }
+                        ],
+                        signature => $fresh_item->{signature},
+                    }
+                );
+            } catch {
+                die "Failed to update attribute $attr_code on item $item_id: $_";
+            }
+        } else {
+            die "Failed to update attribute $attr_code on item $item_id: $_";
+        }
+    };
+}
+
 sub set_parent_attribute {
     my ($self, $args) = @_;
 
@@ -954,7 +1034,146 @@ sub get_service_request {
         updated_datetime => $self->date_to_truncated_dt($attributes->{$mapping->{requested_datetime}}),
     );
 
-    return $self->new_request(%request_args);
+    my $request_obj = $self->new_request(%request_args);
+    $self->_get_service_request_post_process($request_obj, $request, $args);
+    return $request_obj;
+}
+
+=head2 _get_service_request_post_process
+
+Hook for subclasses to enrich a service request after creation.
+Called with the request object, the raw Alloy item, and the original args hash.
+Does nothing by default.
+
+=cut
+
+sub _get_service_request_post_process { }
+
+=head2 _build_attachment_cache
+
+Build a cache of all valid file attachments created within the given date range.
+Uses AQS to query for files efficiently, filtering by:
+- Creation date within start_date to end_date
+- Filename NOT matching FMS pattern
+
+Merges any extra search properties from C<_extra_search_properties> into the
+query (e.g. collectionCode for Dumfries).
+
+Returns a hashref: { attachment_id => { itemId, filename, createdDate } }
+
+=cut
+
+sub _build_attachment_cache {
+    my ($self, $args) = @_;
+
+    return {} unless $args && $args->{start_date} && $args->{end_date};
+
+    my $start_date = $args->{start_date};
+    my $end_date = $args->{end_date};
+
+    $self->logger->debug("Building attachment cache for date range: $start_date to $end_date");
+
+    my $extra = $self->_extra_search_properties();
+
+    # Build AQS query to find all files with lastEditDate in the range
+    my $body = {
+        properties => {
+            dodiCode => "designs_files",
+            attributes => ["attributes_filesOriginalName"],
+            %$extra,
+        },
+        children => [{
+            type => "And",
+            children => [
+                {
+                    type => "GreaterThan",
+                    children => [{
+                        type => "ItemProperty",
+                        properties => { itemPropertyName => "lastEditDate" }
+                    }, {
+                        type => "DateTime",
+                        properties => { value => [$start_date] }
+                    }]
+                },
+                {
+                    type => "LessThan",
+                    children => [{
+                        type => "ItemProperty",
+                        properties => { itemPropertyName => "lastEditDate" }
+                    }, {
+                        type => "DateTime",
+                        properties => { value => [$end_date] }
+                    }]
+                }
+            ]
+        }]
+    };
+
+    my $files = $self->alloy->search($body);
+
+    my %cache;
+    for my $file (@$files) {
+        my $attrs = $self->alloy->attributes_to_hash($file);
+        my $filename = $attrs->{attributes_filesOriginalName} || '';
+
+        # Skip FMS photos
+        next if $filename =~ /^\d+\.\d+\.full\./;
+
+        $cache{$file->{itemId}} = {
+            itemId => $file->{itemId},
+            filename => $filename,
+            createdDate => $file->{createdDate},
+        };
+    }
+
+    my $count = scalar(keys %cache);
+    $self->logger->debug("Attachment cache built: $count file(s) found in date range");
+
+    return \%cache;
+}
+
+=head2 _get_linked_item_media_urls
+
+For a given defect, fetch linked items (jobs, inspections, etc.) via the
+specified link attribute code and return media URLs for their attachments.
+
+Accepts an optional cache (from C<_build_attachment_cache>) to avoid individual
+API calls per attachment, and an optional skip_ids hashref of attachment IDs to
+exclude from results.
+
+=cut
+
+sub _get_linked_item_media_urls {
+    my ($self, $defect, $link_attr_code, $args, $cache, $skip_ids) = @_;
+
+    my @media_urls;
+    my $defect_id = $defect->{itemId};
+
+    my $attributes = $self->alloy->attributes_to_hash($defect);
+    my $linked_ids = $attributes->{$link_attr_code};
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
+
+    unless ($linked_ids) {
+        $self->logger->debug("Defect $defect_id ($title) has no linked items for $link_attr_code");
+        return \@media_urls;
+    }
+
+    # Normalize to array
+    $linked_ids = [ $linked_ids ] unless ref $linked_ids eq 'ARRAY';
+    $self->logger->debug("Defect $defect_id ($title) has " . scalar(@$linked_ids) . " linked item(s) for $link_attr_code");
+
+    for my $id (@$linked_ids) {
+        my $item = $self->alloy->api_call(call => "item/$id");
+        unless ($item && $item->{item}) {
+            $self->logger->warn("Failed to fetch linked item $id for defect $defect_id ($title)");
+            next;
+        }
+
+        my $item_urls = $self->_media_urls_for_item($item, $cache, $args, $skip_ids);
+        push @media_urls, @$item_urls;
+    }
+
+    return \@media_urls;
 }
 
 =head2 get_service_requests
@@ -1152,7 +1371,8 @@ sub defect_status {
     my $status = $defect->{$mapping->{status}};
 
     $status = $status->[0] if ref $status eq 'ARRAY';
-    return $self->config->{defect_status_mapping}->{$status} || 'open';
+    my $result = $self->config->{defect_status_mapping}->{$status} || 'open';
+    return wantarray ? ($result, undef) : $result;
 }
 
 sub skip_fetch_defect {
@@ -1410,9 +1630,9 @@ sub _process_attachment {
             return;
         }
     } else {
-        # XXX is this still needed?
-        # No cache provided - fall back to individual API calls
-        # Fetch the file item to check its filename
+        # No cache provided - fetch each attachment individually.
+        # Used by get_service_requests and get_service_request (singular)
+        # where there's no date range to build a cache from.
         my $file = $self->alloy->api_call(call => "item/$attachment_id");
         unless ($file && $file->{item}) {
             $self->logger->warn("Failed to fetch file $attachment_id for item $item_id");

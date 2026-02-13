@@ -70,6 +70,7 @@ update_to_inspection_attribute_mapping:
 # Needed for categories where Alloy's workflow doesn't automatically
 # set the correct inspection status.
 inspection_status_update:
+  default: '5bc5bdd281d088d177342c73'
   '678f678': 'aa11bb22' # Street Lighting -> Other => Issued
 
 # How values from the above field get mapped to Open311 statuses.

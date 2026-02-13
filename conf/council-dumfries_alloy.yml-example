@@ -79,4 +79,5 @@ update_to_inspection_attribute_mapping:
 # Needed for categories where Alloy's workflow doesn't automatically
 # set the correct inspection status.
 inspection_status_update:
+  default: 'issued_status_id'
   'service_code': 'status_id'

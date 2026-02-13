@@ -87,6 +87,7 @@ sub api_call {
     }
     my $response = $ua->request($request);
     if ($response->is_success) {
+        return $response->content if $args{raw};
         $self->logger->debug($response->content) if $body;
         return decode_json($response->content);
     } else {
