@@ -115,6 +115,23 @@ sub CreateWorksheet {
         foreach (@{$params->{bulky_items}}) {
             push @service_inputs, service_input($_, 1);
         }
+    } elsif ($params->{service_code} eq 'sharps_collection') {
+        push @service_inputs, service_input(3, 1); # Signifier of a sharps collection
+
+        if ( $attributes->{sharps_collect_small_quantity} ) {
+            push @service_inputs, service_input(750, $attributes->{sharps_collect_small_quantity});
+        }
+
+        if ( $attributes->{sharps_collect_large_quantity} ) {
+            push @service_inputs, service_input(751, $attributes->{sharps_collect_large_quantity});
+        }
+
+        if ( $attributes->{sharps_deliver_size} eq '1-litre' ) {
+            push @service_inputs, service_input(752, $attributes->{sharps_deliver_quantity});
+        } elsif ( $attributes->{sharps_deliver_size} eq '5-litre' ) {
+            push @service_inputs, service_input(753, $attributes->{sharps_deliver_quantity});
+        }
+
     } else {
         push @service_inputs,
             service_input($service_params->{service_item_id}, $attributes->{quantity});
@@ -123,6 +140,13 @@ sub CreateWorksheet {
     my $collection_date;
     $collection_date = $attributes->{collection_date} . ' 23:59'
         if $attributes->{collection_date};
+
+    my $container_location;
+    if ($params->{service_code} eq 'sharps_collection') {
+        $container_location = join(' - ', $attributes->{collect_location}, $attributes->{collect_location_other} || ());
+    } else {
+        $container_location = $attributes->{location_of_containers};
+    }
 
     my $worksheet = ixhash(
         Uprn => $params->{uprn},
@@ -133,13 +157,17 @@ sub CreateWorksheet {
         ServiceItemInputs => \@service_inputs,
         ServicePropertyInputs => [
             property_input(79, $attributes->{assisted_yn}),
-            property_input(80, $attributes->{location_of_containers}),
+            property_input(80, $container_location),
             property_input(82, $attributes->{location_of_letterbox}),
             property_input(65, $attributes->{bulky_parking}),
             property_input(66, $attributes->{bulky_location}),
             property_input(59, $attributes->{assisted_reason}),
             property_input(61, $attributes->{assisted_duration}),
             property_input(80, $attributes->{assisted_location}),
+
+            $attributes->{sharps_deliver_glucose_monitor}
+                ? property_input( 88, $attributes->{sharps_deliver_glucose_monitor} )
+                : (),
         ],
         $attributes->{round_instance_id} ? (AdHocRoundInstanceId => $attributes->{round_instance_id}) : (),
     );
