@@ -229,7 +229,8 @@ sub get_service_request_updates {
     for (@update_files) {
         next if _skip_update_file($start, $end, $_->{Name});
         my $data = $self->aurora->fetch_update_file($_->{Name});
-        next unless $self->reverse_status_mapping->{$data->{Message}->{ClearanceReasonCode}} || $_->{Name} =~ /CS_INSPECTION_PROMPTED/;
+        my $clearance_code = $data->{Message}->{ClearanceReasonCode};
+        next unless ($clearance_code && $self->reverse_status_mapping->{$clearance_code}) || $_->{Name} =~ /CS_INSPECTION_PROMPTED/;
 
         my $id_no = @{$data->{Message}->{CaseEventHistory}};
         my $external_update = pop @{$data->{Message}->{CaseEventHistory}};
@@ -237,8 +238,8 @@ sub get_service_request_updates {
                             ->set_nanosecond(0)
                             ->set_time_zone('UTC');
         my %update_args = (
-            status => $_->{Name} =~ /CS_INSPECTION_PROMPTED/ ? 'investigating' : $self->reverse_status_mapping->{ $data->{Message}->{ClearanceReasonCode} },
-            external_status_code => $data->{Message}->{ClearanceReasonCode},
+            status => $_->{Name} =~ /CS_INSPECTION_PROMPTED/ ? 'investigating' : $self->reverse_status_mapping->{ $clearance_code },
+            external_status_code => $clearance_code,
             description => $_->{Name} =~ /CS_CLEAR_CASE/ ? ($data->{Message}->{ClearanceReasonPortalText} // '') : '',
             service_request_id => $data->{Message}->{CaseNumber},
             update_id => $data->{Message}->{CaseNumber} . '_' . $id_no,
