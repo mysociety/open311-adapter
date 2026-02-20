@@ -75,13 +75,8 @@ has status_map => (
         my $statuses = $self->ServiceRequests_Statuses_Get;
         my %map;
         for my $status ( @{ $statuses->{ServiceStatus} } ) {
-            $map{ $status->{ServiceTypeID} } ||= {};
-            my $fms_status = $self->config->{status_map}->{ $status->{Status} };
-            $fms_status = 'open' if $status->{Status} eq 'PENDING';
-            next unless $fms_status;
-            $map{ $status->{ServiceTypeID} }->{$fms_status} = $status->{ID};
+            $map{$status->{ServiceTypeID}}->{$status->{Status}} = $status->{ID};
         }
-
         return \%map;
     }
 );
@@ -230,6 +225,12 @@ sub _methods {
             namespace  => 'http://bartec-systems.com/',
             parameters => [],
         },
+        'ServiceRequest_Update' => {
+            endpoint   => $self->collective_endpoint,
+            soapaction => 'http://bartec-systems.com/ServiceRequest_Update',
+            namespace  => 'http://bartec-systems.com/',
+            parameters => [],
+        },
         'System_ExtendedDataDefinitions_Get' => {
             endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/System_ExtendedDataDefinitions_Get',
@@ -252,10 +253,7 @@ sub _methods {
             endpoint   => $self->collective_endpoint,
             soapaction => 'http://bartec-systems.com/ServiceRequests_Detail_Get',
             namespace  => 'http://bartec-systems.com/',
-            parameters => [
-                SOAP::Data->new(name => 'token', type => 'string'),
-                SOAP::Data->new(name => 'ServiceCode', type => 'string'),
-            ],
+            parameters => [],
         },
         'ServiceRequests_Statuses_Get' => {
             endpoint   => $self->collective_endpoint,
@@ -424,7 +422,9 @@ sub ServiceRequest_Create {
     my $dt = DateTime->now(time_zone => 'Europe/London');
     my $time = DateTime::Format::W3CDTF->new->format_datetime($dt);
 
-    my $status_id = $self->status_map->{$values->{service_code}}->{open};
+    my $bartec_status = $self->config->{forward_status_map}->{OPEN};
+    die "There must be an open forward status mapping" unless $bartec_status;
+    my $status_id = $self->status_map->{$values->{service_code}}->{$bartec_status};
 
     my %req = (
         token => $self->token,
@@ -479,12 +479,11 @@ sub ServiceRequest_Status_Set {
 
     my $service_code = $sr->{ServiceRequest}{ServiceCode};
     my $service_type_id = $sr->{ServiceRequest}{ServiceType}{ID};
-
-    my $statuses = $self->ServiceRequests_Statuses_Get;
     # e.g. 2388 for OPEN Bulky Collection
-    my ($open_status) = grep { $_->{Status} eq $status && $_->{ServiceTypeID} eq $service_type_id } @{ $statuses->{ServiceStatus} };
+    $status = $self->status_map->{$service_type_id}{$status};
+    return unless $status;
 
-    return $self->_wrapper('ServiceRequest_Status_Set', 0, $service_code, $open_status->{ID}, '');
+    return $self->_wrapper('ServiceRequest_Status_Set', 0, $service_code, $status, '');
 }
 
 sub ServiceRequest_Document_Create {
@@ -531,6 +530,32 @@ sub ServiceRequest_Note_Create {
     my $elem = SOAP::Data->value( make_soap_structure( %req ) );
 
     return $self->_wrapper('ServiceRequest_Note_Create', 1, $elem);
+}
+
+sub ServiceRequest_Update {
+    my ($self, $sr, $values) = @_;
+
+    my %req = (
+        token => $self->token,
+        serviceCode => $sr,
+        serviceLocationDescription => '', # Needed otherwise it fails
+    );
+
+    if ( my $extended = $self->get_extended_data ) {
+        if ( my $data = $self->service_extended_data_map->{ $values->{service_code} } ) {
+            my @data;
+            for my $v ( @$data ) {
+                push @data, {
+                    FieldName => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Get.xsd' }, value => $v->{code} },
+                    FieldValue => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Get.xsd' }, value => SOAP::Utils::encode_data($values->{attributes}->{$v->{code}}) },
+                } if $values->{attributes}->{$v->{code}};
+            }
+            $req{extendedData} = { ServiceRequest_UpdateServiceRequest_UpdateFieldFields => \@data } if @data;
+        }
+    }
+
+    my $elem = SOAP::Data->value( make_soap_structure( %req ) );
+    return $self->_wrapper('ServiceRequest_Update', 1, $elem);
 }
 
 sub ServiceRequests_Updates_Get {
@@ -600,7 +625,12 @@ sub get_extended_data {
 
 sub ServiceRequests_Detail_Get {
     my $self = shift;
-    return $self->_wrapper('ServiceRequests_Detail_Get', 0, @_);
+    my %req = (
+        token => $self->token,
+        ServiceCodes => { string => $_[0] },
+    );
+    my $elem = SOAP::Data->value( make_soap_structure( %req ) );
+    return $self->_wrapper('ServiceRequests_Detail_Get', 1, $elem);
 }
 
 sub ServiceRequests_Statuses_Get {
