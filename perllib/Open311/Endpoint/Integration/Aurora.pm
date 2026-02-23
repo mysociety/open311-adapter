@@ -236,10 +236,16 @@ sub get_service_request_updates {
         my $update_date = DateTime::Format::W3CDTF->parse_datetime($external_update->{EventDateTime})
                             ->set_nanosecond(0)
                             ->set_time_zone('UTC');
+
+        my $desc = $_->{Name} =~ /CS_CLEAR_CASE/ ? ($data->{Message}->{ClearanceReasonPortalText} // '') : '';
+        # The exported text from Aurora has newlines stripped so they have been escaped
+        # - unescaping them here.
+        $desc =~ s/\\n/\n/g;
+
         my %update_args = (
             status => $_->{Name} =~ /CS_INSPECTION_PROMPTED/ ? 'investigating' : $self->reverse_status_mapping->{ $data->{Message}->{CaseTypeCode} },
             external_status_code => $data->{Message}->{CaseTypeCode},
-            description => $_->{Name} =~ /CS_CLEAR_CASE/ ? $data->{Message}->{ClearanceReasonPortalText} : '',
+            description => $desc,
             service_request_id => $data->{Message}->{CaseNumber},
             update_id => $data->{Message}->{CaseNumber} . '_' . $id_no,
             updated_datetime => $update_date,
