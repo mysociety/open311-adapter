@@ -451,18 +451,10 @@ sub ServiceRequest_Create {
         },
     );
 
-    if ( my $extended = $self->get_extended_data ) {
-        if ( my $data = $self->service_extended_data_map->{ $values->{service_code} } ) {
-            my @data;
-            for my $v ( @$data ) {
-                push @data, {
-                    FieldName => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd' }, value => $v->{code} },
-                    FieldValue => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequest_Create.xsd' }, value => SOAP::Utils::encode_data($values->{attributes}->{$v->{code}}) },
-                } if $values->{attributes}->{$v->{code}};
-            }
-            $req{extendedData} = { ServiceRequest_CreateServiceRequest_CreateFields => \@data } if @data;
-        }
-    }
+    $self->_add_extended_data($values, \%req,
+        'ServiceRequest_CreateServiceRequest_CreateFields',
+        'http://www.bartec-systems.com/ServiceRequest_Create.xsd',
+    );
 
     my %data = (
         %{ $self->service_defaults->{$values->{service_code} } },
@@ -472,6 +464,23 @@ sub ServiceRequest_Create {
     my $elem = SOAP::Data->value( make_soap_structure( %data ) );
 
     return $self->_wrapper('ServiceRequest_Create', 1, $elem);
+}
+
+sub _add_extended_data {
+    my ($self, $values, $req, $key, $ns) = @_;
+
+    if ( my $extended = $self->get_extended_data ) {
+        if ( my $data = $self->service_extended_data_map->{ $values->{service_code} } ) {
+            my @data;
+            for my $v ( @$data ) {
+                push @data, {
+                    FieldName => { attr => { xmlns => $ns }, value => $v->{code} },
+                    FieldValue => { attr => { xmlns => $ns }, value => SOAP::Utils::encode_data($values->{attributes}->{$v->{code}}) },
+                } if $values->{attributes}->{$v->{code}};
+            }
+            $req->{extendedData} = { $key => \@data } if @data;
+        }
+    }
 }
 
 sub ServiceRequest_Status_Set {
@@ -541,18 +550,10 @@ sub ServiceRequest_Update {
         serviceLocationDescription => '', # Needed otherwise it fails
     );
 
-    if ( my $extended = $self->get_extended_data ) {
-        if ( my $data = $self->service_extended_data_map->{ $values->{service_code} } ) {
-            my @data;
-            for my $v ( @$data ) {
-                push @data, {
-                    FieldName => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Get.xsd' }, value => $v->{code} },
-                    FieldValue => { attr => { xmlns => 'http://www.bartec-systems.com/ServiceRequests_Get.xsd' }, value => SOAP::Utils::encode_data($values->{attributes}->{$v->{code}}) },
-                } if $values->{attributes}->{$v->{code}};
-            }
-            $req{extendedData} = { ServiceRequest_UpdateServiceRequest_UpdateFieldFields => \@data } if @data;
-        }
-    }
+    $self->_add_extended_data($values, \%req,
+        'ServiceRequest_UpdateServiceRequest_UpdateFieldFields',
+        'http://www.bartec-systems.com/ServiceRequests_Get.xsd',
+    );
 
     my $elem = SOAP::Data->value( make_soap_structure( %req ) );
     return $self->_wrapper('ServiceRequest_Update', 1, $elem);
