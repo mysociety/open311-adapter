@@ -283,7 +283,8 @@ subtest "Get updates mapping" => sub {
     <updated_datetime>2025-12-02T09:46:55Z</updated_datetime>
   </request_update>
   <request_update>
-    <description>Ignored unless CS_CLEAR_CASE</description>
+    <description>Ignored unless CS_CLEAR_CASE
+(Also newlines unescaped)</description>
     <external_status_code>GN10</external_status_code>
     <media_url></media_url>
     <service_request_id>FMS-03</service_request_id>
