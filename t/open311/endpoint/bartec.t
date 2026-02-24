@@ -110,6 +110,7 @@ my %responses = (
     ServiceRequests_Notes_Types_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_notes_types_get.xml')->slurp,
     ServiceRequest_Note_Create => \&ServiceRequest_Note_Create,
     System_ExtendedDataDefinitions_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/extended_definitions.xml')->slurp,
+    ServiceRequest_Update => '',
 );
 
 sub gen_full_response {
@@ -134,7 +135,6 @@ my $transport = Test::MockModule->new('SOAP::Transport::HTTP::Client', no_auto =
 $transport->mock(send_receive => sub {
         my $self = shift;
         my %args = @_;
-
 
         (my $action = $args{action}) =~ s#http://bartec-systems.com/##;
         $action =~ s/"//g;
@@ -1387,6 +1387,34 @@ subtest 'fetch_requests with no results' => sub {
 
 
     is_deeply decode_json($res->content), [ ], 'empty list of requests';
+};
+
+subtest 'updates' => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        update_id => '123',
+        updated_datetime => '2026-02-20T12:00:00Z',
+        service_code => 1,
+        service_request_id => '1001',
+        status => 'IN_PROGRESS',
+        description => '',
+    );
+
+    my $sr_update = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Update} );
+    is_deeply $sr_update->body->{ServiceRequest_Update}, {
+        token => 'ABC=',
+        serviceCode => '1001',
+        serviceLocationDescription => '',
+    }, "correct request";
+
+    my $status_set = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Status_Set} );
+    is_deeply $status_set->body->{ServiceRequest_Status_Set}, {
+        token => 'ABC=',
+        ServiceCode => '1001',
+        StatusID => 2278,
+        Comments => '',
+    }, "correct request";
 };
 
 done_testing;
