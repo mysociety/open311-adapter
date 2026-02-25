@@ -230,7 +230,7 @@ sub get_service_request_updates {
         next if _skip_update_file($start, $end, $_->{Name});
         my $data = $self->aurora->fetch_update_file($_->{Name});
         my $clearance_code = $data->{Message}->{ClearanceReasonCode};
-        next unless $clearance_code && $self->reverse_status_mapping->{$clearance_code} || $_->{Name} =~ /CS_INSPECTION_PROMPTED/;
+        next unless ($clearance_code && $self->reverse_status_mapping->{$clearance_code}) || $_->{Name} =~ /CS_INSPECTION_PROMPTED/;
 
         my $id_no = @{$data->{Message}->{CaseEventHistory}};
         my $external_update = pop @{$data->{Message}->{CaseEventHistory}};
