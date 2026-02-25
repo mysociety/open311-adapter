@@ -1075,7 +1075,10 @@ sub _build_attachment_cache {
 
     my $extra = $self->_extra_search_properties();
 
-    # Build AQS query to find all files with lastEditDate in the range
+    # Build AQS query to find all files with createdDate in the range.
+    # We use createdDate (immutable, set once at upload) rather than
+    # lastEditDate (which can be bumped when a file is linked to a new
+    # item or its metadata is touched by Alloy).
     my $body = {
         properties => {
             dodiCode => "designs_files",
@@ -1089,7 +1092,7 @@ sub _build_attachment_cache {
                     type => "GreaterThan",
                     children => [{
                         type => "ItemProperty",
-                        properties => { itemPropertyName => "lastEditDate" }
+                        properties => { itemPropertyName => "createdDate" }
                     }, {
                         type => "DateTime",
                         properties => { value => [$start_date] }
@@ -1099,7 +1102,7 @@ sub _build_attachment_cache {
                     type => "LessThan",
                     children => [{
                         type => "ItemProperty",
-                        properties => { itemPropertyName => "lastEditDate" }
+                        properties => { itemPropertyName => "createdDate" }
                     }, {
                         type => "DateTime",
                         properties => { value => [$end_date] }
