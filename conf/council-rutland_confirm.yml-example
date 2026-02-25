@@ -1,0 +1,18 @@
+"logfile": ""
+"min_log_level": ""
+
+"endpoint_url": ""
+"username": ""
+"password": ""
+"tenant_id": ""
+
+"cutoff_enquiry_date": ""
+"enquiry_method_code": ""
+"point_of_contact_code": ""
+"server_timezone": ""
+
+"service_whitelist": {}
+
+"forward_status_mapping": {}
+
+"reverse_status_mapping": {}

@@ -46,10 +46,10 @@ use Data::Dumper;
 use JSON::MaybeXS;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
-use Open311::Endpoint::Integration::UK::Rutland;
+use Open311::Endpoint::Integration::UK::Rutland::SalesForce;
 use Integrations::SalesForce::Rutland;
 
-my $endpoint = Open311::Endpoint::Integration::UK::Rutland->new;
+my $endpoint = Open311::Endpoint::Integration::UK::Rutland::SalesForce->new;
 
 my %responses = (
     'new_report' => '[{ "Id": "12345" }]',

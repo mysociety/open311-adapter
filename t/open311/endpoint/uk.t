@@ -94,6 +94,7 @@ test_multi(0, 'Open311::Endpoint::Integration::UK::BANES',
 
 test_multi(1, 'Open311::Endpoint::Integration::UK::Rutland',
     'Open311::Endpoint::Integration::UK::Rutland::SalesForce' => 'rutland_salesforce',
+    'Open311::Endpoint::Integration::UK::Rutland::Confirm' => 'rutland_confirm',
 );
 
 
