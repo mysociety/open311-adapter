@@ -238,7 +238,7 @@ sub get_service_request_updates {
                             ->set_nanosecond(0)
                             ->set_time_zone('UTC');
         my %update_args = (
-            status => $_->{Name} =~ /CS_INSPECTION_PROMPTED/ ? 'investigating' : $self->reverse_status_mapping->{ $data->{Message}->{ClearanceReasonCode} },
+            status => $_->{Name} =~ /CS_INSPECTION_PROMPTED/ ? 'investigating' : $self->reverse_status_mapping->{ $clearance_code },
             external_status_code => $data->{Message}->{ClearanceReasonCode},
             description => $_->{Name} =~ /CS_CLEAR_CASE/ ? ($data->{Message}->{ClearanceReasonPortalText} // '') : '',
             service_request_id => $data->{Message}->{CaseNumber},
