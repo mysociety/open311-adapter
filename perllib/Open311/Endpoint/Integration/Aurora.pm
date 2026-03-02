@@ -230,8 +230,8 @@ sub get_service_request_updates {
 
         my %update_args = (
             status => $_->{Name} =~ /CS_INSPECTION_PROMPTED/ ? 'investigating' : $self->reverse_status_mapping->{ $clearance_code },
-            external_status_code => $data->{Message}->{ClearanceReasonCode},
-            description => $desc,
+            external_status_code => $clearance_code,
+            description => $_->{Name} =~ /CS_CLEAR_CASE/ ? ($data->{Message}->{ClearanceReasonPortalText} // '') : '',
             service_request_id => $data->{Message}->{CaseNumber},
             update_id => $data->{Message}->{CaseNumber} . '_' . $id_no,
             updated_datetime => $update_date,
@@ -269,29 +269,33 @@ sub _skip_update_file {
     return 0;
 };
 
+
+# NOTE: Aurora silently fails if we upload an attachment to a case without a name.
 sub _upload_media_as_attachments {
     my ( $self, $args ) = @_;
-    my $attachment_ids = ();
+    my $attachments = ();
 
     my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
     foreach (@{$args->{media_url}}) {
         my $response = $ua->get($_);
         if ($response->is_success) {
-            push @$attachment_ids,
-                $self->aurora->upload_attachment_from_response_and_get_id($response);
+            push @$attachments, {
+                id => $self->aurora->upload_attachment_from_response_and_get_id($response),
+                name => $_->filename,
+            };
         } else {
             $self->logger->warn("Unable to download media " . $_);
         }
     }
 
     foreach (@{$args->{uploads}}) {
-        push @$attachment_ids,
-            $self->aurora->upload_attachment_from_file_and_get_id($_->filename);
+        push @$attachments, {
+            id => $self->aurora->upload_attachment_from_file_and_get_id($_->filename),
+            name => $_->filename,
+        };
     }
 
-    # Aurora silently fails if we upload an attachment without a name so
-    # just using the attachment ID as the name.
-    return [ map { { "id" => $_, "name" => $_ } } @$attachment_ids ];
+    return $attachments;
 }
 
 1;
