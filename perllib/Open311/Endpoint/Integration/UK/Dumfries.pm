@@ -220,41 +220,24 @@ sub _get_service_request_post_process {
 
     my $cache = $self->_build_attachment_cache($args);
 
-    # Build a set of inspection attachment IDs so we can exclude them from job results
-    my %inspection_attachment_ids;
-    my $attributes = $self->alloy->attributes_to_hash($item);
-    my $inspection_ids = $attributes->{attributes_defectsWithInspectionsDefectInspection};
-    if ($inspection_ids) {
-        $inspection_ids = [ $inspection_ids ] unless ref $inspection_ids eq 'ARRAY';
-        for my $inspection_id (@$inspection_ids) {
-            my $inspection = $self->alloy->api_call(call => "item/$inspection_id");
-            if ($inspection && $inspection->{item}) {
-                my $inspection_attrs = $self->alloy->attributes_to_hash($inspection->{item});
-                my $inspection_attachments = $inspection_attrs->{attributes_filesAttachableAttachments};
-                if ($inspection_attachments) {
-                    $inspection_attachments = [ $inspection_attachments ] unless ref $inspection_attachments eq 'ARRAY';
-                    $inspection_attachment_ids{$_} = 1 for @$inspection_attachments;
-                }
-            }
-        }
-        if (%inspection_attachment_ids) {
-            my $defect_id = $item->{itemId};
-            my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
-            $self->logger->debug("Defect $defect_id ($title) has " . scalar(keys %inspection_attachment_ids) . " inspection attachment(s) to exclude");
-        }
-    }
-
     my @all_media_urls;
-
-    my $job_media_urls = $self->_get_linked_item_media_urls(
-        $item, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache, \%inspection_attachment_ids
-    );
-    push @all_media_urls, @$job_media_urls if @$job_media_urls;
 
     my $inspection_media_urls = $self->_get_linked_item_media_urls(
         $item, 'attributes_defectsWithInspectionsDefectInspection', $args, $cache
     );
     push @all_media_urls, @$inspection_media_urls if @$inspection_media_urls;
+
+    my %inspection_attachment_ids = map {
+        $_ => 1
+    } map {
+        /item=(.*?)/;
+        $1 || ();
+    } @all_media_urls;
+
+    my $job_media_urls = $self->_get_linked_item_media_urls(
+        $item, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache, \%inspection_attachment_ids
+    );
+    @all_media_urls = @$job_media_urls if @$job_media_urls;
 
     if (@all_media_urls) {
         $request_obj->{media_url} = \@all_media_urls;
@@ -289,19 +272,26 @@ sub _get_inspection_updates_design {
         if ($report) {
             my @all_media_urls;
 
-            # Get media URLs from jobs (filtered by date range)
-            # Pass the cache to avoid individual API calls
-            my $job_media_urls = $self->_get_linked_item_media_urls(
-                $report, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache
-            );
-            push @all_media_urls, @$job_media_urls if @$job_media_urls;
-
             # Get media URLs from inspections (filtered by date range)
             # Pass the cache to avoid individual API calls
             my $inspection_media_urls = $self->_get_linked_item_media_urls(
                 $report, 'attributes_defectsWithInspectionsDefectInspection', $args, $cache
             );
             push @all_media_urls, @$inspection_media_urls if @$inspection_media_urls;
+
+            my %inspection_attachment_ids = map {
+                $_ => 1
+            } map {
+                /item=(.*)/;
+                $1 || ();
+            } @all_media_urls;
+
+            # Get media URLs from jobs (filtered by date range)
+            # Pass the cache to avoid individual API calls
+            my $job_media_urls = $self->_get_linked_item_media_urls(
+                $report, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache, \%inspection_attachment_ids
+            );
+            @all_media_urls = @$job_media_urls if @$job_media_urls;
 
             if (@all_media_urls) {
                 $update->{media_url} = \@all_media_urls;
