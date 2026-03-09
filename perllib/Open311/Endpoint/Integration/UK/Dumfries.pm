@@ -637,11 +637,13 @@ sub _find_latest_inspection {
 
 =head2 _post_creation_processing
 
-After a defect is created, we need to wait for Alloy's workflow to create an
-inspection, then:
-- Attach any uploaded files to the inspection
-- Update the inspection status to "Issued" for service codes where the workflow
-  doesn't do this automatically
+After a defect is created, if C<uploads_dir> is configured, saves pending
+inspection work (photo attachment and/or status update) to a JSON file for
+async processing by C<bin/alloy/deferred-work>.
+
+Photo files are already uploaded to Alloy before this is called (via
+C<upload_media>), so only Alloy file IDs are stored — no photo bytes.
+Does nothing if neither files nor a status update entry are applicable.
 
 =cut
 
@@ -654,34 +656,85 @@ sub _post_creation_processing {
 
     return unless @$files || $status_id;
 
-    # Wait for inspection (up to 3 minutes) - Alloy workflow creates it asynchronously
-    my $inspection_ref;
-    my $defect;
-    for (1..18) {
-        # Sleep at the start of the loop because the Alloy workflow
-        # needs a few seconds to create the inspection.
-        sleep 10 unless $ENV{TEST_MODE};
-        $defect = $self->alloy->api_call(call => "item/$item_id")->{item};
-        $inspection_ref = $self->_find_latest_inspection($defect);
-        last if $inspection_ref;
-    }
-    my $attributes = $self->alloy->attributes_to_hash($defect);
-    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
-
-    unless ($inspection_ref) {
-        $self->logger->warn("No inspection found for defect $item_id ($title) during POST Service Request");
-        return;
+    # uploads_dir is used as the directory for pending-work JSON files;
+    # without it there's nowhere to queue deferred inspection work.
+    my $dir = $self->config->{uploads_dir};
+    unless ($dir) {
+        die "uploads_dir not configured for Dumfries, unable to defer inspection processing";
     }
 
-    if (@$files) {
-        $self->_attach_files_to_service_request($inspection_ref->{itemId}, $files);
-    }
+    $dir = path($dir);
+    $dir->mkpath;
 
-    if ($status_id) {
-        $self->_update_item($inspection_ref->{itemId}, [{
-            attributeCode => 'attributes_tasksStatus',
-            value => [$status_id],
-        }]);
+    my $data = {
+        item_id            => $item_id,
+        files              => $files,
+        service_code_alloy => $service_code,
+        created_at         => time(),
+    };
+
+    $dir->child("$item_id.json")->spew_utf8(encode_json($data));
+    $self->logger->debug("Deferred post-creation inspection work for defect $item_id");
+}
+
+=head2 process_deferred_work
+
+Processes deferred post-creation inspection work written by
+C<_post_creation_processing>. For each pending JSON file: if the inspection
+now exists in Alloy, attaches any uploaded files and sets the inspection
+status; then removes the file. If the inspection is not yet created, leaves
+the file for the next cron run.
+
+=cut
+
+sub process_deferred_work {
+    my ($self) = @_;
+
+    my $dir = $self->config->{uploads_dir};
+    return unless $dir && -d $dir;
+    $dir = path($dir);
+
+    foreach my $json_file ($dir->children(qr/\.json$/)) {
+        my $data = decode_json($json_file->slurp_utf8);
+
+        my $item_id      = $data->{item_id};
+        my $files        = $data->{files} || [];
+        my $service_code = $data->{service_code_alloy} || '';
+
+        # Wrap API work so a transient error with one item doesn't abort the rest.
+        # 'return' inside try{} exits the try block cleanly (no exception), so
+        # catch is not invoked and the foreach continues to the next file.
+        try {
+            my $defect = $self->alloy->api_call(call => "item/$item_id")->{item};
+            unless ($defect) {
+                $self->logger->warn("Could not fetch defect $item_id from Alloy, will retry");
+                return;
+            }
+
+            my $inspection_ref = $self->_find_latest_inspection($defect);
+            unless ($inspection_ref) {
+                $self->logger->debug("Inspection not yet created for defect $item_id, will retry");
+                return;
+            }
+
+            if (@$files) {
+                $self->_attach_files_to_service_request($inspection_ref, $files);
+            }
+
+            my $status_map = $self->config->{inspection_status_update} || {};
+            my $status_id = $status_map->{$service_code};
+            if ($status_id) {
+                $self->_update_item($inspection_ref->{itemId}, [{
+                    attributeCode => 'attributes_tasksStatus',
+                    value         => [$status_id],
+                }]);
+            }
+
+            $json_file->remove;
+            $self->logger->info("Completed post-creation processing for defect $item_id (inspection $inspection_ref->{itemId})");
+        } catch {
+            $self->logger->error("Error processing deferred work for defect $item_id: $_");
+        };
     }
 }
 

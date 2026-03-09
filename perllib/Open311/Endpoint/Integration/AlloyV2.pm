@@ -266,7 +266,7 @@ sub post_service_request {
     # Upload any photos to Alloy and link them to the new resource
     # via the appropriate attribute
     if (@$files) {
-        $self->_attach_files_to_service_request($item_id, $files);
+        $self->_attach_files_to_service_request($response->{item}, $files);
     }
 
     $self->_post_creation_processing($item_id, $files, $args);
@@ -279,10 +279,9 @@ sub post_service_request {
 }
 
 sub _attach_files_to_service_request {
-    my ($self, $item_id, $files) = @_;
+    my ($self, $item, $files) = @_;
 
-    my $attributes = [{ attributeCode => $self->config->{resource_attachment_attribute_id}, value => $files }];
-    $self->_update_item($item_id, $attributes);
+    $self->_append_to_item_attribute($item, $self->config->{resource_attachment_attribute_id}, $files);
 }
 
 =head2 _post_creation_processing
@@ -294,6 +293,16 @@ the original args hash. Does nothing by default.
 =cut
 
 sub _post_creation_processing { }
+
+=head2 process_deferred_work
+
+Hook for subclasses to process pending deferred work written at request-creation
+time. Called periodically by the alloy_deferred_work cron entry point in UK.pm.
+Does nothing by default.
+
+=cut
+
+sub process_deferred_work { }
 
 =head2 _get_service_code
 
