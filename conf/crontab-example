@@ -3,3 +3,4 @@
 PATH=/usr/local/bin:/usr/bin:/bin
 
 */5 * * * * run-with-lockfile -n "$BASE/confirm-upload.lock" "$BASE/bin/confirm-upload" || echo "stalled?"
+*/2 * * * * run-with-lockfile -n "$BASE/alloy-deferred-work.lock" "$BASE/bin/alloy/deferred-work" || echo "stalled?"
