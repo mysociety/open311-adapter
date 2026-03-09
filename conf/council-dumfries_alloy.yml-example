@@ -81,3 +81,10 @@ update_to_inspection_attribute_mapping:
 inspection_status_update:
   default: 'issued_status_id'
   'service_code': 'status_id'
+
+## Post-creation inspection handling
+
+# Directory for storing pending inspection work (file attachment and status
+# updates). Processed by the bin/alloy/deferred-work cron job.
+uploads_dir: 'uploads/dumfries_alloy'
+

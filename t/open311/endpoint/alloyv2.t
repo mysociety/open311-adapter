@@ -140,7 +140,7 @@ $integration->mock('api_call', sub {
         } elsif ( $call eq 'item' && $body->{designCode} eq 'designs_fMSContacts1001214_5d321178fe2ad80354bbc0a7' ) {
             $content = '{ "item": { "itemId": 708823 } }';
         } elsif ( $call eq 'item' ) {
-            $content = '{ "item": { "itemId": 12345 } }';
+            $content = '{ "item": { "itemId": 12345, "signature": "5d32469bb4e1b9015001430b", "attributes": [] } }';
         } elsif ( $call =~ 'aqs/statistics' ) {
             $content = '{ "page":1,"pageSize":20,"results":[{"value":{"attributeCode":"attributes_fake","value":4.0}}] }';
         } elsif ( $call =~ 'aqs/query' ) {
