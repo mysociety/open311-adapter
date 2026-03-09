@@ -326,6 +326,7 @@ sub learn_additional_types {
     my ($self, $schema) = @_;
     $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/status_extended',
         Open311::Endpoint::Schema->enum('//str',
+            'unchanged',
             'open',
             'closed',
             'fixed',
@@ -346,6 +347,7 @@ sub learn_additional_types {
     );
     $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/status_extended_upper',
         Open311::Endpoint::Schema->enum('//str',
+            'UNCHANGED',
             'OPEN',
             'CLOSED',
             'FIXED',
