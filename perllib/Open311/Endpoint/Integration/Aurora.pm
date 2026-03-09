@@ -190,7 +190,8 @@ Fetches files from Aurora's 'return path update' Azure storage container which c
 snapshot of a case after one of the configured 'triggers' fires.
 
 The C<ClearanceReasonCode> is mapped to an update status via the C<reverse_status_mapping>, with the
-exception of updates via the C<CS_INSPECTION_PROMPTED> trigger which always map to 'investigating'.
+exception of updates via the C<CS_INSPECTION_PROMPTED> trigger which always map to 'investigating',
+and C<CS_CHANGE_QUEUE> which send through a code but do not change state.
 
 Updates via the C<CS_CLEAR_CASE> trigger have their description populated from the
 C<ClearanceReasonPortalText> field, all others are blank.
@@ -215,7 +216,7 @@ sub get_service_request_updates {
         next if _skip_update_file($start, $end, $_->{Name});
         my $data = $self->aurora->fetch_update_file($_->{Name});
         my $clearance_code = $data->{Message}->{ClearanceReasonCode};
-        next unless ($clearance_code && $self->reverse_status_mapping->{$clearance_code}) || $_->{Name} =~ /CS_INSPECTION_PROMPTED/;
+        next unless ($clearance_code && $self->reverse_status_mapping->{$clearance_code}) || $_->{Name} =~ /CS_INSPECTION_PROMPTED|CS_CHANGE_QUEUE/;
 
         my $id_no = @{$data->{Message}->{CaseEventHistory}};
         my $external_update = pop @{$data->{Message}->{CaseEventHistory}};
@@ -228,8 +229,19 @@ sub get_service_request_updates {
         # - unescaping them here.
         $desc =~ s/\\n/\n/g;
 
+        my $state = do {
+            if ($_->{Name} =~ /CS_CHANGE_QUEUE/) {
+                $clearance_code = 'CS_CHANGE_QUEUE';
+                'unchanged';
+            } elsif ($_->{Name} =~ /CS_INSPECTION_PROMPTED/) {
+                'investigating';
+            } else {
+                $self->reverse_status_mapping->{ $clearance_code };
+            }
+        };
+
         my %update_args = (
-            status => $_->{Name} =~ /CS_INSPECTION_PROMPTED/ ? 'investigating' : $self->reverse_status_mapping->{ $clearance_code },
+            status => $state,
             external_status_code => $clearance_code,
             description => $desc,
             service_request_id => $data->{Message}->{CaseNumber},
