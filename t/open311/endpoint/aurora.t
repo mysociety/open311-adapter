@@ -294,10 +294,10 @@ subtest "Get updates mapping" => sub {
   </request_update>
   <request_update>
     <description></description>
-    <external_status_code>GN09</external_status_code>
+    <external_status_code>CS_CHANGE_QUEUE</external_status_code>
     <media_url></media_url>
     <service_request_id>FMS-02</service_request_id>
-    <status>internal_referral</status>
+    <status>unchanged</status>
     <update_id>FMS-02_13</update_id>
     <updated_datetime>2025-12-02T09:40:28Z</updated_datetime>
   </request_update>
@@ -320,7 +320,7 @@ sub _edit_update_file {
     my $file = decode_json($update_file);
     if ($url =~ /CS_CHANGE_QUEUE/) {
         $file->{Message}->{CaseNumber} = 'FMS-02';
-        $file->{Message}->{ClearanceReasonCode} = 'GN09';
+        $file->{Message}->{ClearanceReasonCode} = '';
         splice(@{$file->{Message}->{CaseEventHistory}}, -1);
     } elsif ($url =~ /CS_CLEAR_CASE/) {
         $file->{Message}->{CaseNumber} = 'FMS-03';
