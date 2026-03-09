@@ -1278,6 +1278,7 @@ subtest 'fetch updates' => sub {
             update_id => 228028,
             service_request_id => 'SR00051624',
             status => 'closed',
+            external_status_code => 'UNMAPPED',
             updated_datetime => '2020-06-17T09:59:26+01:00',
             description => '',
             media_url => '',
