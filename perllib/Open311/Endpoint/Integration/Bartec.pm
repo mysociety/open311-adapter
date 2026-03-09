@@ -490,10 +490,11 @@ sub get_service_request_updates {
         my $entries = $self->get_integration->_coerce_to_array( $history, 'ServiceRequest_History' );
 
         for my $entry ( @$entries ) {
-            my $status = $self->_get_update_status($entry);
+            my ($status, $external_status) = $self->_get_update_status($entry);
             next unless $status; # No status, nothing to do
             my %args = (
                 status => $status,
+                $external_status ? ( external_status_code => $external_status ) : (),
                 update_id => $entry->{id},
                 service_request_id => $entry->{ServiceCode},
                 description => '',
@@ -521,7 +522,7 @@ sub _get_update_status {
         $status = $mapped if $mapped;
     }
 
-    return $status;
+    return ($status, $code);
 }
 
 sub get_service_requests {
