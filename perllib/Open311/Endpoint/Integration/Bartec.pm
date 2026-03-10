@@ -479,6 +479,7 @@ sub get_service_request_updates {
 
         for my $entry ( @$entries ) {
             my ($status, $external_status) = $self->_get_update_status($entry);
+            next unless $status; # No status, nothing to do
             my %args = (
                 status => $status,
                 $external_status ? ( external_status_code => $external_status ) : (),
