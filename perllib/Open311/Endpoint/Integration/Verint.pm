@@ -143,8 +143,10 @@ sub update_case_title {
         $result = $result->result;
         my $case = $result->{CoreDetails}{CaseReference};
         my $title = $result->{CoreDetails}{Title};
-        $title .= " - FMS ID: $id";
-        $integ->updateCase($case, $title);
+        if ($case) {
+            $title .= " - FMS ID: $id";
+            $integ->updateCase($case, $title);
+        }
     }
 }
 

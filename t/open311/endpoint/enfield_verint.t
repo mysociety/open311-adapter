@@ -40,6 +40,12 @@ $soap_lite->mock(call => sub {
           title => 'Bench on High Street next to post office',
           description => 'Back has come off bench',
         },
+        fetch_is_empty => {
+          typekey => 'fetch_is_empty',
+          system => 'EXOR',
+          title => 'Bench on High Street next to post office',
+          description => 'Back has come off bench',
+        },
       );
         is $args[0]->name, 'name';
         my $form_name = $args[0]->value;
@@ -89,17 +95,23 @@ $soap_lite->mock(call => sub {
         }
         is scalar @expected, 0, "No unexpected fields";
 
-        return SOAP::Result->new(method => { status => 'success', ref => 12345 });
+        my $id = $form_name eq 'fetch_is_empty' ? 12346 : 12345;
+        return SOAP::Result->new(method => { status => 'success', ref => $id });
     } elsif ($call eq 'searchAndRetrieveCaseDetails') {
         my @data = ${$args[0]->value}->value;
         if ($data[0]->name eq 'CaseReference') {
-            is $data[0]->value, '12345';
-            return SOAP::Result->new(result => {
-                CoreDetails => {
-                    CaseReference => 'CaseRef',
-                    Title => "Title",
-                },
-            });
+            my $v = $data[0]->value;
+            like $v, qr/1234[56]/;
+            if ($v == 12345) {
+                return SOAP::Result->new(result => {
+                    CoreDetails => {
+                        CaseReference => 'CaseRef',
+                        Title => "Title",
+                    },
+                });
+            } elsif ($v == 12346) {
+                return SOAP::Result->new(result => {});
+            }
         } else { # Dates
             is ${$data[0]->value}->value->value, 'service_fixmystreet';
             is $data[1]->value, '2025-11-18T12:00:00Z';
@@ -184,6 +196,15 @@ subtest "GET Service List" => sub {
     <metadata>true</metadata>
     <service_code>bench_or_seat_problem</service_code>
     <service_name>Bench or seat on the pavement</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
+    <description>Fetch empty</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>true</metadata>
+    <service_code>fetch_is_empty</service_code>
+    <service_name>Fetch empty</service_name>
     <type>realtime</type>
   </service>
   <service>
@@ -407,6 +428,17 @@ subtest "POST report with photo" => sub {
     my $res = $enfield_endpoint->run_test_request($req);
 
     is $res->code, 200, 'Report submitted ok';
+};
+
+subtest "POST report, fetch is empty" => sub {
+    set_fixed_time($create_report_time);
+    my $res = $enfield_endpoint->run_test_request(
+        POST => '/requests.json', @standard,
+        service_code => 'fetch_is_empty',
+    );
+    is $res->code, 200, 'Report submitted ok';
+    my $content = decode_json($res->content);
+    is_deeply $content, [{ service_request_id => 12346 }];
 };
 
 subtest 'GET updates' => sub {

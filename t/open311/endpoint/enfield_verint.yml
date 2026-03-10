@@ -26,6 +26,11 @@
       - type: yn
         code: pca
         description: 'Park?'
+  fetch_is_empty:
+    name: Fetch empty
+    form_name: fetch_is_empty
+    typekey: fetch_is_empty
+    lob_system: EXOR
 
 status_mapping:
   'Case Resolved': 'fixed'
