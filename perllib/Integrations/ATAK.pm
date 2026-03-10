@@ -85,7 +85,7 @@ sub create_issue {
     my $request_data = { request => [ $issue_data] };
     my $response = $self->post('/request', $request_data);
 
-    my $issue_id = $response->{'Processed task 1'};
+    my $issue_id = $response->{REQUEST_ID};
     if (!$issue_id) {
         $self->error("No issue ID received.");
     }

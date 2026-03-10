@@ -697,7 +697,7 @@ for my $test (
                     is $photo->{description}, 'Image 1';
                     like $photo->{data}, qr{^data:image/jpeg;base64,/9j/4};
 
-                    return HTTP::Response->new(200, 'OK', [], '{"Processed task 1": "123ABC"}');
+                    return HTTP::Response->new(200, 'OK', [], '{"REQUEST_ID": "123ABC"}');
                 } elsif ($url eq 'https://example.com/ords/hws/atak/v1/login') {
                     return HTTP::Response->new(200, 'OK', [], '{"token": "AUTH-123"}');
                 } elsif ($url eq 'https://example.com/ords/alternative/url/v1') {
