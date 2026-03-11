@@ -270,21 +270,21 @@ Override to add media_url support for jobs and inspections attached to the defec
 sub _get_inspection_updates_design {
     my ($self, $design, $args) = @_;
 
-    # Call parent to get the base updates
-    my @updates = $self->SUPER::_get_inspection_updates_design($design, $args);
+    # Call parent to get the base updates and the raw items
+    my ($updates_ref, $items_by_id) = $self->SUPER::_get_inspection_updates_design($design, $args);
+    my @updates = @$updates_ref;
 
     # Build attachment cache once for all updates
     # This avoids making individual API calls for each attachment
     my $cache = $self->_build_attachment_cache($args);
 
-    # For each update, fetch the associated resource and add media URLs
+    # For each update, use the already-fetched resource to add media URLs
     # Also handle special case for latest_inspection_time
     for my $update (@updates) {
         my $service_request_id = $update->service_request_id;
 
-        # Fetch the resource to get job and inspection media URLs
-        my $response = $self->alloy->api_call(call => "item/$service_request_id");
-        my $report = $response->{item};
+        # Use the item already fetched by the parent method
+        my $report = $items_by_id->{$service_request_id};
 
         if ($report) {
             my @all_media_urls;
@@ -328,7 +328,7 @@ sub _get_inspection_updates_design {
         }
     }
 
-    return @updates;
+    return (\@updates, $items_by_id);
 }
 
 =head2 post_service_request_update
