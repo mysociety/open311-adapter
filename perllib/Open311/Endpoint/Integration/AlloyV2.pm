@@ -746,7 +746,8 @@ sub _get_inspection_updates {
     }
     my @updates;
     foreach (@$resources) {
-        push @updates, $self->_get_inspection_updates_design($_, $args);
+        my ($design_updates, $items_by_id) = $self->_get_inspection_updates_design($_, $args);
+        push @updates, @$design_updates;
     }
     return @updates;
 }
@@ -760,7 +761,7 @@ sub _get_inspection_updates_design {
     my @updates;
 
     my $mapping = $self->config->{inspection_attribute_mapping};
-    return () unless $mapping;
+    return ([], {}) unless $mapping;
 
     my %join;
     if (my $extra_mapping = $mapping->{extra_attributes}) {
@@ -778,6 +779,8 @@ sub _get_inspection_updates_design {
 
     my $assigned_to_users = $self->get_assigned_to_users(@$updates);
 
+    my %items_by_id;
+    my @update_objects;
     for my $report (@$updates) {
         next unless $self->_accept_updated_resource($report, $design);
 
@@ -845,10 +848,11 @@ sub _get_inspection_updates_design {
             }
         }
 
-        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
+        $items_by_id{$report->{itemId}} = $report;
+        push @update_objects, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
 
-    return @updates;
+    return (\@update_objects, \%items_by_id);
 }
 
 sub _skip_inspection_update { }
