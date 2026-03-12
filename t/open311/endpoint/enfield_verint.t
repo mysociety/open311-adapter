@@ -70,6 +70,7 @@ $soap_lite->mock(call => sub {
             [ 'txt_cust_info_first_name', 'Bob' ],
             [ 'txt_cust_info_last_name', 'Mould' ],
             [ 'eml_cust_info_email', 'test@example.com' ],
+            [ 'txta_cust_info_address', "1 Example Street\nEnfield\nEN1 1AA" ],
             [ 'txta_problem_details', $form_data->{title} . ' - FMS ID: 1' ],
             [ 'txta_problem', $form_data->{description} ],
         );

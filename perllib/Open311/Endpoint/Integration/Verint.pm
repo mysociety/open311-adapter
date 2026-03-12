@@ -108,6 +108,7 @@ sub post_service_request {
             txt_cust_info_last_name => $args->{last_name},
             eml_cust_info_email => $args->{email},
             tel_cust_info_phone => $args->{phone},
+            $self->endpoint_config->{customer_address} ? (txta_cust_info_address => $self->endpoint_config->{customer_address}) : (),
             # Report
             txta_problem_details => $title,
             txta_problem => $args->{attributes}->{description},

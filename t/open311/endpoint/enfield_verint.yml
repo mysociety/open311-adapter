@@ -32,5 +32,7 @@
     typekey: fetch_is_empty
     lob_system: EXOR
 
+customer_address: "1 Example Street\nEnfield\nEN1 1AA"
+
 status_mapping:
   'Case Resolved': 'fixed'

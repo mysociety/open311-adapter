@@ -9,3 +9,5 @@ service_whitelist:
     group: Benches
     form_name: lle_benches_form
     typekey: bench_or_seat_problem
+
+customer_address: "1 Example Street\nEnfield\nEN1 1AA"
