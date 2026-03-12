@@ -2,21 +2,12 @@ package Integrations::Bartec::Dummy;
 use Path::Tiny;
 use Moo;
 extends 'Integrations::Bartec';
-sub _build_config_file { path(__FILE__)->sibling('bartec.yml')->stringify }
+sub _build_config_file { path(__FILE__)->parent->parent->child('open311', 'endpoint', 'bartec.yml')->stringify }
 
-sub collective_endpoint { 'https://collectiveapi.bartec-systems.com/API-R1531/CollectiveAPI.asmx' }
+package main;
 
-sub auth_endpoint { 'https://collapi.bartec-systems.com/CollAuth/Authenticate.asmx' }
-
-sub get_integration {
-    my $self = shift;
-    my $integ = Integrations::Bartec::Dummy->new;
-    $integ->config_filename('dummy');
-    return $integ;
-}
-my $integration = get_integration();
-
-use strict; use warnings;
+use strict;
+use warnings;
 
 use Test::More;
 use Test::LongString;
@@ -24,6 +15,14 @@ use Test::MockModule;
 use Test::Output;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
+
+my $integration = get_integration();
+
+sub get_integration {
+    my $self = shift;
+    my $integ = Integrations::Bartec::Dummy->new;
+    return $integ;
+}
 
 sub gen_full_response {
     my $append = shift(@_);

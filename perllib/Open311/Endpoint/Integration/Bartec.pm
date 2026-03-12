@@ -413,6 +413,39 @@ sub distance_haversine {
     return $d;
 }
 
+sub post_service_request_update {
+    my ($self, $args) = @_;
+
+    my $integ = $self->get_integration;
+    my $conf = $integ->config;
+
+    # Update Bartec status
+    if (my $bartec_status = $conf->{forward_status_map}->{$args->{status}}) {
+        my $sr = {
+            ServiceRequest => {
+                ServiceCode => $args->{service_request_id},
+                ServiceType => { ID => $args->{service_code} },
+            }
+        };
+        my $res = $integ->ServiceRequest_Status_Set($sr, $bartec_status);
+        if ($res->{Errors}{Result}) {
+            $self->logger->warn("failed to update status on $args->{service_request_id}: $res->{Errors}->{Message}");
+        }
+    }
+
+    # Update Bartec extra data
+    my $res = $integ->ServiceRequest_Update($args->{service_request_id}, $args);
+    if ($res->{Errors}{Result}) {
+        $self->logger->warn("failed to update extra data on $args->{service_request_id}: $res->{Errors}->{Message}");
+    }
+
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        service_request_id => $args->{service_request_id},
+        status => lc $args->{status},
+        update_id => 'BLANK',
+    );
+}
+
 sub get_service_request_updates {
     my ($self, $args) = @_;
 
@@ -445,8 +478,11 @@ sub get_service_request_updates {
         my $entries = $self->get_integration->_coerce_to_array( $history, 'ServiceRequest_History' );
 
         for my $entry ( @$entries ) {
+            my ($status, $external_status) = $self->_get_update_status($entry);
+            next unless $status; # No status, nothing to do
             my %args = (
-                status => $self->_get_update_status($entry),
+                status => $status,
+                $external_status ? ( external_status_code => $external_status ) : (),
                 update_id => $entry->{id},
                 service_request_id => $entry->{ServiceCode},
                 description => '',
@@ -466,13 +502,15 @@ sub _get_update_status {
     my $conf = $self->get_integration->config;
 
     my $status = $conf->{status_map}->{ $update->{ServiceStatusName} };
+    my $code = $update->{ClosingCode};
 
-    if ($update->{ClosingCode}) {
-        my $mapped = $conf->{closing_code_map}->{ $update->{ServiceStatusName} }->{ $update->{ClosingCode} };
-        return $mapped if $mapped;
+    # Check to see if a closing code is specially mapped
+    if ($code) {
+        my $mapped = $conf->{closing_code_map}->{ $update->{ServiceStatusName} }->{$code};
+        $status = $mapped if $mapped;
     }
 
-    return $status;
+    return ($status, $code);
 }
 
 sub get_service_requests {
