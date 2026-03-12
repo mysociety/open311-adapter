@@ -10,7 +10,7 @@ use Moo;
 extends 'Open311::Endpoint::Integration::UK::Rutland::Confirm';
 around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
-    $args{jurisdiction_id} = 'rutland_confirmx';
+    $args{jurisdiction_id} = 'rutland_confirm';
     $args{config_file} = path(__FILE__)->sibling("rutland_confirm.yml")->stringify;
     return $class->$orig(%args);
 };
@@ -25,7 +25,7 @@ use Test::More;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
-my $endpoint = Open311::Endpoint::Integration::UK::Rutland::Confirm->new;
+my $endpoint = Open311::Endpoint::Integration::UK::Rutland::Confirm::Dummy->new;
 
 subtest "Only uses the photo with the correct classification tag" => sub {
     my @photos = (
