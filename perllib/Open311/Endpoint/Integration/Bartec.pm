@@ -445,8 +445,10 @@ sub get_service_request_updates {
         my $entries = $self->get_integration->_coerce_to_array( $history, 'ServiceRequest_History' );
 
         for my $entry ( @$entries ) {
+            my $status = $self->_get_update_status($entry);
+            next unless $status; # No status, nothing to do
             my %args = (
-                status => $self->_get_update_status($entry),
+                status => $status,
                 update_id => $entry->{id},
                 service_request_id => $entry->{ServiceCode},
                 description => '',
@@ -466,10 +468,12 @@ sub _get_update_status {
     my $conf = $self->get_integration->config;
 
     my $status = $conf->{status_map}->{ $update->{ServiceStatusName} };
+    my $code = $update->{ClosingCode};
 
-    if ($update->{ClosingCode}) {
-        my $mapped = $conf->{closing_code_map}->{ $update->{ServiceStatusName} }->{ $update->{ClosingCode} };
-        return $mapped if $mapped;
+    # Check to see if a closing code is specially mapped
+    if ($code) {
+        my $mapped = $conf->{closing_code_map}->{ $update->{ServiceStatusName} }->{$code};
+        $status = $mapped if $mapped;
     }
 
     return $status;
