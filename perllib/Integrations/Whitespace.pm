@@ -115,6 +115,24 @@ sub CreateWorksheet {
         foreach (@{$params->{bulky_items}}) {
             push @service_inputs, service_input($_, 1);
         }
+    } elsif ($params->{service_code} eq 'sharps_collection') {
+        push @service_inputs, service_input(3, 1); # Signifier of a sharps collection
+
+        # XXX Need correct IDs from Bexley
+        if ( $attributes->{sharps_collect_small_quantity} ) {
+            push @service_inputs, service_input(750, $attributes->{sharps_collect_small_quantity});
+        }
+
+        if ( $attributes->{sharps_collect_large_quantity} ) {
+            push @service_inputs, service_input(751, $attributes->{sharps_collect_large_quantity});
+        }
+
+        if ( $attributes->{sharps_deliver_size} eq '1-litre' ) {
+            push @service_inputs, service_input(752, $attributes->{sharps_deliver_quantity});
+        } elsif ( $attributes->{sharps_deliver_size} eq '5-litre' ) {
+            push @service_inputs, service_input(753, $attributes->{sharps_deliver_quantity});
+        }
+
     } else {
         push @service_inputs,
             service_input($service_params->{service_item_id}, $attributes->{quantity});
@@ -140,6 +158,13 @@ sub CreateWorksheet {
             property_input(59, $attributes->{assisted_reason}),
             property_input(61, $attributes->{assisted_duration}),
             property_input(80, $attributes->{assisted_location}),
+
+            # Sharps
+            # XXX Need correct IDs from Bexley
+            property_input( 64, $attributes->{sharps_collect_small_quantity} ),
+            property_input( 65, $attributes->{sharps_collect_large_quantity} ),
+            property_input( 66, $attributes->{sharps_deliver_quantity} ),
+            property_input( 67, $attributes->{sharps_location} ),
         ],
         $attributes->{round_instance_id} ? (AdHocRoundInstanceId => $attributes->{round_instance_id}) : (),
     );
