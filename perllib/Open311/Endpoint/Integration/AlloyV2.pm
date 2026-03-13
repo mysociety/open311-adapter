@@ -295,6 +295,16 @@ the original args hash. Does nothing by default.
 
 sub _post_creation_processing { }
 
+=head2 process_deferred_work
+
+Hook for subclasses to process pending deferred work written at request-creation
+time. Called periodically by the alloy_deferred_work cron entry point in UK.pm.
+Does nothing by default.
+
+=cut
+
+sub process_deferred_work { }
+
 =head2 _get_service_code
 
 Used to determine the Open311 service code for a service.
