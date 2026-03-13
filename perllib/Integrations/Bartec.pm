@@ -77,6 +77,7 @@ has status_map => (
         for my $status ( @{ $statuses->{ServiceStatus} } ) {
             $map{ $status->{ServiceTypeID} } ||= {};
             my $fms_status = $self->config->{status_map}->{ $status->{Status} };
+            $fms_status = 'open' if $status->{Status} eq 'PENDING';
             next unless $fms_status;
             $map{ $status->{ServiceTypeID} }->{$fms_status} = $status->{ID};
         }
