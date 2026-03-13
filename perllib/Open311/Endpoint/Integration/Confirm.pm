@@ -632,7 +632,7 @@ sub get_service_request_updates {
         my $job_photos = @{ $integ->enquiry_update_job_photo_statuses };
         my $defect_photos = @{ $integ->enquiry_update_defect_photo_statuses };
 
-        my $documents = 'documents { url documentName documentDate }';
+        my $documents = 'documents { url documentName documentDate docTypeCode}';
         my $job_documents = $job_photos ? $documents : "";
         my $defect_documents = $defect_photos ? $documents : "";
 
@@ -1846,7 +1846,8 @@ sub _parse_graphql_docs {
     return map { {
         URL => $_->{url},
         Name => $_->{documentName},
-        Date => $self->date_parser->parse_datetime($_->{documentDate})
+        Date => $self->date_parser->parse_datetime($_->{documentDate}),
+        ClassificationCode => $_->{docTypeCode} || '',
     } } @$docs;
 }
 

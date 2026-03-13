@@ -50,7 +50,7 @@ has ua => (
 
 If the Confirm endpoint requires a particular EnquiryMethodCode for NewEnquiry
 requests, override this in the subclass. Valid values can be found by calling
-the GetCustomerLookup method on the endpoint.
+the GetCustomerLookups method on the endpoint.
 
 =cut
 
@@ -64,7 +64,7 @@ has 'enquiry_method_code' => (
 
 Similar to enquiry_method_code, if the Confirm endpoint requires a particular
 PointOfContactCode for NewEnquiry requests, override this in the subclass.
-Valid values can be found by calling the GetCustomerLookup method on the endpoint.
+Valid values can be found by calling the GetCustomerLookups method on the endpoint.
 
 =cut
 
@@ -78,7 +78,7 @@ has 'point_of_contact_code' => (
 
 Similar to enquiry_method_code/point_of_contact_code, if the Confirm endpoint requires a particular
 CustomerTypeCode for NewEnquiry requests, override this in the subclass.
-Valid values can be found by calling the GetCustomerLookup method on the endpoint.
+Valid values can be found by calling the GetCustomerLookups method on the endpoint.
 
 =cut
 
@@ -844,6 +844,12 @@ sub GetEnquiries {
     }
 
     return @enquiries;
+}
+
+sub GetCustomerLookups {
+    my $self = shift;
+    my $lookups = $self->perform_request(\SOAP::Data->name('GetCustomerLookups'));
+    return $lookups;
 }
 
 sub GetEnquiryLookups {

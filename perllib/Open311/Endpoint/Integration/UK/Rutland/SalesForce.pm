@@ -1,8 +1,4 @@
-package Open311::Endpoint::Integration::SalesForce::Rutland;
-
-use Moo;
-extends 'Open311::Endpoint';
-with 'Open311::Endpoint::Role::mySociety';
+package Open311::Endpoint::Integration::UK::Rutland::SalesForce;
 
 use Open311::Endpoint::Service::UKCouncil::Rutland;
 use Open311::Endpoint::Service::Request::SalesForce;
@@ -14,6 +10,28 @@ use Integrations::SalesForce::Rutland;
 use Encode qw(encode_utf8);
 use Digest::MD5 qw(md5_hex);
 use DateTime::Format::Strptime;
+
+use Moo;
+extends 'Open311::Endpoint';
+with 'Open311::Endpoint::Role::mySociety';
+
+has jurisdiction_id => (
+    is => 'ro',
+    default => 'rutland_salesforce',
+);
+
+sub reverse_status_mapping {
+    my ($self, $status) = @_;
+
+    my %valid_status = map { my $no_spaces  = $_; $no_spaces =~ s/\s+/_/g; $_ => $no_spaces; } (
+        'open', 'investigating', 'in progress', 'planned', 'action scheduled',
+        'no further action', 'not councils responsibility', 'duplicate', 'internal referral',
+        'fixed', 'closed',
+    );
+
+    $valid_status{'not responsible'} = 'not_councils_responsibility';
+    return $valid_status{lc($status)} || 'open';
+}
 
 sub service_request_content {
     '/open311/service_request_extended'
@@ -36,8 +54,6 @@ sub parse_datetime {
 
     return $strp->parse_datetime($time);
 }
-
-sub reverse_status_mapping {}
 
 has '+request_class' => (
     is => 'ro',
@@ -277,4 +293,4 @@ sub service {
     return $service;
 }
 
-__PACKAGE__->run_if_script;
+1;

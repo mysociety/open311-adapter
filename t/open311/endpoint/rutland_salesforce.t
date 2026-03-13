@@ -46,10 +46,10 @@ use Data::Dumper;
 use JSON::MaybeXS;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
-use Open311::Endpoint::Integration::UK;
+use Open311::Endpoint::Integration::UK::Rutland::SalesForce;
 use Integrations::SalesForce::Rutland;
 
-my $endpoint = Open311::Endpoint::Integration::UK->new;
+my $endpoint = Open311::Endpoint::Integration::UK::Rutland::SalesForce->new;
 
 my %responses = (
     'new_report' => '[{ "Id": "12345" }]',
@@ -240,7 +240,7 @@ subtest "create basic problem" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
-        jurisdiction_id => 'rutland',
+        jurisdiction_id => 'rutland_salesforce',
         api_key => 'test',
         service_code => 'POT',
         address_string => '22 Acacia Avenue',
@@ -294,7 +294,7 @@ subtest "create problem with extra categories" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
-        jurisdiction_id => 'rutland',
+        jurisdiction_id => 'rutland_salesforce',
         api_key => 'test',
         service_code => 'POT',
         address_string => '22 Acacia Avenue',
@@ -351,7 +351,7 @@ subtest "create problem with extra list categories" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
-        jurisdiction_id => 'rutland',
+        jurisdiction_id => 'rutland_salesforce',
         api_key => 'test',
         service_code => 'RC_08',
         address_string => '22 Acacia Avenue',
@@ -408,7 +408,7 @@ subtest "create problem with multiple photos" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
-        jurisdiction_id => 'rutland',
+        jurisdiction_id => 'rutland_salesforce',
         api_key => 'test',
         service_code => 'POT',
         address_string => '22 Acacia Avenue',
@@ -466,7 +466,7 @@ subtest "create problem with unrecognised attribute" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
-        jurisdiction_id => 'rutland',
+        jurisdiction_id => 'rutland_salesforce',
         api_key => 'test',
         service_code => 'POT',
         address_string => '22 Acacia Avenue',
@@ -512,7 +512,7 @@ subtest "create problem with unrecognised attribute" => sub {
 subtest "check fetch problem" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
-      GET => '/requests.json?jurisdiction_id=rutland&start_date=2018-01-10T00:00:00Z&end_date=2018-01-10T23:59:59Z',
+      GET => '/requests.json?jurisdiction_id=rutland_salesforce&start_date=2018-01-10T00:00:00Z&end_date=2018-01-10T23:59:59Z',
     );
 
     my $sent = pop @sent;
@@ -579,13 +579,12 @@ subtest "check fetch problem with not responsible status" => sub {
 
     }]',
     my $res = $endpoint->run_test_request(
-      GET => '/requests.json?jurisdiction_id=rutland&start_date=2018-01-10T00:00:00Z&end_date=2018-01-10T23:59:59Z',
+      GET => '/requests.json?jurisdiction_id=rutland_salesforce&start_date=2018-01-10T00:00:00Z&end_date=2018-01-10T23:59:59Z',
     );
 
     my $sent = pop @sent;
     ok $res->is_success, 'valid request'
         or diag $res->content;
-
     is_deeply decode_json($res->content),
     [ {
         address => '',
@@ -646,7 +645,7 @@ subtest "check fetch problem ignores problems older than start date" => sub {
 
     }]',
     my $res = $endpoint->run_test_request(
-      GET => '/requests.json?jurisdiction_id=rutland&start_date=2018-01-10T00:00:00Z&end_date=2018-01-10T23:59:59Z',
+      GET => '/requests.json?jurisdiction_id=rutland_salesforce&start_date=2018-01-10T00:00:00Z&end_date=2018-01-10T23:59:59Z',
     );
 
     my $sent = pop @sent;
@@ -698,7 +697,7 @@ subtest "check fetch problem works with no start date" => sub {
 
     }]',
     my $res = $endpoint->run_test_request(
-      GET => '/requests.json?jurisdiction_id=rutland',
+      GET => '/requests.json?jurisdiction_id=rutland_salesforce',
     );
 
     my $sent = pop @sent;
@@ -728,7 +727,8 @@ subtest "create update" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
         POST => '/servicerequestupdates.json',
-        jurisdiction_id => 'rutland',
+        jurisdiction_id => 'rutland_salesforce',
+        service_code => 'code',
         api_key => 'test',
         service_request_id => "a086E000001gcVRQAY",
         updated_datetime => "2014-01-01T12:00:00Z",
@@ -761,8 +761,9 @@ subtest "create update with unicode" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
         POST => '/servicerequestupdates.json',
-        jurisdiction_id => 'rutland',
+        jurisdiction_id => 'rutland_salesforce',
         api_key => 'test',
+        service_code => 'code',
         service_request_id => "a086E000001gcVRQAY",
         updated_datetime => "2014-01-01T12:00:00Z",
         update_id => 1234,
@@ -793,7 +794,7 @@ subtest "create update with unicode" => sub {
 subtest "check fetch updates" => sub {
     set_fixed_time('2014-01-01T12:00:00Z');
     my $res = $endpoint->run_test_request(
-      GET => '/servicerequestupdates.json?jurisdiction_id=rutland',
+      GET => '/servicerequestupdates.json?jurisdiction_id=rutland_salesforce',
     );
 
     my $sent = pop @sent;
@@ -821,7 +822,7 @@ subtest "check fetch update with no comment" => sub {
     }]';
 
     my $res = $endpoint->run_test_request(
-      GET => '/servicerequestupdates.json?jurisdiction_id=rutland',
+      GET => '/servicerequestupdates.json?jurisdiction_id=rutland_salesforce',
     );
 
     my $sent = pop @sent;
@@ -849,7 +850,7 @@ subtest "check fetch update with unicode comment" => sub {
     }]';
 
     my $res = $endpoint->run_test_request(
-      GET => '/servicerequestupdates.json?jurisdiction_id=rutland',
+      GET => '/servicerequestupdates.json?jurisdiction_id=rutland_salesforce',
     );
 
     my $sent = pop @sent;
@@ -877,7 +878,7 @@ subtest "check fetch update with not responsible status" => sub {
     }]';
 
     my $res = $endpoint->run_test_request(
-      GET => '/servicerequestupdates.json?jurisdiction_id=rutland',
+      GET => '/servicerequestupdates.json?jurisdiction_id=rutland_salesforce',
     );
 
     my $sent = pop @sent;
@@ -897,7 +898,7 @@ subtest "check fetch update with not responsible status" => sub {
 
 subtest "check fetch service description" => sub {
     my $res = $endpoint->run_test_request(
-      GET => '/services.json?jurisdiction_id=rutland',
+      GET => '/services.json?jurisdiction_id=rutland_salesforce',
     );
 
     my $sent = pop @sent;
@@ -928,7 +929,7 @@ subtest "check fetch service description" => sub {
 
 subtest "check fetch failing request" => sub {
     my $res = $endpoint->run_test_request(
-      GET => '/services/RC_09.json?jurisdiction_id=rutland',
+      GET => '/services/RC_09.json?jurisdiction_id=rutland_salesforce',
     );
 
     my $sent = pop @sent;
@@ -946,7 +947,7 @@ subtest "check fetch failing request" => sub {
 
 subtest "check fetch service metadata" => sub {
     my $res = $endpoint->run_test_request(
-      GET => '/services/a096E000007pbxWQAQ.json?jurisdiction_id=rutland',
+      GET => '/services/a096E000007pbxWQAQ.json?jurisdiction_id=rutland_salesforce',
     );
 
     my $sent = pop @sent;
