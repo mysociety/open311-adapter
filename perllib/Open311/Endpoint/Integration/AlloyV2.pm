@@ -269,6 +269,8 @@ sub post_service_request {
         $self->_attach_files_to_service_request($item_id, $files);
     }
 
+    $self->_post_creation_processing($item_id, $files, $args);
+
     # create a new Request and return it
     return $self->new_request(
         service_request_id => $item_id
@@ -282,6 +284,16 @@ sub _attach_files_to_service_request {
     my $attributes = [{ attributeCode => $self->config->{resource_attachment_attribute_id}, value => $files }];
     $self->_update_item($item_id, $attributes);
 }
+
+=head2 _post_creation_processing
+
+Hook for subclasses to perform additional processing after a service request
+item has been created. Called with the item ID, uploaded files array, and
+the original args hash. Does nothing by default.
+
+=cut
+
+sub _post_creation_processing { }
 
 =head2 _get_service_code
 
@@ -763,17 +775,7 @@ sub _get_inspection_updates_design {
     my $mapping = $self->config->{inspection_attribute_mapping};
     return ([], {}) unless $mapping;
 
-    my %join;
-    if (my $extra_mapping = $mapping->{extra_attributes}) {
-        # Collect all attribute paths, flattening arrays
-        foreach my $attr_paths (values %$extra_mapping) {
-            if (ref $attr_paths eq 'ARRAY') {
-                push @{$join{joinAttributes}}, @$attr_paths;
-            } else {
-                push @{$join{joinAttributes}}, $attr_paths;
-            }
-        }
-    }
+    my %join = $self->_build_extra_attributes_join($mapping->{extra_attributes});
 
     my $updates = $self->fetch_updated_resources($design, $args->{start_date}, $args->{end_date}, \%join);
 
@@ -832,21 +834,7 @@ sub _get_inspection_updates_design {
             }
         }
 
-        if (my $extra_mapping = $mapping->{extra_attributes}) {
-            foreach my $key (keys %$extra_mapping) {
-                my $attr_paths = $extra_mapping->{$key};
-                # Support both single string and array of attribute paths
-                $attr_paths = [ $attr_paths ] unless ref $attr_paths eq 'ARRAY';
-                
-                # Try each attribute path until we find one with a value
-                foreach my $attr_path (@$attr_paths) {
-                    if ($attr_path && $attributes->{$attr_path}) {
-                        $args{extras}{$key} = $attributes->{$attr_path};
-                        last;
-                    }
-                }
-            }
-        }
+        $self->_apply_extra_attributes($mapping->{extra_attributes}, $attributes, $args{extras});
 
         $items_by_id{$report->{itemId}} = $report;
         push @update_objects, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
@@ -946,8 +934,13 @@ sub _get_defect_updates_resource {
     my $start_time = $self->date_to_dt($args->{start_date});
     my $end_time = $self->date_to_dt($args->{end_date});
 
+    my $mapping = $self->config->{defect_attribute_mapping};
+    my %skip = map { $_ => 1 } @{ $self->config->{defect_extra_attributes_skip_designs} || [] };
+    my $extra_mapping = $skip{$resource_name} ? undef : $mapping->{extra_attributes};
+    my %join = $self->_build_extra_attributes_join($extra_mapping);
+
     my @updates;
-    my $updates = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date});
+    my $updates = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date}, \%join);
     for my $report (@$updates) {
         next if $self->is_ignored_category( $report );
 
@@ -977,6 +970,8 @@ sub _get_defect_updates_resource {
             external_status_code => $external_status_code,
             extras => { latest_data_only => 1 },
         );
+
+        $self->_apply_extra_attributes($extra_mapping, $attributes, $args{extras});
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
@@ -1239,14 +1234,14 @@ sub _get_service_requests_resource {
 
         my $category = $self->get_defect_category( $request );
         unless ($category) {
-            $self->logger->warn("No category found for defect $request->{itemId}, source type $request->{designCode} in " . $self->jurisdiction_id);
+            $self->logger->warn("No category found for defect $request->{itemId} ($title), source type $request->{designCode} in " . $self->jurisdiction_id);
             next;
         }
         $category =~ s/ /_/g;
 
         my $cat_service = $self->service($category);
         unless ($cat_service) {
-            $self->logger->warn("No service found for defect $request->{itemId}, category $category in " . $self->jurisdiction_id);
+            $self->logger->warn("No service found for defect $request->{itemId} ($title), category $category in " . $self->jurisdiction_id);
             next;
         }
 
@@ -1254,7 +1249,7 @@ sub _get_service_requests_resource {
 
         unless ($args{latlong}) {
             my $geometry = $request->{geometry}{type} || 'unknown';
-            $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry");
+            $self->logger->error("Defect $request->{itemId} ($title): don't know how to handle geometry: $geometry");
             next;
         }
 
@@ -1380,7 +1375,8 @@ sub defect_status {
     my $status = $defect->{$mapping->{status}};
 
     $status = $status->[0] if ref $status eq 'ARRAY';
-    return $self->config->{defect_status_mapping}->{$status} || 'open';
+    my $result = $self->config->{defect_status_mapping}->{$status} || 'open';
+    return wantarray ? ($result, undef) : $result;
 }
 
 sub skip_fetch_defect {
@@ -1400,6 +1396,35 @@ sub service_request_id_for_resource {
     # This default behaviour just uses the resource ID which will always
     # be present.
     return $resource->{item}->{itemId};
+}
+
+sub _build_extra_attributes_join {
+    my ($self, $extra_mapping) = @_;
+    my %join;
+    return %join unless $extra_mapping;
+    foreach my $attr_paths (values %$extra_mapping) {
+        if (ref $attr_paths eq 'ARRAY') {
+            push @{$join{joinAttributes}}, @$attr_paths;
+        } else {
+            push @{$join{joinAttributes}}, $attr_paths;
+        }
+    }
+    return %join;
+}
+
+sub _apply_extra_attributes {
+    my ($self, $extra_mapping, $attributes, $extras) = @_;
+    return unless $extra_mapping;
+    foreach my $key (keys %$extra_mapping) {
+        my $attr_paths = $extra_mapping->{$key};
+        $attr_paths = [ $attr_paths ] unless ref $attr_paths eq 'ARRAY';
+        foreach my $attr_path (@$attr_paths) {
+            if ($attr_path && $attributes->{$attr_path}) {
+                $extras->{$key} = $attributes->{$attr_path};
+                last;
+            }
+        }
+    }
 }
 
 sub get_latest_version_date {

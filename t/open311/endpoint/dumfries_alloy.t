@@ -33,6 +33,8 @@ use Data::Dumper;
 BEGIN { $ENV{TEST_MODE} = 1; }
 
 my (@sent);
+my @api_calls;  # Track all API calls for assertions
+my %item_data;
 
 my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
 
@@ -49,9 +51,21 @@ $integration->mock('api_call', sub {
     my $call    = $args{call};
     my $params  = $args{params};
     my $body    = $args{body};
+    my $method  = $args{method} || '';
     my $is_file = $args{is_file};
 
+    push @api_calls, \%args;
+
     my $content;
+
+    if ($is_file) {
+        return { fileItemId => 'file_001' };
+    }
+
+    if ($method eq 'PUT' && $call =~ m{^item/(.+)$}) {
+        my $item_id = $1;
+        return { item => { itemId => $item_id } };
+    }
 
     if ($body) {
         push @sent, $body;
@@ -67,6 +81,8 @@ $integration->mock('api_call', sub {
             if ( $dodi_code eq 'designs_serviceEnquiry' ) {
                 # Fetching updates
                 $content = path(__FILE__)->sibling('json/alloyv2/dumfries/designs_serviceEnquiry_search.json')->slurp;
+            } elsif ( $dodi_code eq 'designs_testDefect' ) {
+                $content = path(__FILE__)->sibling('json/alloyv2/dumfries/defect_updates_search.json')->slurp;
             }
         } elsif ( $call =~ m{aqs/query} ) {
             my $dodi_code = $body->{aqs}->{properties}->{dodiCode} || '';
@@ -80,8 +96,13 @@ $integration->mock('api_call', sub {
                 $content = '{ "page": 1, "results": [] }';
             }
         } elsif ( $call =~ m{aqs/statistics} ) {
-            # Statistics query - return count
-            $content = '{ "page": 1, "pageSize": 20, "results": [{"value":{"attributeCode":"fake","value":5.0}}] }';
+            my $dodi_code = $body->{aqs}->{properties}->{dodiCode} || '';
+            if ( $dodi_code eq 'designs_testDefect' ) {
+                $content = '{ "results": [ { "value": { "value": 1 } } ] }';
+            } else {
+                # Statistics query - return count
+                $content = '{ "page": 1, "pageSize": 20, "results": [{"value":{"attributeCode":"fake","value":5.0}}] }';
+            }
         }
 
     } else {
@@ -93,9 +114,15 @@ $integration->mock('api_call', sub {
             $content = '{ "design": { "code": "designs_seReportedIssueList" } }';
         } elsif ( $call =~ 'item-log/item/(.*)$' ) {
             $content = path(__FILE__)->sibling("json/alloyv2/dumfries/item_log_$1.json")->slurp;
+        } elsif ( $call =~ m{item/defect_item_1/parents} ) {
+            $content = '{ "page": 1, "results": [] }';
         } elsif ( $call =~ m{^item/(.+)$} ) {
             my $item_id = $1;
-            $content = '{ "item": { "itemId": "' . $item_id . '", "attributes": [] } }';
+            if (my $data = $item_data{$item_id}) {
+                $content = encode_json({ item => $data });
+            } else {
+                $content = '{ "item": { "itemId": "' . $item_id . '", "attributes": [] } }';
+            }
         } else {
             die "No handler found for API call $call";
         }
@@ -387,8 +414,9 @@ subtest 'priority pulled through' => sub {
         $update->{extras} ||= { latest_data_only => 1 };
         $update->{updated_datetime} ||= '2025-12-25T12:00:00Z';
     }
-    is scalar(@$updates), 1, 'Got 1 update (second has no status attributes, returns IGNORE and is filtered)';
-    is_deeply $updates->[0], {
+    is scalar(@$updates), 2, 'Got 2 updates (one inspection, one defect; second inspection has no status attributes, returns IGNORE and is filtered)';
+    my ($inspection_update) = grep { $_->{service_request_id} eq '63ee34826965f30390f01cda' } @$updates;
+    is_deeply $inspection_update, {
       "status" => "planned",
       "external_status_code" => "1212aad:1234ade:987ffa",
       "updated_datetime" => "2025-12-25T12:00:00Z",
@@ -400,8 +428,144 @@ subtest 'priority pulled through' => sub {
       },
       "description" => "",
       "service_request_id" => "63ee34826965f30390f01cda"
-    }, 'First update has correct data with priority';
+    }, 'Inspection update has correct data with priority';
 };
+
+subtest 'defect updates include priority from extra_attributes' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?start_date=2025-12-25T00:00:00Z&end_date=2025-12-26T00:00:00Z'
+    );
+    my $updates = decode_json($res->content);
+
+    # Find the defect update (from designs_testDefect)
+    my @defect_updates = grep { $_->{service_request_id} eq 'defect_item_1' } @$updates;
+    is scalar(@defect_updates), 1, 'Got defect update';
+
+    my $defect_update = $defect_updates[0];
+    is $defect_update->{status}, 'planned', 'Defect status is planned';
+    is $defect_update->{extras}{priority}, '3 - 60 Working Days', 'Defect update includes priority from extra_attributes';
+    is $defect_update->{extras}{latest_data_only}, 1, 'latest_data_only flag present';
+};
+
+%item_data = (
+    report_456 => {
+        itemId => 'report_456',
+        attributes => [{
+            attributeCode => 'attributes_defectsWithInspectionsDefectInspection',
+            value => ['inspection_456']
+        }]
+    },
+    inspection_456 => {
+        itemId => 'inspection_456',
+    },
+);
+
+subtest 'post_service_request updates inspection status for Street Lighting -> Other' => sub {
+    # Test that posting a service request with a special service code
+    # (no photos) updates the inspection status to "Issued"
+
+    @api_calls = ();
+
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        jurisdiction_id => 'dumfries_alloy',
+        api_key => 'test',
+        service_code => '678f678',
+        address_string => '1 High Street',
+        first_name => 'Test',
+        last_name => 'User',
+        email => 'test@example.com',
+        phone => '07700900123',
+        description => 'Street light issue',
+        lat => '55.0611',
+        long => '-3.6056',
+        'attribute[description]' => 'Street light issue',
+        'attribute[title]' => 'Street light on High Street',
+        'attribute[report_url]' => 'http://localhost/789',
+        'attribute[group]' => 'Street Lighting',
+        'attribute[category]' => 'Other',
+        'attribute[fixmystreet_id]' => 124,
+        'attribute[easting]' => 300000,
+        'attribute[northing]' => 600000,
+    );
+
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+    my @inspection_updates = grep {
+        $_->{call} && $_->{call} eq 'item/inspection_456' &&
+        $_->{method} && $_->{method} eq 'PUT'
+    } @api_calls;
+
+    is scalar(@inspection_updates), 1, 'inspection was updated once';
+
+    my ($status_attr) = grep {
+        $_->{attributeCode} eq 'attributes_tasksStatus'
+    } @{$inspection_updates[0]->{body}{attributes}};
+
+    ok $status_attr, 'status attribute present in update';
+    is_deeply $status_attr->{value}, ['aa11bb22'], 'inspection status set to Issued';
+};
+
+subtest 'post_service_request with photos and status update' => sub {
+    # Test that both photo attachment and status update happen
+
+    @api_calls = ();
+
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        jurisdiction_id => 'dumfries_alloy',
+        api_key => 'test',
+        service_code => '678f678',
+        address_string => '1 High Street',
+        first_name => 'Test',
+        last_name => 'User',
+        email => 'test@example.com',
+        phone => '07700900123',
+        description => 'Street light issue with photo',
+        lat => '55.0611',
+        long => '-3.6056',
+        'attribute[description]' => 'Street light issue with photo',
+        'attribute[title]' => 'Street light on High Street',
+        'attribute[report_url]' => 'http://localhost/790',
+        'attribute[group]' => 'Street Lighting',
+        'attribute[category]' => 'Other',
+        'attribute[fixmystreet_id]' => 125,
+        'attribute[easting]' => 300000,
+        'attribute[northing]' => 600000,
+        media_url => 'http://example.org/photo/1.jpeg',
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    my @inspection_updates = grep {
+        $_->{call} && $_->{call} eq 'item/inspection_456' &&
+        $_->{method} && $_->{method} eq 'PUT'
+    } @api_calls;
+
+    is scalar(@inspection_updates), 2, 'inspection was updated twice (photo + status)';
+
+    my ($status_update) = grep {
+        my $attrs = $_->{body}{attributes};
+        grep { $_->{attributeCode} eq 'attributes_tasksStatus' } @$attrs;
+    } @inspection_updates;
+
+    ok $status_update, 'status update found';
+    my ($status_attr) = grep {
+        $_->{attributeCode} eq 'attributes_tasksStatus'
+    } @{$status_update->{body}{attributes}};
+
+    is_deeply $status_attr->{value}, ['aa11bb22'], 'inspection status set to Issued';
+
+    my ($photo_update) = grep {
+        my $attrs = $_->{body}{attributes};
+        grep { $_->{attributeCode} eq 'attributes_filesAttachableAttachments' } @$attrs;
+    } @inspection_updates;
+
+    ok $photo_update, 'photo attachment update found';
+};
+
+%item_data = ();
 
 subtest '_find_latest_inspection with single inspection' => sub {
     # Mock api_call to return a defect with a single inspection
