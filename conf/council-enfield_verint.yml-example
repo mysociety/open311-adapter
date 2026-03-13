@@ -10,4 +10,9 @@ service_whitelist:
     form_name: lle_benches_form
     typekey: bench_or_seat_problem
 
-customer_address: "1 Example Street\nEnfield\nEN1 1AA"
+customer_address:
+  uprn: "10001234567"
+  street_number: "1"
+  street_name: "Example Street"
+  town: "Enfield"
+  postcode: "EN1 1AA"

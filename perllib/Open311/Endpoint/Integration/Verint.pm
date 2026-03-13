@@ -108,7 +108,7 @@ sub post_service_request {
             txt_cust_info_last_name => $args->{last_name},
             eml_cust_info_email => $args->{email},
             tel_cust_info_phone => $args->{phone},
-            $self->endpoint_config->{customer_address} ? (txta_cust_info_address => $self->endpoint_config->{customer_address}) : (),
+            $self->_customer_address_fields,
             # Report
             txta_problem_details => $title,
             txta_problem => $args->{attributes}->{description},
@@ -262,6 +262,20 @@ sub services {
     } sort keys %$services;
 
     return @services;
+}
+
+sub _customer_address_fields {
+    my ($self) = @_;
+    my $addr = $self->endpoint_config->{customer_address};
+    return () unless $addr;
+    return (
+        txta_cust_info_address      => "$addr->{street_number} $addr->{street_name}\n$addr->{town}\n$addr->{postcode}",
+        $addr->{uprn} ? (txt_cust_info_uprn => $addr->{uprn}) : (),
+        txt_cust_info_street_number => $addr->{street_number},
+        txt_cust_info_street_name   => $addr->{street_name},
+        txt_cust_info_town          => $addr->{town},
+        txt_cust_info_postcode      => $addr->{postcode},
+    );
 }
 
 sub ixhash {
