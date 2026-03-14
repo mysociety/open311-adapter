@@ -180,7 +180,7 @@ sub services {
 
             my $subcategory_name = $subcategory_alias || $subcategory;
 
-            (my $code = $subcategory) =~ s/ /_/g;
+            my $code = $self->_get_service_code($group, $subcategory, $subcategory_config);
             if ($subcategory_alias) {
                 $code .= '_' . ++$suffixes{$code};
             }
@@ -266,15 +266,61 @@ sub post_service_request {
     # Upload any photos to Alloy and link them to the new resource
     # via the appropriate attribute
     if (@$files) {
-        my $attributes = [{ attributeCode => $self->config->{resource_attachment_attribute_id}, value => $files }];
-        $self->_update_item($item_id, $attributes);
+        $self->_attach_files_to_service_request($item_id, $files);
     }
+
+    $self->_post_creation_processing($item_id, $files, $args);
 
     # create a new Request and return it
     return $self->new_request(
         service_request_id => $item_id
     );
 
+}
+
+sub _attach_files_to_service_request {
+    my ($self, $item_id, $files) = @_;
+
+    my $attributes = [{ attributeCode => $self->config->{resource_attachment_attribute_id}, value => $files }];
+    $self->_update_item($item_id, $attributes);
+}
+
+=head2 _post_creation_processing
+
+Hook for subclasses to perform additional processing after a service request
+item has been created. Called with the item ID, uploaded files array, and
+the original args hash. Does nothing by default.
+
+=cut
+
+sub _post_creation_processing { }
+
+=head2 process_deferred_work
+
+Hook for subclasses to process pending deferred work written at request-creation
+time. Called periodically by the alloy_deferred_work cron entry point in UK.pm.
+Does nothing by default.
+
+=cut
+
+sub process_deferred_work { }
+
+=head2 _get_service_code
+
+Used to determine the Open311 service code for a service.
+Takes the group, subcategory, and value (aka subcategory_config) from
+service_whitelist in the integration's config file.
+
+By default we use the subcategory name as the service code, replacing spaces
+with underscores.
+
+=cut
+
+sub _get_service_code {
+    my ($self, $group, $subcategory, $subcategory_config) = @_;
+
+    (my $code = $subcategory) =~ s/ /_/g;
+    return $code;
 }
 
 sub _munge_service_code {
@@ -325,6 +371,86 @@ sub _update_item {
     };
 
     return $update;
+}
+
+=head2 _append_to_item_attribute
+
+Appends new values to an existing list attribute on an Alloy item.
+Handles ItemSignatureMismatch by refetching the item and retrying once.
+
+=cut
+
+sub _append_to_item_attribute {
+    my ($self, $item, $attr_code, $new_values) = @_;
+
+    my $item_id = $item->{itemId};
+
+    # Find the current values for this attribute
+    my @current_values;
+    for my $attr (@{$item->{attributes}}) {
+        if ($attr->{attributeCode} eq $attr_code) {
+            @current_values = ref $attr->{value} eq 'ARRAY'
+                ? @{$attr->{value}}
+                : ($attr->{value});
+            last;
+        }
+    }
+
+    push @current_values, @$new_values;
+
+    my $updated = {
+        attributes => [
+            {
+                attributeCode => $attr_code,
+                value => \@current_values,
+            }
+        ],
+        signature => $item->{signature},
+    };
+
+    try {
+        $self->alloy->api_call(
+            call => "item/$item_id",
+            method => 'PUT',
+            body => $updated
+        );
+    } catch {
+        if ( $_ =~ /ItemSignatureMismatch/ ) {
+            my $fresh_item = $self->alloy->api_call(call => "item/$item_id")->{item};
+
+            # Rebuild the list from the fresh item's attributes
+            my @fresh_values;
+            for my $attr (@{$fresh_item->{attributes}}) {
+                if ($attr->{attributeCode} eq $attr_code) {
+                    @fresh_values = ref $attr->{value} eq 'ARRAY'
+                        ? @{$attr->{value}}
+                        : ($attr->{value});
+                    last;
+                }
+            }
+            push @fresh_values, @$new_values;
+
+            try {
+                $self->alloy->api_call(
+                    call => "item/$item_id",
+                    method => 'PUT',
+                    body => {
+                        attributes => [
+                            {
+                                attributeCode => $attr_code,
+                                value => \@fresh_values,
+                            }
+                        ],
+                        signature => $fresh_item->{signature},
+                    }
+                );
+            } catch {
+                die "Failed to update attribute $attr_code on item $item_id: $_";
+            }
+        } else {
+            die "Failed to update attribute $attr_code on item $item_id: $_";
+        }
+    };
 }
 
 sub set_parent_attribute {
@@ -642,7 +768,8 @@ sub _get_inspection_updates {
     }
     my @updates;
     foreach (@$resources) {
-        push @updates, $self->_get_inspection_updates_design($_, $args);
+        my ($design_updates, $items_by_id) = $self->_get_inspection_updates_design($_, $args);
+        push @updates, @$design_updates;
     }
     return @updates;
 }
@@ -656,17 +783,16 @@ sub _get_inspection_updates_design {
     my @updates;
 
     my $mapping = $self->config->{inspection_attribute_mapping};
-    return () unless $mapping;
+    return ([], {}) unless $mapping;
 
-    my %join;
-    $join{joinAttributes}
-        = [ $mapping->{category_title}, $mapping->{group_title} ]
-        if $mapping->{category_title};
+    my %join = $self->_build_extra_attributes_join($mapping->{extra_attributes});
 
     my $updates = $self->fetch_updated_resources($design, $args->{start_date}, $args->{end_date}, \%join);
 
     my $assigned_to_users = $self->get_assigned_to_users(@$updates);
 
+    my %items_by_id;
+    my @update_objects;
     for my $report (@$updates) {
         next unless $self->_accept_updated_resource($report, $design);
 
@@ -678,6 +804,7 @@ sub _get_inspection_updates_design {
         my $attributes = $self->alloy->attributes_to_hash($report);
 
         my ($status, $reason_for_closure) = $self->_get_inspection_status($attributes, $mapping);
+        next if $self->_skip_inspection_update($status);
 
         my $description = '';
         if ($mapping->{inspector_comments}) {
@@ -717,21 +844,16 @@ sub _get_inspection_updates_design {
             }
         }
 
-        if ( $mapping->{category_title} ) {
-            $args{extras}{category}
-                = $attributes->{ $mapping->{category_title} }
-                if $attributes->{ $mapping->{category_title} };
+        $self->_apply_extra_attributes($mapping->{extra_attributes}, $attributes, $args{extras});
 
-            $args{extras}{group}
-                = $attributes->{ $mapping->{group_title} }
-                if $attributes->{ $mapping->{group_title} };
-        }
-
-        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
+        $items_by_id{$report->{itemId}} = $report;
+        push @update_objects, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
 
-    return @updates;
+    return (\@update_objects, \%items_by_id);
 }
+
+sub _skip_inspection_update { }
 
 sub get_assigned_to_users {
     # Currently for Northumberland only
@@ -808,6 +930,7 @@ sub _get_defect_updates {
 
     my @updates;
     my $resources = $self->config->{defect_resource_name};
+    $resources = [] unless $resources;
     $resources = [ $resources ] unless ref $resources eq 'ARRAY';
     foreach (@$resources) {
         push @updates, $self->_get_defect_updates_resource($_, $args);
@@ -821,8 +944,13 @@ sub _get_defect_updates_resource {
     my $start_time = $self->date_to_dt($args->{start_date});
     my $end_time = $self->date_to_dt($args->{end_date});
 
+    my $mapping = $self->config->{defect_attribute_mapping};
+    my %skip = map { $_ => 1 } @{ $self->config->{defect_extra_attributes_skip_designs} || [] };
+    my $extra_mapping = $skip{$resource_name} ? undef : $mapping->{extra_attributes};
+    my %join = $self->_build_extra_attributes_join($extra_mapping);
+
     my @updates;
-    my $updates = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date});
+    my $updates = $self->fetch_updated_resources($resource_name, $args->{start_date}, $args->{end_date}, \%join);
     for my $report (@$updates) {
         next if $self->is_ignored_category( $report );
 
@@ -834,7 +962,7 @@ sub _get_defect_updates_resource {
         ($linked_defect, $service_request_id) = $self->_get_defect_inspection($report, $service_request_id);
 
         # we don't care about linked defects until they have been scheduled
-        my $status = $self->defect_status($attributes);
+        my ($status, $external_status_code) = $self->defect_status($attributes, $report, $linked_defect);
         next if $self->_skip_job_update($linked_defect, $status);
 
         my $date = $self->get_latest_version_date($report->{itemId});
@@ -849,8 +977,11 @@ sub _get_defect_updates_resource {
             service_request_id => $service_request_id,
             description => '',
             updated_datetime => $update_dt,
+            external_status_code => $external_status_code,
             extras => { latest_data_only => 1 },
         );
+
+        $self->_apply_extra_attributes($extra_mapping, $attributes, $args{extras});
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
@@ -862,6 +993,201 @@ sub _skip_job_update {
     my ($self, $linked_defect, $status) = @_;
 
     return $linked_defect && ( $status eq 'open' || $status eq 'investigating' );
+}
+
+=head2 get_service_request
+
+Fetches a single service request by ID.
+
+=cut
+
+sub get_service_request {
+    my ($self, $service_request_id, $args) = @_;
+
+    # Fetch the item from Alloy
+    my $response = $self->alloy->api_call(call => "item/$service_request_id");
+    my $request = $response->{item};
+
+    unless ($request) {
+        return;
+    }
+
+    # Check if this is a defect we should process
+    return if $self->skip_fetch_defect($request);
+
+    my $mapping = $self->config->{defect_attribute_mapping};
+    my $attributes = $self->alloy->attributes_to_hash($request);
+
+    my $category = $self->get_defect_category($request);
+    return unless $category;
+    $category =~ s/ /_/g;
+    my $service_obj = $self->service($category);
+
+    return unless $service_obj;
+
+    my $latlong = $self->get_latlong_from_request($request);
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
+    unless ($latlong) {
+        my $geometry = $request->{geometry}{type} || 'unknown';
+        $self->logger->error("Defect $request->{itemId} ($title): don't know how to handle geometry: $geometry");
+        return;
+    }
+
+    my $description = $self->get_request_description($attributes->{$mapping->{description}}, $request);
+    my ($status, $external_status_code) = $self->defect_status($attributes);
+
+    my %request_args = (
+        latlong => $latlong,
+        description => $description,
+        status => $status,
+        external_status_code => $external_status_code,
+        title => $attributes->{attributes_itemsTitle},
+        service => $service_obj,
+        service_request_id => $request->{itemId},
+        requested_datetime => $self->date_to_truncated_dt($attributes->{$mapping->{requested_datetime}}),
+        updated_datetime => $self->date_to_truncated_dt($attributes->{$mapping->{requested_datetime}}),
+    );
+
+    my $request_obj = $self->new_request(%request_args);
+    $self->_get_service_request_post_process($request_obj, $request, $args);
+    return $request_obj;
+}
+
+=head2 _get_service_request_post_process
+
+Hook for subclasses to enrich a service request after creation.
+Called with the request object, the raw Alloy item, and the original args hash.
+Does nothing by default.
+
+=cut
+
+sub _get_service_request_post_process { }
+
+=head2 _build_attachment_cache
+
+Build a cache of all valid file attachments created within the given date range.
+Uses AQS to query for files efficiently, filtering by:
+- Creation date within start_date to end_date
+- Filename NOT matching FMS pattern
+
+Merges any extra search properties from C<_extra_search_properties> into the
+query (e.g. collectionCode for Dumfries).
+
+Returns a hashref: { attachment_id => { itemId, filename, createdDate } }
+
+=cut
+
+sub _build_attachment_cache {
+    my ($self, $args) = @_;
+
+    return {} unless $args && $args->{start_date} && $args->{end_date};
+
+    my $start_date = $args->{start_date};
+    my $end_date = $args->{end_date};
+
+    $self->logger->debug("Building attachment cache for date range: $start_date to $end_date");
+
+    my $extra = $self->_extra_search_properties();
+
+    # Build AQS query to find all files with lastEditDate in the range
+    my $body = {
+        properties => {
+            dodiCode => "designs_files",
+            attributes => ["attributes_filesOriginalName"],
+            %$extra,
+        },
+        children => [{
+            type => "And",
+            children => [
+                {
+                    type => "GreaterThan",
+                    children => [{
+                        type => "ItemProperty",
+                        properties => { itemPropertyName => "lastEditDate" }
+                    }, {
+                        type => "DateTime",
+                        properties => { value => [$start_date] }
+                    }]
+                },
+                {
+                    type => "LessThan",
+                    children => [{
+                        type => "ItemProperty",
+                        properties => { itemPropertyName => "lastEditDate" }
+                    }, {
+                        type => "DateTime",
+                        properties => { value => [$end_date] }
+                    }]
+                }
+            ]
+        }]
+    };
+
+    my $files = $self->alloy->search($body);
+
+    my %cache;
+    for my $file (@$files) {
+        my $attrs = $self->alloy->attributes_to_hash($file);
+        my $filename = $attrs->{attributes_filesOriginalName} || '';
+
+        # Skip FMS photos
+        next if $filename =~ /^\d+\.\d+\.full\./;
+
+        $cache{$file->{itemId}} = {
+            itemId => $file->{itemId},
+            filename => $filename,
+            createdDate => $file->{createdDate},
+        };
+    }
+
+    my $count = scalar(keys %cache);
+    $self->logger->debug("Attachment cache built: $count file(s) found in date range");
+
+    return \%cache;
+}
+
+=head2 _get_linked_item_media_urls
+
+For a given defect, fetch linked items (jobs, inspections, etc.) via the
+specified link attribute code and return media URLs for their attachments.
+
+Accepts an optional cache (from C<_build_attachment_cache>) to avoid individual
+API calls per attachment, and an optional skip_ids hashref of attachment IDs to
+exclude from results.
+
+=cut
+
+sub _get_linked_item_media_urls {
+    my ($self, $defect, $link_attr_code, $args, $cache, $skip_ids) = @_;
+
+    my @media_urls;
+    my $defect_id = $defect->{itemId};
+
+    my $attributes = $self->alloy->attributes_to_hash($defect);
+    my $linked_ids = $attributes->{$link_attr_code};
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
+
+    unless ($linked_ids) {
+        $self->logger->debug("Defect $defect_id ($title) has no linked items for $link_attr_code");
+        return \@media_urls;
+    }
+
+    # Normalize to array
+    $linked_ids = [ $linked_ids ] unless ref $linked_ids eq 'ARRAY';
+    $self->logger->debug("Defect $defect_id ($title) has " . scalar(@$linked_ids) . " linked item(s) for $link_attr_code");
+
+    for my $id (@$linked_ids) {
+        my $item = $self->alloy->api_call(call => "item/$id");
+        unless ($item && $item->{item}) {
+            $self->logger->warn("Failed to fetch linked item $id for defect $defect_id ($title)");
+            next;
+        }
+
+        my $item_urls = $self->_media_urls_for_item($item, $cache, $args, $skip_ids);
+        push @media_urls, @$item_urls;
+    }
+
+    return \@media_urls;
 }
 
 =head2 get_service_requests
@@ -913,17 +1239,19 @@ sub _get_service_requests_resource {
         my %args;
 
         next if $self->skip_fetch_defect( $request );
+        my $attributes = $self->alloy->attributes_to_hash($request);
+        my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
 
         my $category = $self->get_defect_category( $request );
         unless ($category) {
-            $self->logger->warn("No category found for defect $request->{itemId}, source type $request->{designCode} in " . $self->jurisdiction_id);
+            $self->logger->warn("No category found for defect $request->{itemId} ($title), source type $request->{designCode} in " . $self->jurisdiction_id);
             next;
         }
         $category =~ s/ /_/g;
 
         my $cat_service = $self->service($category);
         unless ($cat_service) {
-            $self->logger->warn("No service found for defect $request->{itemId}, category $category in " . $self->jurisdiction_id);
+            $self->logger->warn("No service found for defect $request->{itemId} ($title), category $category in " . $self->jurisdiction_id);
             next;
         }
 
@@ -931,13 +1259,15 @@ sub _get_service_requests_resource {
 
         unless ($args{latlong}) {
             my $geometry = $request->{geometry}{type} || 'unknown';
-            $self->logger->error("Defect $request->{itemId}: don't know how to handle geometry: $geometry");
+            $self->logger->error("Defect $request->{itemId} ($title): don't know how to handle geometry: $geometry");
             next;
         }
 
-        my $attributes = $self->alloy->attributes_to_hash($request);
-        $args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
-        $args{status} = $self->defect_status($attributes);
+        if ($mapping->{description}) {
+            $args{description} = $self->get_request_description($attributes->{$mapping->{description}}, $request);
+        }
+        ( $args{status}, $args{external_status_code} ) = $self->defect_status($attributes);
+        next if $args{status} eq 'IGNORE';
 
         #XXX check this no longer required
         next if grep { $_ =~ /_FIXMYSTREET_ID$/ && $attributes->{$_} } keys %{ $attributes };
@@ -951,6 +1281,7 @@ sub _get_service_requests_resource {
         $args{service_request_id} = $request->{itemId};
         $args{requested_datetime} = $self->date_to_truncated_dt( $attributes->{$mapping->{requested_datetime}} );
         $args{updated_datetime} = $self->date_to_truncated_dt( $attributes->{$mapping->{requested_datetime}} );
+        $args{media_url} = $self->_media_urls_for_item({ item => $request });
 
         my $request = $self->new_request( %args );
 
@@ -961,9 +1292,21 @@ sub _get_service_requests_resource {
 }
 
 sub get_request_description {
-    my ($self, $desc) = @_;
+    my ($self, $desc, $request) = @_;
 
-    return $desc;
+    return $desc || '';
+}
+
+=head2 _extra_search_properties
+
+Hook for subclasses to add extra properties to the search body.
+Returns a hashref of additional properties to merge into the search.
+
+=cut
+
+sub _extra_search_properties {
+    my ($self) = @_;
+    return {};
 }
 
 sub fetch_updated_resources {
@@ -975,6 +1318,7 @@ sub fetch_updated_resources {
         properties =>  {
             dodiCode => $code,
             attributes => ["all"],
+            %{ $self->_extra_search_properties() },
             %{ $join || {} },
         },
         children => [{
@@ -1041,7 +1385,8 @@ sub defect_status {
     my $status = $defect->{$mapping->{status}};
 
     $status = $status->[0] if ref $status eq 'ARRAY';
-    return $self->config->{defect_status_mapping}->{$status} || 'open';
+    my $result = $self->config->{defect_status_mapping}->{$status} || 'open';
+    return wantarray ? ($result, undef) : $result;
 }
 
 sub skip_fetch_defect {
@@ -1061,6 +1406,35 @@ sub service_request_id_for_resource {
     # This default behaviour just uses the resource ID which will always
     # be present.
     return $resource->{item}->{itemId};
+}
+
+sub _build_extra_attributes_join {
+    my ($self, $extra_mapping) = @_;
+    my %join;
+    return %join unless $extra_mapping;
+    foreach my $attr_paths (values %$extra_mapping) {
+        if (ref $attr_paths eq 'ARRAY') {
+            push @{$join{joinAttributes}}, @$attr_paths;
+        } else {
+            push @{$join{joinAttributes}}, $attr_paths;
+        }
+    }
+    return %join;
+}
+
+sub _apply_extra_attributes {
+    my ($self, $extra_mapping, $attributes, $extras) = @_;
+    return unless $extra_mapping;
+    foreach my $key (keys %$extra_mapping) {
+        my $attr_paths = $extra_mapping->{$key};
+        $attr_paths = [ $attr_paths ] unless ref $attr_paths eq 'ARRAY';
+        foreach my $attr_path (@$attr_paths) {
+            if ($attr_path && $attributes->{$attr_path}) {
+                $extras->{$key} = $attributes->{$attr_path};
+                last;
+            }
+        }
+    }
 }
 
 sub get_latest_version_date {
@@ -1150,7 +1524,7 @@ sub get_defect_category {
         my $type;
 
         for my $att (@attributes) {
-            if ($att->{attributeCode} =~ /DefectType|DefectFaultType|lightingJobJobType/) {
+            if ($att->{attributeCode} =~ /DefectType|DefectFaultType|lightingJobJobType|SpecificDefect|FaultType/) {
                 $type = $att->{value}->[0];
             }
         }
@@ -1239,6 +1613,127 @@ sub _get_defect_inspection_parents {
     }
 
     return @linked_defects;
+}
+
+=head2 _process_attachment
+
+Process a single attachment and return its media URL if it passes all filters.
+Returns undef if the attachment should be skipped.
+
+Filters applied:
+- Excludes FMS files (pattern \d+\.\d+\.full\.)
+- Excludes photos outside the date range (if args provided)
+
+If a cache is provided (from _build_attachment_cache), uses it to avoid individual API calls.
+
+=cut
+
+sub _process_attachment {
+    my ($self, $attachment_id, $args, $item_id, $cache) = @_;
+
+    my $filename;
+
+    if ($cache) {
+        my $cached = $cache->{$attachment_id};
+        if ($cached) {
+            # it already passed all filters so we can use it
+            $filename = $cached->{filename};
+            $self->logger->debug("Using cached file data for $attachment_id: $filename");
+        } else {
+            $self->logger->debug("Attachment $attachment_id not in cache, skipping");
+            return;
+        }
+    } else {
+        # No cache provided - fetch each attachment individually.
+        # Used by get_service_requests and get_service_request (singular)
+        # where there's no date range to build a cache from.
+        my $file = $self->alloy->api_call(call => "item/$attachment_id");
+        unless ($file && $file->{item}) {
+            $self->logger->warn("Failed to fetch file $attachment_id for item $item_id");
+            return;
+        }
+
+        my $file_attrs = $self->alloy->attributes_to_hash($file->{item});
+        $filename = $file_attrs->{attributes_filesOriginalName} || '';
+
+        # These are FMS photos
+        if ($filename =~ /^\d+\.\d+\.full\./) {
+            $self->logger->debug("Skipping FMS file: $filename");
+            return;
+        }
+
+        # Check if photo was created within the date range
+        # Use item-log to get the actual creation date from Alloy
+        if ($args && $args->{start_date} && $args->{end_date}) {
+            my $photo_log = $self->alloy->api_call(call => "item-log/item/$attachment_id");
+            my ($create_action) = grep { $_->{action} eq 'Create' } @{$photo_log->{results}};
+
+            if ($create_action && $create_action->{date}) {
+                my $created = $create_action->{date};
+                my $created_dt = $self->date_to_dt($created);
+                my $start_time = $self->date_to_dt($args->{start_date});
+                my $end_time = $self->date_to_dt($args->{end_date});
+
+                $self->logger->debug("Checking photo $attachment_id date filter: created=$created, range=$args->{start_date} to $args->{end_date}");
+
+                if ($created_dt < $start_time || $created_dt > $end_time) {
+                    $self->logger->debug("Skipping photo $attachment_id created at $created (outside range)");
+                    return;
+                } else {
+                    $self->logger->debug("Including photo $attachment_id created at $created (within range)");
+                }
+            } else {
+                $self->logger->debug("No creation date found for photo $attachment_id, including it");
+            }
+        }
+    }
+
+    # Build media URL using base_url and photo endpoint pattern
+    my $base_url = $self->config->{base_url};
+    unless ($base_url) {
+        $self->logger->warn("No base_url configured, skipping media_url for attachment $attachment_id");
+        return;
+    }
+
+    my $jurisdiction_id = $self->jurisdiction_id;
+    my $media_url = "${base_url}photos?jurisdiction_id=${jurisdiction_id}&item=${attachment_id}";
+    $self->logger->debug("Added media_url for item $item_id: $media_url (filename: $filename)");
+
+    return $media_url;
+}
+
+sub _media_urls_for_item {
+    my ($self, $item, $cache, $args, $skip_ids) = @_;
+
+    my @media_urls;
+    my $attributes = $self->alloy->attributes_to_hash($item->{item});
+    my $item_id = $item->{item}->{itemId};
+    my $attachment_ids = $attributes->{attributes_filesAttachableAttachments};
+    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
+
+    unless ($attachment_ids) {
+        $self->logger->debug("item $item_id ($title) has no attachments");
+        return [];
+    }
+
+    # Normalize to array
+    $attachment_ids = [ $attachment_ids ] unless ref $attachment_ids eq 'ARRAY';
+    $self->logger->debug("item $item_id ($title) has " . scalar(@$attachment_ids) . " attachment(s)");
+
+    # Process each attachment
+    for my $attachment_id (@$attachment_ids) {
+        # Skip attachments we don't want
+        if ($skip_ids && $skip_ids->{$attachment_id}) {
+            $self->logger->debug("Skipping attachment $attachment_id (already on inspection?)");
+            next;
+        }
+
+        my $media_url = $self->_process_attachment($attachment_id, $args, $item_id, $cache);
+        push @media_urls, $media_url if $media_url;
+    }
+
+    return \@media_urls;
+
 }
 
 sub _get_attachments {

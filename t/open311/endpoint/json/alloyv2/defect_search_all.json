@@ -129,6 +129,10 @@
           "value": "2019-01-01T00:00:07Z"
         },
         {
+          "attributeCode": "attributes_itemsTitle",
+          "value": "DEF-10101"
+        },
+        {
           "attributeCode": "attributes_defectsStatus",
           "value": [""]
         },
