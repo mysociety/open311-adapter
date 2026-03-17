@@ -1,0 +1,27 @@
+{
+    "item": {
+        "itemId": "4947506",
+        "designCode": "designs_coversGratingsFramesBoxes1000797_5d323f8efe2ad80354bbda56",
+        "collection": "Live",
+        "geometry": {
+            "type": "Point",
+            "coordinates": [2, 1]
+        },
+        "attributes": [
+            {
+                "attributeCode": "attributes_defectsReportedDate",
+                "value": "2019-01-02T11:29:16Z"
+            },
+            {
+                "attributeCode": "attributes_defectsStatus",
+                "value": ["5c8bdfb98ae862230019dc20"]
+            },
+            {
+                "attributeCode": "attributes_description",
+                "value": "test"
+            }
+        ],
+        "signature": "5d32469bb4e1b90150014305",
+        "title": "DEF-654320"
+    }
+}

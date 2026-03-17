@@ -1023,6 +1023,18 @@ attributes_itemsTitle for the title.
 sub get_service_requests {
     my ($self, $args) = @_;
 
+    # If specific service_request_ids were requested, fetch each one
+    # directly by ID rather than doing a date-range search.
+    if ($args->{service_request_id} && @{$args->{service_request_id}}) {
+        my @requests;
+        for my $id (@{$args->{service_request_id}}) {
+            if (my $request = $self->get_service_request($id, $args)) {;
+                push @requests, $request;
+            }
+        }
+        return @requests;
+    }
+
     my $resources = $self->config->{defect_resource_name};
     $resources = [ $resources ] unless ref $resources eq 'ARRAY';
     my @requests;
@@ -1432,21 +1444,31 @@ sub get_service_request {
     my $request = $response->{item};
 
     unless ($request) {
+        $self->logger->debug("No item $service_request_id found in Alloy");
         return;
     }
 
     # Check if this is a defect we should process
-    return if $self->skip_fetch_defect($request);
+    if ($self->skip_fetch_defect($request)) {
+        $self->logger->debug("Skipping fetched defect $service_request_id");
+        return;
+    };
 
     my $mapping = $self->config->{defect_attribute_mapping};
     my $attributes = $self->alloy->attributes_to_hash($request);
 
     my $category = $self->get_defect_category($request);
-    return unless $category;
+    unless ($category) {
+        $self->logger->debug("No category for defect $service_request_id; skipping");
+        return;
+    }
     $category =~ s/ /_/g;
     my $service_obj = $self->service($category);
 
-    return unless $service_obj;
+    unless ($service_obj) {
+        $self->logger->debug("No service for defect $service_request_id; skipping");
+        return;
+    }
 
     my $latlong = $self->get_latlong_from_request($request);
     my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
@@ -1456,7 +1478,9 @@ sub get_service_request {
         return;
     }
 
-    my $description = $self->get_request_description($attributes->{$mapping->{description}}, $request);
+    my $description = $mapping->{description}
+        ? $self->get_request_description($attributes->{$mapping->{description}}, $request)
+        : '';
     my ($status) = $self->defect_status($attributes);
 
     my %request_args = (
