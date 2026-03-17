@@ -1,0 +1,45 @@
+{
+    "item": {
+        "itemId": "4947597",
+        "designCode": "designs_gritBin193939393_asdhfaiuasdf93d",
+        "collection": "Live",
+        "end": "9999-12-31T23:59:59.999Z",
+        "icon": "icon-inspection-unknown",
+        "colour": "#99cf22",
+        "attributes": [
+            {
+                "attributeCode": "attributes_defectsReportedDate",
+                "value": "2019-01-02T14:44:53Z"
+            },
+            {
+                "attributeCode": "attributes_defectsStatus",
+                "value": [
+                    "5c8bdfc88ae862230019dc22"
+                ]
+            },
+            {
+                "attributeCode": "attributes_DefectType",
+                "value": [
+                    "designs_gritBinEmpty193939393_asdhfaiuasdf93d"
+                ]
+            },
+            {
+                "attributeCode": "attributes_description",
+                "value": "fill"
+            },
+            {
+                "attributeCode": "attributes_itemsGeometry",
+                "value": {
+                    "type": "Point",
+                    "coordinates": [
+                        2,
+                        1
+                    ]
+                }
+            }
+        ],
+        "signature": "5d32469bb4e1b90150014305",
+        "title": "DEF-123456",
+        "subtitle": "DEFECT 123456"
+    }
+}
