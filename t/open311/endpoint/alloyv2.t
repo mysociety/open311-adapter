@@ -882,6 +882,60 @@ subtest "check fetch problem" => sub {
    }], "correct json returned";
 };
 
+subtest "fetch multiple problems by service_request_id" => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.json?jurisdiction_id=dummy&service_request_id=4947505,4947597',
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [{
+      long => 2,
+      requested_datetime => "2019-01-02T11:29:16Z",
+      service_code => "Shelter_Damaged",
+      updated_datetime => "2019-01-02T11:29:16Z",
+      service_name => "Shelter Damaged",
+      address_id => "",
+      lat => 1,
+      description => "test",
+      service_request_id => 4947505,
+      zipcode => "",
+      media_url => "",
+      status => "investigating",
+      address => ""
+   },
+   {
+      address_id => "",
+      lat => 1,
+      service_request_id => 4947597,
+      description => "fill",
+      service_name => "Grit Bin - empty/refill",
+      status => "fixed",
+      media_url => "",
+      address => "",
+      zipcode => "",
+      requested_datetime => "2019-01-02T14:44:53Z",
+      long => 2,
+      updated_datetime => "2019-01-02T14:44:53Z",
+      service_code => "Grit_Bin_-_empty/refill"
+   }], "correct json returned for multiple IDs";
+};
+
+subtest "fetch problems by service_request_id skips ignored IDs" => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.json?jurisdiction_id=dummy&service_request_id=4947505,4947506',
+    );
+
+    ok $res->is_success, 'request succeeds despite ignored ID'
+        or diag $res->content;
+
+    my $data = decode_json($res->content);
+    is scalar @$data, 1, 'only non-ignored item returned';
+    is $data->[0]{service_request_id}, 4947505, 'correct item returned';
+};
+
 subtest "check fetch service description" => sub {
     my $res = $endpoint->run_test_request(
       GET => '/services.json?jurisdiction_id=dummy',
