@@ -266,7 +266,7 @@ sub post_service_request {
     # Upload any photos to Alloy and link them to the new resource
     # via the appropriate attribute
     if (@$files) {
-        $self->_attach_files_to_service_request($item_id, $files);
+        $self->_attach_files_to_service_request($response->{item}, $files);
     }
 
     $self->_post_creation_processing($item_id, $files, $args);
@@ -279,10 +279,9 @@ sub post_service_request {
 }
 
 sub _attach_files_to_service_request {
-    my ($self, $item_id, $files) = @_;
+    my ($self, $item, $files) = @_;
 
-    my $attributes = [{ attributeCode => $self->config->{resource_attachment_attribute_id}, value => $files }];
-    $self->_update_item($item_id, $attributes);
+    $self->_append_to_item_attribute($item, $self->config->{resource_attachment_attribute_id}, $files);
 }
 
 =head2 _post_creation_processing
@@ -294,6 +293,16 @@ the original args hash. Does nothing by default.
 =cut
 
 sub _post_creation_processing { }
+
+=head2 process_deferred_work
+
+Hook for subclasses to process pending deferred work written at request-creation
+time. Called periodically by the alloy_deferred_work cron entry point in UK.pm.
+Does nothing by default.
+
+=cut
+
+sub process_deferred_work { }
 
 =head2 _get_service_code
 
@@ -758,7 +767,8 @@ sub _get_inspection_updates {
     }
     my @updates;
     foreach (@$resources) {
-        push @updates, $self->_get_inspection_updates_design($_, $args);
+        my ($design_updates, $items_by_id) = $self->_get_inspection_updates_design($_, $args);
+        push @updates, @$design_updates;
     }
     return @updates;
 }
@@ -772,7 +782,7 @@ sub _get_inspection_updates_design {
     my @updates;
 
     my $mapping = $self->config->{inspection_attribute_mapping};
-    return () unless $mapping;
+    return ([], {}) unless $mapping;
 
     my %join = $self->_build_extra_attributes_join($mapping->{extra_attributes});
 
@@ -780,6 +790,8 @@ sub _get_inspection_updates_design {
 
     my $assigned_to_users = $self->get_assigned_to_users(@$updates);
 
+    my %items_by_id;
+    my @update_objects;
     for my $report (@$updates) {
         next unless $self->_accept_updated_resource($report, $design);
 
@@ -833,10 +845,11 @@ sub _get_inspection_updates_design {
 
         $self->_apply_extra_attributes($mapping->{extra_attributes}, $attributes, $args{extras});
 
-        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
+        $items_by_id{$report->{itemId}} = $report;
+        push @update_objects, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
 
-    return @updates;
+    return (\@update_objects, \%items_by_id);
 }
 
 sub _skip_inspection_update { }
@@ -995,21 +1008,31 @@ sub get_service_request {
     my $request = $response->{item};
 
     unless ($request) {
+        $self->logger->debug("No item $service_request_id found in Alloy");
         return;
     }
 
     # Check if this is a defect we should process
-    return if $self->skip_fetch_defect($request);
+    if ($self->skip_fetch_defect($request)) {
+        $self->logger->debug("Skipping fetched defect $service_request_id");
+        return;
+    };
 
     my $mapping = $self->config->{defect_attribute_mapping};
     my $attributes = $self->alloy->attributes_to_hash($request);
 
     my $category = $self->get_defect_category($request);
-    return unless $category;
+    unless ($category) {
+        $self->logger->debug("No category for defect $service_request_id; skipping");
+        return;
+    }
     $category =~ s/ /_/g;
     my $service_obj = $self->service($category);
 
-    return unless $service_obj;
+    unless ($service_obj) {
+        $self->logger->debug("No service for defect $service_request_id; skipping");
+        return;
+    }
 
     my $latlong = $self->get_latlong_from_request($request);
     my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
@@ -1019,7 +1042,9 @@ sub get_service_request {
         return;
     }
 
-    my $description = $self->get_request_description($attributes->{$mapping->{description}}, $request);
+    my $description = $mapping->{description}
+        ? $self->get_request_description($attributes->{$mapping->{description}}, $request)
+        : '';
     my ($status, $external_status_code) = $self->defect_status($attributes);
 
     my %request_args = (
@@ -1205,6 +1230,18 @@ attributes_itemsTitle for the title.
 
 sub get_service_requests {
     my ($self, $args) = @_;
+
+    # If specific service_request_ids were requested, fetch each one
+    # directly by ID rather than doing a date-range search.
+    if ($args->{service_request_id} && @{$args->{service_request_id}}) {
+        my @requests;
+        for my $id (@{$args->{service_request_id}}) {
+            if (my $request = $self->get_service_request($id, $args)) {;
+                push @requests, $request;
+            }
+        }
+        return @requests;
+    }
 
     my $resources = $self->config->{defect_resource_name};
     $resources = [ $resources ] unless ref $resources eq 'ARRAY';

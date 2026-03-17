@@ -220,24 +220,41 @@ sub _get_service_request_post_process {
 
     my $cache = $self->_build_attachment_cache($args);
 
+    # Build a set of inspection attachment IDs so we can exclude them from job results
+    my %inspection_attachment_ids;
+    my $attributes = $self->alloy->attributes_to_hash($item);
+    my $inspection_ids = $attributes->{attributes_defectsWithInspectionsDefectInspection};
+    if ($inspection_ids) {
+        $inspection_ids = [ $inspection_ids ] unless ref $inspection_ids eq 'ARRAY';
+        for my $inspection_id (@$inspection_ids) {
+            my $inspection = $self->alloy->api_call(call => "item/$inspection_id");
+            if ($inspection && $inspection->{item}) {
+                my $inspection_attrs = $self->alloy->attributes_to_hash($inspection->{item});
+                my $inspection_attachments = $inspection_attrs->{attributes_filesAttachableAttachments};
+                if ($inspection_attachments) {
+                    $inspection_attachments = [ $inspection_attachments ] unless ref $inspection_attachments eq 'ARRAY';
+                    $inspection_attachment_ids{$_} = 1 for @$inspection_attachments;
+                }
+            }
+        }
+        if (%inspection_attachment_ids) {
+            my $defect_id = $item->{itemId};
+            my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
+            $self->logger->debug("Defect $defect_id ($title) has " . scalar(keys %inspection_attachment_ids) . " inspection attachment(s) to exclude");
+        }
+    }
+
     my @all_media_urls;
+
+    my $job_media_urls = $self->_get_linked_item_media_urls(
+        $item, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache, \%inspection_attachment_ids
+    );
+    push @all_media_urls, @$job_media_urls if @$job_media_urls;
 
     my $inspection_media_urls = $self->_get_linked_item_media_urls(
         $item, 'attributes_defectsWithInspectionsDefectInspection', $args, $cache
     );
     push @all_media_urls, @$inspection_media_urls if @$inspection_media_urls;
-
-    my %inspection_attachment_ids = map {
-        $_ => 1
-    } map {
-        /item=(.*?)/;
-        $1 || ();
-    } @all_media_urls;
-
-    my $job_media_urls = $self->_get_linked_item_media_urls(
-        $item, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache, \%inspection_attachment_ids
-    );
-    @all_media_urls = @$job_media_urls if @$job_media_urls;
 
     if (@all_media_urls) {
         $request_obj->{media_url} = \@all_media_urls;
@@ -253,24 +270,31 @@ Override to add media_url support for jobs and inspections attached to the defec
 sub _get_inspection_updates_design {
     my ($self, $design, $args) = @_;
 
-    # Call parent to get the base updates
-    my @updates = $self->SUPER::_get_inspection_updates_design($design, $args);
+    # Call parent to get the base updates and the raw items
+    my ($updates_ref, $items_by_id) = $self->SUPER::_get_inspection_updates_design($design, $args);
+    my @updates = @$updates_ref;
 
     # Build attachment cache once for all updates
     # This avoids making individual API calls for each attachment
     my $cache = $self->_build_attachment_cache($args);
 
-    # For each update, fetch the associated resource and add media URLs
+    # For each update, use the already-fetched resource to add media URLs
     # Also handle special case for latest_inspection_time
     for my $update (@updates) {
         my $service_request_id = $update->service_request_id;
 
-        # Fetch the resource to get job and inspection media URLs
-        my $response = $self->alloy->api_call(call => "item/$service_request_id");
-        my $report = $response->{item};
+        # Use the item already fetched by the parent method
+        my $report = $items_by_id->{$service_request_id};
 
         if ($report) {
             my @all_media_urls;
+
+            # Get media URLs from jobs (filtered by date range)
+            # Pass the cache to avoid individual API calls
+            my $job_media_urls = $self->_get_linked_item_media_urls(
+                $report, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache
+            );
+            push @all_media_urls, @$job_media_urls if @$job_media_urls;
 
             # Get media URLs from inspections (filtered by date range)
             # Pass the cache to avoid individual API calls
@@ -278,20 +302,6 @@ sub _get_inspection_updates_design {
                 $report, 'attributes_defectsWithInspectionsDefectInspection', $args, $cache
             );
             push @all_media_urls, @$inspection_media_urls if @$inspection_media_urls;
-
-            my %inspection_attachment_ids = map {
-                $_ => 1
-            } map {
-                /item=(.*)/;
-                $1 || ();
-            } @all_media_urls;
-
-            # Get media URLs from jobs (filtered by date range)
-            # Pass the cache to avoid individual API calls
-            my $job_media_urls = $self->_get_linked_item_media_urls(
-                $report, 'attributes_defectsRaisingJobsRaisedJobs', $args, $cache, \%inspection_attachment_ids
-            );
-            @all_media_urls = @$job_media_urls if @$job_media_urls;
 
             if (@all_media_urls) {
                 $update->{media_url} = \@all_media_urls;
@@ -318,7 +328,7 @@ sub _get_inspection_updates_design {
         }
     }
 
-    return @updates;
+    return (\@updates, $items_by_id);
 }
 
 =head2 post_service_request_update
@@ -535,11 +545,7 @@ sub _find_latest_inspection {
     my @inspections;
 
     # First, check if the defect has a direct link to inspections via attributes
-    # Convert attributes array to hash for easier lookup
-    my $attributes = {};
-    for my $attr (@{$defect->{attributes}}) {
-        $attributes->{$attr->{attributeCode}} = $attr->{value};
-    }
+    my $attributes = $self->alloy->attributes_to_hash($defect);
 
     # Check for the inspection link attribute on the defect
     my $inspection_ids = $attributes->{attributes_defectsWithInspectionsDefectInspection};
@@ -631,11 +637,13 @@ sub get_photo {
 
 =head2 _post_creation_processing
 
-After a defect is created, we need to wait for Alloy's workflow to create an
-inspection, then:
-- Attach any uploaded files to the inspection
-- Update the inspection status to "Issued" for service codes where the workflow
-  doesn't do this automatically
+After a defect is created, if C<uploads_dir> is configured, saves pending
+inspection work (photo attachment and/or status update) to a JSON file for
+async processing by C<bin/alloy/deferred-work>.
+
+Photo files are already uploaded to Alloy before this is called (via
+C<upload_media>), so only Alloy file IDs are stored — no photo bytes.
+Does nothing if neither files nor a status update entry are applicable.
 
 =cut
 
@@ -648,34 +656,85 @@ sub _post_creation_processing {
 
     return unless @$files || $status_id;
 
-    # Wait for inspection (up to 3 minutes) - Alloy workflow creates it asynchronously
-    my $inspection_ref;
-    my $defect;
-    for (1..18) {
-        # Sleep at the start of the loop because the Alloy workflow
-        # needs a few seconds to create the inspection.
-        sleep 10 unless $ENV{TEST_MODE};
-        $defect = $self->alloy->api_call(call => "item/$item_id")->{item};
-        $inspection_ref = $self->_find_latest_inspection($defect);
-        last if $inspection_ref;
-    }
-    my $attributes = $self->alloy->attributes_to_hash($defect);
-    my $title = $attributes->{attributes_itemsTitle} || 'Unknown title';
-
-    unless ($inspection_ref) {
-        $self->logger->warn("No inspection found for defect $item_id ($title) during POST Service Request");
-        return;
+    # uploads_dir is used as the directory for pending-work JSON files;
+    # without it there's nowhere to queue deferred inspection work.
+    my $dir = $self->config->{uploads_dir};
+    unless ($dir) {
+        die "uploads_dir not configured for Dumfries, unable to defer inspection processing";
     }
 
-    if (@$files) {
-        $self->_attach_files_to_service_request($inspection_ref->{itemId}, $files);
-    }
+    $dir = path($dir);
+    $dir->mkpath;
 
-    if ($status_id) {
-        $self->_update_item($inspection_ref->{itemId}, [{
-            attributeCode => 'attributes_tasksStatus',
-            value => [$status_id],
-        }]);
+    my $data = {
+        item_id            => $item_id,
+        files              => $files,
+        service_code_alloy => $service_code,
+        created_at         => time(),
+    };
+
+    $dir->child("$item_id.json")->spew_utf8(encode_json($data));
+    $self->logger->debug("Deferred post-creation inspection work for defect $item_id");
+}
+
+=head2 process_deferred_work
+
+Processes deferred post-creation inspection work written by
+C<_post_creation_processing>. For each pending JSON file: if the inspection
+now exists in Alloy, attaches any uploaded files and sets the inspection
+status; then removes the file. If the inspection is not yet created, leaves
+the file for the next cron run.
+
+=cut
+
+sub process_deferred_work {
+    my ($self) = @_;
+
+    my $dir = $self->config->{uploads_dir};
+    return unless $dir && -d $dir;
+    $dir = path($dir);
+
+    foreach my $json_file ($dir->children(qr/\.json$/)) {
+        my $data = decode_json($json_file->slurp_utf8);
+
+        my $item_id      = $data->{item_id};
+        my $files        = $data->{files} || [];
+        my $service_code = $data->{service_code_alloy} || '';
+
+        # Wrap API work so a transient error with one item doesn't abort the rest.
+        # 'return' inside try{} exits the try block cleanly (no exception), so
+        # catch is not invoked and the foreach continues to the next file.
+        try {
+            my $defect = $self->alloy->api_call(call => "item/$item_id")->{item};
+            unless ($defect) {
+                $self->logger->warn("Could not fetch defect $item_id from Alloy, will retry");
+                return;
+            }
+
+            my $inspection_ref = $self->_find_latest_inspection($defect);
+            unless ($inspection_ref) {
+                $self->logger->debug("Inspection not yet created for defect $item_id, will retry");
+                return;
+            }
+
+            if (@$files) {
+                $self->_attach_files_to_service_request($inspection_ref, $files);
+            }
+
+            my $status_map = $self->config->{inspection_status_update} || {};
+            my $status_id = $status_map->{$service_code};
+            if ($status_id) {
+                $self->_update_item($inspection_ref->{itemId}, [{
+                    attributeCode => 'attributes_tasksStatus',
+                    value         => [$status_id],
+                }]);
+            }
+
+            $json_file->remove;
+            $self->logger->info("Completed post-creation processing for defect $item_id (inspection $inspection_ref->{itemId})");
+        } catch {
+            $self->logger->error("Error processing deferred work for defect $item_id: $_");
+        };
     }
 }
 
