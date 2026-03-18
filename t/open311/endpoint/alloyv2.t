@@ -936,6 +936,22 @@ subtest "fetch problems by service_request_id skips ignored IDs" => sub {
     is $data->[0]{service_request_id}, 4947505, 'correct item returned';
 };
 
+subtest "fetch by service_request_id includes media_url from defect attachments" => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.json?jurisdiction_id=dummy&service_request_id=4947700',
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    my $data = decode_json($res->content);
+    is scalar @$data, 1, 'one item returned';
+    is $data->[0]{service_request_id}, 4947700, 'correct item returned';
+    is $data->[0]{media_url},
+        'http://localhost/photos?jurisdiction_id=dummy&item=file_abc123',
+        'media_url populated from defect attachment';
+};
+
 subtest "check fetch service description" => sub {
     my $res = $endpoint->run_test_request(
       GET => '/services.json?jurisdiction_id=dummy',

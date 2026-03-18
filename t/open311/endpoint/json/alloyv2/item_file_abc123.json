@@ -1,0 +1,13 @@
+{
+    "item": {
+        "itemId": "file_abc123",
+        "designCode": "designs_files",
+        "collection": "Live",
+        "attributes": [
+            {
+                "attributeCode": "attributes_filesOriginalName",
+                "value": "council_photo.jpg"
+            }
+        ]
+    }
+}

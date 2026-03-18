@@ -1057,6 +1057,7 @@ sub get_service_request {
         service_request_id => $request->{itemId},
         requested_datetime => $self->date_to_truncated_dt($attributes->{$mapping->{requested_datetime}}),
         updated_datetime => $self->date_to_truncated_dt($attributes->{$mapping->{requested_datetime}}),
+        media_url => $self->_media_urls_for_item({ item => $request }),
     );
 
     my $request_obj = $self->new_request(%request_args);
