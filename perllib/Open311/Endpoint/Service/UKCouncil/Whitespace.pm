@@ -52,7 +52,8 @@ sub _build_attributes {
             } qw(
                 collection_date
                 round_instance_id
-                sharps_location
+                collect_location
+                collect_location_other
 
                 sharps_collecting
                 sharps_collect_small_quantity

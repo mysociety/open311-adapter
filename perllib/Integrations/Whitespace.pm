@@ -164,7 +164,7 @@ sub CreateWorksheet {
             property_input( 64, $attributes->{sharps_collect_small_quantity} ),
             property_input( 65, $attributes->{sharps_collect_large_quantity} ),
             property_input( 66, $attributes->{sharps_deliver_quantity} ),
-            property_input( 67, $attributes->{sharps_location} ),
+            property_input( 67, $attributes->{collect_location} . ' ' . $attributes->{collect_location_other}),
         ],
         $attributes->{round_instance_id} ? (AdHocRoundInstanceId => $attributes->{round_instance_id}) : (),
     );
