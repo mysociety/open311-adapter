@@ -347,7 +347,7 @@ Collection date: 08/08/2025
 
 Location of items: On the doorstep
 
-Contains glucose monitoring device(s): Yes};
+Delivery for glucose monitoring device(s): Yes};
         return 1001;
     });
 
@@ -367,7 +367,7 @@ Contains glucose monitoring device(s): Yes};
         'attribute[collect_location]' => 'On the doorstep',
         'attribute[sharps_collect_small_quantity]' => 1,
         'attribute[sharps_collect_large_quantity]' => 2,
-        'attribute[sharps_collect_glucose_monitor]' => 'Yes',
+        'attribute[sharps_deliver_glucose_monitor]' => 'Yes',
         'attribute[sharps_deliver_size]' => '5-litre',
         'attribute[sharps_deliver_quantity]' => 3,
     );
