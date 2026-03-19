@@ -118,7 +118,6 @@ sub CreateWorksheet {
     } elsif ($params->{service_code} eq 'sharps_collection') {
         push @service_inputs, service_input(3, 1); # Signifier of a sharps collection
 
-        # XXX Need correct IDs from Bexley
         if ( $attributes->{sharps_collect_small_quantity} ) {
             push @service_inputs, service_input(750, $attributes->{sharps_collect_small_quantity});
         }
@@ -142,6 +141,11 @@ sub CreateWorksheet {
     $collection_date = $attributes->{collection_date} . ' 23:59'
         if $attributes->{collection_date};
 
+    my $container_location
+        = $params->{service_code} eq 'sharps_collection'
+        ? $attributes->{collect_location} . ' ' . $attributes->{collect_location_other}
+        : $attributes->{location_of_containers};
+
     my $worksheet = ixhash(
         Uprn => $params->{uprn},
         ServiceId => $service_id,
@@ -151,7 +155,7 @@ sub CreateWorksheet {
         ServiceItemInputs => \@service_inputs,
         ServicePropertyInputs => [
             property_input(79, $attributes->{assisted_yn}),
-            property_input(80, $attributes->{location_of_containers}),
+            property_input(80, $container_location),
             property_input(82, $attributes->{location_of_letterbox}),
             property_input(65, $attributes->{bulky_parking}),
             property_input(66, $attributes->{bulky_location}),
@@ -159,12 +163,9 @@ sub CreateWorksheet {
             property_input(61, $attributes->{assisted_duration}),
             property_input(80, $attributes->{assisted_location}),
 
-            # Sharps
-            # XXX Need correct IDs from Bexley
-            property_input( 64, $attributes->{sharps_collect_small_quantity} ),
-            property_input( 65, $attributes->{sharps_collect_large_quantity} ),
-            property_input( 66, $attributes->{sharps_deliver_quantity} ),
-            property_input( 67, $attributes->{sharps_location} ),
+            $attributes->{sharps_deliver_glucose_monitor}
+                ? property_input( 88, $attributes->{sharps_deliver_glucose_monitor} )
+                : (),
         ],
         $attributes->{round_instance_id} ? (AdHocRoundInstanceId => $attributes->{round_instance_id}) : (),
     );

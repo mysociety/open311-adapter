@@ -52,14 +52,15 @@ sub _build_attributes {
             } qw(
                 collection_date
                 round_instance_id
-                sharps_location
+                collect_location
+                collect_location_other
 
                 sharps_collecting
                 sharps_collect_small_quantity
                 sharps_collect_large_quantity
-                sharps_collect_glucose_monitor
 
                 sharps_delivering
+                sharps_deliver_glucose_monitor
                 sharps_deliver_size
                 sharps_deliver_quantity
             );

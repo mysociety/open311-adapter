@@ -20,8 +20,9 @@ sub _worksheet_message {
     ) : $args->{service_code} eq 'sharps_collection' ? (
         { key => 'fixmystreet_id', label => 'Booking reference:' },
         { key => 'collection_date', label => 'Collection date:' },
-        { key => 'sharps_location', label => 'Location of items:' },
-        { key => 'sharps_collect_glucose_monitor', label => 'Contains glucose monitoring device(s):' },
+        { key => 'collect_location', label => 'Location of items:' },
+        { key => 'collect_location_other', label => 'Further access details:' },
+        { key => 'sharps_deliver_glucose_monitor', label => 'Delivery for glucose monitoring device(s):' },
     ) : (
         { key => 'assisted_yn', label => 'Assisted collection?' },
         { key => 'location_of_containers', label => 'Location of containers:' },
