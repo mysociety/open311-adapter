@@ -22,7 +22,6 @@ sub _worksheet_message {
         { key => 'collection_date', label => 'Collection date:' },
         { key => 'sharps_location', label => 'Location of items:' },
         { key => 'sharps_collect_glucose_monitor', label => 'Contains glucose monitoring device(s):' },
-        { key => 'sharps_collect_cytotoxic', label => 'Contains cytotoxic waste:' }
     ) : (
         { key => 'assisted_yn', label => 'Assisted collection?' },
         { key => 'location_of_containers', label => 'Location of containers:' },

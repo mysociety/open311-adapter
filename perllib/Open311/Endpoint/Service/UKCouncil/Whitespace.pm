@@ -58,7 +58,6 @@ sub _build_attributes {
                 sharps_collect_small_quantity
                 sharps_collect_large_quantity
                 sharps_collect_glucose_monitor
-                sharps_collect_cytotoxic
 
                 sharps_delivering
                 sharps_deliver_size

@@ -347,9 +347,7 @@ Collection date: 08/08/2025
 
 Location of items: Doorstep
 
-Contains glucose monitoring device(s): Yes
-
-Contains cytotoxic waste: No};
+Contains glucose monitoring device(s): Yes};
         return 1001;
     });
 
@@ -370,7 +368,6 @@ Contains cytotoxic waste: No};
         'attribute[sharps_collect_small_quantity]' => 1,
         'attribute[sharps_collect_large_quantity]' => 2,
         'attribute[sharps_collect_glucose_monitor]' => 'Yes',
-        'attribute[sharps_collect_cytotoxic]' => 'No',
         'attribute[sharps_deliver_size]' => '5-litre',
         'attribute[sharps_deliver_quantity]' => 3,
     );
