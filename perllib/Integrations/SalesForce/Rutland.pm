@@ -4,6 +4,7 @@ use Moo;
 extends 'Integrations::SalesForce::Base';
 
 use JSON::MaybeXS;
+use Try::Tiny;
 
 has 'requests_endpoint' => (
     is => 'ro',
@@ -120,7 +121,12 @@ sub get_services {
     $self->logger->debug("No memcached entry found for $key. Fetching services from Salesforce");
 
     $services = [];
-    my $response = $self->get($self->services_endpoint . '?summary');
+    my $response;
+    try {
+        $response = $self->get($self->services_endpoint . '?summary');
+    } catch {
+        return ();
+    };
     for my $service (@{ $response->{CategoryInformation} }) {
         push @$services, $service;
     }
