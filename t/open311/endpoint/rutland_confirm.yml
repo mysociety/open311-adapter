@@ -9,5 +9,6 @@ ignored_attributes: []
 ignored_attribute_options: []
 forward_status_mapping: {}
 reverse_status_mapping: {
-  FMS: unchanged
+  FMS: unchanged,
+  1600: referred_to_salesforce
   }

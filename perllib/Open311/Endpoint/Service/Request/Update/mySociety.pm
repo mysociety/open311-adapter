@@ -25,6 +25,7 @@ has status => (
         'for_triage',
         'referred_to_veolia_streets', # Bromley passthrough
         'referred_to_lbb_streets', # Bromley passthrough
+        'referred_to_salesforce', # Rutland redirect
     ],
 );
 
