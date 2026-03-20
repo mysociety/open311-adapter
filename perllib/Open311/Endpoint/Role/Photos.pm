@@ -25,11 +25,25 @@ around dispatch_request => sub {
     );
 };
 
+# Handle being given a multi's jurisdiction_id directly
 sub get_photo {
     my ($self, $args) = @_;
-    $self->_call('get_photo', $args->{jurisdiction_id}, $args)
-        or [ 400, [ 'Content-Type', 'text/plain' ], [ 'Bad request' ] ];
-}
+    my $jurisdiction_id = $args->{jurisdiction_id};
 
+    foreach ($self->plugins) {
+        if ($_->jurisdiction_id eq $jurisdiction_id) {
+            return $_->get_photo($args);
+        }
+        if ($_->isa('Open311::Endpoint::Integration::Multi')) {
+            foreach ($_->plugins) {
+                if ($_->jurisdiction_id eq $jurisdiction_id) {
+                    return $_->get_photo($args);
+                }
+            }
+        }
+    }
+
+    [ 400, [ 'Content-type', 'text/plain' ], [ 'Bad request' ] ];
+}
 
 1;
