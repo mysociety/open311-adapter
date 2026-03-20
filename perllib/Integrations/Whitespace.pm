@@ -141,10 +141,12 @@ sub CreateWorksheet {
     $collection_date = $attributes->{collection_date} . ' 23:59'
         if $attributes->{collection_date};
 
-    my $container_location
-        = $params->{service_code} eq 'sharps_collection'
-        ? $attributes->{collect_location} . ' ' . $attributes->{collect_location_other}
-        : $attributes->{location_of_containers};
+    my $container_location;
+    if ($params->{service_code} eq 'sharps_collection') {
+        $container_location = join(' - ', $attributes->{collect_location}, $attributes->{collect_location_other} || ());
+    } else {
+        $container_location = $attributes->{location_of_containers};
+    }
 
     my $worksheet = ixhash(
         Uprn => $params->{uprn},
