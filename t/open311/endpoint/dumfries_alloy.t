@@ -846,4 +846,427 @@ subtest 'post_service_request_update with parent-type inspection (no description
         'update created successfully even when template lacks description field';
 };
 
+
+subtest 'photo fetching with AQS cache' => sub {
+    # Mock api_call to handle photo fetching scenarios
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    my %mock_responses = (
+        # Defect with job and inspection
+        'item/defect_with_photos' => {
+            item => {
+                itemId => 'defect_with_photos',
+                designCode => 'designs_defects',
+                attributes => [
+                    { attributeCode => 'attributes_defectsRaisingJobsRaisedJobs', value => 'job_001' },
+                    { attributeCode => 'attributes_defectsWithInspectionsDefectInspection', value => 'insp_001' },
+                ],
+            }
+        },
+        # Job with 2 attachments
+        'item/job_001' => {
+            item => {
+                itemId => 'job_001',
+                designCode => 'designs_jobs',
+                attributes => [
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => ['file_001', 'file_002'] },
+                ],
+            }
+        },
+        # Inspection with 1 attachment (overlapping with job)
+        'item/insp_001' => {
+            item => {
+                itemId => 'insp_001',
+                designCode => 'designs_hWYCustomerReport',
+                attributes => [
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => 'file_002' },
+                ],
+            }
+        },
+        # File items
+        'item/file_001' => {
+            item => {
+                itemId => 'file_001',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'photo1.jpg' },
+                ],
+            }
+        },
+        'item/file_002' => {
+            item => {
+                itemId => 'file_002',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'photo2.jpg' },
+                ],
+            }
+        },
+        'item/file_003' => {
+            item => {
+                itemId => 'file_003',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => '123.456.full.photo3.jpg' },
+                ],
+            }
+        },
+        # Item logs (creation dates)
+        'item-log/item/file_001' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T10:00:00.000Z' },
+            ],
+        },
+        'item-log/item/file_002' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T11:00:00.000Z' },
+            ],
+        },
+        'item-log/item/file_003' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T12:00:00.000Z' },
+            ],
+        },
+    );
+
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+        return $mock_responses{$call} if exists $mock_responses{$call};
+        die "Unmocked API call: $call";
+    });
+
+    $integration->mock('search', sub {
+        my ($self, $body) = @_;
+        # Return files within date range for cache building
+        return [
+            {
+                itemId => 'file_001',
+                createdDate => '2025-12-25T10:00:00.000Z',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'photo1.jpg' },
+                ],
+            },
+            {
+                itemId => 'file_002',
+                createdDate => '2025-12-25T11:00:00.000Z',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'photo2.jpg' },
+                ],
+            },
+            # file_003 has FMS pattern, should be filtered out
+            {
+                itemId => 'file_003',
+                createdDate => '2025-12-25T12:00:00.000Z',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => '123.456.full.photo3.jpg' },
+                ],
+            },
+        ];
+    });
+
+    # Build attachment cache with date range
+    my $cache = $endpoint->_build_attachment_cache({
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    });
+
+    # Check cache contains valid files only (not FMS pattern)
+    is(scalar(keys %$cache), 2, 'Cache contains 2 valid files');
+    ok(exists $cache->{file_001}, 'Cache contains file_001');
+    ok(exists $cache->{file_002}, 'Cache contains file_002');
+    ok(!exists $cache->{file_003}, 'Cache does not contain FMS file');
+
+    # Test _get_linked_item_media_urls for jobs with cache and skip_ids
+    my $defect = $mock_responses{'item/defect_with_photos'}{item};
+    my %inspection_skip = ( file_002 => 1 ); # file_002 is on inspection, exclude from job results
+    my $job_urls = $endpoint->_get_linked_item_media_urls($defect,
+        'attributes_defectsRaisingJobsRaisedJobs', {
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    }, $cache, \%inspection_skip);
+
+    # Should get file_001 only (file_002 is on inspection and should be excluded to avoid duplication)
+    is(scalar(@$job_urls), 1, 'Got 1 job media URL');
+    like($job_urls->[0], qr/photos.*item=file_001/, 'Job URL contains file_001');
+
+    # Test _get_linked_item_media_urls for inspections with cache
+    my $insp_urls = $endpoint->_get_linked_item_media_urls($defect,
+        'attributes_defectsWithInspectionsDefectInspection', {
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    }, $cache);
+
+    # Should get file_002 from inspection
+    is(scalar(@$insp_urls), 1, 'Got 1 inspection media URL');
+    like($insp_urls->[0], qr/photos.*item=file_002/, 'Inspection URL contains file_002');
+};
+
+
+subtest 'photo fetching without cache (fallback behavior)' => sub {
+    # Test the fallback path when no cache is provided
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    my %mock_responses = (
+        'item/defect_simple' => {
+            item => {
+                itemId => 'defect_simple',
+                designCode => 'designs_defects',
+                attributes => [
+                    { attributeCode => 'attributes_defectsRaisingJobsRaisedJobs', value => 'job_002' },
+                ],
+            }
+        },
+        'item/job_002' => {
+            item => {
+                itemId => 'job_002',
+                designCode => 'designs_jobs',
+                attributes => [
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => 'file_004' },
+                ],
+            }
+        },
+        'item/file_004' => {
+            item => {
+                itemId => 'file_004',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'valid_photo.jpg' },
+                ],
+            }
+        },
+        'item-log/item/file_004' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T14:00:00.000Z' },
+            ],
+        },
+    );
+
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+        return $mock_responses{$call} if exists $mock_responses{$call};
+        die "Unmocked API call: $call";
+    });
+
+    # Call without cache (should fall back to individual API calls)
+    my $defect = $mock_responses{'item/defect_simple'}{item};
+    my $urls = $endpoint->_get_linked_item_media_urls($defect,
+        'attributes_defectsRaisingJobsRaisedJobs', {
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    });
+
+    is(scalar(@$urls), 1, 'Got 1 media URL via fallback path');
+    like($urls->[0], qr/photos.*item=file_004/, 'URL contains file_004');
+};
+
+subtest 'FMS file filtering' => sub {
+    # Test that FMS auto-generated files are excluded
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    my %mock_responses = (
+        'item/defect_fms' => {
+            item => {
+                itemId => 'defect_fms',
+                designCode => 'designs_defects',
+                attributes => [
+                    { attributeCode => 'attributes_defectsRaisingJobsRaisedJobs', value => 'job_003' },
+                ],
+            }
+        },
+        'item/job_003' => {
+            item => {
+                itemId => 'job_003',
+                designCode => 'designs_jobs',
+                attributes => [
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => ['file_fms', 'file_valid'] },
+                ],
+            }
+        },
+        'item/file_fms' => {
+            item => {
+                itemId => 'file_fms',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => '12345.67890.full.original.jpg' },
+                ],
+            }
+        },
+        'item/file_valid' => {
+            item => {
+                itemId => 'file_valid',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'user_photo.jpg' },
+                ],
+            }
+        },
+        'item-log/item/file_fms' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T15:00:00.000Z' },
+            ],
+        },
+        'item-log/item/file_valid' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T16:00:00.000Z' },
+            ],
+        },
+    );
+
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+        return $mock_responses{$call} if exists $mock_responses{$call};
+        die "Unmocked API call: $call";
+    });
+
+    my $defect = $mock_responses{'item/defect_fms'}{item};
+    my $urls = $endpoint->_get_linked_item_media_urls($defect,
+        'attributes_defectsRaisingJobsRaisedJobs', {
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    });
+
+    # Should only get the valid file, FMS file should be filtered out
+    is(scalar(@$urls), 1, 'Got only 1 URL (FMS file excluded)');
+    like($urls->[0], qr/photos.*item=file_valid/, 'URL is for valid file');
+    unlike($urls->[0], qr/file_fms/, 'FMS file not included');
+};
+
+subtest 'date range filtering' => sub {
+    # Test that photos outside date range are excluded
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    my %mock_responses = (
+        'item/defect_dates' => {
+            item => {
+                itemId => 'defect_dates',
+                designCode => 'designs_defects',
+                attributes => [
+                    { attributeCode => 'attributes_defectsRaisingJobsRaisedJobs', value => 'job_004' },
+                ],
+            }
+        },
+        'item/job_004' => {
+            item => {
+                itemId => 'job_004',
+                designCode => 'designs_jobs',
+                attributes => [
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => ['file_old', 'file_new', 'file_future'] },
+                ],
+            }
+        },
+        'item/file_old' => {
+            item => {
+                itemId => 'file_old',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'old.jpg' },
+                ],
+            }
+        },
+        'item/file_new' => {
+            item => {
+                itemId => 'file_new',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'new.jpg' },
+                ],
+            }
+        },
+        'item/file_future' => {
+            item => {
+                itemId => 'file_future',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'future.jpg' },
+                ],
+            }
+        },
+        'item-log/item/file_old' => {
+            results => [
+                { action => 'Create', date => '2025-12-20T10:00:00.000Z' }, # Before range
+            ],
+        },
+        'item-log/item/file_new' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T10:00:00.000Z' }, # In range
+            ],
+        },
+        'item-log/item/file_future' => {
+            results => [
+                { action => 'Create', date => '2025-12-30T10:00:00.000Z' }, # After range
+            ],
+        },
+    );
+
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+        return $mock_responses{$call} if exists $mock_responses{$call};
+        die "Unmocked API call: $call";
+    });
+
+    my $defect = $mock_responses{'item/defect_dates'}{item};
+    my $urls = $endpoint->_get_linked_item_media_urls($defect,
+        'attributes_defectsRaisingJobsRaisedJobs', {
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    });
+
+    # Should only get file_new (in range), not file_old or file_future
+    is(scalar(@$urls), 1, 'Got only 1 URL (date filtered)');
+    like($urls->[0], qr/photos.*item=file_new/, 'URL is for file in date range');
+};
+
+
+subtest '_find_latest_inspection uses attributes_tasksRaisedTime' => sub {
+    # Test that attributes_tasksRaisedTime takes precedence over lastEditDate
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+
+        if ($call eq 'item/inspection_raised_early') {
+            return {
+                item => {
+                    itemId => 'inspection_raised_early',
+                    designCode => 'designs_hWYCustomerReport',
+                    lastEditDate => '2025-12-25T15:00:00.000Z',  # Later edit
+                    createdDate => '2025-12-20T10:00:00.000Z',
+                    attributes => [
+                        { attributeCode => 'attributes_tasksRaisedTime', value => '2025-12-20T10:00:00.000Z' }
+                    ],
+                }
+            };
+        } elsif ($call eq 'item/inspection_raised_late') {
+            return {
+                item => {
+                    itemId => 'inspection_raised_late',
+                    designCode => 'designs_hWYCustomerReport',
+                    lastEditDate => '2025-12-20T10:00:00.000Z',  # Earlier edit
+                    createdDate => '2025-12-19T10:00:00.000Z',
+                    attributes => [
+                        { attributeCode => 'attributes_tasksRaisedTime', value => '2025-12-26T10:00:00.000Z' }
+                    ],
+                }
+            };
+        } elsif ($call eq 'item/defect_with_raised_times/parents') {
+            return { results => [] };
+        }
+    });
+
+    my $defect = {
+        itemId => 'defect_with_raised_times',
+        attributes => [
+            {
+                attributeCode => 'attributes_defectsWithInspectionsDefectInspection',
+                value => ['inspection_raised_early', 'inspection_raised_late']
+            }
+        ]
+    };
+
+    my $inspection = $endpoint->_find_latest_inspection($defect);
+    is $inspection->{itemId}, 'inspection_raised_late',
+        'uses attributes_tasksRaisedTime for sorting (not lastEditDate)';
+};
+
 done_testing;
