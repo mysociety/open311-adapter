@@ -58,6 +58,42 @@ sub _get_service_code {
     return $subcategory_config->{id};
 }
 
+sub service_request_content {
+    '/open311/service_request_extended'
+}
+
+=head2 service
+
+For Dumfries, we need to handle the case where the service_code from Alloy
+is a base ID (e.g., 64f1dc207e262328e7cf803a) but our service_whitelist has
+IDs with suffixes (e.g., 64f1dc207e262328e7cf803a_1, 64f1dc207e262328e7cf803a_2)
+because the same subcategory is reused across multiple categories.
+
+We match the base ID and return the first matching service.
+
+=cut
+
+sub service {
+    my ($self, $service_code) = @_;
+
+    # Try exact match first (standard behavior)
+    my @services = $self->services;
+    for my $service (@services) {
+        return $service if $service->service_code eq $service_code;
+    }
+
+    # If no exact match, try prefix match (for IDs with _1, _2 suffixes)
+    for my $service (@services) {
+        my $whitelist_code = $service->service_code;
+        # Check if whitelist code starts with the service_code followed by underscore and digit
+        if ($whitelist_code =~ /^\Q$service_code\E_\d+$/) {
+            return $service;
+        }
+    }
+
+    return;
+}
+
 =head2 _extra_search_properties
 
 For Dumfries, we need to include both Live and Archive collections when
