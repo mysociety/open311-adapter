@@ -58,6 +58,18 @@ sub _get_service_code {
     return $subcategory_config->{id};
 }
 
+=head2 _extra_search_properties
+
+For Dumfries, we need to include both Live and Archive collections when
+fetching updated resources from Alloy.
+
+=cut
+
+sub _extra_search_properties {
+    my ($self) = @_;
+    return { collectionCode => ["Live", "Archive"] };
+}
+
 =head2 _get_inspection_status
 
 The Open311 status of a defect in Alloy depends on multiple fields - status,
