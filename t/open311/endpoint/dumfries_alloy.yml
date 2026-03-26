@@ -18,6 +18,7 @@ request_to_resource_attribute_mapping:
   title: attributes_serviceEnquiryLocation
 request_to_resource_attribute_manual_mapping:
   service_code: attributes_serviceEnquiryReportedIssue
+  customer_description: attributes_seCustomerDescription
 
 contact:
   code: designs_contacts
