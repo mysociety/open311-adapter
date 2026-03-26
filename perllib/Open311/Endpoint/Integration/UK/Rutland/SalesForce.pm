@@ -20,6 +20,12 @@ has jurisdiction_id => (
     default => 'rutland_salesforce',
 );
 
+has 'whitelist' => (
+    is => 'ro',
+    is => 'lazy',
+    default => sub { shift->get_integration->config->{whitelist} || {} }
+);
+
 sub reverse_status_mapping {
     my ($self, $status) = @_;
 
@@ -196,6 +202,7 @@ sub services {
     my ($self, $args) = @_;
 
     my @services = $self->get_integration->get_services($args);
+    @services = grep { $self->whitelist->{ $_->{name} } || $_->{hasChildren} eq 'true' } @services;
 
     my %service_lookup = map { $_->{serviceid} => $_ } @services;
 
@@ -230,6 +237,7 @@ sub service {
 
     my $meta = $self->get_integration->get_service($id, $args);
     my @services = $self->get_integration->get_services($args);
+    @services = grep { $self->whitelist->{ $_->{name} } || $_->{hasChildren} eq 'true' } @services;
 
     my %service_lookup = map { $_->{serviceid} => $_ } @services;
     my $srv = $service_lookup{$id};
