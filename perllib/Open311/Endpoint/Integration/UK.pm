@@ -143,6 +143,22 @@ sub confirm_upload {
     }
 }
 
+sub alloy_deferred_work {
+    my $self = shift;
+
+    my @plugins;
+    foreach ($self->plugins) {
+        push @plugins, $_;
+        if ($_->isa('Open311::Endpoint::Integration::Multi')) {
+            push @plugins, $_->plugins;
+        }
+    }
+    foreach (@plugins) {
+        next unless $_->isa('Open311::Endpoint::Integration::AlloyV2');
+        $_->process_deferred_work;
+    }
+}
+
 sub check_endpoints {
     my ($self, $verbose) = @_;
     my @plugins = ();

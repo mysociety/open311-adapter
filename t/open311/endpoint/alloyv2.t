@@ -140,7 +140,7 @@ $integration->mock('api_call', sub {
         } elsif ( $call eq 'item' && $body->{designCode} eq 'designs_fMSContacts1001214_5d321178fe2ad80354bbc0a7' ) {
             $content = '{ "item": { "itemId": 708823 } }';
         } elsif ( $call eq 'item' ) {
-            $content = '{ "item": { "itemId": 12345 } }';
+            $content = '{ "item": { "itemId": 12345, "signature": "5d32469bb4e1b9015001430b", "attributes": [] } }';
         } elsif ( $call =~ 'aqs/statistics' ) {
             $content = '{ "page":1,"pageSize":20,"results":[{"value":{"attributeCode":"attributes_fake","value":4.0}}] }';
         } elsif ( $call =~ 'aqs/query' ) {
@@ -842,7 +842,7 @@ subtest "check fetch problem" => sub {
             GET => '/requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
         );
     }
-    qr/No category found for defect 3027031, source type designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6/,
+    qr/No category found for defect 3027031 \(DEF-10101\), source type designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6/,
     "Correct warnings generated";
 
     my $sent = pop @sent;
@@ -880,6 +880,76 @@ subtest "check fetch problem" => sub {
       updated_datetime => "2019-01-02T14:44:53Z",
       service_code => "Grit_Bin_-_empty/refill"
    }], "correct json returned";
+};
+
+subtest "fetch multiple problems by service_request_id" => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.json?jurisdiction_id=dummy&service_request_id=4947505,4947597',
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+    [{
+      long => 2,
+      requested_datetime => "2019-01-02T11:29:16Z",
+      service_code => "Shelter_Damaged",
+      updated_datetime => "2019-01-02T11:29:16Z",
+      service_name => "Shelter Damaged",
+      address_id => "",
+      lat => 1,
+      description => "test",
+      service_request_id => 4947505,
+      zipcode => "",
+      media_url => "",
+      status => "investigating",
+      address => ""
+   },
+   {
+      address_id => "",
+      lat => 1,
+      service_request_id => 4947597,
+      description => "fill",
+      service_name => "Grit Bin - empty/refill",
+      status => "fixed",
+      media_url => "",
+      address => "",
+      zipcode => "",
+      requested_datetime => "2019-01-02T14:44:53Z",
+      long => 2,
+      updated_datetime => "2019-01-02T14:44:53Z",
+      service_code => "Grit_Bin_-_empty/refill"
+   }], "correct json returned for multiple IDs";
+};
+
+subtest "fetch problems by service_request_id skips ignored IDs" => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.json?jurisdiction_id=dummy&service_request_id=4947505,4947506',
+    );
+
+    ok $res->is_success, 'request succeeds despite ignored ID'
+        or diag $res->content;
+
+    my $data = decode_json($res->content);
+    is scalar @$data, 1, 'only non-ignored item returned';
+    is $data->[0]{service_request_id}, 4947505, 'correct item returned';
+};
+
+subtest "fetch by service_request_id includes media_url from defect attachments" => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.json?jurisdiction_id=dummy&service_request_id=4947700',
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    my $data = decode_json($res->content);
+    is scalar @$data, 1, 'one item returned';
+    is $data->[0]{service_request_id}, 4947700, 'correct item returned';
+    is $data->[0]{media_url},
+        'http://localhost/photos?jurisdiction_id=dummy&item=file_abc123',
+        'media_url populated from defect attachment';
 };
 
 subtest "check fetch service description" => sub {
