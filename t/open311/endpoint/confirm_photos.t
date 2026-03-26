@@ -96,7 +96,11 @@ subtest "fetching of job photos for enquiry update" => sub {
         GET => '/servicerequestupdates.xml?start_date=2025-01-01T00:00:00Z&end_date=2025-01-01T01:00:00Z',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
-    contains_string $res->content, '<media_url>http://example.com/photos?jurisdiction_id=confirm_dummy_photos&amp;job=432&amp;photo=1</media_url>';
+    contains_string $res->content,
+    '<media_url>
+      <media_url>http://example.com/photos?jurisdiction_id=confirm_dummy_photos&amp;job=432&amp;photo=1</media_url>
+      <media_url>http://example.com/photos?jurisdiction_id=confirm_dummy_photos&amp;job=432&amp;photo=2</media_url>
+    </media_url>';
 
     $lwp->mock(request => \&empty_json);
     $integration->mock(perform_request => \&empty_json);
