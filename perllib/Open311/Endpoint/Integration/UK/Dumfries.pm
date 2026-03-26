@@ -40,6 +40,18 @@ sub process_attributes {
         value => [ $args->{service_code_alloy} ],
     };
 
+    my $desc = sprintf(
+        "Category: %s/%s\nSummary: %s\nDescription: %s",
+        $args->{attributes}{group},
+        $args->{attributes}{category},
+        $args->{attributes}{title},
+        $args->{attributes}{description}
+    );
+    push @$attributes, {
+        attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{customer_description},
+        value => $desc,
+    };
+
     return $attributes;
 }
 
@@ -371,6 +383,28 @@ sub get_photo {
     return [ 200, [ 'Content-Type', $content_type ], [ $content ] ];
 }
 
+=head2 _append_attachments_to_defect
+
+Appends new attachment IDs to a defect's existing attachments.
+Delegates to _append_to_item_attribute with error logging.
+
+=cut
+
+sub _append_attachments_to_defect {
+    my ($self, $defect, $new_attachment_ids) = @_;
+
+    my $defect_id = $defect->{itemId};
+    my $attachment_code = $self->config->{resource_attachment_attribute_id};
+
+    return unless $attachment_code && $new_attachment_ids && @$new_attachment_ids;
+
+    try {
+        $self->_append_to_item_attribute($defect, $attachment_code, $new_attachment_ids);
+        $self->logger->info("Attached " . scalar(@$new_attachment_ids) . " photo(s) to defect $defect_id");
+    } catch {
+        $self->logger->error("Failed to attach photos to defect $defect_id: $_");
+    };
+}
 
 =head2 post_service_request_update
 
@@ -401,6 +435,11 @@ sub post_service_request_update {
 
     # Look up the inspection using one of the mentioned processes
     my $inspection_ref = $self->_find_latest_inspection($defect);
+
+    unless ($inspection_ref) {
+        $self->logger->error("No inspection found for defect $resource_id ($title) during POST Service Request Update");
+        die "No inspection found for defect $resource_id ($title)";
+    }
 
     # Fetch the full inspection details
     my $inspection = $self->alloy->api_call(call => "item/$inspection_ref->{itemId}")->{item};
@@ -487,11 +526,14 @@ sub post_service_request_update {
         }
     }
 
+    # Handle photo uploads - we need to attach them to both the new inspection AND the original defect
+    my $new_attachments;
     if ($self->config->{resource_attachment_attribute_id}
         && ($args->{media_url} || $args->{uploads})) {
         my $attachment_code = $self->config->{resource_attachment_attribute_id};
-        my $new_attachments = $self->upload_media($args);
+        $new_attachments = $self->upload_media($args);
         if ($new_attachments && @$new_attachments) {
+            # Add to new inspection attributes
             my ($existing) = grep { $_->{attributeCode} eq $attachment_code } @new_attributes;
             if ($existing) {
                 my $existing_value = $existing->{value};
@@ -520,6 +562,11 @@ sub post_service_request_update {
     # Update the defect to link to the new inspection
     # Add the new inspection ID to the defect's inspection list attribute
     $self->_link_inspection_to_defect($defect, $new_inspection_id);
+
+    # Also attach the uploaded photos to the original defect
+    if ($new_attachments && @$new_attachments) {
+        $self->_append_attachments_to_defect($defect, $new_attachments);
+    }
 
     # Return the update with the combined ID
     return Open311::Endpoint::Service::Request::Update::mySociety->new(
