@@ -180,7 +180,7 @@ sub services {
 
             my $subcategory_name = $subcategory_alias || $subcategory;
 
-            (my $code = $subcategory) =~ s/ /_/g;
+            my $code = $self->_get_service_code($group, $subcategory, $subcategory_config);
             if ($subcategory_alias) {
                 $code .= '_' . ++$suffixes{$code};
             }
@@ -277,6 +277,24 @@ sub post_service_request {
 
 }
 
+=head2 _get_service_code
+
+Used to determine the Open311 service code for a service.
+Takes the group, subcategory, and value (aka subcategory_config) from
+service_whitelist in the integration's config file.
+
+By default we use the subcategory name as the service code, replacing spaces
+with underscores.
+
+=cut
+
+sub _get_service_code {
+    my ($self, $group, $subcategory, $subcategory_config) = @_;
+
+    (my $code = $subcategory) =~ s/ /_/g;
+    return $code;
+}
+
 sub _munge_service_code {
     my ( $self, $service_code ) = @_;
 
@@ -325,6 +343,86 @@ sub _update_item {
     };
 
     return $update;
+}
+
+=head2 _append_to_item_attribute
+
+Appends new values to an existing list attribute on an Alloy item.
+Handles ItemSignatureMismatch by refetching the item and retrying once.
+
+=cut
+
+sub _append_to_item_attribute {
+    my ($self, $item, $attr_code, $new_values) = @_;
+
+    my $item_id = $item->{itemId};
+
+    # Find the current values for this attribute
+    my @current_values;
+    for my $attr (@{$item->{attributes}}) {
+        if ($attr->{attributeCode} eq $attr_code) {
+            @current_values = ref $attr->{value} eq 'ARRAY'
+                ? @{$attr->{value}}
+                : ($attr->{value});
+            last;
+        }
+    }
+
+    push @current_values, @$new_values;
+
+    my $updated = {
+        attributes => [
+            {
+                attributeCode => $attr_code,
+                value => \@current_values,
+            }
+        ],
+        signature => $item->{signature},
+    };
+
+    try {
+        $self->alloy->api_call(
+            call => "item/$item_id",
+            method => 'PUT',
+            body => $updated
+        );
+    } catch {
+        if ( $_ =~ /ItemSignatureMismatch/ ) {
+            my $fresh_item = $self->alloy->api_call(call => "item/$item_id")->{item};
+
+            # Rebuild the list from the fresh item's attributes
+            my @fresh_values;
+            for my $attr (@{$fresh_item->{attributes}}) {
+                if ($attr->{attributeCode} eq $attr_code) {
+                    @fresh_values = ref $attr->{value} eq 'ARRAY'
+                        ? @{$attr->{value}}
+                        : ($attr->{value});
+                    last;
+                }
+            }
+            push @fresh_values, @$new_values;
+
+            try {
+                $self->alloy->api_call(
+                    call => "item/$item_id",
+                    method => 'PUT',
+                    body => {
+                        attributes => [
+                            {
+                                attributeCode => $attr_code,
+                                value => \@fresh_values,
+                            }
+                        ],
+                        signature => $fresh_item->{signature},
+                    }
+                );
+            } catch {
+                die "Failed to update attribute $attr_code on item $item_id: $_";
+            }
+        } else {
+            die "Failed to update attribute $attr_code on item $item_id: $_";
+        }
+    };
 }
 
 sub set_parent_attribute {
@@ -659,9 +757,16 @@ sub _get_inspection_updates_design {
     return () unless $mapping;
 
     my %join;
-    $join{joinAttributes}
-        = [ $mapping->{category_title}, $mapping->{group_title} ]
-        if $mapping->{category_title};
+    if (my $extra_mapping = $mapping->{extra_attributes}) {
+        # Collect all attribute paths, flattening arrays
+        foreach my $attr_paths (values %$extra_mapping) {
+            if (ref $attr_paths eq 'ARRAY') {
+                push @{$join{joinAttributes}}, @$attr_paths;
+            } else {
+                push @{$join{joinAttributes}}, $attr_paths;
+            }
+        }
+    }
 
     my $updates = $self->fetch_updated_resources($design, $args->{start_date}, $args->{end_date}, \%join);
 
@@ -678,6 +783,7 @@ sub _get_inspection_updates_design {
         my $attributes = $self->alloy->attributes_to_hash($report);
 
         my ($status, $reason_for_closure) = $self->_get_inspection_status($attributes, $mapping);
+        next if $self->_skip_inspection_update($status);
 
         my $description = '';
         if ($mapping->{inspector_comments}) {
@@ -717,14 +823,20 @@ sub _get_inspection_updates_design {
             }
         }
 
-        if ( $mapping->{category_title} ) {
-            $args{extras}{category}
-                = $attributes->{ $mapping->{category_title} }
-                if $attributes->{ $mapping->{category_title} };
-
-            $args{extras}{group}
-                = $attributes->{ $mapping->{group_title} }
-                if $attributes->{ $mapping->{group_title} };
+        if (my $extra_mapping = $mapping->{extra_attributes}) {
+            foreach my $key (keys %$extra_mapping) {
+                my $attr_paths = $extra_mapping->{$key};
+                # Support both single string and array of attribute paths
+                $attr_paths = [ $attr_paths ] unless ref $attr_paths eq 'ARRAY';
+                
+                # Try each attribute path until we find one with a value
+                foreach my $attr_path (@$attr_paths) {
+                    if ($attr_path && $attributes->{$attr_path}) {
+                        $args{extras}{$key} = $attributes->{$attr_path};
+                        last;
+                    }
+                }
+            }
         }
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
@@ -732,6 +844,8 @@ sub _get_inspection_updates_design {
 
     return @updates;
 }
+
+sub _skip_inspection_update { }
 
 sub get_assigned_to_users {
     # Currently for Northumberland only
@@ -808,6 +922,7 @@ sub _get_defect_updates {
 
     my @updates;
     my $resources = $self->config->{defect_resource_name};
+    $resources = [] unless $resources;
     $resources = [ $resources ] unless ref $resources eq 'ARRAY';
     foreach (@$resources) {
         push @updates, $self->_get_defect_updates_resource($_, $args);
