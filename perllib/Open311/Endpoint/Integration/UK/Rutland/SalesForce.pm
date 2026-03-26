@@ -280,23 +280,22 @@ sub service {
     }
 
     my %options = (
+        code => 'notice',
         required => 0,
         variable => 0,
         datatype => 'string',
-        automated => 'server_set',
     );
 
-    push @{ $service->attributes }, Open311::Endpoint::Service::Attribute->new(
-        code => 'hint',
-        description => $hint,
-        %options,
-    );
-
-    push @{ $service->attributes }, Open311::Endpoint::Service::Attribute->new(
-        code => 'group_hint',
-        description => $group_hint,
-        %options,
-    );
+    if ($hint || $group_hint) {
+        my $description = $group_hint ? '<p>' . $group_hint . '</p>' : '';
+        $description .= $hint ? '<p>' . $hint . '</p>' : '';
+        if ($description) {
+            push @{ $service->attributes }, Open311::Endpoint::Service::Attribute->new(
+              description => $description,
+              %options,
+            );
+        };
+    };
 
     return $service;
 }

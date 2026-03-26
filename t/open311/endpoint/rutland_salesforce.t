@@ -989,24 +989,13 @@ subtest "check fetch service metadata" => sub {
             description => "Additional Information",
           },
           {
-            variable => 'false',
-            code => "hint",
-            datatype => "string",
-            required => 'false',
-            datatype_description => '',
-            order => 6,
-            description => "<span>This is the category HTML hint</span>",
-            automated => 'server_set',
-          },
-          {
-            variable => 'false',
-            code => "group_hint",
-            datatype => "string",
-            required => 'false',
-            datatype_description => '',
-            order => 7,
-            description => "<span>This is the group HTML hint</span>",
-            automated => 'server_set',
+           "variable" => "false",
+           "required" => "false",
+           "order" => 6,
+           "code" => "notice",
+           "description" => "<p><span>This is the group HTML hint</span></p><p><span>This is the category HTML hint</span></p>",
+           "datatype" => "string",
+           "datatype_description" => "",
           }
         ]
     }, 'correct json returned';
