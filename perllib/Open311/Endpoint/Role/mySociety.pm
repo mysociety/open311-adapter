@@ -286,8 +286,7 @@ sub format_updates {
                     ),
                     (
                         map {
-                            my $value = $update->$_->[0];
-                            $_ => $value || '';
+                            $_ => @{$update->$_} || '';
                         }
                         qw/
                             media_url
