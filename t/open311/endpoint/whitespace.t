@@ -23,6 +23,7 @@ package main;
 
 use strict;
 use warnings;
+use utf8;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
@@ -30,12 +31,33 @@ use Test::More;
 use Test::MockModule;
 use JSON::MaybeXS;
 use SOAP::Lite;
+use SOAP::Transport::HTTP;
 
 my $lwp = Test::MockModule->new('LWP::UserAgent');
 $lwp->mock(get => sub {
     return HTTP::Response->new(200, 'OK', [], 'Hello' . $_[1]);
 });
 
+my %sent;
+my $transport = Test::MockModule->new('SOAP::Transport::HTTP::Client', no_auto => 1);
+$transport->mock(send_receive => sub {
+        my $self = shift;
+        my %args = @_;
+
+        (my $action = $args{action}) =~ s#http://bartec-systems.com/##;
+        $action =~ s/"//g;
+        $sent{$action} = $args{envelope};
+
+        return <<EOF;
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<soap:Body></soap:Body>
+</soap:Envelope>
+EOF
+    }
+);
 # This is called when a test below makes a SOAP call, along with the data
 # to be passed via SOAP to the server. We check the values here, then pass
 # back a mocked result.
@@ -50,7 +72,7 @@ $soap_lite->mock(call => sub {
         if ($params{Uprn} eq 1000001) {
             is $params{ServiceId}, '289', 'ServiceId correct';
             is $params{WorksheetReference}, 2000123, 'WorksheetReference correct';
-            is $params{WorksheetMessage}, 'This is the details', 'Description correct';
+            is $params{WorksheetMessage}, 'This is the ☃️ details', 'Description correct';
 
             my %service_property_inputs = map { $_->value } map { ${$_->value}->value } ${$params{ServicePropertyInputs}}->value->value;
             is $service_property_inputs{'79'}, 'No', 'AssistedYn correct';
@@ -86,6 +108,14 @@ $soap_lite->mock(call => sub {
             is $service_property_inputs{61}, '6 months';
         } else {
             die "Unknown uprn $params{Uprn}";
+        }
+
+        # Call underlying SOAP sending code as well
+        $soap_lite->original('call')->(@_);
+
+        my $xml = $sent{'http://webservices.whitespacews.com/CreateWorksheet'};
+        if ($params{Uprn} eq 1000001) {
+            like $xml, qr{<WorksheetMessage xsi:type="xsd:string">This is the ☃️ details</WorksheetMessage>};
         }
 
         return SOAP::Result->new(
@@ -184,7 +214,7 @@ subtest "POST missed collection OK" => sub {
         service_code => 'missed_collection',
         first_name => 'Bob',
         last_name => 'Mould',
-        description => "This is the details",
+        description => "This is the ☃️ details",
         lat => 51,
         long => -1,
         'attribute[uprn]' => 1000001,

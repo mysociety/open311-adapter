@@ -38,7 +38,10 @@ has endpoint => (
             on_action => sub { $self->attr . $_[1] }
         );
         $soap->serializer->register_ns("http://schemas.datacontract.org/2004/07/WSAPIAuth.Web.Inputs", 'wsap');
-
+        # Prevent Base64 encoding
+        my $lookup = $soap->serializer->typelookup;
+        $lookup->{base64Binary}->[0] = 1000;
+        $soap->serializer->typelookup($lookup);
         return $soap;
     },
 );
