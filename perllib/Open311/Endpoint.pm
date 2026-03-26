@@ -824,8 +824,13 @@ sub format_service_requests {
                     ),
                     (
                         map {
-                            my $value = $request->$_->[0];
-                            $_ => $value || '';
+                            my $value;
+                            if (scalar @{ $request->$_ } <= 1) {
+                                $value = $request->$_->[0] || '';
+                            } else {
+                                $value = $request->@{$_};
+                            }
+                            $_ => $value;
                         }
                         qw/
                             media_url
