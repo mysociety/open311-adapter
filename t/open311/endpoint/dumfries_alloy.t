@@ -163,7 +163,8 @@ subtest 'send new report to Alloy with contact and service_code' => sub {
         'attribute[description]' => 'There is a large pothole',
         'attribute[title]' => 'Pothole on High Street',
         'attribute[report_url]' => 'http://localhost/123',
-        'attribute[category]' => 'Roads_Pothole',
+        'attribute[group]' => 'Roads',
+        'attribute[category]' => 'Pothole',
         'attribute[fixmystreet_id]' => 123,
         'attribute[easting]' => 300000,
         'attribute[northing]' => 600000,
@@ -203,11 +204,177 @@ subtest 'send new report to Alloy with contact and service_code' => sub {
     is_deeply $service_code_attr->{value}, ['123a123'],
         'service_code attribute contains the Alloy ID';
 
+    # Find the customer_description attribute
+    my ($customer_desc_attr) = grep {
+        $_->{attributeCode} eq 'attributes_seCustomerDescription'
+    } @{$report_sent->{attributes}};
+
+    ok $customer_desc_attr, 'customer_description attribute present';
+    is_deeply $customer_desc_attr->{value}, "Category: Roads/Pothole\nSummary: Pothole on High Street\nDescription: There is a large pothole",
+        'customer_description attribute contains formatted category/summary/description';
+
     is_deeply decode_json($res->content),
         [ { service_request_id => 'report_456' } ],
         'correct json returned';
 
     restore_time();
+};
+
+subtest '_status_from_mapping' => sub {
+    # Test that _status_from_mapping correctly maps status/outcome/priority combinations
+    # to Open311 statuses based on the config, and returns external_status_code
+
+    # Test OPEN status - Awaiting Inspection
+    my $defect = {
+        attributes_status => ['123abc'],
+    };
+    my ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'open', 'Awaiting Inspection maps to open';
+    is $ext, '123abc::', 'external_status_code contains status only';
+
+    # Test OPEN status - Reported with 24hr priority
+    $defect = {
+        attributes_status => ['456def'],
+        attributes_hwyPriority => ['987ffa'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'open', 'Reported + 24hr priority maps to open';
+    is $ext, '456def::987ffa', 'external_status_code contains status and priority';
+
+    # Test OPEN status - Reported with 5 day priority (using se_priority)
+    $defect = {
+        attributes_status => ['456def'],
+        attributes_sePriority => ['12ef34a'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'open', 'Reported + 5 day priority maps to open';
+    is $ext, '456def::12ef34a', 'external_status_code contains status and se_priority';
+
+    # Test INVESTIGATING status - note: this matches 'open' first due to config order
+    # The open rule with outcome=null matches before the investigating rule
+    $defect = {
+        attributes_status => ['456def'],
+        attributes_outcome => ['981bbe'],
+        attributes_hwyPriority => ['987ffa'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'open', 'Reported + Further Investigation + 24hr priority matches open (config order)';
+    is $ext, '456def:981bbe:987ffa', 'external_status_code contains all three values';
+
+    # Test PLANNED status
+    $defect = {
+        attributes_status => ['1212aad'],
+        attributes_hwyPriority => ['987ffa'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'planned', 'Job Raised + 24hr priority maps to planned';
+    is $ext, '1212aad::987ffa', 'external_status_code contains status and priority';
+
+    # Test FIXED status
+    $defect = {
+        attributes_status => ['91827eea'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'fixed', 'Remedied maps to fixed';
+    is $ext, '91827eea::', 'external_status_code contains status only';
+
+    # Test FIXED status, ignoring priority
+    $defect = {
+        attributes_status => ['91827eea'],
+        attributes_hwyPriority => ['12ef34a'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'fixed', 'Remedied maps to fixed';
+    is $ext, '91827eea::12ef34a', 'external_status_code still captures actual priority';
+
+    # Test DUPLICATE status
+    $defect = {
+        attributes_status => ['11aa22cc'],
+        attributes_outcome => ['1133cc11'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'duplicate', 'No Action Required + No Action outcome maps to duplicate';
+    is $ext, '11aa22cc:1133cc11:', 'external_status_code contains status and outcome';
+
+    # Test NO_FURTHER_ACTION status
+    $defect = {
+        attributes_status => ['11aa22cc'],
+        attributes_outcome => ['98ae11'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'no_further_action', 'No Action Required + Defect no action outcome maps to no_further_action';
+    is $ext, '11aa22cc:98ae11:', 'external_status_code contains status and outcome';
+
+    # Test NOT_COUNCILS_RESPONSIBILITY status - note: this matches 'fixed' first due to config order
+    # The fixed rule with outcome=null, priority=null matches before the not_councils_responsibility rule
+    $defect = {
+        attributes_status => ['91827eea'],
+        attributes_outcome => ['123a9ea'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'fixed', 'Remedied + Passed to 3rd Party matches fixed (config order)';
+    is $ext, '91827eea:123a9ea:', 'external_status_code contains status and outcome';
+
+    # Test CLOSED status with Low Risk priority
+    $defect = {
+        attributes_sePriority => ['9a9a9a'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'closed', 'Low Risk priority maps to closed';
+    is $ext, '::9a9a9a', 'external_status_code contains priority only';
+
+    # Test CLOSED status with No Response priority
+    $defect = {
+        attributes_hwyPriority => ['9b9b9baa'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'closed', 'No Response priority maps to closed';
+    is $ext, '::9b9b9baa', 'external_status_code contains priority only';
+
+    # Test CLOSED status with No Response priority, ignoring outcome
+    $defect = {
+        attributes_outcome => ['123a9ea'],
+        attributes_hwyPriority => ['9b9b9baa'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'closed', 'No Response priority maps to closed';
+    is $ext, ':123a9ea:9b9b9baa', 'external_status_code contains outcome and priority';
+
+    # Test CLOSED status with No Response priority, ignoring status
+    $defect = {
+        attributes_status => ['91827eeb'],
+        attributes_hwyPriority => ['9b9b9baa'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'closed', 'No Response priority maps to closed';
+    is $ext, '91827eeb::9b9b9baa', 'external_status_code contains status and priority';
+
+    # Test CLOSED status with No Response priority, ignoring status and outcome
+    $defect = {
+        attributes_status => ['91827eeb'],
+        attributes_outcome => ['123a9eb'],
+        attributes_hwyPriority => ['9b9b9baa'],
+    };
+    ($status, $ext) = $endpoint->_status_from_mapping($defect);
+    is $status, 'closed', 'No Response priority maps to closed';
+    is $ext, '91827eeb:123a9eb:9b9b9baa', 'external_status_code contains all three values';
+
+    # Test that non-matching combinations return IGNORE (scalar, not list)
+    $defect = {
+        attributes_status => ['unknown_status'],
+        attributes_outcome => ['unknown_outcome'],
+        attributes_hwyPriority => ['unknown_priority'],
+    };
+    is $endpoint->_status_from_mapping($defect), 'IGNORE',
+        'Unmatched status combination returns IGNORE';
+
+    # Test _skip_inspection_update returns true for IGNORE status
+    ok $endpoint->_skip_inspection_update('IGNORE'),
+        '_skip_inspection_update returns true for IGNORE status';
+
+    # Test _skip_inspection_update returns false for other statuses
+    ok !$endpoint->_skip_inspection_update('open'),
+        '_skip_inspection_update returns false for open status';
 };
 
 subtest 'priority pulled through' => sub {
@@ -614,6 +781,96 @@ subtest 'post_service_request_update without description' => sub {
         'update created successfully without description';
 };
 
+subtest 'post_service_request_update with media_url uploads attachment' => sub {
+    my @api_calls;
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        push @api_calls, \%args;
+
+        my $call = $args{call};
+        my $body = $args{body};
+        my $method = $args{method} || '';
+        my $is_file = $args{is_file};
+
+        if ($call eq 'item/defect_104' && !$method) {
+            return {
+                item => {
+                    itemId => 'defect_104',
+                    designCode => 'designs_serviceEnquiry',
+                    geometry => { type => 'Point', coordinates => [3, 4] },
+                    signature => 'sig_901',
+                    attributes => [
+                        {
+                            attributeCode => 'attributes_defectsWithInspectionsDefectInspection',
+                            value => ['inspection_107']
+                        },
+                        {
+                            attributeCode => 'attributes_filesAttachableAttachments',
+                            value => ['existing_file_001']
+                        }
+                    ]
+                }
+            };
+        } elsif ($call eq 'item/inspection_107') {
+            return {
+                item => {
+                    itemId => 'inspection_107',
+                    designCode => 'designs_hWYCustomerReport',
+                    geometry => { type => 'Point', coordinates => [1, 2] },
+                    attributes => [
+                        { attributeCode => 'attributes_status', value => ['status_123'] },
+                    ]
+                }
+            };
+        } elsif ($call eq 'item/defect_104/parents') {
+            return { results => [] };
+        } elsif ($is_file) {
+            return { fileItemId => 'file_123' };
+        } elsif ($call eq 'item' && $body && !$method) {
+            return { item => { itemId => 'inspection_108' } };
+        } elsif ($call eq 'item/defect_104' && $method eq 'PUT') {
+            return { item => { itemId => 'defect_104' } };
+        }
+    });
+
+    my $result = $endpoint->post_service_request_update({
+        service_request_id => 'defect_104',
+        status => 'investigating',
+        updated_datetime => '2025-12-25T14:30:00Z',
+        description => 'Update with photo',
+        media_url => ['http://example.org/photo/1.jpeg'],
+        uploads => [],
+    });
+
+    my ($create_call) = grep { $_->{call} eq 'item' && $_->{body} } @api_calls;
+    ok $create_call, 'created inspection with attachments';
+
+    my $new_inspection = $create_call->{body};
+    my %attrs = map { $_->{attributeCode} => $_->{value} } @{$new_inspection->{attributes}};
+    is_deeply $attrs{attributes_filesAttachableAttachments}, ['file_123'],
+        'inspection includes uploaded attachment';
+
+    # Verify defect was updated with attachments (should have 2 PUT calls - one for inspection link, one for attachments)
+    my @defect_put_calls = grep { $_->{call} eq 'item/defect_104' && ($_->{method} || '') eq 'PUT' } @api_calls;
+    is scalar(@defect_put_calls), 2, 'defect was updated twice (inspection link + attachments)';
+
+    # Find the attachment update (the one with attributes_filesAttachableAttachments)
+    my ($attachment_put) = grep {
+        my $attrs = $_->{body}{attributes};
+        grep { $_->{attributeCode} eq 'attributes_filesAttachableAttachments' } @$attrs;
+    } @defect_put_calls;
+    ok $attachment_put, 'found PUT call to update defect attachments';
+
+    my ($attachment_attr) = grep { $_->{attributeCode} eq 'attributes_filesAttachableAttachments' }
+        @{$attachment_put->{body}{attributes}};
+    is_deeply $attachment_attr->{value}, ['existing_file_001', 'file_123'],
+        'defect attachments include both existing and new files';
+
+    is $result->update_id, 'defect_104_inspection_108',
+        'update created successfully with attachment';
+};
+
 subtest 'post_service_request_update with parent-type inspection (no description field)' => sub {
     # Test that we don't try to set description field on inspections that don't have it
     # (e.g., inspections found via parent relationship)
@@ -687,6 +944,429 @@ subtest 'post_service_request_update with parent-type inspection (no description
 
     is $result->update_id, 'defect_103_inspection_106',
         'update created successfully even when template lacks description field';
+};
+
+
+subtest 'photo fetching with AQS cache' => sub {
+    # Mock api_call to handle photo fetching scenarios
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    my %mock_responses = (
+        # Defect with job and inspection
+        'item/defect_with_photos' => {
+            item => {
+                itemId => 'defect_with_photos',
+                designCode => 'designs_defects',
+                attributes => [
+                    { attributeCode => 'attributes_defectsRaisingJobsRaisedJobs', value => 'job_001' },
+                    { attributeCode => 'attributes_defectsWithInspectionsDefectInspection', value => 'insp_001' },
+                ],
+            }
+        },
+        # Job with 2 attachments
+        'item/job_001' => {
+            item => {
+                itemId => 'job_001',
+                designCode => 'designs_jobs',
+                attributes => [
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => ['file_001', 'file_002'] },
+                ],
+            }
+        },
+        # Inspection with 1 attachment (overlapping with job)
+        'item/insp_001' => {
+            item => {
+                itemId => 'insp_001',
+                designCode => 'designs_hWYCustomerReport',
+                attributes => [
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => 'file_002' },
+                ],
+            }
+        },
+        # File items
+        'item/file_001' => {
+            item => {
+                itemId => 'file_001',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'photo1.jpg' },
+                ],
+            }
+        },
+        'item/file_002' => {
+            item => {
+                itemId => 'file_002',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'photo2.jpg' },
+                ],
+            }
+        },
+        'item/file_003' => {
+            item => {
+                itemId => 'file_003',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => '123.456.full.photo3.jpg' },
+                ],
+            }
+        },
+        # Item logs (creation dates)
+        'item-log/item/file_001' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T10:00:00.000Z' },
+            ],
+        },
+        'item-log/item/file_002' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T11:00:00.000Z' },
+            ],
+        },
+        'item-log/item/file_003' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T12:00:00.000Z' },
+            ],
+        },
+    );
+
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+        return $mock_responses{$call} if exists $mock_responses{$call};
+        die "Unmocked API call: $call";
+    });
+
+    $integration->mock('search', sub {
+        my ($self, $body) = @_;
+        # Return files within date range for cache building
+        return [
+            {
+                itemId => 'file_001',
+                createdDate => '2025-12-25T10:00:00.000Z',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'photo1.jpg' },
+                ],
+            },
+            {
+                itemId => 'file_002',
+                createdDate => '2025-12-25T11:00:00.000Z',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'photo2.jpg' },
+                ],
+            },
+            # file_003 has FMS pattern, should be filtered out
+            {
+                itemId => 'file_003',
+                createdDate => '2025-12-25T12:00:00.000Z',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => '123.456.full.photo3.jpg' },
+                ],
+            },
+        ];
+    });
+
+    # Build attachment cache with date range
+    my $cache = $endpoint->_build_attachment_cache({
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    });
+
+    # Check cache contains valid files only (not FMS pattern)
+    is(scalar(keys %$cache), 2, 'Cache contains 2 valid files');
+    ok(exists $cache->{file_001}, 'Cache contains file_001');
+    ok(exists $cache->{file_002}, 'Cache contains file_002');
+    ok(!exists $cache->{file_003}, 'Cache does not contain FMS file');
+
+    # Test _get_linked_item_media_urls for jobs with cache and skip_ids
+    my $defect = $mock_responses{'item/defect_with_photos'}{item};
+    my %inspection_skip = ( file_002 => 1 ); # file_002 is on inspection, exclude from job results
+    my $job_urls = $endpoint->_get_linked_item_media_urls($defect,
+        'attributes_defectsRaisingJobsRaisedJobs', {
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    }, $cache, \%inspection_skip);
+
+    # Should get file_001 only (file_002 is on inspection and should be excluded to avoid duplication)
+    is(scalar(@$job_urls), 1, 'Got 1 job media URL');
+    like($job_urls->[0], qr/photos.*item=file_001/, 'Job URL contains file_001');
+
+    # Test _get_linked_item_media_urls for inspections with cache
+    my $insp_urls = $endpoint->_get_linked_item_media_urls($defect,
+        'attributes_defectsWithInspectionsDefectInspection', {
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    }, $cache);
+
+    # Should get file_002 from inspection
+    is(scalar(@$insp_urls), 1, 'Got 1 inspection media URL');
+    like($insp_urls->[0], qr/photos.*item=file_002/, 'Inspection URL contains file_002');
+};
+
+
+subtest 'photo fetching without cache (fallback behavior)' => sub {
+    # Test the fallback path when no cache is provided
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    my %mock_responses = (
+        'item/defect_simple' => {
+            item => {
+                itemId => 'defect_simple',
+                designCode => 'designs_defects',
+                attributes => [
+                    { attributeCode => 'attributes_defectsRaisingJobsRaisedJobs', value => 'job_002' },
+                ],
+            }
+        },
+        'item/job_002' => {
+            item => {
+                itemId => 'job_002',
+                designCode => 'designs_jobs',
+                attributes => [
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => 'file_004' },
+                ],
+            }
+        },
+        'item/file_004' => {
+            item => {
+                itemId => 'file_004',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'valid_photo.jpg' },
+                ],
+            }
+        },
+        'item-log/item/file_004' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T14:00:00.000Z' },
+            ],
+        },
+    );
+
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+        return $mock_responses{$call} if exists $mock_responses{$call};
+        die "Unmocked API call: $call";
+    });
+
+    # Call without cache (should fall back to individual API calls)
+    my $defect = $mock_responses{'item/defect_simple'}{item};
+    my $urls = $endpoint->_get_linked_item_media_urls($defect,
+        'attributes_defectsRaisingJobsRaisedJobs', {
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    });
+
+    is(scalar(@$urls), 1, 'Got 1 media URL via fallback path');
+    like($urls->[0], qr/photos.*item=file_004/, 'URL contains file_004');
+};
+
+subtest 'FMS file filtering' => sub {
+    # Test that FMS auto-generated files are excluded
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    my %mock_responses = (
+        'item/defect_fms' => {
+            item => {
+                itemId => 'defect_fms',
+                designCode => 'designs_defects',
+                attributes => [
+                    { attributeCode => 'attributes_defectsRaisingJobsRaisedJobs', value => 'job_003' },
+                ],
+            }
+        },
+        'item/job_003' => {
+            item => {
+                itemId => 'job_003',
+                designCode => 'designs_jobs',
+                attributes => [
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => ['file_fms', 'file_valid'] },
+                ],
+            }
+        },
+        'item/file_fms' => {
+            item => {
+                itemId => 'file_fms',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => '12345.67890.full.original.jpg' },
+                ],
+            }
+        },
+        'item/file_valid' => {
+            item => {
+                itemId => 'file_valid',
+                designCode => 'designs_files',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'user_photo.jpg' },
+                ],
+            }
+        },
+        'item-log/item/file_fms' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T15:00:00.000Z' },
+            ],
+        },
+        'item-log/item/file_valid' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T16:00:00.000Z' },
+            ],
+        },
+    );
+
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+        return $mock_responses{$call} if exists $mock_responses{$call};
+        die "Unmocked API call: $call";
+    });
+
+    my $defect = $mock_responses{'item/defect_fms'}{item};
+    my $urls = $endpoint->_get_linked_item_media_urls($defect,
+        'attributes_defectsRaisingJobsRaisedJobs', {
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    });
+
+    # Should only get the valid file, FMS file should be filtered out
+    is(scalar(@$urls), 1, 'Got only 1 URL (FMS file excluded)');
+    like($urls->[0], qr/photos.*item=file_valid/, 'URL is for valid file');
+    unlike($urls->[0], qr/file_fms/, 'FMS file not included');
+};
+
+subtest 'date range filtering' => sub {
+    # Test that photos outside date range are excluded
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+
+    my %mock_responses = (
+        'item/defect_dates' => {
+            item => {
+                itemId => 'defect_dates',
+                designCode => 'designs_defects',
+                attributes => [
+                    { attributeCode => 'attributes_defectsRaisingJobsRaisedJobs', value => 'job_004' },
+                ],
+            }
+        },
+        'item/job_004' => {
+            item => {
+                itemId => 'job_004',
+                designCode => 'designs_jobs',
+                attributes => [
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => ['file_old', 'file_new', 'file_future'] },
+                ],
+            }
+        },
+        'item/file_old' => {
+            item => {
+                itemId => 'file_old',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'old.jpg' },
+                ],
+            }
+        },
+        'item/file_new' => {
+            item => {
+                itemId => 'file_new',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'new.jpg' },
+                ],
+            }
+        },
+        'item/file_future' => {
+            item => {
+                itemId => 'file_future',
+                attributes => [
+                    { attributeCode => 'attributes_filesOriginalName', value => 'future.jpg' },
+                ],
+            }
+        },
+        'item-log/item/file_old' => {
+            results => [
+                { action => 'Create', date => '2025-12-20T10:00:00.000Z' }, # Before range
+            ],
+        },
+        'item-log/item/file_new' => {
+            results => [
+                { action => 'Create', date => '2025-12-25T10:00:00.000Z' }, # In range
+            ],
+        },
+        'item-log/item/file_future' => {
+            results => [
+                { action => 'Create', date => '2025-12-30T10:00:00.000Z' }, # After range
+            ],
+        },
+    );
+
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+        return $mock_responses{$call} if exists $mock_responses{$call};
+        die "Unmocked API call: $call";
+    });
+
+    my $defect = $mock_responses{'item/defect_dates'}{item};
+    my $urls = $endpoint->_get_linked_item_media_urls($defect,
+        'attributes_defectsRaisingJobsRaisedJobs', {
+        start_date => '2025-12-25T00:00:00Z',
+        end_date => '2025-12-26T00:00:00Z',
+    });
+
+    # Should only get file_new (in range), not file_old or file_future
+    is(scalar(@$urls), 1, 'Got only 1 URL (date filtered)');
+    like($urls->[0], qr/photos.*item=file_new/, 'URL is for file in date range');
+};
+
+
+subtest '_find_latest_inspection uses attributes_tasksRaisedTime' => sub {
+    # Test that attributes_tasksRaisedTime takes precedence over lastEditDate
+    my $integration = Test::MockModule->new('Integrations::AlloyV2');
+    $integration->mock('api_call', sub {
+        my ($self, %args) = @_;
+        my $call = $args{call};
+
+        if ($call eq 'item/inspection_raised_early') {
+            return {
+                item => {
+                    itemId => 'inspection_raised_early',
+                    designCode => 'designs_hWYCustomerReport',
+                    lastEditDate => '2025-12-25T15:00:00.000Z',  # Later edit
+                    createdDate => '2025-12-20T10:00:00.000Z',
+                    attributes => [
+                        { attributeCode => 'attributes_tasksRaisedTime', value => '2025-12-20T10:00:00.000Z' }
+                    ],
+                }
+            };
+        } elsif ($call eq 'item/inspection_raised_late') {
+            return {
+                item => {
+                    itemId => 'inspection_raised_late',
+                    designCode => 'designs_hWYCustomerReport',
+                    lastEditDate => '2025-12-20T10:00:00.000Z',  # Earlier edit
+                    createdDate => '2025-12-19T10:00:00.000Z',
+                    attributes => [
+                        { attributeCode => 'attributes_tasksRaisedTime', value => '2025-12-26T10:00:00.000Z' }
+                    ],
+                }
+            };
+        } elsif ($call eq 'item/defect_with_raised_times/parents') {
+            return { results => [] };
+        }
+    });
+
+    my $defect = {
+        itemId => 'defect_with_raised_times',
+        attributes => [
+            {
+                attributeCode => 'attributes_defectsWithInspectionsDefectInspection',
+                value => ['inspection_raised_early', 'inspection_raised_late']
+            }
+        ]
+    };
+
+    my $inspection = $endpoint->_find_latest_inspection($defect);
+    is $inspection->{itemId}, 'inspection_raised_late',
+        'uses attributes_tasksRaisedTime for sorting (not lastEditDate)';
 };
 
 done_testing;
