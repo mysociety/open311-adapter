@@ -1,6 +1,7 @@
 {
   "api_key": "api_key",
   "api_url": "http://localhost/api/",
+  "base_url": "http://localhost/",
   "source_type_property_name": "INSPECTION_STANDARD",
   "rfs_design": 'designs_enquiryInspectionRFS1001181_5d3245c5fe2ad806f8dfbaf6', # "Enquiry Inspection RFS"
   "defect_inspection_parent_id": 1001181,
