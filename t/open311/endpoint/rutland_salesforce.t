@@ -30,6 +30,25 @@ has is_success => (
     default => 1
 );
 
+package Integrations::SalesForce::Rutland::Dummy;
+use Path::Tiny;
+use Moo;
+extends 'Integrations::SalesForce::Rutland';
+sub _build_config_file { path(__FILE__)->sibling("rutland_salesforce.yml")->stringify }
+
+package Open311::Endpoint::Integration::UK::Rutland::SalesForce::Dummy;
+use Path::Tiny;
+use Moo;
+extends 'Open311::Endpoint::Integration::UK::Rutland::SalesForce';
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{jurisdiction_id} = 'rutland_salesforce';
+    $args{config_file} = path(__FILE__)->sibling("rutland_salesforce.yml")->stringify;
+    return $class->$orig(%args);
+};
+has integration_class => (is => 'ro', default => 'Integrations::SalesForce::Rutland::Dummy');
+
+
 package main;
 
 use strict; use warnings;
@@ -44,12 +63,13 @@ use Test::MockTime ':all';
 use Open311::Endpoint;
 use Data::Dumper;
 use JSON::MaybeXS;
+use Path::Tiny;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
-use Open311::Endpoint::Integration::UK::Rutland::SalesForce;
-use Integrations::SalesForce::Rutland;
+use Open311::Endpoint::Integration::UK::Rutland::SalesForce::Dummy;
+use Integrations::SalesForce::Rutland::Dummy;
 
-my $endpoint = Open311::Endpoint::Integration::UK::Rutland::SalesForce->new;
+my $endpoint = Open311::Endpoint::Integration::UK::Rutland::SalesForce::Dummy->new;
 
 my %responses = (
     'new_report' => '[{ "Id": "12345" }]',
@@ -884,15 +904,6 @@ subtest "check fetch service description" => sub {
         type => "realtime",
         keywords => "",
         group => "Street Furniture"
-    },
-    {
-        metadata => "true",
-        description => "Phasing/timing issues",
-        group => "Traffic Lights - Permanent",
-        service_code => "a012500000JJ0neAAD",
-        type => "realtime",
-        service_name => "Phasing/timing issues",
-        keywords => ""
     } ], 'correct json returned'
         or diag $res->content;
 };
@@ -978,24 +989,13 @@ subtest "check fetch service metadata" => sub {
             description => "Additional Information",
           },
           {
-            variable => 'false',
-            code => "hint",
-            datatype => "string",
-            required => 'false',
-            datatype_description => '',
-            order => 6,
-            description => "<span>This is the category HTML hint</span>",
-            automated => 'server_set',
-          },
-          {
-            variable => 'false',
-            code => "group_hint",
-            datatype => "string",
-            required => 'false',
-            datatype_description => '',
-            order => 7,
-            description => "<span>This is the group HTML hint</span>",
-            automated => 'server_set',
+           "variable" => "false",
+           "required" => "false",
+           "order" => 6,
+           "code" => "notice",
+           "description" => "<p><span>This is the group HTML hint</span></p><p><span>This is the category HTML hint</span></p>",
+           "datatype" => "string",
+           "datatype_description" => "",
           }
         ]
     }, 'correct json returned';
