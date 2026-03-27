@@ -75,6 +75,8 @@ my %responses = (
         "interface_used__c": "Web interface",
         "lat__c": 52.669102,
         "long__c": -0.723561,
+        "easting__c": 1234,
+        "northing__c": 4567,
         "requestor_name__c": "A User",
         "service_request_id__c": 12345,
         "title__c": "Car",
@@ -106,6 +108,8 @@ my %responses = (
         "interface_used__c": "Web interface",
         "lat__c": 52.68248,
         "long__c": -0.469137,
+        "easting__c": 1234,
+        "northing__c": 4567,
         "requestor_name__c": "Struan Donald",
         "requested_datetime__c": "2018-01-09T18:00:00.000+0000",
         "service_request_id__c": 975,
@@ -246,6 +250,8 @@ subtest "create basic problem" => sub {
         description => 'description',
         lat => '50',
         long => '0.1',
+        'attribute[easting]' => '1234',
+        'attribute[northing]' => '4567',
         'attribute[description]' => 'description',
         'attribute[external_id]' => '1',
         'attribute[title]' => '1',
@@ -254,7 +260,6 @@ subtest "create basic problem" => sub {
     my $sent = pop @sent;
     ok $res->is_success, 'valid request'
         or diag $res->content;
-
 
     is_deeply decode_json($sent),
     [{
@@ -273,7 +278,9 @@ subtest "create basic problem" => sub {
         "contact_name__c" => "Bob Mould",
         "contact_email__c" => 'test@example.com',
         "agency_sent_datetime__c" => "2014-01-01T12:00:00+0000",
-        "agency_responsible__c" => "Rutland County Council"
+        "agency_responsible__c" => "Rutland County Council",
+        "easting__c" => '1234',
+        "northing__c" => '4567',
     }] , 'correct json sent';
 
     is_deeply decode_json($res->content),
@@ -297,6 +304,8 @@ subtest "create problem with extra categories" => sub {
         description => 'description',
         lat => '50',
         long => '0.1',
+        'attribute[easting]' => '1234',
+        'attribute[northing]' => '4567',
         'attribute[description]' => 'description',
         'attribute[external_id]' => '1',
         'attribute[title]' => '1',
@@ -326,6 +335,8 @@ subtest "create problem with extra categories" => sub {
         contact_email__c => 'test@example.com',
         agency_sent_datetime__c => "2014-01-01T12:00:00+0000",
         agency_responsible__c => "Rutland County Council",
+        easting__c => '1234',
+        northing__c => '4567',
         extra => "extra_attribute"
     }] , 'correct json sent';
 
@@ -350,6 +361,8 @@ subtest "create problem with extra list categories" => sub {
         description => 'description',
         lat => '50',
         long => '0.1',
+        'attribute[easting]' => '1234',
+        'attribute[northing]' => '4567',
         'attribute[pot_type]' => 'Don´t know',
         'attribute[external_id]' => '1',
         'attribute[title]' => '1',
@@ -379,6 +392,8 @@ subtest "create problem with extra list categories" => sub {
         contact_email__c => 'test@example.com',
         agency_sent_datetime__c => "2014-01-01T12:00:00+0000",
         agency_responsible__c => "Rutland County Council",
+        easting__c => '1234',
+        northing__c => '4567',
         pot_type => "Don´t know"
     }] , 'correct json sent';
 
@@ -403,6 +418,8 @@ subtest "create problem with multiple photos" => sub {
         description => 'description',
         lat => '50',
         long => '0.1',
+        'attribute[easting]' => '1234',
+        'attribute[northing]' => '4567',
         'attribute[description]' => 'description',
         'attribute[external_id]' => '1',
         'attribute[title]' => '1',
@@ -433,7 +450,9 @@ subtest "create problem with multiple photos" => sub {
         contact_name__c => "Bob Mould",
         contact_email__c => 'test@example.com',
         agency_sent_datetime__c => "2014-01-01T12:00:00+0000",
-        agency_responsible__c => "Rutland County Council"
+        agency_responsible__c => "Rutland County Council",
+        easting__c => '1234',
+        northing__c => '4567',
     }] , 'correct json sent for mulitple photos';
 
     is_deeply decode_json($res->content),
@@ -457,6 +476,8 @@ subtest "create problem with unrecognised attribute" => sub {
         description => 'description',
         lat => '50',
         long => '0.1',
+        'attribute[easting]' => '1234',
+        'attribute[northing]' => '4567',
         'attribute[description]' => 'description',
         'attribute[external_id]' => '1',
         'attribute[title]' => '1',
@@ -483,6 +504,8 @@ subtest "create problem with unrecognised attribute" => sub {
         contact_email__c => 'test@example.com',
         agency_sent_datetime__c => "2014-01-01T12:00:00+0000",
         agency_responsible__c => "Rutland County Council",
+        easting__c => '1234',
+        northing__c => '4567',
     }] , 'correct json sent';
 };
 
@@ -539,6 +562,8 @@ subtest "check fetch problem with not responsible status" => sub {
         "interface_used__c": "Web interface",
         "lat__c": 52.68248,
         "long__c": -0.469137,
+        "easting__c": 1234,
+        "northing__c": 4567,
         "requestor_name__c": "Struan Donald",
         "requested_datetime__c": "2018-01-09T18:00:00.000+0000",
         "service_request_id__c": 975,
@@ -604,6 +629,8 @@ subtest "check fetch problem ignores problems older than start date" => sub {
         "interface_used__c": "Web interface",
         "lat__c": 52.68248,
         "long__c": -0.469137,
+        "easting__c": 1234,
+        "northing__c": 4567,
         "requestor_name__c": "Struan Donald",
         "requested_datetime__c": "2018-01-09T18:00:00.000+0000",
         "service_request_id__c": 975,
@@ -654,6 +681,8 @@ subtest "check fetch problem works with no start date" => sub {
         "interface_used__c": "Web interface",
         "lat__c": 52.68248,
         "long__c": -0.469137,
+        "easting__c": 1234,
+        "northing__c": 4567,
         "requestor_name__c": "Struan Donald",
         "requested_datetime__c": "2018-01-09T18:00:00.000+0000",
         "service_request_id__c": 975,
@@ -969,12 +998,32 @@ subtest "check fetch service metadata" => sub {
             automated => 'server_set',
           },
           {
+            required => "true",
+            description => "easting",
+            code => "easting",
+            automated => "server_set",
+            variable => "false",
+            order => 5,
+            datatype => "number",
+            datatype_description => ""
+          },
+          {
+            required => "true",
+            description => "northing",
+            code => "northing",
+            automated => "server_set",
+            variable => "false",
+            order => 6,
+            datatype => "number",
+            datatype_description => ""
+          },
+          {
             variable => 'true',
             code => "extra",
             datatype => "string",
             required => 'false',
             datatype_description => '',
-            order => 5,
+            order => 7,
             description => "Additional Information",
           },
           {
@@ -983,7 +1032,7 @@ subtest "check fetch service metadata" => sub {
             datatype => "string",
             required => 'false',
             datatype_description => '',
-            order => 6,
+            order => 8,
             description => "<span>This is the category HTML hint</span>",
             automated => 'server_set',
           },
@@ -993,7 +1042,7 @@ subtest "check fetch service metadata" => sub {
             datatype => "string",
             required => 'false',
             datatype_description => '',
-            order => 7,
+            order => 9,
             description => "<span>This is the group HTML hint</span>",
             automated => 'server_set',
           }
