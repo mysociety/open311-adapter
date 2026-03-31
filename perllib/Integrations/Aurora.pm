@@ -93,10 +93,6 @@ has ua => (
 has access_token => (
     is => 'lazy',
     default => sub {
-        # NOTE: Temporarily disabling access token to prevent actually
-        # interacting with Aurora until it's live.
-
-        return undef;
         my $self = shift;
         my $token = $self->memcache->get('access_token');
         unless ($token) {
