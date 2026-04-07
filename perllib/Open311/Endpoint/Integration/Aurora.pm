@@ -178,7 +178,7 @@ sub post_service_request_update {
     };
     $payload->{attachments} = $self->_upload_media_as_attachments($args);
     $self->aurora->add_note_to_case($case_number, $payload);
-    return Open311::Endpoint::Service::Request::Update->new(
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
         status => lc $args->{status},
         update_id => $args->{update_id},
     );
