@@ -55,11 +55,19 @@ subtest "Only uses the photo with the correct classification tag" => sub {
             Name => '3.jpg',
             Date => DateTime->now->subtract(days => 3),
         },
+        {
+            URL => '4',
+            Name => '4.jpg',
+            Date => DateTime->now->subtract(days => 4),
+            ClassificationCode => 'DT10',
+        },
     );
     my @filtered = $endpoint->filter_photos_graphql(@photos);
 
-    is @filtered, 1;
-    is $filtered[0]->{URL}, 2;
+    is @filtered, 2;
+    my %by_url = map { $_->{URL} => 1 } @filtered;
+    ok $by_url{2}, 'DT20 photo included';
+    ok $by_url{2}, 'DT10 photo included';
 };
 
 subtest 'Only pass on log notes for updates for "FMS" status' => sub {

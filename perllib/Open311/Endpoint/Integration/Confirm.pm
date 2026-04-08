@@ -752,6 +752,7 @@ GRAPHQL
         $self->_get_service_request_updates_for_defects($integ, $args, \@updates);
     }
 
+    @updates = sort { $a->{updated_datetime} <=> $b->{updated_datetime} } @updates;
     return @updates;
 }
 
