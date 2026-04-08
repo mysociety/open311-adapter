@@ -22,7 +22,7 @@ tag.
 around filter_photos_graphql => sub {
     my ($orig, $self, @photos) = @_;
     my @filtered = $self->$orig(@photos);
-    return grep { $_->{ClassificationCode} && $_->{ClassificationCode} eq 'DT20' } @filtered;
+    return grep { $_->{ClassificationCode} && $_->{ClassificationCode} =~ /^DT[12]0$/ } @filtered;
 };
 
 around _parse_enquiry_status_log => sub {

@@ -42,7 +42,7 @@ subtest "Only uses the photo with the correct classification tag" => sub {
             URL => '1',
             Name => '1.jpg',
             Date => DateTime->now->subtract(days => 1),
-            ClassificationCode => 'DT10',
+            ClassificationCode => 'DT30',
         },
         {
             URL => '2',
