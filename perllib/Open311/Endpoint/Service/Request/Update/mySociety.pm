@@ -8,6 +8,7 @@ extends 'Open311::Endpoint::Service::Request::Update';
 has status => (
     is => 'ro',
     isa => Enum[
+        'unchanged', # For when the update has no state
         'open',
         'closed',
         'fixed',

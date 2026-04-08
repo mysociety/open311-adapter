@@ -19,7 +19,6 @@ test_multi(0, 'Open311::Endpoint::Integration::UK',
     'Open311::Endpoint::Integration::UK::Kingston' => 'kingston_echo',
     'Open311::Endpoint::Integration::UK::Lincolnshire' => 'lincolnshire_confirm',
     'Open311::Endpoint::Integration::UK::NorthumberlandAlloy' => 'northumberland_alloy',
-    'Open311::Endpoint::Integration::UK::Rutland' => 'rutland',
     'Open311::Endpoint::Integration::UK::Shropshire' => 'shropshire_confirm',
     'Open311::Endpoint::Integration::UK::Southwark' => 'southwark_confirm',
     'Open311::Endpoint::Integration::UK::Surrey' => 'surrey_boomi',
@@ -92,6 +91,12 @@ test_multi(0, 'Open311::Endpoint::Integration::UK::BANES',
     'Open311::Endpoint::Integration::UK::BANES::Confirm' => 'banes_confirm',
     #'Open311::Endpoint::Integration::UK::Bristol::Passthrough' => 'www.banes.gov.uk',
 );
+
+test_multi(1, 'Open311::Endpoint::Integration::UK::Rutland',
+    'Open311::Endpoint::Integration::UK::Rutland::SalesForce' => 'rutland_salesforce',
+    'Open311::Endpoint::Integration::UK::Rutland::Confirm' => 'rutland_confirm',
+);
+
 
 done_testing;
 

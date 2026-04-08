@@ -1,8 +1,4 @@
-package Open311::Endpoint::Integration::SalesForce::Rutland;
-
-use Moo;
-extends 'Open311::Endpoint';
-with 'Open311::Endpoint::Role::mySociety';
+package Open311::Endpoint::Integration::UK::Rutland::SalesForce;
 
 use Open311::Endpoint::Service::UKCouncil::Rutland;
 use Open311::Endpoint::Service::Request::SalesForce;
@@ -14,6 +10,34 @@ use Integrations::SalesForce::Rutland;
 use Encode qw(encode_utf8);
 use Digest::MD5 qw(md5_hex);
 use DateTime::Format::Strptime;
+
+use Moo;
+extends 'Open311::Endpoint';
+with 'Open311::Endpoint::Role::mySociety';
+
+has jurisdiction_id => (
+    is => 'ro',
+    default => 'rutland_salesforce',
+);
+
+has 'whitelist' => (
+    is => 'ro',
+    is => 'lazy',
+    default => sub { shift->get_integration->config->{whitelist} || {} }
+);
+
+sub reverse_status_mapping {
+    my ($self, $status) = @_;
+
+    my %valid_status = map { my $no_spaces  = $_; $no_spaces =~ s/\s+/_/g; $_ => $no_spaces; } (
+        'open', 'investigating', 'in progress', 'planned', 'action scheduled',
+        'no further action', 'not councils responsibility', 'duplicate', 'internal referral',
+        'fixed', 'closed',
+    );
+
+    $valid_status{'not responsible'} = 'not_councils_responsibility';
+    return $valid_status{lc($status)} || 'open';
+}
 
 sub service_request_content {
     '/open311/service_request_extended'
@@ -36,8 +60,6 @@ sub parse_datetime {
 
     return $strp->parse_datetime($time);
 }
-
-sub reverse_status_mapping {}
 
 has '+request_class' => (
     is => 'ro',
@@ -180,6 +202,7 @@ sub services {
     my ($self, $args) = @_;
 
     my @services = $self->get_integration->get_services($args);
+    @services = grep { $self->whitelist->{ $_->{name} } || $_->{hasChildren} eq 'true' } @services;
 
     my %service_lookup = map { $_->{serviceid} => $_ } @services;
 
@@ -214,6 +237,7 @@ sub service {
 
     my $meta = $self->get_integration->get_service($id, $args);
     my @services = $self->get_integration->get_services($args);
+    @services = grep { $self->whitelist->{ $_->{name} } || $_->{hasChildren} eq 'true' } @services;
 
     my %service_lookup = map { $_->{serviceid} => $_ } @services;
     my $srv = $service_lookup{$id};
@@ -256,25 +280,24 @@ sub service {
     }
 
     my %options = (
+        code => 'notice',
         required => 0,
         variable => 0,
         datatype => 'string',
-        automated => 'server_set',
     );
 
-    push @{ $service->attributes }, Open311::Endpoint::Service::Attribute->new(
-        code => 'hint',
-        description => $hint,
-        %options,
-    );
-
-    push @{ $service->attributes }, Open311::Endpoint::Service::Attribute->new(
-        code => 'group_hint',
-        description => $group_hint,
-        %options,
-    );
+    if ($hint || $group_hint) {
+        my $description = $group_hint ? '<p>' . $group_hint . '</p>' : '';
+        $description .= $hint ? '<p>' . $hint . '</p>' : '';
+        if ($description) {
+            push @{ $service->attributes }, Open311::Endpoint::Service::Attribute->new(
+              description => $description,
+              %options,
+            );
+        };
+    };
 
     return $service;
 }
 
-__PACKAGE__->run_if_script;
+1;

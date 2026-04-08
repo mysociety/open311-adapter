@@ -286,8 +286,13 @@ sub format_updates {
                     ),
                     (
                         map {
-                            my $value = $update->$_->[0];
-                            $_ => $value || '';
+                            my $value;
+                            if (scalar @{ $update->$_ } <= 1) {
+                                $value = $update->$_->[0] || '';
+                            } else {
+                                $value = $update->@{$_};
+                            }
+                            $_ => $value;
                         }
                         qw/
                             media_url
@@ -326,6 +331,7 @@ sub learn_additional_types {
     my ($self, $schema) = @_;
     $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/status_extended',
         Open311::Endpoint::Schema->enum('//str',
+            'unchanged',
             'open',
             'closed',
             'fixed',
@@ -346,6 +352,7 @@ sub learn_additional_types {
     );
     $schema->learn_type( 'tag:wiki.open311.org,GeoReport_v2:rx/status_extended_upper',
         Open311::Endpoint::Schema->enum('//str',
+            'UNCHANGED',
             'OPEN',
             'CLOSED',
             'FIXED',
@@ -373,7 +380,7 @@ sub learn_additional_types {
                 status => '/open311/status_extended',
                 updated_datetime => '/open311/datetime',
                 description => '//str',
-                media_url => '//str',
+                media_url => { type => '//any', of => [ { type => '//str' }, { type => '//arr', contents => '//str' } ] },
             },
             optional => {
                 external_status_code => '//str',
@@ -401,7 +408,7 @@ sub learn_additional_types {
                 zipcode => '//str',
                 lat => '//num',
                 long => '//num',
-                media_url => '//str',
+                media_url => { type => '//any', of => [ { type => '//str' }, { type => '//arr', contents => '//str' } ] },
             },
             optional => {
                 title => '//str',
