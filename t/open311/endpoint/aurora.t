@@ -101,9 +101,8 @@ subtest "post_service_request" => sub {
         return "case-number";
     });
 
-    my $attachment_upload_filename;
     $integration->mock('upload_attachment_from_file_and_get_id', sub {
-        $attachment_upload_filename = $_[1];
+        is length(path($_[1])->slurp), 160, 'correct file size';
         return 'attachment-id';
     });
 
@@ -148,8 +147,6 @@ subtest "post_service_request" => sub {
     is $create_contact_last_name, 'last';
     is $create_contact_number, '07700 900000';
 
-    is $attachment_upload_filename, 'test_image.jpg';
-
     is_deeply $create_case_payload,
         {
             description => "title\n\ndescription\n\nLocation query entered: address string\n\nView report on FixMyStreet: url",
@@ -175,9 +172,8 @@ subtest "post_service_request" => sub {
 };
 
 subtest "post_service_request_update" => sub {
-    my $attachment_upload_filename;
     $integration->mock('upload_attachment_from_file_and_get_id', sub {
-        $attachment_upload_filename = $_[1];
+        is length(path($_[1])->slurp), 160, 'correct file size';
         return 'attachment-id';
     });
 
@@ -210,8 +206,6 @@ subtest "post_service_request_update" => sub {
             update_id => 'update_id',
         },
     ];
-
-    is $attachment_upload_filename, 'test_image.jpg';
 
     is $add_note_case_id, 'case-number';
     is_deeply $add_note_payload,

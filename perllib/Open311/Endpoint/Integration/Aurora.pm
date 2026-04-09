@@ -290,7 +290,7 @@ sub _upload_media_as_attachments {
 
     foreach (@{$args->{uploads}}) {
         push @$attachments, {
-            id => $self->aurora->upload_attachment_from_file_and_get_id($_->filename),
+            id => $self->aurora->upload_attachment_from_file_and_get_id($_->tempname),
             name => $_->filename,
         };
     }
