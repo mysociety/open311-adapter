@@ -1,9 +1,9 @@
     <ServiceRequests_Updates_GetResponse xmlns="http://bartec-systems.com/">
-      <ServiceRequests_Updates_GetResult xmlns="http://www.bartec-systems.com/ServiceRequests_Updates_Get.xsd" RecordCount="11">
+      <ServiceRequests_Updates_GetResult xmlns="http://www.bartec-systems.com/ServiceRequests_Updates_Get.xsd" RecordCount="4">
         <ServiceRequest_Updates RecordCount="0">
           <ServiceRequestID>51389</ServiceRequestID>
           <ServiceCode>SR00051688</ServiceCode>
-          <JobReference/>
+          <JobReference>9012341</JobReference>
           <ServiceCategory>General</ServiceCategory>
           <ServiceClass>WASTE</ServiceClass>
           <ServiceType>GW BIN OPERATION</ServiceType>
@@ -21,12 +21,22 @@
           <DateChanged>2020-06-19T15:04:56.317</DateChanged>
         </ServiceRequest_Updates>
         <ServiceRequest_Updates RecordCount="0">
+          <ServiceRequestID>51341</ServiceRequestID>
+          <ServiceCode>SR00051689</ServiceCode>
+          <JobReference>843</JobReference>
+          <ServiceCategory>General</ServiceCategory>
+          <ServiceClass>STREET CLEANSING</ServiceClass>
+          <ServiceType>LEAF REMOVAL</ServiceType>
+          <DateAdded>0001-01-01T00:00:00</DateAdded>
+          <DateChanged>2020-06-19T15:04:56.317</DateChanged>
+        </ServiceRequest_Updates>
+        <ServiceRequest_Updates RecordCount="0">
           <ServiceRequestID>51340</ServiceRequestID>
           <ServiceCode>SR00051624</ServiceCode>
-          <JobReference/>
+          <JobReference>1234567</JobReference>
           <ServiceCategory>General</ServiceCategory>
-          <ServiceClass>WASTE</ServiceClass>
-          <ServiceType>GW BIN OPERATION</ServiceType>
+          <ServiceClass>STREET CLEANSING</ServiceClass>
+          <ServiceType>LEAF REMOVAL</ServiceType>
           <DateAdded>0001-01-01T00:00:00</DateAdded>
           <DateChanged>2020-06-19T15:04:56.007</DateChanged>
         </ServiceRequest_Updates>

@@ -102,7 +102,7 @@ sub _get_service_name {
     my ($self, $service) = @_;
 
     $service->{Description} =~ s/(.)(.*)/\U$1\L$2/;
-    (my $class = $service->{ServiceClass}->{Description}) =~ s/(.)(.*)/\U$1\L$2/;
+    (my $class = $service->{ServiceClass}->{Name}) =~ s/(.)(.*)/\U$1\L$2/;
     my $service_name = $service->{Description};
 
     # service type names are not unique in bartec so need to distinguish
@@ -130,8 +130,8 @@ sub _allowed_service {
 
     return 1 if $self->allowed_services->{uc $service->{Description}} ||
                 (
-                    $self->service_map->{uc $service->{ServiceClass}->{Description}} &&
-                    $self->service_map->{uc $service->{ServiceClass}->{Description}}->{uc $service->{Description}}
+                    $self->service_map->{uc $service->{ServiceClass}->{Name}} &&
+                    $self->service_map->{uc $service->{ServiceClass}->{Name}}->{uc $service->{Description}}
                 );
 
     return 0;
@@ -439,6 +439,18 @@ sub get_service_request_updates {
     my @updates;
     my $updates = $self->get_integration->_coerce_to_array( $response, 'ServiceRequest_Updates' );
     for my $update ( @$updates ) {
+        my $ref = $update->{JobReference} // ''; # JobReference is the external (to Bartec) ID, i.e. FMS report ID
+        next unless $ref =~ /^\d{7,}$/; # skip ServiceRequest if its job ref doesn't look like an FMS ID
+
+        # Skip updates for ServiceRequests whose services we're not responsible for
+        my $service = {
+            Description => $update->{ServiceType},
+            ServiceClass => {
+                Name => $update->{ServiceClass},
+            }
+        };
+        next unless $self->_allowed_service($service);
+
         my $history = $self->get_integration->ServiceRequests_History_Get( $update->{ServiceRequestID}, $history_start_date );
 
         next unless $history->{ServiceRequest_History};

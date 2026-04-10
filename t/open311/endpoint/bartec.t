@@ -1247,6 +1247,7 @@ subtest 'get uprn for usrn with one result' => sub {
 };
 
 subtest 'fetch updates' => sub {
+    %sent = ();
     my $res = $endpoint->run_test_request(
         GET => '/servicerequestupdates.json?jurisdiction_id=bartec&start_date=2020-06-19T10:00:00Z&end_date=2020-06-19T12:00:00Z'
     );
@@ -1261,46 +1262,43 @@ subtest 'fetch updates' => sub {
         LastUpdated => '2020-06-19T10:00:00Z',
     }, 'correct fetch updates request sent';
 
+    # Only the entry with an allowed service (LEAF REMOVAL) AND a valid 7+ digit
+    # JobReference (1234567) should trigger a history call. The WASTE/GW BIN
+    # OPERATION entry (wrong service), the WASTE/GW NEW SUBSCRIPTION entry
+    # (wrong service, short JobReference), and the LEAF REMOVAL entry with short
+    # JobReference (843) must all be skipped.
     is_deeply $sent_history->body->{ServiceRequests_History_Get}, {
         token => 'ABC=',
         ServiceRequestID => '51340',
         Date => '1753-01-01T00:00:00Z',
-    }, 'correct fetch history request sent';
+    }, 'history only fetched for allowed service with valid JobReference';
 
     is_deeply decode_json($res->content), [
         {
-            update_id =>228025,
-            service_request_id =>'SR00051627',
-            status =>'open',
-            updated_datetime => '2020-06-17T09:47:26+01:00',
-            description =>'',
-            media_url =>'',
-        },
-        {
-            update_id =>228026,
-            service_request_id =>'SR00051628',
-            status =>'fixed',
-            updated_datetime => '2020-06-17T09:48:26+01:00',
-            description =>'',
-            media_url =>'',
-        },
-        {
-            update_id =>228027,
-            service_request_id =>'SR00051627',
-            status =>'open',
-            updated_datetime => '2020-06-17T09:55:36+01:00',
-            description =>'',
-            media_url =>'',
-        },
-        {
-            update_id =>228028,
-            service_request_id =>'SR00051624',
-            status =>'closed',
+            update_id => 228028,
+            service_request_id => 'SR00051624',
+            status => 'closed',
             updated_datetime => '2020-06-17T09:59:26+01:00',
-            description =>'',
-            media_url =>'',
-        }
-    ], 'correct return';
+            description => '',
+            media_url => '',
+        },
+    ], 'only updates for allowed services with valid JobReference returned';
+};
+
+subtest 'fetch updates - all entries filtered' => sub {
+    %sent = ();
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?jurisdiction_id=bartec&start_date=2020-06-23T10:00:00Z&end_date=2020-06-23T12:00:00Z'
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is $sent{ServiceRequests_History_Get}, undef,
+        'no history calls when all updates are filtered out';
+
+    is_deeply decode_json($res->content), [],
+        'empty result when all updates filtered';
 };
 
 subtest 'fetch_requests' => sub {
