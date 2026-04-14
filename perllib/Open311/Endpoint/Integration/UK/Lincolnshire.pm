@@ -26,9 +26,9 @@ sub process_service_request_args {
 
 sub photo_filter {
     my ($self, $doc) = @_;
-    my $filename = $doc->{fileName} || '';
-    my $notes = $doc->{documentNotes} || '';
-    return $filename =~ /jpe?g/i && $notes =~ /after/i;
+    my $filename_ok = $self->SUPER::photo_filter($doc);
+    my $notes_ok = ($doc->{Notes} || '') =~ /after/i;
+    return $filename_ok && $notes_ok;
 }
 
 1;

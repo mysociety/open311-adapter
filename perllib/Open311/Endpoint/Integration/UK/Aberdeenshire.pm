@@ -85,13 +85,13 @@ sub _defect_attributes_description {
     return $desc;
 }
 
-=head2 filter_photos_graphql
+=head2 filter_photos
 
 Aberdeenshire want us to return the first photo only.
 
 =cut
 
-around filter_photos_graphql => sub {
+around filter_photos => sub {
     my ($orig, $class, @photos) = @_;
     my @filtered = $class->$orig(@photos);
     return @filtered unless scalar @filtered > 1;

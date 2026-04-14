@@ -632,7 +632,7 @@ sub get_service_request_updates {
         my $job_photos = @{ $integ->enquiry_update_job_photo_statuses };
         my $defect_photos = @{ $integ->enquiry_update_defect_photo_statuses };
 
-        my $documents = 'documents { url documentName documentDate docTypeCode}';
+        my $documents = 'documents { url documentName documentDate docTypeCode documentNotes}';
         my $job_documents = $job_photos ? $documents : "";
         my $defect_documents = $defect_photos ? $documents : "";
 
@@ -866,7 +866,7 @@ sub _get_service_request_updates_for_defects {
         my @media_urls;
         if ($statuses_for_job_photos{$log->{statusCode}}) {
             my @job_docs = $self->_parse_graphql_docs($log->{job}{documents});
-            my @filtered = $self->filter_photos_graphql(@job_docs);
+            my @filtered = $self->filter_photos(@job_docs);
             my @urls = map { $self->construct_photo_url_from_graphql_fetched_doc($_) } @filtered;
             push @media_urls, @urls;
         }
@@ -941,14 +941,29 @@ sub construct_photo_url_from_graphql_fetched_doc {
     return $self->construct_photo_url($qs);
 }
 
-sub photo_filter {
-    my ($self, $doc) = @_;
-    return $doc->{fileName} =~ /jpe?g/i;
+=head2 photo_filter
+
+Determines if a job document is suitable for including in media_url output.
+By default allows anything with an image file extension.
+
+Takes a hashref of form
+
+{
+    Name => 'filename',
+    Notes => 'document notes'
 }
 
-sub filter_photos_graphql {
-    my ($self, @graphql_docs) = @_;
-    return grep { $_->{Name} =~ /\.(jpg|jpeg|pjpeg|gif|tiff|png)$/ } @graphql_docs;
+Subclasses e.g. Lincolnshire can make further determinations based on the Notes field.
+=cut
+
+sub photo_filter {
+    my ($self, $doc) = @_;
+    return $doc->{Name} =~ /\.(jpg|jpeg|pjpeg|gif|tiff|png)$/i;
+}
+
+sub filter_photos {
+    my ($self, @docs) = @_;
+    return grep { $self->photo_filter($_) } @docs;
 }
 
 sub job_photo_urls_for_enquiry_update {
@@ -956,7 +971,7 @@ sub job_photo_urls_for_enquiry_update {
 
     if (defined $status_log->{JobDocuments}) {
         # We've already queried for the documents in GraphQL.
-        my @docs = $self->filter_photos_graphql(@{$status_log->{JobDocuments}});
+        my @docs = $self->filter_photos(@{$status_log->{JobDocuments}});
         my @urls = map { $self->construct_photo_url_from_graphql_fetched_doc($_) } @docs;
         return \@urls;
     };
@@ -967,10 +982,13 @@ sub job_photo_urls_for_enquiry_update {
     my $job_id = $enquiry->{jobNumber};
     my $documents = $integ->documents_for_job($job_id) or return [];
 
-    my @ids = map { $_->{documentNo} } grep { $self->photo_filter($_) } @$documents;
-    return [] unless @ids;
+    my @filtered = $self->filter_photos(
+        map { { Name => $_->{fileName}, Notes => $_->{documentNotes} || '', documentNo => $_->{documentNo} } }
+        @$documents
+    );
+    return [] unless @filtered;
 
-    my @urls = map { $self->construct_photo_url_from_rest_fetched_job($job_id, $_) } @ids;
+    my @urls = map { $self->construct_photo_url_from_rest_fetched_job($job_id, $_->{documentNo}) } @filtered;
     return \@urls;
 }
 
@@ -979,7 +997,7 @@ sub defect_photo_urls_for_enquiry_update {
 
     if (defined $status_log->{DefectDocuments}) {
         # We've already queried for the documents in GraphQL.
-        my @docs = $self->filter_photos_graphql(@{$status_log->{DefectDocuments}});
+        my @docs = $self->filter_photos(@{$status_log->{DefectDocuments}});
         my @urls = map { $self->construct_photo_url_from_graphql_fetched_doc($_) } @docs;
         return \@urls;
     };
@@ -1584,7 +1602,7 @@ sub _get_service_requests_for_defects {
         my @media_urls;
         if ($integ->include_photos_on_defect_fetch) {
             my @defect_docs = $self->_parse_graphql_docs($defect->{documents});
-            my @filtered = $self->filter_photos_graphql(@defect_docs);
+            my @filtered = $self->filter_photos(@defect_docs);
             my @urls = map { $self->construct_photo_url_from_graphql_fetched_doc($_) } @filtered;
             push @media_urls, @urls;
         }
@@ -1837,6 +1855,7 @@ sub _parse_graphql_docs {
         Name => $_->{documentName},
         Date => $self->date_parser->parse_datetime($_->{documentDate}),
         ClassificationCode => $_->{docTypeCode} || '',
+        Notes => $_->{documentNotes} || '',
     } } @$docs;
 }
 

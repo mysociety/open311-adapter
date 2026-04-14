@@ -62,7 +62,7 @@ subtest "Only uses the photo with the correct classification tag" => sub {
             ClassificationCode => 'DT10',
         },
     );
-    my @filtered = $endpoint->filter_photos_graphql(@photos);
+    my @filtered = $endpoint->filter_photos(@photos);
 
     is @filtered, 2;
     my %by_url = map { $_->{URL} => 1 } @filtered;
