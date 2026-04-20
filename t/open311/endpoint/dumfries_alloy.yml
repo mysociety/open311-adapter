@@ -36,20 +36,14 @@ contact:
 
 service_whitelist:
   Roads:
-    Pothole:
-      id: "123a123"
-    Sinkhole:
-      id: "234b234"
-    Missing Drain Cover:
-      id: "345c345"
+    123a123a123a123a123a123a: Pothole
+    234b234b234b234b234b234b: Sinkhole
+    345c345c345c345c345c345c: Missing Drain Cover
   Pavements:
-    Pothole:
-      id: "456d456"
-    Cracked/Damaged Paving Slab:
-      id: "567e567"
+    456d456d456d456d456d456d: Pothole
+    567e567e567e567e567e567e: Cracked/Damaged Paving Slab
   Street Lighting:
-    Other:
-      id: "678f678"
+    678f678f678f678f678f678f: Other
 
 # Mapping of Alloy attribute codes to status/outcome/priority fields
 inspection_attribute_mapping:
@@ -71,7 +65,7 @@ update_to_inspection_attribute_mapping:
 # set the correct inspection status.
 inspection_status_update:
   default: '5bc5bdd281d088d177342c73'
-  '678f678': 'aa11bb22' # Street Lighting -> Other => Issued
+  '678f678f678f678f678f678f': 'aa11bb22' # Street Lighting -> Other => Issued
 
 # How values from the above field get mapped to Open311 statuses.
 inspection_status_mapping:

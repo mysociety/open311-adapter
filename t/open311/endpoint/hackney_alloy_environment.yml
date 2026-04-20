@@ -10,13 +10,11 @@
 
   "service_whitelist": {
      "Littering and cleanliness": {
-        "Graffiti": 1,
-        "Fly Tipping": 1,
-        "Gully": 1,
+        'abcde0d6dcf79201591d720f': "Graffiti",
+        'abcde0e5227cd101577025e2': "Fly Tipping",
+        'abcde0f5dcf79201591d735e': "Gully",
       }
     },
-
-  "default_category_attribute_value": "testtest",
 
   "request_to_resource_attribute_mapping": {
     "title": "attributes_fixedMyStreetDefectFMSReportTitle",

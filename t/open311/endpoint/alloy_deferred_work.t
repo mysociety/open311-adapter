@@ -79,7 +79,7 @@ subtest 'POST writes deferred work to JSON file' => sub {
         POST => '/requests.json',
         jurisdiction_id => 'dumfries_alloy',
         api_key => 'test',
-        service_code => '678f678',
+        service_code => '678f678f' x 3,
         address_string => '1 High Street',
         first_name => 'Test',
         last_name => 'User',
@@ -112,7 +112,7 @@ subtest 'POST writes deferred work to JSON file' => sub {
 
     my $data = decode_json($json_file->slurp_utf8);
     is $data->{item_id}, 'defect_001', 'item_id correct';
-    is $data->{service_code_alloy}, '678f678', 'service_code_alloy correct';
+    is $data->{service_code_alloy}, '678f678f' x 3, 'service_code_alloy correct';
     is_deeply $data->{files}, ['file_001'], 'uploaded file IDs stored';
     ok $data->{created_at}, 'created_at timestamp present';
 };

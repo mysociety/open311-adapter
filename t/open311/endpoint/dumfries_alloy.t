@@ -155,7 +155,7 @@ subtest 'check services use Alloy IDs as service codes' => sub {
         grep { $_ eq 'Roads' } @{$_->{groups}}
     } @$services;
 
-    is $pothole_roads->{service_code}, '123a123',
+    is $pothole_roads->{service_code}, '123a123a' x 3,
         'Roads > Pothole uses ID from config as service code';
 
     # Find the "Pothole" service under "Pavements"
@@ -164,7 +164,7 @@ subtest 'check services use Alloy IDs as service codes' => sub {
         grep { $_ eq 'Pavements' } @{$_->{groups}}
     } @$services;
 
-    is $pothole_pavements->{service_code}, '456d456',
+    is $pothole_pavements->{service_code}, '456d456d' x 3,
         'Pavements > Pothole uses different ID from config as service code';
 
     # Verify they're different even though they have the same name
@@ -181,7 +181,7 @@ subtest 'send new report to Alloy with contact and service_code' => sub {
         POST => '/requests.json',
         jurisdiction_id => 'dumfries_alloy',
         api_key => 'test',
-        service_code => '123a123',  # Using the Alloy ID as service code
+        service_code => '123a123a' x 3,  # Using the Alloy ID as service code
         address_string => '1 High Street',
         first_name => 'Test',
         last_name => 'User',
@@ -231,7 +231,7 @@ subtest 'send new report to Alloy with contact and service_code' => sub {
     } @{$report_sent->{attributes}};
 
     ok $service_code_attr, 'service_code attribute present';
-    is_deeply $service_code_attr->{value}, ['123a123'],
+    is_deeply $service_code_attr->{value}, ['123a123a' x 3],
         'service_code attribute contains the Alloy ID';
 
     # Find the customer_description attribute
@@ -465,7 +465,7 @@ subtest 'POST writes deferred work with photos for Street Lighting -> Other' => 
         POST => '/requests.json',
         jurisdiction_id => 'dumfries_alloy',
         api_key => 'test',
-        service_code => '678f678',
+        service_code => '678f678f' x 3,
         address_string => '1 High Street',
         first_name => 'Test',
         last_name => 'User',
@@ -493,7 +493,7 @@ subtest 'POST writes deferred work with photos for Street Lighting -> Other' => 
 
     my $data = decode_json($json_file->slurp_utf8);
     is $data->{item_id},            'report_456';
-    is $data->{service_code_alloy}, '678f678';
+    is $data->{service_code_alloy}, '678f678f' x 3;
     is_deeply $data->{files},       ['file_001'];
 };
 

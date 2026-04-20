@@ -57,7 +57,8 @@ defect_resource_name: []
 
 service_whitelist: {
   '': {
-    'Dead animal that needs removing': {
+    61daed49fdc7a101544177de: {
+      name: 'Dead animal that needs removing',
       questions: [
         {
           code: type_of_animal,
@@ -74,17 +75,17 @@ service_whitelist: {
           alloy_attribute: attributes_customerContactAnimalType_67617293b20d22b010bf32e6,
         },
       ],
-      alloy_code: 61daed49fdc7a101544177de,
     },
-    'Fly-posting':                     67612fb03656423aa2e903eb,
-    'Syringes or drugs equipment':     676130151e4316383b708af3,
+    67612fb03656423aa2e903eb: 'Fly-posting',
+    676130151e4316383b708af3: 'Syringes or drugs equipment',
   },
   'Broken glass or other hazard': {
-    'Broken glass':               61ba1492fb9e760158060b96,
-    'Debris on pavement or road': 61ba1492fb9e760158060b96,
-    'Leaves':                     6761303e730164f38ff14351,
-    'Spillage':                   61ba1492fb9e760158060b96,
-    'Dog fouling': {
+    61ba1492fb9e760158060b96_1: 'Broken glass',
+    61ba1492fb9e760158060b96_2: 'Debris on pavement or road',
+    6761303e730164f38ff14351_1: 'Leaves',
+    61ba1492fb9e760158060b96_3: 'Spillage',
+    61ba198c7148450165fff23f: {
+      name: 'Dog fouling',
       questions: [
         {
           code: did_you_witness,
@@ -92,19 +93,19 @@ service_whitelist: {
           values: [ Yes, No ],
         },
       ],
-      alloy_code: 61ba198c7148450165fff23f,
     },
   },
   'Litter bins': {
-    'Missing bin':            622f7387bef0e701b91e2504,
-    'Overflowing litter bin': 61b9e1127148450165fd145f,
-    'Damaged dog bin':        61b9e1ccfb9e760158036bc1,
-    'Damaged dual use bin':   61b9e1ccfb9e760158036bc1,
-    'Damaged litter bin':     61b9e1ccfb9e760158036bc1,
+    622f7387bef0e701b91e2504: 'Missing bin',
+    61b9e1127148450165fd145f: 'Overflowing litter bin',
+    61b9e1ccfb9e760158036bc1_1: 'Damaged dog bin',
+    61b9e1ccfb9e760158036bc1_2: 'Damaged dual use bin',
+    61b9e1ccfb9e760158036bc1_3: 'Damaged litter bin',
   },
   'Graffiti': {
-    'Non-offensive graffiti': 61ba15dd67018e015a6aa578,
-    'Offensive graffiti': {
+    61ba15dd67018e015a6aa578_1: 'Non-offensive graffiti',
+    61ba15dd67018e015a6aa578_2: {
+      name: 'Offensive graffiti',
       questions: [
         {
           code: did_you_witness,
@@ -112,38 +113,35 @@ service_whitelist: {
           values: [ Yes, No ],
         },
       ],
-      alloy_code: 61ba15dd67018e015a6aa578,
     },
   },
   'Hedge/vegetation issue': {
-    'Overgrown hedges': 654525b2fa6eef8cf20cc7ee,
-    'Overgrown weeds':  654525b2fa6eef8cf20cc7ee,
-    'Overgrown grass':  65452595fa6eef8cf20cc5d3,
+    654525b2fa6eef8cf20cc7ee_1: 'Overgrown hedges',
+    654525b2fa6eef8cf20cc7ee_2: 'Overgrown weeds',
+    65452595fa6eef8cf20cc5d3: 'Overgrown grass',
   },
   'Playground and park equipment': {
-    'Damaged or dangerous playground equipment': 6761309797567c437eb404e7,
-    'Damaged park furniture':                    67613116730164f38ff19c1a,
+    6761309797567c437eb404e7: 'Damaged or dangerous playground equipment',
+    67613116730164f38ff19c1a: 'Damaged park furniture',
   },
   'Public toilets': {
-    'Unclean public toilets': 67612fec3656423aa2e90eec,
+    67612fec3656423aa2e90eec_1: 'Unclean public toilets',
   },
   'Street cleaning or littering': {
-    'Leaves':                              6761303e730164f38ff14351,
-    'Litter in street or public area':     61ba1492fb9e760158060b96,
-    'Spillage after recycling collection': 61ba1492fb9e760158060b96,
-    'Spillage after waste collection':     61ba1492fb9e760158060b96,
+    6761303e730164f38ff14351_2: 'Leaves',
+    61ba1492fb9e760158060b96_4: 'Litter in street or public area',
+    61ba1492fb9e760158060b96_5: 'Spillage after recycling collection',
+    61ba1492fb9e760158060b96_6: 'Spillage after waste collection',
   },
   'Missing or damaged street nameplates': {
-    'Damaged nameplate':                   676130de730164f38ff18e9c,
-    'Dangerous nameplate':                 676130ec97567c437eb41cb6,
-    'Missing nameplate':                   676131051e4316383b70cfe7,
-    'Faded nameplate': {
-      alias: "Faded nameplate (can't read easily)",
-      alloy_code: 676130de730164f38ff18e9c,
-    },
+    676130de730164f38ff18e9c_1: 'Damaged nameplate',
+    676130ec97567c437eb41cb6: 'Dangerous nameplate',
+    676131051e4316383b70cfe7: 'Missing nameplate',
+    676130de730164f38ff18e9c_2: "Faded nameplate (can't read easily)",
   },
   'Fly-tipping': {
-    'Regular flytipping': {
+    61ba19cf7148450165fff478_1: {
+      name: 'Regular flytipping',
       questions: [
         {
           code: did_you_witness,
@@ -151,14 +149,13 @@ service_whitelist: {
           values: [ Yes, No ],
         },
       ],
-      alloy_code: 61ba19cf7148450165fff478,
     },
   },
   'Car parks': {
-    'Unclean public toilets': 67612fec3656423aa2e90eec,
+    67612fec3656423aa2e90eec_2: 'Unclean public toilets',
   },
   'Watercourse': {
-    'Items in watercourse': 61ba19cf7148450165fff478,
+    61ba19cf7148450165fff478_2: 'Items in watercourse',
   },
 }
 

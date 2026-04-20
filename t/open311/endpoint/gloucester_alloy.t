@@ -112,10 +112,21 @@ $integration->mock('api_call', sub {
     return decode_json( encode_utf8($content) );
 });
 
+subtest 'check service_name' => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/services.json' );
+    ok $res->is_success, 'json success';
+
+    my $services = decode_json( $res->content );
+
+   my %services = map { $_->{service_code} => $_ } @$services;
+   is $services{'61b9e1ccfb9e760158036bc1_3'}->{service_name}, 'Damaged litter bin';
+};
+
 subtest 'check metadata set for given services' => sub {
     subtest "Faded nameplate (can't read easily)" => sub {
         my $res = $endpoint->run_test_request(
-            GET => '/services/Faded_nameplate_1.json' );
+            GET => '/services/676130de730164f38ff18e9c_2.json' );
         ok $res->is_success, 'json success';
 
         my $content = decode_json( $res->content );
@@ -124,7 +135,7 @@ subtest 'check metadata set for given services' => sub {
 
     subtest 'Dead animal that needs removing' => sub {
         my $res = $endpoint->run_test_request(
-            GET => '/services/Dead_animal_that_needs_removing.json' );
+            GET => '/services/61daed49fdc7a101544177de.json' );
         ok $res->is_success, 'json success';
 
         my $content        = decode_json( $res->content );
@@ -155,7 +166,7 @@ subtest 'check metadata set for given services' => sub {
 
     subtest 'Dog fouling' => sub {
         my $res = $endpoint->run_test_request(
-            GET => '/services/Dog_fouling.json' );
+            GET => '/services/61ba198c7148450165fff23f.json' );
         ok $res->is_success, 'json success';
 
         my $content         = decode_json( $res->content );
@@ -199,7 +210,7 @@ subtest 'send new report to Alloy' => sub {
 
             %shared_params,
 
-            service_code => 'Dead_animal_that_needs_removing',
+            service_code => '61daed49fdc7a101544177de',
             'attribute[category]' => 'Dead animal that needs removing',
             'attribute[type_of_animal]' => 'Other',
         );
@@ -272,7 +283,7 @@ subtest 'send new report to Alloy' => sub {
 
             %shared_params,
 
-            service_code => 'Dog_fouling',
+            service_code => '61ba198c7148450165fff23f',
             'attribute[category]' => 'Dog fouling',
             'attribute[group]' => 'Broken glass or other hazard',
             'attribute[did_you_witness]' => 'Yes',
@@ -342,7 +353,7 @@ subtest 'send new report to Alloy' => sub {
 
             %shared_params,
 
-            service_code => 'Damaged_dog_bin',
+            service_code => '61b9e1ccfb9e760158036bc1_1',
             'attribute[category]' => 'Damaged dog bin',
             'attribute[group]' => 'Litter bins',
         );
@@ -407,7 +418,7 @@ subtest 'send new report to Alloy' => sub {
 
             %shared_params,
 
-            service_code => 'Overflowing_litter_bin',
+            service_code => '61b9e1127148450165fd145f',
             'attribute[category]' => 'Overflowing litter bin',
             'attribute[group]' => 'Litter bins',
         );
