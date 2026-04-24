@@ -174,5 +174,39 @@ sub _get_inspection_status {
     return ($status, $ext_code);
 }
 
+=head2 _get_inspection_updates_design
+
+Override to add media_url support for photos attached to the item.
+
+=cut
+
+sub _get_inspection_updates_design {
+    my ($self, $design, $args) = @_;
+
+    # Call parent to get the base updates and the raw items
+    my ($updates_ref, $items_by_id) = $self->SUPER::_get_inspection_updates_design($design, $args);
+    my @updates = @$updates_ref;
+
+    # Build attachment cache once for all updates
+    # This avoids making individual API calls for each attachment
+    # This also filters out photos that seem to have originated from FMS (based on filename)
+    my $cache = $self->_build_attachment_cache($args);
+
+    # For each update, use the already-fetched resource to add media URLs
+    for my $update (@updates) {
+        my $service_request_id = $update->service_request_id;
+
+        next unless $update->status eq 'fixed'; # only show photos for fixed updates
+
+        # Use the item already fetched by the parent method
+        my $report = $items_by_id->{$service_request_id};
+
+        if ($report) {
+            $update->{media_url} = $self->_media_urls_for_item({item => $report}, $cache, $args);
+        }
+    }
+
+    return (\@updates, $items_by_id);
+}
 
 1;

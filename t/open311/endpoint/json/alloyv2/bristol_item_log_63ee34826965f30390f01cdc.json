@@ -1,0 +1,19 @@
+{
+  "page": 1,
+  "pageSize": 20,
+  "results": [
+    {
+      "itemId": "63ee34826965f30390f01cdc",
+      "designCode": "designs_bWCSCStreetCleansingDefect_5e21a98bca315003e0983035",
+      "action": "Edit",
+      "causes": [
+        {
+          "workflowRunId": "63ee348be5b28203ae91632d",
+          "discriminator": "ItemChangeCauseWorkflowWebModel"
+        }
+      ],
+      "date": "2023-02-16T13:50:08.792Z",
+      "username": "alloybot"
+    }
+  ]
+}

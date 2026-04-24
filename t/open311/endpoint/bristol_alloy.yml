@@ -1,6 +1,7 @@
 {
   "api_key": "api_key",
   "api_url": "http://localhost/api/",
+  "base_url": "http://localhost/",
 
 "rfs_design": {
     "SC-Fly-Post Defect": 'designs_bWCSCFlyPostDefect_5e203bd4ca315009b4e5c714',

@@ -331,58 +331,6 @@ sub _get_inspection_updates_design {
     return (\@updates, $items_by_id);
 }
 
-=head2 get_photo
-
-Fetch a photo from Alloy by its file item ID.
-
-=cut
-
-sub get_photo {
-    my ($self, $args) = @_;
-
-    my $item_id = $args->{item};
-    unless ($item_id) {
-        $self->logger->error("get_photo called without item parameter");
-        return [ 400, [ 'Content-Type', 'text/plain' ], [ 'Missing item parameter' ] ];
-    }
-
-    # Fetch the file from Alloy
-    my $content;
-    my $content_type = 'image/jpeg'; # default
-
-    # First, get the file metadata to determine content type
-    try {
-        my $file_item = $self->alloy->api_call(call => "item/$item_id");
-        if ($file_item && $file_item->{item}) {
-            my $attrs = $self->alloy->attributes_to_hash($file_item->{item});
-            my $filename = $attrs->{attributes_filesOriginalName} || '';
-            if ($filename =~ /\.png$/i) {
-                $content_type = 'image/png';
-            } elsif ($filename =~ /\.gif$/i) {
-                $content_type = 'image/gif';
-            } elsif ($filename =~ /\.jpe?g$/i) {
-                $content_type = 'image/jpeg';
-            }
-        }
-    } catch {
-        $self->logger->warn("Failed to fetch file metadata for $item_id: $_");
-    };
-
-    # Now fetch the actual file content
-    try {
-        $content = $self->alloy->api_call(
-            call => "file/$item_id",
-            raw => 1,
-        );
-    } catch {
-        $self->logger->error("Failed to fetch photo $item_id: $_");
-        return [ 404, [ 'Content-Type', 'text/plain' ], [ 'Photo not found' ] ];
-    };
-
-    return [ 404, [ 'Content-Type', 'text/plain' ], [ 'Photo not found' ] ] unless $content;
-    return [ 200, [ 'Content-Type', $content_type ], [ $content ] ];
-}
-
 =head2 _append_attachments_to_defect
 
 Appends new attachment IDs to a defect's existing attachments.
