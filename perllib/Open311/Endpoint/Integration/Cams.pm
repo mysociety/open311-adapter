@@ -359,17 +359,20 @@ sub get_service_request_updates {
         for my $update (@$recent_updates) {
             my $status = $self->reverse_status_mapping->{ $update->{'StatusDesc'} };
             next unless $status;
-            my $md5_hash = md5_hex($update->{'webTrackingNo'}, $status, $update->{'LastUpdatedDate'});
-            my %update_args = (
-                status => $status,
-                external_status_code => $update->{'StatusDesc'},
-                description => '',
-                service_request_id => $update->{'webTrackingNo'},
-                update_id => $md5_hash,
-                updated_datetime => $update->{'LastUpdatedDate'},
-            );
+            my @ids = split /,/, $update->{'webTrackingNo'};
+            foreach my $id (@ids) {
+                my $md5_hash = md5_hex($id, $status, $update->{'LastUpdatedDate'});
+                my %update_args = (
+                    status => $status,
+                    external_status_code => $update->{'StatusDesc'},
+                    description => '',
+                    service_request_id => $id,
+                    update_id => $md5_hash,
+                    updated_datetime => $update->{'LastUpdatedDate'},
+                );
 
-            push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %update_args );
+                push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %update_args );
+            }
         }
     }
 

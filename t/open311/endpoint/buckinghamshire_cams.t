@@ -128,7 +128,7 @@ subtest 'check fetch updates' => sub {
     );
 
     $response = decode_json($res->content);
-    is @{ decode_json($res->content) }, 5, "Five updates fetched when one update without matching status";
+    is @{ decode_json($res->content) }, 6, "Six updates fetched when one update without matching status";
     is_deeply $response, &_parsed_updates, "Updates parsed correctly";
 };
 
@@ -237,6 +237,15 @@ return [
             'update_id' => '2f7ee0d614b1ab9c82e0c9707d7712b8',
             'updated_datetime' => '2025-06-15T13:50:25Z',
             'service_request_id' => '6',
+            'status' => 'in_progress'
+          },
+          {
+            'external_status_code' => 'Officer Progressing Issue',
+            'description' => '',
+            'media_url' => '',
+            'update_id' => '1e837c146d4342aa08facc60a27380f1',
+            'updated_datetime' => '2025-06-15T13:50:25Z',
+            'service_request_id' => '12',
             'status' => 'in_progress'
           }
         ];
