@@ -1,18 +1,37 @@
+# General for integrations
+
 "logfile": ""
 "min_log_level": ""
+"cutoff_enquiry_date": ""
+"service_whitelist": {}
+"forward_status_mapping": {}
+"reverse_status_mapping": {}
 
+# Confirm settings
+
+# For sending/fetching reports/updates
+# Required
 "endpoint_url": ""
 "username": ""
 "password": ""
 "tenant_id": ""
 
-"cutoff_enquiry_date": ""
-"enquiry_method_code": ""
-"point_of_contact_code": ""
+# Usually Europe/London
+# Required
 "server_timezone": ""
 
-"service_whitelist": {}
+# For further features such as fetching photos with reports
+# need to add graphql and have set directory for storing photos
+# Required for extra features
+"graphql_pass": ""
+"web_url": ""
+"uploads_dir": ""
 
-"forward_status_mapping": {}
-
-"reverse_status_mapping": {}
+# These may be optional depending on
+# Confirm setup but documented in
+# wiki how to fetch them if not
+# supplied
+# Maybe required
+"enquiry_method_code": ""
+"point_of_contact_code": ""
+"customer_type_code": ""
