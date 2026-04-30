@@ -1386,6 +1386,10 @@ sub _parse_enquiry {
         }
     }
 
+    if ($self->can('munge_new_request')) {
+        $self->munge_new_request(\%args, $services);
+    }
+
     return $self->new_request( %args );
 }
 

@@ -1,0 +1,64 @@
+endpoint_url: "http://confirm/endpoint"
+base_url: http://confirm/
+web_url: http://confirm/web/api
+username: "username"
+password: "pw"
+tenant_id: "123"
+server_timezone: Europe/London
+default_site_code: 999999
+service_whitelist:
+  All:
+    HMOB_MO06: Advert
+    HMOB_MO05: Obstruction (Road)
+    SD_HSF9: Trip hazard
+    SD_HSF9_2: Tree roots
+    PRWD_RW41: Hedge outgrowth
+    HMOB_MO02: On pavement
+    HMOB_MO02_2: On road
+    HMOB_MO10: On pavement
+    HMOB_MO10_1: On road
+    HMVG_MV05_1: Hedge in the way
+    HMVG_MV05_2: Tree blocking light
+
+reverse_status_mapping:
+  DUP: duplicate
+  INP: in_progress
+  FIX: fixed
+  FOR: for_triage
+
+wrapped_services:
+  HMOB_MO06:
+    passthrough: 1
+    group: ["Pavement", "Roads"]
+  HMOB_MO05:
+    passthrough: 1
+    group: ["Pavement", "Roads"]
+  SD_HSF9_2:
+    passthrough: 1
+    group: Trees
+  TRIP_HAZARD:
+    group: Pavement
+    name: Trip hazard
+    wraps: ["SD_HSF9"]
+  PROW_TREES:
+    group: PROW
+    name: Trees
+    wraps: ["PRWD_RW41"]
+  PROW_OBS:
+    group: PROW
+    name: Obstruction
+    wraps: ["PRWD_RW41"]
+  TREES_FALLEN:
+    group: Trees
+    name: Fallen tree
+    wraps: ["HMOB_MO02", "HMOB_MO02_2"]
+  TREE_HANGING:
+    group: Trees
+    name: Hanging tree
+    wraps: ["HMOB_MO10", "HMOB_MO10_1"]
+  HMVG_MV05_1:
+    passthrough: 1
+    group: Trees
+  HMVG_MV05_2:
+    passthrough: 1
+    group: Trees
