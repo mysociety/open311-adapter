@@ -53,9 +53,7 @@ $integration->mock('api_call', sub {
         } elsif ( $call =~ 'aqs/query' ) {
             my $type = $body->{aqs}->{properties}->{dodiCode};
             $content = '{}';
-            if ($type eq 'designs_fMSCategory') {
-                $content = path(__FILE__)->sibling('json/hackney_environment/categories_search.json')->slurp;
-            } elsif ($type eq 'designs_contacts') {
+            if ($type eq 'designs_contacts') {
                 $content = path(__FILE__)->sibling('json/hackney_environment/contacts_search.json')->slurp;
             } elsif ($type eq 'designs_fixedMyStreetDefect') {
                 $content = path(__FILE__)->sibling('json/hackney_environment/defects_search.json')->slurp;
@@ -90,7 +88,7 @@ subtest "create basic problem" => sub {
         POST => '/requests.json',
         jurisdiction_id => 'hackney',
         api_key => 'key',
-        service_code => 'Graffiti',
+        service_code => 'abcde0d6dcf79201591d720f',
         first_name => 'Bob',
         last_name => 'Mould',
         email => 'test@example.com',

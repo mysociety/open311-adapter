@@ -106,8 +106,13 @@ has service_class  => (
 =head2 service_whitelist
 
 This is a mapping of Alloy services, from group to categories, each category
-being a key with value 1 or a map. (Not sure why.)
-Both groups and categories can have an 'alias' field set in their maps. This lets you expose the group or category under a different name than used by Alloy.
+being either:
+* New style, a key of the Alloy ID, and value the category name or a map (including name);
+* Old style, a key of the category name, with value either 1 or a map.
+
+Groups (and categories in the old style, new style doesn't need this) can have
+an 'alias' field set in their maps. This lets you expose the group or category
+under a different name than used by Alloy.
 
 =cut
 
@@ -145,26 +150,24 @@ sub services {
     for my $group (sort keys %{ $self->service_whitelist }) {
 
         my $group_config = $self->service_whitelist->{$group};
-        my $group_alias;
-        if (ref($group_config) eq 'HASH' && exists($group_config->{alias})) {
-            $group_alias = $group_config->{alias};
-        }
+        my $group_alias = $group_config->{alias};
         my $group_name = $group_alias || $group;
 
         for my $subcategory (sort keys %{ $group_config }) {
             next if $subcategory eq 'alias';
             my $subcategory_config = $self->service_whitelist->{$group}->{$subcategory};
 
-            my $subcategory_alias;
             my @questions;
-
-            if ( ref($subcategory_config) eq 'HASH' ) {
-                if ( exists( $subcategory_config->{alias} ) ) {
-                    $subcategory_alias = $subcategory_config->{alias};
+            if ($subcategory =~ /^[0-9a-f]{24}(_\d+)?$/) {
+                # New style, Alloy ID (perhaps with extension if multiple) => name or data
+                if (ref($subcategory_config)) {
+                    $subcategory = { id => $subcategory, %$subcategory_config };
+                } else {
+                    $subcategory = { id => $subcategory, name => $subcategory_config };
                 }
 
-                if ( exists( $subcategory_config->{questions} ) ) {
-                    for my $q ( @{ $subcategory_config->{questions} } ) {
+                if ( exists( $subcategory->{questions} ) ) {
+                    for my $q ( @{ $subcategory->{questions} } ) {
                         push @questions, {
                             code        => $q->{code},
                             datatype    => 'singlevaluelist',
@@ -176,22 +179,34 @@ sub services {
                         };
                     }
                 }
+
+            } else {
+                # Old style
+                my $subcategory_alias;
+                if (ref($subcategory_config)) { # Alias
+                    $subcategory_alias = $subcategory_config->{alias};
+                }
+
+                (my $code = $subcategory) =~ s/ /_/g;
+                if ($subcategory_alias) {
+                    $code .= '_' . ++$suffixes{$code};
+                }
+
+                $subcategory = {
+                    id => $code,
+                    name => $subcategory_alias || $subcategory,
+                };
             }
 
-            my $subcategory_name = $subcategory_alias || $subcategory;
-
-            my $code = $self->_get_service_code($group, $subcategory, $subcategory_config);
-            if ($subcategory_alias) {
-                $code .= '_' . ++$suffixes{$code};
-            }
+            my $code = $subcategory->{id};
             if ($services{$code}) {
                 push @{$services{$code}->groups}, $group_name;
                 next;
             }
 
             my %service = (
-                service_name => $subcategory_name,
-                description => $subcategory_name,
+                service_name => $subcategory->{name},
+                description => $subcategory->{name},
                 service_code => $code,
                 groups => [ $group_name ],
             );
@@ -303,24 +318,6 @@ Does nothing by default.
 =cut
 
 sub process_deferred_work { }
-
-=head2 _get_service_code
-
-Used to determine the Open311 service code for a service.
-Takes the group, subcategory, and value (aka subcategory_config) from
-service_whitelist in the integration's config file.
-
-By default we use the subcategory name as the service code, replacing spaces
-with underscores.
-
-=cut
-
-sub _get_service_code {
-    my ($self, $group, $subcategory, $subcategory_config) = @_;
-
-    (my $code = $subcategory) =~ s/ /_/g;
-    return $code;
-}
 
 sub _munge_service_code {
     my ( $self, $service_code ) = @_;
