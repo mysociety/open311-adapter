@@ -50,7 +50,7 @@ has ua => (
 
 If the Confirm endpoint requires a particular EnquiryMethodCode for NewEnquiry
 requests, override this in the subclass. Valid values can be found by calling
-the GetCustomerLookup method on the endpoint.
+the GetCustomerLookups method on the endpoint.
 
 =cut
 
@@ -64,7 +64,7 @@ has 'enquiry_method_code' => (
 
 Similar to enquiry_method_code, if the Confirm endpoint requires a particular
 PointOfContactCode for NewEnquiry requests, override this in the subclass.
-Valid values can be found by calling the GetCustomerLookup method on the endpoint.
+Valid values can be found by calling the GetCustomerLookups method on the endpoint.
 
 =cut
 
@@ -78,13 +78,24 @@ has 'point_of_contact_code' => (
 
 Similar to enquiry_method_code/point_of_contact_code, if the Confirm endpoint requires a particular
 CustomerTypeCode for NewEnquiry requests, override this in the subclass.
-Valid values can be found by calling the GetCustomerLookup method on the endpoint.
+Valid values can be found by calling the GetCustomerLookups method on the endpoint.
 
 =cut
 
 has 'customer_type_code' => (
     is => 'lazy',
     default => sub { $_[0]->config->{customer_type_code} }
+);
+
+=head2 customer_type_code_by_email
+
+This lets the customer type code be set differently for particular email addresses.
+
+=cut
+
+has customer_type_code_by_email => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{customer_type_code_by_email} }
 );
 
 
@@ -142,18 +153,68 @@ has 'server_timezone' => (
 );
 
 
-=head2 completion_statuses
+=head2 enquiry_update_job_photo_statuses
 
-A list of enquiry status codes that determine whether job completion photos
-should be looked up when fetching updates.
+A list of enquiry status codes that determine whether job photos
+should be returned when fetching enquiry updates.
 
 =cut
 
-has completion_statuses => (
+has enquiry_update_job_photo_statuses => (
     is => 'lazy',
-    default => sub { $_[0]->config->{completion_statuses} || [] }
+    default => sub { $_[0]->config->{enquiry_update_job_photo_statuses} || [] }
 );
 
+
+=head2 enquiry_update_defect_photo_statuses
+
+A list of enquiry status codes that determine whether defect photos
+should be returned when fetching enquiry updates.
+
+=cut
+
+has enquiry_update_defect_photo_statuses => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{enquiry_update_defect_photo_statuses} || [] }
+);
+
+
+=head2 defect_update_job_photo_statuses
+
+A list of job status codes that determine whether job photos
+should be returned when fetching defect updates.
+
+=cut
+
+has defect_update_job_photo_statuses => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{defect_update_job_photo_statuses} || [] }
+);
+
+
+=head2 include_photos_on_defect_fetch
+
+Whether or not to include defect photos when they are fetched in get_service_requests.
+
+=cut
+
+has include_photos_on_defect_fetch => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{include_photos_on_defect_fetch} }
+);
+
+
+=head2 external_system_number
+
+A code to use to mark enquiries we submit as coming from us; with this set,
+we also send the FMS ID through as the external system reference.
+
+=cut
+
+has external_system_number => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{external_system_number} }
+);
 
 =head2 base_url
 
@@ -189,6 +250,20 @@ has graphql_url => (
         return "$web_url/$tenant_id/graphql"
     }
 );
+
+=head2 attribute_overrides
+
+Allows individual attributes' initialisers to be overridden.
+Useful for, e.g. making Confirm mandatory fields not required by Open311,
+setting the 'automated' field etc.
+
+=cut
+
+has attribute_overrides => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{attribute_overrides} || {} }
+);
+
 
 has oauth_token => (
     is => 'lazy',
@@ -320,12 +395,17 @@ sub perform_request_graphql {
         'POST',
         $uri,
     );
-    $request->header(
-        Authorization => 'Basic '
-            . $self->config->{graphql_key}
-    );
+
+    my $bearer;
+    if ($self->config->{graphql_pass}) {
+        $bearer = encode_base64(sprintf("%s:%s", $self->config->{username}, $self->config->{graphql_pass}));
+    } else {
+        $bearer = $self->config->{graphql_key};
+    }
+    $request->header(Authorization => "Basic $bearer");
     $request->content_type('application/json; charset=UTF-8');
 
+    $args{type} //= '';
     my $query;
     if ( $args{type} eq 'job_types' ) {
         $query = $self->job_types_graphql_query();
@@ -339,7 +419,10 @@ sub perform_request_graphql {
         $query = $self->defects_graphql_query(%args);
     } elsif ( $args{type} eq 'defect_status_logs' ) {
         $query = $self->defect_status_logs_graphql_query(%args);
+    } elsif ( $args{query} ) {
+        $query = $args{query};
     }
+    $self->logger->debug("GraphQL query: $query");
 
     my $body = {
         query => $query,
@@ -350,6 +433,7 @@ sub perform_request_graphql {
 
     my $response = $self->ua->request($request);
 
+    $self->logger->debug("GraphQL response: " . $response->content);
     my $content = decode_json($response->content);
 
     if ($content->{errors} && @{$content->{errors}}) {
@@ -372,34 +456,19 @@ sub perform_request_graphql {
 sub job_status_logs_graphql_query {
     my ( $self, %args ) = @_;
 
-    my @job_type_codes
-        = keys %{ $self->config->{job_service_whitelist} // () };
-
-    my @status_codes
-        = keys %{ $self->config->{job_reverse_status_mapping} // () };
-
-    my (
-        $start_date,
-        $end_date,
-        $job_type_codes_str,
-        $status_codes_str,
-    ) = (
-        $args{start_date},
-        $args{end_date},
-        join( ',', @job_type_codes ),
-        join( ',', @status_codes ),
-    );
+    my $job_type_codes = join '","', sort keys %{ $self->config->{job_service_whitelist} // () };
+    my $status_filter = $args{jobs_status_filter} || "";
 
     return <<GRAPHQL;
 {
     jobStatusLogs(
         filter: {
             loggedDate: {
-                greaterThanEquals: "$start_date"
-                lessThanEquals: "$end_date"
+                greaterThanEquals: "$args{start_date}"
+                lessThanEquals: "$args{end_date}"
             }
             statusCode: {
-                inList: [ $status_codes_str ]
+                $status_filter
             }
         }
     ) {
@@ -412,7 +481,7 @@ sub job_status_logs_graphql_query {
             jobType(
                 filter: {
                     code: {
-                        inList: [ $job_type_codes_str ]
+                        inList: [ "$job_type_codes" ]
                     }
                 }
             ){
@@ -427,38 +496,25 @@ GRAPHQL
 sub jobs_graphql_query {
     my ( $self, %args ) = @_;
 
-    my @job_type_codes
-        = keys %{ $self->config->{job_service_whitelist} // () };
-
-    my @status_codes
-        = keys %{ $self->config->{job_reverse_status_mapping} // () };
-
-    my (
-        $start_date,
-        $end_date,
-        $job_type_codes_str,
-        $status_codes_str,
-    ) = (
-        $args{start_date},
-        $args{end_date},
-        join( ',', @job_type_codes ),
-        join( ',', @status_codes ),
-    );
+    my $job_type_codes = join '","', sort keys %{ $self->config->{job_service_whitelist} // () };
+    my $jobs_extra_filter = $args{jobs_extra_filter} || "";
+    my $status_filter = $args{jobs_status_filter} || "";
 
     return <<"GRAPHQL"
 {
     jobs (
         filter: {
             entryDate: {
-                greaterThanEquals: "$start_date"
-                lessThanEquals: "$end_date"
+                greaterThanEquals: "$args{start_date}"
+                lessThanEquals: "$args{end_date}"
             }
+            $jobs_extra_filter
         }
     ){
         jobType(
             filter: {
                 code: {
-                    inList: [ $job_type_codes_str ]
+                    inList: [ "$job_type_codes" ]
                 }
             }
         ){
@@ -466,10 +522,10 @@ sub jobs_graphql_query {
             name
         }
 
-        statusLogs (
+        currentStatusLog (
             filter: {
                 statusCode: {
-                    inList: [ $status_codes_str ]
+                    $status_filter
                 }
             }
         ) {
@@ -517,6 +573,7 @@ sub defects_graphql_query { # XXX factor together with jobs?
         join( ',', @defect_type_codes ),
     );
 
+    # NOTE Aberdeenshire specific!
     return <<"GRAPHQL"
 {
   defects(
@@ -525,13 +582,24 @@ sub defects_graphql_query { # XXX factor together with jobs?
                 greaterThanEquals: "$start_date"
                 lessThanEquals: "$end_date"
             }
+            priorityCode: { notEquals: "DP0" }
         }
   ) {
     defectNumber
+    supersedesDefectNumber
     easting
     northing
     loggedDate
     targetDate
+    priorityCode
+    feature {
+        attribute_CCAT {
+            attributeValueCode
+        }
+        attribute_SPD {
+            attributeValueCode
+        }
+    }
     defectType(
         filter: {
             code: {
@@ -540,6 +608,11 @@ sub defects_graphql_query { # XXX factor together with jobs?
         }
     ){
         code
+    }
+    enquiries {
+        centralEnquiry {
+            externalSystemNumber
+        }
     }
     job {
       jobNumber
@@ -550,6 +623,8 @@ sub defects_graphql_query { # XXX factor together with jobs?
     }
     documents {
       url
+      documentName
+      documentDate
     }
     description
   }
@@ -605,13 +680,28 @@ sub defect_status_logs_graphql_query {
         key
 
         job {
+            estimatedStartDate
+            documents {
+              url
+              documentName
+              documentDate
+            }
             defects(filter: {
                 defectTypeCode: {
                     inList: [ $defect_type_codes_str ]
                 }
             }) {
+                supersedesDefectNumber
                 defectNumber
                 targetDate
+                feature {
+                    attribute_CCAT {
+                        attributeValueCode
+                    }
+                    attribute_SPD {
+                        attributeValueCode
+                    }
+                }
             }
         }
     }
@@ -707,6 +797,28 @@ sub GetDefectLookups {  # XXX factor together with jobs?
     return $lookups->{data}{defectTypes} // [];
 }
 
+=head2 GetDefectAttributes
+
+Fetches full defect data from the web API, including attributes.
+Results are cached in memcache for 10 minutes.
+
+=cut
+
+sub GetDefectAttributes {
+    my ($self, $defect_number) = @_;
+
+    return unless $defect_number;
+
+    my $cache_key = "DefectAttributes:$defect_number";
+    my $attributes = $self->memcache->get($cache_key);
+    unless ($attributes) {
+        $attributes = $self->json_web_api_call("/defects/$defect_number");
+        $self->memcache->set($cache_key, $attributes, 600);
+    }
+
+    return $attributes;
+}
+
 sub GetEnquiries {
     my $self = shift;
 
@@ -734,6 +846,12 @@ sub GetEnquiries {
     return @enquiries;
 }
 
+sub GetCustomerLookups {
+    my $self = shift;
+    my $lookups = $self->perform_request(\SOAP::Data->name('GetCustomerLookups'));
+    return $lookups;
+}
+
 sub GetEnquiryLookups {
     my $self = shift;
 
@@ -744,6 +862,35 @@ sub GetEnquiryLookups {
     }
 
     return $lookups;
+}
+
+sub _build_enquiry_attribute_elements {
+    my ($self, $service, $args, $service_types, $attributes_required) = @_;
+
+    my @elements;
+    my $tag_types = {
+        singlevaluelist => 'EnqAttribValueCode',
+        datetime => 'EnqAttribDateValue',
+    };
+
+    for my $code (map { $_->code } @{ $service->attributes }) {
+        next unless exists $args->{attributes}->{$code};
+        next if grep {$code eq $_} ('easting', 'northing', 'fixmystreet_id', 'closest_address');
+        my $value = substr($args->{attributes}->{$code}, 0, 2000);
+
+        # FMS will send a blank string if the user didn't make a selection in a
+        # non-required singlevaluelist. In that case sending the blank string
+        # to Confirm results in an error, so just skip over it.
+        next if (!$value && $service_types->{$code} eq 'singlevaluelist' && !$attributes_required->{$code});
+
+        my $tag = $tag_types->{$service_types->{$code}} || 'EnqAttribStringValue';
+        push @elements, SOAP::Data->name('EnquiryAttribute' => \SOAP::Data->value(
+            SOAP::Data->name('EnqAttribTypeCode' => SOAP::Utils::encode_data($code))->type(""),
+            SOAP::Data->name($tag => SOAP::Utils::encode_data($value))->type(""),
+        ));
+    }
+
+    return @elements;
 }
 
 sub NewEnquiry {
@@ -792,8 +939,8 @@ sub NewEnquiry {
         $enq{CentralAssetId} = $args->{central_asset_id};
     }
 
-    if ($args->{external_system_number}) {
-        $enq{ExternalSystemNumber} = $args->{external_system_number};
+    if ($self->external_system_number) {
+        $enq{ExternalSystemNumber} = $self->external_system_number;
         $enq{ExternalSystemReference} = $args->{attributes}->{fixmystreet_id};
     }
     if (my $code = $self->service_enquiry_class_code($service_code)) {
@@ -805,27 +952,7 @@ sub NewEnquiry {
         SOAP::Data->name($_ => $value)->type("")
     } keys %enq;
 
-    my $tag_types = {
-        singlevaluelist => 'EnqAttribValueCode',
-        datetime => 'EnqAttribDateValue',
-    };
-
-    for my $code (map { $_->code } @{ $service->attributes }) {
-        next unless exists $args->{attributes}->{$code};
-        next if grep {$code eq $_} ('easting', 'northing', 'fixmystreet_id', 'closest_address');
-        my $value = substr($args->{attributes}->{$code}, 0, 2000);
-
-        # FMS will send a blank string if the user didn't make a selection in a
-        # non-required singlevaluelist. In that case sending the blank string
-        # to Confirm results in an error, so just skip over it.
-        next if (!$value && $service_types{$code} eq 'singlevaluelist' && !$attributes_required{$code});
-
-        my $tag = $tag_types->{$service_types{$code}} || 'EnqAttribStringValue';
-        push @elements, SOAP::Data->name('EnquiryAttribute' => \SOAP::Data->value(
-            SOAP::Data->name('EnqAttribTypeCode' => SOAP::Utils::encode_data($code))->type(""),
-            SOAP::Data->name($tag => SOAP::Utils::encode_data($value))->type(""),
-        ));
-    }
+    push @elements, $self->_build_enquiry_attribute_elements($service, $args, \%service_types, \%attributes_required);
 
     my @customer = (
         SOAP::Data->name('CustomerEmail' => SOAP::Utils::encode_data($args->{email}))->type(""),
@@ -839,9 +966,22 @@ sub NewEnquiry {
     if (my $point_of_contact = ($args->{point_of_contact_code} || $self->point_of_contact_code)) {
         push @customer, SOAP::Data->name('PointOfContactCode' => SOAP::Utils::encode_data($point_of_contact))->type("");
     }
-    if (my $customer_type = $self->customer_type_code) {
-        push @customer, SOAP::Data->name('CustomerTypeCode' => SOAP::Utils::encode_data($customer_type))->type("");
+
+    my $customer_type_code = $self->customer_type_code;
+    if ($args->{email} && $self->customer_type_code_by_email) {
+        foreach my $code (keys %{$self->customer_type_code_by_email}) {
+            foreach (@{$self->customer_type_code_by_email->{$code}}) {
+                if (lc $_ eq lc $args->{email}) {
+                    $customer_type_code = $code;
+                    last;
+                }
+            }
+        }
     }
+    if ($customer_type_code) {
+        push @customer, SOAP::Data->name('CustomerTypeCode' => SOAP::Utils::encode_data($customer_type_code))->type("");
+    }
+
     if ( $self->send_customer_ref_field ) {
         push @customer, SOAP::Data->name('CustomerReference' => SOAP::Utils::encode_data($args->{attributes}->{fixmystreet_id}))->type("");
     }
@@ -900,7 +1040,7 @@ sub EnquiryUpdate {
 
     $enq{EnquiryStatusCode} = $args->{status_code} if $args->{status_code};
 
-    my $response = $self->perform_request($self->operation_for_update(\%enq), { return_on_fault => 1});
+    my $response = $self->perform_request($self->operation_for_update(\%enq, $args->{_new_service}), { return_on_fault => 1});
 
     return $response unless $response->{Fault};
 
@@ -915,13 +1055,47 @@ sub EnquiryUpdate {
 
     delete $enq{EnquiryStatusCode} if $enq{EnquiryStatusCode};
     delete $enq{LoggedTime} if $enq{LoggedTime};
-    return $self->perform_request($self->operation_for_update(\%enq));
+    return $self->perform_request($self->operation_for_update(\%enq, $args->{_new_service}));
 }
 
 sub operation_for_update {
-    my ($self, $enq) = @_;
+    my ($self, $enq, $new_service) = @_;
 
-    my @elements = map {
+    my @elements = ();
+
+    # If we're changing to a new service we'll need to set
+    # ServiceCode/SubjectCode, as well as handle any default values for
+    # attributes on the new service
+    if ($new_service) {
+        my ($serv, $subj) = split /_/, $new_service->service_code;
+        if ( $serv && $subj ) {
+            $enq->{ServiceCode} = $serv;
+            $enq->{SubjectCode} = $subj;
+
+            # Build args hash with default values from attribute_overrides
+            my $args = { attributes => {} };
+
+            # Apply attribute overrides with default values
+            my @codes = map { $_->code } @{ $new_service->attributes };
+            for my $code (@codes) {
+                my $cfg = $self->attribute_overrides->{$code};
+                if ($cfg && $cfg->{default}) {
+                    $args->{attributes}->{$code} = $cfg->{default};
+                }
+            }
+
+            if (%{ $args->{attributes} }) {
+                my %service_types = map { $_->code => $_->datatype } @{ $new_service->attributes };
+                my %attributes_required = map { $_->code => $_->required } @{ $new_service->attributes };
+
+                push @elements, $self->_build_enquiry_attribute_elements(
+                    $new_service, $args, \%service_types, \%attributes_required
+                );
+            }
+        }
+    }
+
+    push @elements, map {
         my $value = SOAP::Utils::encode_data($enq->{$_});
         SOAP::Data->name($_ => $value)->type("")
     } keys %$enq;
@@ -935,18 +1109,6 @@ sub operation_for_update {
 
 sub GetEnquiryStatusChanges {
     my ($self, $start, $end) = @_;
-
-    # The Confirm server seems to ignore timezone hints in the datetime
-    # string, so we need to convert whatever $start/$end we've been given
-    # into (Confirm) local time.
-    my $w3c = DateTime::Format::W3CDTF->new;
-    my $start_time = $w3c->parse_datetime( $start );
-    $start_time->set_time_zone($self->server_timezone);
-    $start = $w3c->format_datetime($start_time);
-
-    my $end_time = $w3c->parse_datetime( $end );
-    $end_time->set_time_zone($self->server_timezone);
-    $end = $w3c->format_datetime($end_time);
 
     $start = SOAP::Utils::encode_data($start);
     $end = SOAP::Utils::encode_data($end);
@@ -1073,6 +1235,14 @@ sub documents_for_job {
 sub get_job_photo {
     my ($self, $job_id, $photo_id) = @_;
     my $response = $self->web_api_call("/documents/0/JOB/$job_id/$photo_id") or return;
+    my $type = $response->header('Content-Type') || '';
+    return unless $type =~ m{image/(jpeg|pjpeg|gif|tiff|png)}i;
+    return ( $type, $response->decoded_content );
+}
+
+sub get_photo_by_doc_url {
+    my ($self, $doc_url) = @_;
+    my $response = $self->web_api_call($doc_url) or return;
     my $type = $response->header('Content-Type') || '';
     return unless $type =~ m{image/(jpeg|pjpeg|gif|tiff|png)}i;
     return ( $type, $response->decoded_content );

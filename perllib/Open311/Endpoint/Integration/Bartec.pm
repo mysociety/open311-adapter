@@ -30,6 +30,10 @@ has '+request_class' => (
     default => 'Open311::Endpoint::Service::Request::ExtendedStatus',
 );
 
+sub service_request_content {
+    '/open311/service_request_extended'
+}
+
 has integration_class => (
     is => 'ro',
     default => 'Integrations::Bartec'
@@ -98,7 +102,7 @@ sub _get_service_name {
     my ($self, $service) = @_;
 
     $service->{Description} =~ s/(.)(.*)/\U$1\L$2/;
-    (my $class = $service->{ServiceClass}->{Description}) =~ s/(.)(.*)/\U$1\L$2/;
+    (my $class = $service->{ServiceClass}->{Name}) =~ s/(.)(.*)/\U$1\L$2/;
     my $service_name = $service->{Description};
 
     # service type names are not unique in bartec so need to distinguish
@@ -126,8 +130,8 @@ sub _allowed_service {
 
     return 1 if $self->allowed_services->{uc $service->{Description}} ||
                 (
-                    $self->service_map->{uc $service->{ServiceClass}->{Description}} &&
-                    $self->service_map->{uc $service->{ServiceClass}->{Description}}->{uc $service->{Description}}
+                    $self->service_map->{uc $service->{ServiceClass}->{Name}} &&
+                    $self->service_map->{uc $service->{ServiceClass}->{Name}}->{uc $service->{Description}}
                 );
 
     return 0;
@@ -205,6 +209,14 @@ sub post_service_request {
         $self->logger->warn("failed to fetch newly created ServiceRequest: " . $res->{ServiceCode} . " (FMS ID " . $args->{attributes}->{fixmystreet_id} . ")");
         return $request;
     };
+
+    if ($service->service_name eq 'Bulky collection') {
+        try {
+            $integ->ServiceRequest_Status_Set($sr, 'OPEN');
+        } catch {
+            $self->logger->warn("failed to open bulky collection " . $res->{ServiceCode} . " (FMS ID " . $args->{attributes}->{fixmystreet_id} . ")");
+        };
+    }
 
     try {
         $self->_attach_note( $args, $sr );
@@ -401,6 +413,39 @@ sub distance_haversine {
     return $d;
 }
 
+sub post_service_request_update {
+    my ($self, $args) = @_;
+
+    my $integ = $self->get_integration;
+    my $conf = $integ->config;
+
+    # Update Bartec status
+    if (my $bartec_status = $conf->{forward_status_map}->{$args->{status}}) {
+        my $sr = {
+            ServiceRequest => {
+                ServiceCode => $args->{service_request_id},
+                ServiceType => { ID => $args->{service_code} },
+            }
+        };
+        my $res = $integ->ServiceRequest_Status_Set($sr, $bartec_status);
+        if ($res->{Errors}{Result}) {
+            $self->logger->warn("failed to update status on $args->{service_request_id}: $res->{Errors}->{Message}");
+        }
+    }
+
+    # Update Bartec extra data
+    my $res = $integ->ServiceRequest_Update($args->{service_request_id}, $args);
+    if ($res->{Errors}{Result}) {
+        $self->logger->warn("failed to update extra data on $args->{service_request_id}: $res->{Errors}->{Message}");
+    }
+
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        service_request_id => $args->{service_request_id},
+        status => lc $args->{status},
+        update_id => 'BLANK',
+    );
+}
+
 sub get_service_request_updates {
     my ($self, $args) = @_;
 
@@ -427,14 +472,29 @@ sub get_service_request_updates {
     my @updates;
     my $updates = $self->get_integration->_coerce_to_array( $response, 'ServiceRequest_Updates' );
     for my $update ( @$updates ) {
+        my $ref = $update->{JobReference} // ''; # JobReference is the external (to Bartec) ID, i.e. FMS report ID
+        next unless $ref =~ /^\d{7,}$/; # skip ServiceRequest if its job ref doesn't look like an FMS ID
+
+        # Skip updates for ServiceRequests whose services we're not responsible for
+        my $service = {
+            Description => $update->{ServiceType},
+            ServiceClass => {
+                Name => $update->{ServiceClass},
+            }
+        };
+        next unless $self->_allowed_service($service);
+
         my $history = $self->get_integration->ServiceRequests_History_Get( $update->{ServiceRequestID}, $history_start_date );
 
         next unless $history->{ServiceRequest_History};
         my $entries = $self->get_integration->_coerce_to_array( $history, 'ServiceRequest_History' );
 
         for my $entry ( @$entries ) {
+            my ($status, $external_status) = $self->_get_update_status($entry);
+            next unless $status; # No status, nothing to do
             my %args = (
-                status => $self->_get_update_status($entry),
+                status => $status,
+                $external_status ? ( external_status_code => $external_status ) : (),
                 update_id => $entry->{id},
                 service_request_id => $entry->{ServiceCode},
                 description => '',
@@ -454,19 +514,22 @@ sub _get_update_status {
     my $conf = $self->get_integration->config;
 
     my $status = $conf->{status_map}->{ $update->{ServiceStatusName} };
+    my $code = $update->{ClosingCode};
 
-    if ($update->{ClosingCode}) {
-        my $mapped = $conf->{closing_code_map}->{ $update->{ServiceStatusName} }->{ $update->{ClosingCode} };
-        return $mapped if $mapped;
+    # Check to see if a closing code is specially mapped
+    if ($code) {
+        my $mapped = $conf->{closing_code_map}->{ $update->{ServiceStatusName} }->{$code};
+        $status = $mapped if $mapped;
     }
 
-    return $status;
+    return ($status, $code);
 }
 
 sub get_service_requests {
     my ($self, $args) = @_;
 
     my $w3c = DateTime::Format::W3CDTF->new;
+    my $conf = $self->get_integration->config;
 
     my $response = $self->get_integration->ServiceRequests_Updates_Get($args->{start_date});
 
@@ -493,7 +556,7 @@ sub get_service_requests {
             requested_datetime => $date,
             updated_datetime => $date,
 
-            status => 'open',
+            status => $conf->{status_map}->{ $sr->{ServiceStatus}->{Status} },
             latlong => [ $location->attr->{Latitude}, $location->attr->{Longitude} ],
         );
 
@@ -510,18 +573,25 @@ sub get_service_requests {
     return @requests;
 }
 
-# if it's got an external reference it's an FixMyStreet report. And ignore reports
-# that are in any state other than open as it's assumed they are not new.
+# Ignore reports with external references (it's a FixMyStreet report),
+# and any that are not listed in a list of statuses to fetch, plus any
+# waste categories.
 sub skip_request {
     my ($self, $sr) = @_;
-    my $skip = 0;
 
-    if ( $sr->{ExternalReference} ||
-         not grep { $sr->{ServiceStatus}->{Status} eq $_ } @{ $self->get_integration->config->{statuses_to_fetch} } ) {
-         $skip = 1;
+    return 1 if $sr->{ExternalReference};
+
+    my $statuses = $self->get_integration->config->{statuses_to_fetch};
+    if (not grep { $sr->{ServiceStatus}->{Status} eq $_ } @$statuses) {
+         return 1;
     }
 
-    return $skip;
+    my $keywords_map = $self->get_integration->config->{service_keywords};
+    foreach (@{ $keywords_map->{$sr->{ServiceType}->{ID}} || [] }) {
+        return 1 if $_ eq 'waste_only';
+    }
+
+    return 0;
 }
 
 sub upload_urls {

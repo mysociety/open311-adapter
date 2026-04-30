@@ -27,6 +27,7 @@ my $bartec = Test::MockModule->new('Open311::Endpoint::Integration::UK::Peterbor
 $bartec->mock(services => sub {
     return ( new_service('DFOUL'), new_service('RUBB') );
 });
+$bartec->mock(get_service_request_updates => sub { die "There was a problem" });
 $bartec->mock(get_service_requests => sub {
   my $dt = DateTime->new(
       year => 2018,

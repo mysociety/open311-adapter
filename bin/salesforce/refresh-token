@@ -33,17 +33,23 @@ sub fetch_token {
     my $client_id = $conf->{client_id};
     my $client_secret = $conf->{client_secret};
     my $refresh_token = $conf->{refresh_token};
-    my $salesforce_url = 'https://login.salesforce.com';
+    my $url = URI->new($conf->{endpoint});
+    my $salesforce_url = $url->scheme . "://" . $url->host;
 
+    my $params = {
+        client_id => $client_id,
+        client_secret => $client_secret,
+    };
+    if ($refresh_token) {
+        $params->{grant_type} = 'refresh_token';
+        $params->{refresh_token} = $refresh_token;
+    } else {
+        $params->{grant_type} = 'client_credentials';
+    }
     my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
     my $response = $ua->post(
         "$salesforce_url/services/oauth2/token",
-        {
-            grant_type => 'refresh_token',
-            client_id => $client_id,
-            client_secret => $client_secret,
-            refresh_token => $refresh_token,
-        }
+        $params,
     );
     $response = decode_json($response->decoded_content);
     my $token = $response->{access_token};

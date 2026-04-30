@@ -224,10 +224,7 @@ subtest 'send new report to Alloy' => sub {
                 },
                 {   attributeCode =>
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
-                    value => 'description
-
-Type of animal?
-Other',
+                    value => "title\n\ndescription\n\nType of animal?\nOther",
                 },
                 { attributeCode =>
                         'attributes_customerContactPriorities_630e8d78afc533014f6cce97',
@@ -243,7 +240,7 @@ Other',
                 },
                 {   attributeCode =>
                         'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
-                    value => '2025-04-02',
+                    value => '2025-04-02T22:59:59Z',
                 },
                 {   attributeCode =>
                         'attributes_defectsReportedDate',
@@ -297,10 +294,7 @@ Other',
                 },
                 {   attributeCode =>
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
-                    value => 'description
-
-Did you witness the dog fouling?
-Yes',
+                    value => "title\n\ndescription\n\nDid you witness the dog fouling?\nYes",
                 },
                 { attributeCode =>
                         'attributes_customerContactPriorities_630e8d78afc533014f6cce97',
@@ -316,7 +310,7 @@ Yes',
                 },
                 {   attributeCode =>
                         'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
-                    value => '2025-06-24',
+                    value => '2025-06-24T22:59:59Z',
                 },
                 {   attributeCode =>
                         'attributes_defectsReportedDate',
@@ -369,7 +363,7 @@ Yes',
                 },
                 {   attributeCode =>
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
-                    value => 'description',
+                    value => "title\n\ndescription",
                 },
                 { attributeCode =>
                         'attributes_customerContactPriorities_630e8d78afc533014f6cce97',
@@ -385,7 +379,7 @@ Yes',
                 },
                 {   attributeCode =>
                         'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
-                    value => '2025-04-29',
+                    value => '2025-04-29T22:59:59Z',
                 },
                 {   attributeCode =>
                         'attributes_defectsReportedDate',
@@ -434,7 +428,7 @@ Yes',
                 },
                 {   attributeCode =>
                         'attributes_customerContactCustomerComments_630e97d11aff300150181403',
-                    value => 'description',
+                    value => "title\n\ndescription",
                 },
                 { attributeCode =>
                         'attributes_customerContactPriorities_630e8d78afc533014f6cce97',
@@ -450,7 +444,7 @@ Yes',
                 },
                 {   attributeCode =>
                         'attributes_customerContactTargetDate_63105e3a46f558015ab4c576',
-                    value => '2025-04-29',
+                    value => '2025-04-29T22:59:59Z',
                 },
                 {   attributeCode =>
                         'attributes_defectsReportedDate',

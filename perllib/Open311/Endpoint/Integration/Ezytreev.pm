@@ -183,7 +183,7 @@ sub get_service_request_updates {
             # Default to blank description so automated response template can be used in FMS.
             my $description = "";
             if ($self->statuses_to_show_notes_for->{$status_code}) {
-                $description = $enquiry_status->{StatusInfo};
+                $description = $enquiry_status->{StatusInfo} || '';
             }
 
             my %update_args = (

@@ -1,4 +1,4 @@
-endpoint_url: "http://example.org/endpoint"
+endpoint_url: "http://confirm/endpoint"
 username: "username"
 password: "pw"
 tenant_id: "123"
@@ -14,8 +14,8 @@ wrapped_services:
     group: "Road/Footpath Problems"
     name: "Pothole"
     wraps:
-      - ABC_DEF
       - ABC_GHI
+      - ABC_DEF
   ABC_JKL:
     passthrough: 1
     group: Flooding & Drainage
@@ -27,11 +27,9 @@ reverse_status_mapping:
   FOR: for_triage
 request_ignore_statuses:
   - FOR
-completion_statuses:
-  - FIX
 service_enquiry_class_code:
   ABC: TEST
-base_url: http://example.com/
-web_url: http://example.org/web/api
+base_url: http://confirm/
+web_url: http://confirm/web/api
 cutoff_enquiry_date: 2018-04-12T12:00:00
 include_private_customer_details: 1

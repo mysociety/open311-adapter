@@ -30,8 +30,14 @@ has token => (
     default => sub {
         my ($self) = @_;
 
+        my $url;
+        if ($self->config->{token_url}) {
+            $url = $self->config->{token_url};
+        } else {
+            $url = $self->config->{api_url} . '/login';
+        }
         my $response = $self->ua->post(
-            $self->config->{api_url} . '/login',
+            $url,
             Content_Type => 'form-data',
             Content      => [ username => $self->config->{username}, password => $self->config->{password} ]
         );
@@ -76,10 +82,10 @@ Create an issue in the Continental Landscapes ATAK system.
 sub create_issue {
     my ($self, $issue_data) = @_;
 
-    my $request_data = { tasks => [ $issue_data] };
-    my $response = $self->post('/enq', $request_data);
+    my $request_data = { request => [ $issue_data] };
+    my $response = $self->post('/request', $request_data);
 
-    my $issue_id = $response->{'Processed task 1'};
+    my $issue_id = $response->{REQUEST_ID};
     if (!$issue_id) {
         $self->error("No issue ID received.");
     }

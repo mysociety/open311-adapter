@@ -17,4 +17,8 @@ has integration_without_prefix => (
     default => 'Confirm',
 );
 
+sub service_request_content {
+    '/open311/service_request_extended'
+}
+
 __PACKAGE__->run_if_script;

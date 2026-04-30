@@ -46,6 +46,13 @@ field_defaults:
   Source: FixMyStreet
   ReporterType: Public
 
+forward_status_map:
+  OPEN: OPEN
+  INVESTIGATING: PENDING
+  IN_PROGRESS: IN PROGRESS
+  CLOSED: CLOSED
+  CANCELLED: CANCELLED
+
 status_map:
   OPEN: open
   PENDING: investigating
@@ -62,6 +69,7 @@ closing_code_map:
 
 statuses_to_fetch:
   - OPEN
+  - PENDING
 
 note_types:
   report: General note

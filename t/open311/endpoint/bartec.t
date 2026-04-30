@@ -100,6 +100,7 @@ my %responses = (
 </AuthenticateResponse>',
     ServiceRequests_Types_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_types_get.xml')->slurp,
     ServiceRequest_Create => \&ServiceRequest_Create,
+    ServiceRequest_Status_Set => '',
     ServiceRequests_Statuses_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_status_get.xml')->slurp,
     Premises_Get => \&Premises_Get,
     ServiceRequests_History_Get =>  \&ServiceRequests_History_Get,
@@ -109,6 +110,7 @@ my %responses = (
     ServiceRequests_Notes_Types_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/servicerequests_notes_types_get.xml')->slurp,
     ServiceRequest_Note_Create => \&ServiceRequest_Note_Create,
     System_ExtendedDataDefinitions_Get => path(__FILE__)->parent(1)->realpath->child('xml/bartec/extended_definitions.xml')->slurp,
+    ServiceRequest_Update => '',
 );
 
 sub gen_full_response {
@@ -133,7 +135,6 @@ my $transport = Test::MockModule->new('SOAP::Transport::HTTP::Client', no_auto =
 $transport->mock(send_receive => sub {
         my $self = shift;
         my %args = @_;
-
 
         (my $action = $args{action}) =~ s#http://bartec-systems.com/##;
         $action =~ s/"//g;
@@ -551,7 +552,7 @@ subtest "check send basic report" => sub {
     my $note_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Note_Create} );
     is_deeply $note_sent->body->{ServiceRequest_Note_Create}, {
         token => 'ABC=',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         NoteTypeID => 11,
         Note => "a title\n\na description",
         Comment => 'Note added by FixMyStreet',
@@ -651,7 +652,7 @@ subtest "check send report with extended info & ampersands " => sub {
     my $note_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Note_Create} );
     is_deeply $note_sent->body->{ServiceRequest_Note_Create}, {
         token => 'ABC=',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         NoteTypeID => 11,
         Note => "a title\n\na description & some text",
         Comment => "Logged by staff\@example.org\n\nNote added by FixMyStreet",
@@ -762,7 +763,7 @@ subtest "check send report with assets" => sub {
     my $note_sent = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Note_Create} );
     is_deeply $note_sent->body->{ServiceRequest_Note_Create}, {
         token => 'ABC=',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         NoteTypeID => 11,
         Note => "a title\n\na description\n\nAsset id: 8080\nAsset detail: this is an asset",
         Comment => 'Note added by FixMyStreet',
@@ -838,7 +839,7 @@ subtest "check send report with a photo" => sub {
     is_deeply $sr_doc->body->{ServiceRequest_Document_Create}, {
         token => 'ABC=',
         Public => 'true',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         DateTaken => '2020-06-17T17:28:30+01:00',
         Comment => 'Photo uploaded from FixMyStreet',
         AttachedDocument => {
@@ -914,11 +915,19 @@ subtest "check send bulky report with a photo" => sub {
         ServiceCode => '0001',
     }, "correct request for servicerequests_get";
 
+    my $status_set = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Status_Set} );
+    is_deeply $status_set->body->{ServiceRequest_Status_Set}, {
+        token => 'ABC=',
+        ServiceCode => '0001',
+        StatusID => '2388',
+        Comments => '',
+    }, "correct request for servicerequests_get";
+
     my $sr_doc = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Document_Create} );
     is_deeply $sr_doc->body->{ServiceRequest_Document_Create}, {
         token => 'ABC=',
         Public => 'true',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         DateTaken => '2020-06-17T17:28:30+01:00',
         Comment => 'Bulky waste photo',
         AttachedDocument => {
@@ -1044,7 +1053,7 @@ subtest "check send report with a photo as an upload" => sub {
     is_deeply $sr_doc->body->{ServiceRequest_Document_Create}, {
         token => 'ABC=',
         Public => 'true',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         DateTaken => '2020-06-17T17:28:30+01:00',
         Comment => 'Photo uploaded from FixMyStreet',
         AttachedDocument => {
@@ -1130,11 +1139,19 @@ subtest "check send bulky report with a photo as an upload" => sub {
         ServiceCode => '0001',
     }, "correct request for servicerequests_get";
 
+    my $status_set = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Status_Set} );
+    is_deeply $status_set->body->{ServiceRequest_Status_Set}, {
+        token => 'ABC=',
+        ServiceCode => '0001',
+        StatusID => '2388',
+        Comments => '',
+    }, "correct request for servicerequests_get";
+
     my $sr_doc = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Document_Create} );
     is_deeply $sr_doc->body->{ServiceRequest_Document_Create}, {
         token => 'ABC=',
         Public => 'true',
-        ServiceRequestID => '0001',
+        ServiceRequestID => '1234',
         DateTaken => '2020-06-17T17:28:30+01:00',
         Comment => 'Bulky waste photo',
         AttachedDocument => {
@@ -1230,6 +1247,7 @@ subtest 'get uprn for usrn with one result' => sub {
 };
 
 subtest 'fetch updates' => sub {
+    %sent = ();
     my $res = $endpoint->run_test_request(
         GET => '/servicerequestupdates.json?jurisdiction_id=bartec&start_date=2020-06-19T10:00:00Z&end_date=2020-06-19T12:00:00Z'
     );
@@ -1244,46 +1262,44 @@ subtest 'fetch updates' => sub {
         LastUpdated => '2020-06-19T10:00:00Z',
     }, 'correct fetch updates request sent';
 
+    # Only the entry with an allowed service (LEAF REMOVAL) AND a valid 7+ digit
+    # JobReference (1234567) should trigger a history call. The WASTE/GW BIN
+    # OPERATION entry (wrong service), the WASTE/GW NEW SUBSCRIPTION entry
+    # (wrong service, short JobReference), and the LEAF REMOVAL entry with short
+    # JobReference (843) must all be skipped.
     is_deeply $sent_history->body->{ServiceRequests_History_Get}, {
         token => 'ABC=',
         ServiceRequestID => '51340',
         Date => '1753-01-01T00:00:00Z',
-    }, 'correct fetch history request sent';
+    }, 'history only fetched for allowed service with valid JobReference';
 
     is_deeply decode_json($res->content), [
         {
-            update_id =>228025,
-            service_request_id =>'SR00051627',
-            status =>'open',
-            updated_datetime => '2020-06-17T09:47:26+01:00',
-            description =>'',
-            media_url =>'',
-        },
-        {
-            update_id =>228026,
-            service_request_id =>'SR00051628',
-            status =>'fixed',
-            updated_datetime => '2020-06-17T09:48:26+01:00',
-            description =>'',
-            media_url =>'',
-        },
-        {
-            update_id =>228027,
-            service_request_id =>'SR00051627',
-            status =>'open',
-            updated_datetime => '2020-06-17T09:55:36+01:00',
-            description =>'',
-            media_url =>'',
-        },
-        {
-            update_id =>228028,
-            service_request_id =>'SR00051624',
-            status =>'closed',
+            update_id => 228028,
+            service_request_id => 'SR00051624',
+            status => 'closed',
+            external_status_code => 'UNMAPPED',
             updated_datetime => '2020-06-17T09:59:26+01:00',
-            description =>'',
-            media_url =>'',
-        }
-    ], 'correct return';
+            description => '',
+            media_url => '',
+        },
+    ], 'only updates for allowed services with valid JobReference returned';
+};
+
+subtest 'fetch updates - all entries filtered' => sub {
+    %sent = ();
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?jurisdiction_id=bartec&start_date=2020-06-23T10:00:00Z&end_date=2020-06-23T12:00:00Z'
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is $sent{ServiceRequests_History_Get}, undef,
+        'no history calls when all updates are filtered out';
+
+    is_deeply decode_json($res->content), [],
+        'empty result when all updates filtered';
 };
 
 subtest 'fetch_requests' => sub {
@@ -1301,7 +1317,7 @@ subtest 'fetch_requests' => sub {
 
     is_deeply $sent_get->body->{ServiceRequests_Get}, {
         token => 'ABC=',
-        ServiceCode => 'SR4',
+        ServiceCode => 'SR6',
     }, 'correct fetch history request sent';
 
     ok $res->is_success, 'valid request'
@@ -1345,7 +1361,7 @@ subtest 'fetch_requests with mapped service' => sub {
             requested_datetime => "2020-06-24T16:17:00+01:00",
             updated_datetime => "2020-06-24T16:17:00+01:00",
             media_url => "",
-            status => "open",
+            status => "investigating",
             service_name => "Offensive graffiti",
             zipcode => "",
             service_code => "281"
@@ -1370,6 +1386,34 @@ subtest 'fetch_requests with no results' => sub {
 
 
     is_deeply decode_json($res->content), [ ], 'empty list of requests';
+};
+
+subtest 'updates' => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        update_id => '123',
+        updated_datetime => '2026-02-20T12:00:00Z',
+        service_code => 1,
+        service_request_id => '1001',
+        status => 'IN_PROGRESS',
+        description => '',
+    );
+
+    my $sr_update = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Update} );
+    is_deeply $sr_update->body->{ServiceRequest_Update}, {
+        token => 'ABC=',
+        serviceCode => '1001',
+        serviceLocationDescription => '',
+    }, "correct request";
+
+    my $status_set = SOAP::Deserializer->deserialize( $sent{ServiceRequest_Status_Set} );
+    is_deeply $status_set->body->{ServiceRequest_Status_Set}, {
+        token => 'ABC=',
+        ServiceCode => '1001',
+        StatusID => 2278,
+        Comments => '',
+    }, "correct request";
 };
 
 done_testing;

@@ -1,0 +1,313 @@
+=head1 NAME
+
+Open311::Endpoint::Integration::Aurora - An integration with Symology's Aurora platform.
+
+=head1 SYNOPSIS
+
+This integration:
+* Creates cases for requests.
+* Makes updates on the relevant cases.
+* Fetches udpates on relevant cases.
+
+=cut
+
+package Open311::Endpoint::Integration::Aurora;
+
+use strict;
+use warnings;
+
+use Moo;
+use File::Temp qw(tempfile);
+use Integrations::Aurora;
+use Open311::Endpoint::Service::UKCouncil::Aurora;
+use Try::Tiny;
+use Open311::Endpoint::Service::Request::Update::mySociety;
+use DateTime::Format::Strptime;
+
+extends 'Open311::Endpoint';
+with 'Open311::Endpoint::Role::mySociety';
+with 'Role::EndpointConfig';
+with 'Role::Logger';
+
+=head1 CONFIGURATION
+
+=cut
+
+has integration_class => (is => 'ro', default => 'Integrations::Aurora');
+
+has aurora => (
+    is => 'lazy',
+    default => sub { $_[0]->integration_class->new(config_filename => $_[0]->jurisdiction_id) },
+);
+
+sub get_integration {
+    return $_[0]->aurora;
+};
+
+=head2 service_class
+
+Uses the same service class as our Symology Insight integration.
+
+=cut
+
+has service_class  => (
+    is => 'ro',
+    default => 'Open311::Endpoint::Service::UKCouncil::Aurora'
+);
+
+has jurisdiction_id => ( is => 'ro' );
+
+=head2 category_mapping
+
+A map from service_code to:
+
+  name: The display name for the category
+  group: Optional category group
+  parameters: dictionary of default parameters to use
+
+=cut
+
+has category_mapping => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{category_mapping} }
+);
+
+=head2 reverse_status_mapping
+
+Table of statuses sent by Aurora and how they map to FMS statuses
+
+=cut
+
+has reverse_status_mapping => (
+    is => 'ro',
+    default => sub { $_[0]->endpoint_config->{reverse_status_mapping} }
+);
+
+=head1 BEHAVIOUR
+
+=head2 services
+
+Returns services based on the configured C<category_mapping>.
+
+=cut
+
+sub services {
+    my $self = shift;
+    my $services = $self->category_mapping;
+    my @services = map {
+        my $name = $services->{$_}{name};
+        my $service = $self->service_class->new(
+            service_name => $name,
+            service_code => $_,
+            description => $name,
+            $services->{$_}{group} ? (group => $services->{$_}{group}) : (),
+        );
+    } keys %$services;
+    return @services;
+}
+
+=head2 post_service_request
+
+Creates a contact if one doesn't already exist for the reporter's email, or phone number.
+Uploads media provided as uploads or URLs as attachments.
+Creates a case using these and also the default parameters set in
+the C<category_mapping>.
+Calls C<populate_description> for description text.
+
+=cut
+
+sub post_service_request {
+    my ( $self, $service, $args ) = @_;
+
+    my $service_code = $args->{service_code};
+    my $category = $self->category_mapping->{$service_code};
+    my $payload = $category->{parameters} || {};
+    $payload->{easting} = $args->{attributes}->{easting};
+    $payload->{northing} = $args->{attributes}->{northing};
+    $payload->{usrn} = $args->{attributes}->{NSGRef};
+    $payload->{internalAssetId} = $args->{attributes}->{UnitID};
+    $payload->{externalReference} = "FMS" . $args->{attributes}->{fixmystreet_id};
+    $payload->{locationText} = $args->{attributes}->{title};
+
+    $payload->{description} = $args->{attributes}->{title} . "\n\n" . $args->{attributes}->{description};
+    if ($args->{address_string}) {
+        $payload->{description} .= "\n\nLocation query entered: " . $args->{address_string};
+    }
+    if ($args->{attributes}->{report_url}) {
+        $payload->{description} .= "\n\nView report on FixMyStreet: $args->{attributes}->{report_url}";
+    }
+
+    my $contact_id;
+    my $email = $args->{email};
+    my $phone = $args->{phone};
+    if ($email) {
+        $contact_id = $self->aurora->get_contact_id_for_email_address($email);
+    }
+    if (!$contact_id && $phone) {
+        $contact_id = $self->aurora->get_contact_id_for_phone_number($phone);
+    }
+    if (!$contact_id) {
+        $contact_id = $self->aurora->create_contact_and_get_id(
+            $email,
+            $args->{first_name},
+            $args->{last_name},
+            $phone,
+        );
+    }
+    $payload->{contactId} = $contact_id;
+    $payload->{attachments} = $self->_upload_media_as_attachments($args);
+    my $case_number = $self->aurora->create_case_and_get_number($payload);
+
+    return $self->new_request(
+        service_request_id => $case_number
+    );
+}
+
+=head2 post_service_request_update
+
+Adds a note to the case with the update text, with
+any media also uploaded as attachments.
+
+=cut
+
+sub post_service_request_update {
+    my ( $self, $args ) = @_;
+    my $case_number = $args->{service_request_id};
+    my $payload = {
+        noteText => $args->{description},
+    };
+    $payload->{attachments} = $self->_upload_media_as_attachments($args);
+    $self->aurora->add_note_to_case($case_number, $payload);
+    return Open311::Endpoint::Service::Request::Update::mySociety->new(
+        status => lc $args->{status},
+        update_id => $args->{update_id},
+    );
+}
+
+=head2 get_service_request_updates
+
+Fetches files from Aurora's 'return path update' Azure storage container which contains a
+snapshot of a case after one of the configured 'triggers' fires.
+
+The C<ClearanceReasonCode> is mapped to an update status via the C<reverse_status_mapping>, with the
+exception of updates via the C<CS_INSPECTION_PROMPTED> trigger which always map to 'investigating',
+and C<CS_CHANGE_QUEUE> which send through a code but do not change state.
+
+Updates via the C<CS_CLEAR_CASE> trigger have their description populated from the
+C<ClearanceReasonPortalText> field, all others are blank.
+
+=cut
+
+sub get_service_request_updates {
+    my ( $self, $args ) = @_;
+
+    my $start;
+    my $end;
+    if ($args->{start_date}) {
+        $start = DateTime::Format::W3CDTF->parse_datetime($args->{start_date});
+    };
+    if ($args->{end_date}) {
+        $end = DateTime::Format::W3CDTF->parse_datetime($args->{end_date});
+    };
+
+    my @update_files = $self->aurora->fetch_update_filenames;
+    my @updates = ();
+    for (@update_files) {
+        next if _skip_update_file($start, $end, $_->{Name});
+        my $data = $self->aurora->fetch_update_file($_->{Name});
+        my $clearance_code = $data->{Message}->{ClearanceReasonCode};
+        next unless ($clearance_code && $self->reverse_status_mapping->{$clearance_code}) || $_->{Name} =~ /CS_INSPECTION_PROMPTED|CS_CHANGE_QUEUE/;
+
+        my $id_no = @{$data->{Message}->{CaseEventHistory}};
+        my $external_update = pop @{$data->{Message}->{CaseEventHistory}};
+        my $update_date = DateTime::Format::W3CDTF->parse_datetime($external_update->{EventDateTime})
+                            ->set_nanosecond(0)
+                            ->set_time_zone('UTC');
+
+        my $desc = $_->{Name} =~ /CS_CLEAR_CASE/ ? ($data->{Message}->{ClearanceReasonPortalText} // '') : '';
+        # The exported text from Aurora has newlines stripped so they have been escaped
+        # - unescaping them here.
+        $desc =~ s/\\n/\n/g;
+
+        my $state = do {
+            if ($_->{Name} =~ /CS_CHANGE_QUEUE/) {
+                $clearance_code = 'CS_CHANGE_QUEUE';
+                'unchanged';
+            } elsif ($_->{Name} =~ /CS_INSPECTION_PROMPTED/) {
+                'investigating';
+            } else {
+                $self->reverse_status_mapping->{ $clearance_code };
+            }
+        };
+
+        my %update_args = (
+            status => $state,
+            external_status_code => $clearance_code,
+            description => $desc,
+            service_request_id => $data->{Message}->{CaseNumber},
+            update_id => $data->{Message}->{CaseNumber} . '_' . $id_no,
+            updated_datetime => $update_date,
+        );
+
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %update_args );
+    }
+
+    return @updates;
+}
+
+sub _skip_update_file {
+    my ($start, $end, $file_name) = @_;
+
+    return 1 unless $file_name =~ /_(CS_INSPECTION_PROMPTED|CS_CLEAR_CASE|CS_RECORD_CONTACT_EVENT|CS_MAINTENANCE_COMPLETED|CS_CHANGE_QUEUE|CS_RE_QUEUE)\.json/;
+
+    return unless $start || $end;
+
+    my ($year, $month, $day, $hour, $min, $sec) = $file_name =~ /^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/;
+    my $file_date = DateTime->new(
+        year => $year,
+        month => $month,
+        day => $day,
+        hour => $hour,
+        minute => $min,
+        second => $sec,
+    );
+
+    if ($start && $file_date < $start) {
+        return 1;
+    } elsif ($end && $file_date > $end) {
+        return 1;
+    };
+
+    return 0;
+};
+
+
+# NOTE: Aurora silently fails if we upload an attachment to a case without a name.
+sub _upload_media_as_attachments {
+    my ( $self, $args ) = @_;
+    my $attachments = ();
+
+    my $ua = LWP::UserAgent->new(agent => "FixMyStreet/open311-adapter");
+    foreach (@{$args->{media_url}}) {
+        my $response = $ua->get($_);
+        if ($response->is_success) {
+            push @$attachments, {
+                id => $self->aurora->upload_attachment_from_response_and_get_id($response),
+                name => $response->filename,
+            };
+        } else {
+            $self->logger->warn("Unable to download media " . $_);
+        }
+    }
+
+    foreach (@{$args->{uploads}}) {
+        push @$attachments, {
+            id => $self->aurora->upload_attachment_from_file_and_get_id($_->tempname),
+            name => $_->filename,
+        };
+    }
+
+    return $attachments;
+}
+
+1;

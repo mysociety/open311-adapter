@@ -10,6 +10,4 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
-has cancel_actiontype_id => ( is => 'ro', default => 518 );
-
 1;

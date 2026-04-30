@@ -149,10 +149,10 @@ DISTRIBUTIONS
       Module::Build::Tiny 0.035
       URI::Escape 0
       perl 5.008001
-  Cpanel-JSON-XS-4.37
-    pathname: R/RU/RURBAN/Cpanel-JSON-XS-4.37.tar.gz
+  Cpanel-JSON-XS-4.40
+    pathname: R/RU/RURBAN/Cpanel-JSON-XS-4.40.tar.gz
     provides:
-      Cpanel::JSON::XS 4.37
+      Cpanel::JSON::XS 4.40
       Cpanel::JSON::XS::Type undef
     requirements:
       Carp 0
@@ -179,118 +179,118 @@ DISTRIBUTIONS
       Scalar::Util 0
       Test::More 0
       perl 5.006
-  CryptX-0.078
-    pathname: M/MI/MIK/CryptX-0.078.tar.gz
+  CryptX-0.087
+    pathname: M/MI/MIK/CryptX-0.087.tar.gz
     provides:
-      Crypt::AuthEnc 0.078
-      Crypt::AuthEnc::CCM 0.078
-      Crypt::AuthEnc::ChaCha20Poly1305 0.078
-      Crypt::AuthEnc::EAX 0.078
-      Crypt::AuthEnc::GCM 0.078
-      Crypt::AuthEnc::OCB 0.078
-      Crypt::Checksum 0.078
-      Crypt::Checksum::Adler32 0.078
-      Crypt::Checksum::CRC32 0.078
-      Crypt::Cipher 0.078
-      Crypt::Cipher::AES 0.078
-      Crypt::Cipher::Anubis 0.078
-      Crypt::Cipher::Blowfish 0.078
-      Crypt::Cipher::CAST5 0.078
-      Crypt::Cipher::Camellia 0.078
-      Crypt::Cipher::DES 0.078
-      Crypt::Cipher::DES_EDE 0.078
-      Crypt::Cipher::IDEA 0.078
-      Crypt::Cipher::KASUMI 0.078
-      Crypt::Cipher::Khazad 0.078
-      Crypt::Cipher::MULTI2 0.078
-      Crypt::Cipher::Noekeon 0.078
-      Crypt::Cipher::RC2 0.078
-      Crypt::Cipher::RC5 0.078
-      Crypt::Cipher::RC6 0.078
-      Crypt::Cipher::SAFERP 0.078
-      Crypt::Cipher::SAFER_K128 0.078
-      Crypt::Cipher::SAFER_K64 0.078
-      Crypt::Cipher::SAFER_SK128 0.078
-      Crypt::Cipher::SAFER_SK64 0.078
-      Crypt::Cipher::SEED 0.078
-      Crypt::Cipher::Serpent 0.078
-      Crypt::Cipher::Skipjack 0.078
-      Crypt::Cipher::Twofish 0.078
-      Crypt::Cipher::XTEA 0.078
-      Crypt::Digest 0.078
-      Crypt::Digest::BLAKE2b_160 0.078
-      Crypt::Digest::BLAKE2b_256 0.078
-      Crypt::Digest::BLAKE2b_384 0.078
-      Crypt::Digest::BLAKE2b_512 0.078
-      Crypt::Digest::BLAKE2s_128 0.078
-      Crypt::Digest::BLAKE2s_160 0.078
-      Crypt::Digest::BLAKE2s_224 0.078
-      Crypt::Digest::BLAKE2s_256 0.078
-      Crypt::Digest::CHAES 0.078
-      Crypt::Digest::Keccak224 0.078
-      Crypt::Digest::Keccak256 0.078
-      Crypt::Digest::Keccak384 0.078
-      Crypt::Digest::Keccak512 0.078
-      Crypt::Digest::MD2 0.078
-      Crypt::Digest::MD4 0.078
-      Crypt::Digest::MD5 0.078
-      Crypt::Digest::RIPEMD128 0.078
-      Crypt::Digest::RIPEMD160 0.078
-      Crypt::Digest::RIPEMD256 0.078
-      Crypt::Digest::RIPEMD320 0.078
-      Crypt::Digest::SHA1 0.078
-      Crypt::Digest::SHA224 0.078
-      Crypt::Digest::SHA256 0.078
-      Crypt::Digest::SHA384 0.078
-      Crypt::Digest::SHA3_224 0.078
-      Crypt::Digest::SHA3_256 0.078
-      Crypt::Digest::SHA3_384 0.078
-      Crypt::Digest::SHA3_512 0.078
-      Crypt::Digest::SHA512 0.078
-      Crypt::Digest::SHA512_224 0.078
-      Crypt::Digest::SHA512_256 0.078
-      Crypt::Digest::SHAKE 0.078
-      Crypt::Digest::Tiger192 0.078
-      Crypt::Digest::Whirlpool 0.078
-      Crypt::KeyDerivation 0.078
-      Crypt::Mac 0.078
-      Crypt::Mac::BLAKE2b 0.078
-      Crypt::Mac::BLAKE2s 0.078
-      Crypt::Mac::F9 0.078
-      Crypt::Mac::HMAC 0.078
-      Crypt::Mac::OMAC 0.078
-      Crypt::Mac::PMAC 0.078
-      Crypt::Mac::Pelican 0.078
-      Crypt::Mac::Poly1305 0.078
-      Crypt::Mac::XCBC 0.078
-      Crypt::Misc 0.078
-      Crypt::Mode 0.078
-      Crypt::Mode::CBC 0.078
-      Crypt::Mode::CFB 0.078
-      Crypt::Mode::CTR 0.078
-      Crypt::Mode::ECB 0.078
-      Crypt::Mode::OFB 0.078
-      Crypt::PK 0.078
-      Crypt::PK::DH 0.078
-      Crypt::PK::DSA 0.078
-      Crypt::PK::ECC 0.078
-      Crypt::PK::Ed25519 0.078
-      Crypt::PK::RSA 0.078
-      Crypt::PK::X25519 0.078
-      Crypt::PRNG 0.078
-      Crypt::PRNG::ChaCha20 0.078
-      Crypt::PRNG::Fortuna 0.078
-      Crypt::PRNG::RC4 0.078
-      Crypt::PRNG::Sober128 0.078
-      Crypt::PRNG::Yarrow 0.078
-      Crypt::Stream::ChaCha 0.078
-      Crypt::Stream::RC4 0.078
-      Crypt::Stream::Rabbit 0.078
-      Crypt::Stream::Salsa20 0.078
-      Crypt::Stream::Sober128 0.078
-      Crypt::Stream::Sosemanuk 0.078
-      CryptX 0.078
-      Math::BigInt::LTM 0.078
+      Crypt::AuthEnc 0.087
+      Crypt::AuthEnc::CCM 0.087
+      Crypt::AuthEnc::ChaCha20Poly1305 0.087
+      Crypt::AuthEnc::EAX 0.087
+      Crypt::AuthEnc::GCM 0.087
+      Crypt::AuthEnc::OCB 0.087
+      Crypt::Checksum 0.087
+      Crypt::Checksum::Adler32 0.087
+      Crypt::Checksum::CRC32 0.087
+      Crypt::Cipher 0.087
+      Crypt::Cipher::AES 0.087
+      Crypt::Cipher::Anubis 0.087
+      Crypt::Cipher::Blowfish 0.087
+      Crypt::Cipher::CAST5 0.087
+      Crypt::Cipher::Camellia 0.087
+      Crypt::Cipher::DES 0.087
+      Crypt::Cipher::DES_EDE 0.087
+      Crypt::Cipher::IDEA 0.087
+      Crypt::Cipher::KASUMI 0.087
+      Crypt::Cipher::Khazad 0.087
+      Crypt::Cipher::MULTI2 0.087
+      Crypt::Cipher::Noekeon 0.087
+      Crypt::Cipher::RC2 0.087
+      Crypt::Cipher::RC5 0.087
+      Crypt::Cipher::RC6 0.087
+      Crypt::Cipher::SAFERP 0.087
+      Crypt::Cipher::SAFER_K128 0.087
+      Crypt::Cipher::SAFER_K64 0.087
+      Crypt::Cipher::SAFER_SK128 0.087
+      Crypt::Cipher::SAFER_SK64 0.087
+      Crypt::Cipher::SEED 0.087
+      Crypt::Cipher::Serpent 0.087
+      Crypt::Cipher::Skipjack 0.087
+      Crypt::Cipher::Twofish 0.087
+      Crypt::Cipher::XTEA 0.087
+      Crypt::Digest 0.087
+      Crypt::Digest::BLAKE2b_160 0.087
+      Crypt::Digest::BLAKE2b_256 0.087
+      Crypt::Digest::BLAKE2b_384 0.087
+      Crypt::Digest::BLAKE2b_512 0.087
+      Crypt::Digest::BLAKE2s_128 0.087
+      Crypt::Digest::BLAKE2s_160 0.087
+      Crypt::Digest::BLAKE2s_224 0.087
+      Crypt::Digest::BLAKE2s_256 0.087
+      Crypt::Digest::CHAES 0.087
+      Crypt::Digest::Keccak224 0.087
+      Crypt::Digest::Keccak256 0.087
+      Crypt::Digest::Keccak384 0.087
+      Crypt::Digest::Keccak512 0.087
+      Crypt::Digest::MD2 0.087
+      Crypt::Digest::MD4 0.087
+      Crypt::Digest::MD5 0.087
+      Crypt::Digest::RIPEMD128 0.087
+      Crypt::Digest::RIPEMD160 0.087
+      Crypt::Digest::RIPEMD256 0.087
+      Crypt::Digest::RIPEMD320 0.087
+      Crypt::Digest::SHA1 0.087
+      Crypt::Digest::SHA224 0.087
+      Crypt::Digest::SHA256 0.087
+      Crypt::Digest::SHA384 0.087
+      Crypt::Digest::SHA3_224 0.087
+      Crypt::Digest::SHA3_256 0.087
+      Crypt::Digest::SHA3_384 0.087
+      Crypt::Digest::SHA3_512 0.087
+      Crypt::Digest::SHA512 0.087
+      Crypt::Digest::SHA512_224 0.087
+      Crypt::Digest::SHA512_256 0.087
+      Crypt::Digest::SHAKE 0.087
+      Crypt::Digest::Tiger192 0.087
+      Crypt::Digest::Whirlpool 0.087
+      Crypt::KeyDerivation 0.087
+      Crypt::Mac 0.087
+      Crypt::Mac::BLAKE2b 0.087
+      Crypt::Mac::BLAKE2s 0.087
+      Crypt::Mac::F9 0.087
+      Crypt::Mac::HMAC 0.087
+      Crypt::Mac::OMAC 0.087
+      Crypt::Mac::PMAC 0.087
+      Crypt::Mac::Pelican 0.087
+      Crypt::Mac::Poly1305 0.087
+      Crypt::Mac::XCBC 0.087
+      Crypt::Misc 0.087
+      Crypt::Mode 0.087
+      Crypt::Mode::CBC 0.087
+      Crypt::Mode::CFB 0.087
+      Crypt::Mode::CTR 0.087
+      Crypt::Mode::ECB 0.087
+      Crypt::Mode::OFB 0.087
+      Crypt::PK 0.087
+      Crypt::PK::DH 0.087
+      Crypt::PK::DSA 0.087
+      Crypt::PK::ECC 0.087
+      Crypt::PK::Ed25519 0.087
+      Crypt::PK::RSA 0.087
+      Crypt::PK::X25519 0.087
+      Crypt::PRNG 0.087
+      Crypt::PRNG::ChaCha20 0.087
+      Crypt::PRNG::Fortuna 0.087
+      Crypt::PRNG::RC4 0.087
+      Crypt::PRNG::Sober128 0.087
+      Crypt::PRNG::Yarrow 0.087
+      Crypt::Stream::ChaCha 0.087
+      Crypt::Stream::RC4 0.087
+      Crypt::Stream::Rabbit 0.087
+      Crypt::Stream::Salsa20 0.087
+      Crypt::Stream::Sober128 0.087
+      Crypt::Stream::Sosemanuk 0.087
+      CryptX 0.087
+      Math::BigInt::LTM 0.087
     requirements:
       ExtUtils::MakeMaker 0
       Math::BigInt 0
@@ -3556,15 +3556,21 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       perl 5.008
-  YAML-LibYAML-0.88
-    pathname: I/IN/INGY/YAML-LibYAML-0.88.tar.gz
+  YAML-LibYAML-v0.904.0
+    pathname: T/TI/TINITA/YAML-LibYAML-v0.904.0.tar.gz
     provides:
-      YAML::LibYAML 0.88
-      YAML::XS 0.88
-      YAML::XS::LibYAML undef
+      YAML::LibYAML v0.904.0
+      YAML::XS v0.904.0
     requirements:
+      B::Deparse 0
+      Exporter 0
       ExtUtils::MakeMaker 0
+      Scalar::Util 0
+      base 0
+      constant 0
       perl 5.008001
+      strict 0
+      warnings 0
   YAML-Logic-0.07
     pathname: M/MS/MSCHILLI/YAML-Logic-0.07.tar.gz
     provides:

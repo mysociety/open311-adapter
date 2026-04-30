@@ -41,6 +41,11 @@ $open311->mock(perform_request => sub {
     if ($op->name eq 'NewEnquiry') {
         my %req = map { $_->name => $_->value } ${$op->value}->value;
         my %customer = map { $_->name =>$_->value } ${$req{EnquiryCustomer}}->value;
+        if ($customer{CustomerEmail} eq'test@example.org') {
+            is $customer{CustomerTypeCode}, 'CC';
+        } else {
+            is $customer{CustomerTypeCode}, undef;
+        }
         is $customer{PointOfContactCode}, 'CSC';
         return { OperationResponse => { NewEnquiryResponse => { Enquiry => { EnquiryNumber => 2001 } } } };
     }
@@ -49,22 +54,41 @@ $open311->mock(perform_request => sub {
 
 my $endpoint = Open311::Endpoint::Integration::UK::Dummy->new;
 
+my @shared = (
+    POST => '/requests.json',
+    api_key => 'test',
+    service_code => 'ABC_DEF',
+    address_string => '22 Acacia Avenue',
+    first_name => 'Bob',
+    last_name => 'Mould',
+    description => "This is the details",
+    'attribute[easting]' => 100,
+    'attribute[northing]' => 100,
+    'attribute[fixmystreet_id]' => 1001,
+    'attribute[title]' => 'Title',
+    'attribute[description]' => 'This is the details',
+    'attribute[report_url]' => 'http://example.com/report/1001',
+    'attribute[contributed_by]' => 1,
+);
+
 subtest "POST OK" => sub {
     my $res = $endpoint->run_test_request(
-        POST => '/requests.json',
-        api_key => 'test',
-        service_code => 'ABC_DEF',
-        address_string => '22 Acacia Avenue',
-        first_name => 'Bob',
-        last_name => 'Mould',
-        description => "This is the details",
-        'attribute[easting]' => 100,
-        'attribute[northing]' => 100,
-        'attribute[fixmystreet_id]' => 1001,
-        'attribute[title]' => 'Title',
-        'attribute[description]' => 'This is the details',
-        'attribute[report_url]' => 'http://example.com/report/1001',
-        'attribute[contributed_by]' => 1,
+        @shared,
+        email => 'normal@example.org',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => 2001
+        } ], 'correct json returned';
+};
+
+subtest "POST OK with special email" => sub {
+    my $res = $endpoint->run_test_request(
+        @shared,
+        email => 'test@example.org',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;

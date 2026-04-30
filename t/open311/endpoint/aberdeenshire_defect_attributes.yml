@@ -1,0 +1,40 @@
+endpoint_url: "https://test.example.com/graphql"
+web_url: "https://test.example.com/"
+username: "test_user"
+password: "test_pass"
+tenant_id: "test_tenant"
+server_timezone: "Europe/London"
+service_whitelist: {}
+ignored_attributes: []
+ignored_attribute_options: []
+forward_status_mapping: {}
+reverse_status_mapping: {}
+defect_attributes:
+  priority:
+    name: "Priority"
+    values:
+      high: "High Priority"
+      medium: "Medium Priority"
+      low: "Low Priority"
+  surface:
+    name: "Surface"
+    values:
+      tarmac: "Tarmac"
+      concrete: "Concrete"
+      paving: "Paving Stones"
+  depth:
+    name: "Depth"
+    numeric: true
+feature_attributes:
+  CCAT:
+    name: "Carriageway Category"
+    values:
+      1: "Category 1"
+      2: "Category 2"
+      3: "Category 3"
+  SPD:
+    name: "Speed Limit"
+    values:
+      20: "20 mph"
+      30: "30 mph"
+      40: "40 mph"

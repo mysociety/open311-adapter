@@ -161,8 +161,6 @@ sub get_token {
 sub post_service_request_update {
     my ($self, $args) = @_;
 
-    # Cobrand needs to send the service_code through with updates
-    # (see Bexley's open311_munge_update_params in FMS for example)
     my ($integration, $service_code) = $self->_map_from_new_id($args->{service_code}, 'service');
     my ($integration2, $service_request_id) = $self->_map_from_new_id($args->{service_request_id}, 'request');
     die "$integration did not equal $integration2\n" if $integration ne $integration2;

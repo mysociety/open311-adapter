@@ -20,14 +20,14 @@ sub _build_attributes {
             code => "usrn",
             description => "USRN",
             datatype => "string",
-            required => 1,
+            required => 0,
             automated => 'hidden_field',
         ),
         Open311::Endpoint::Service::Attribute->new(
             code => "unit_number",
             description => "Unit number",
             datatype => "text",
-            required => 1,
+            required => 0,
             automated => 'hidden_field',
         ),
         Open311::Endpoint::Service::Attribute->new(
@@ -41,7 +41,7 @@ sub _build_attributes {
             code => "mayrise_id",
             description => "Mayrise Identifier",
             datatype => "string",
-            required => 1,
+            required => 0,
             automated => 'hidden_field',
         ),
         Open311::Endpoint::Service::Attribute->new(

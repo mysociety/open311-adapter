@@ -195,34 +195,44 @@ subtest 'GET service' => sub {
                 order                => 8,
             },
             {   %defaults,
+                code                 => 'pro_rata',
+                description          => 'Payment amount in pence for subscription amendments',
+                order                => 9,
+            },
+            {   %defaults,
                 code                 => 'reason',
                 description          => 'Cancellation reason',
-                order                => 9,
+                order                => 10,
             },
             {   %defaults,
                 code                 => 'due_date',
                 description          => 'Cancellation date',
-                order                => 10,
+                order                => 11,
             },
             {   %defaults,
                 code                 => 'customer_external_ref',
                 description          => 'Customer external ref',
-                order                => 11,
+                order                => 12,
             },
             {   %defaults,
                 code                 => 'direct_debit_reference',
                 description          => 'Direct debit reference',
-                order                => 12,
+                order                => 13,
             },
             {   %defaults,
                 code                 => 'direct_debit_start_date',
                 description          => 'Direct debit initial payment date',
-                order                => 13,
+                order                => 14,
             },
             {   %defaults,
                 code                 => 'type',
                 description          => 'Denotes whether subscription request is a renewal or not',
-                order                => 14,
+                order                => 15,
+            },
+            {   %defaults,
+                code                 => 'renew_as_new_subscription',
+                description          => 'Denotes a renewal that is being made as a new subscription due to new (unverified) user',
+                order                => 16,
             },
         ],
     }, 'correct json returned';
@@ -364,6 +374,32 @@ subtest 'successfully renew garden subscription (direct debit)' => sub {
 
     is_deeply decode_json($res->content), [ {
         service_request_id => 9876,
+    } ], 'correct json returned';
+};
+
+subtest 'successfully renew garden subscription, but as new because expired' => sub {
+    # Payment method mapping tested in mock api_call
+    $last_payment_method = 'credit_card';
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        lat => 51,
+        long => -1,
+        service_code => 'garden_subscription',
+        'attribute[type]' => 'renew',
+        'attribute[customer_external_ref]' => 'customer_XYZ',
+        'attribute[uprn]' => '123_no_sub',
+        'attribute[fixmystreet_id]' => 2000005,
+        'attribute[total_containers]' => 1,
+        'attribute[current_containers]' => 1,
+        'attribute[payment_method]' => 'credit_card',
+        'attribute[PaymentCode]' => 'payment_renew_1',
+    );
+
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+    is_deeply decode_json($res->content), [ {
+        service_request_id => 'GW-SERV-001',
     } ], 'correct json returned';
 };
 

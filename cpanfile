@@ -5,6 +5,8 @@ requires 'Class::Unload';
 
 # Manual upgrades
 requires 'IO::Socket::SSL', '2.056';
+requires 'Cpanel::JSON::XS', '4.40';
+requires 'CryptX', '0.087';
 
 # Application
 requires 'Cache::Memcached';
@@ -36,7 +38,7 @@ requires 'Text::CSV_XS';
 requires 'Types::Standard';
 requires 'XML::Simple';
 requires 'Web::Simple';
-requires 'YAML::XS';
+requires 'YAML::XS', '0.903';
 requires 'YAML::Logic';
 requires 'Log::Dispatch';
 requires 'Tie::IxHash';

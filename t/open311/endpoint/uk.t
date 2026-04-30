@@ -9,7 +9,9 @@ test_multi(0, 'Open311::Endpoint::Integration::UK',
     'Open311::Endpoint::Integration::UK::Aberdeenshire' => 'aberdeenshire_confirm',
     'Open311::Endpoint::Integration::UK::AlloyDemo' => 'alloy_demo',
     'Open311::Endpoint::Integration::UK::CheshireEast' => 'cheshireeast_confirm',
+    'Open311::Endpoint::Integration::UK::Dumfries' => 'dumfries_alloy',
     'Open311::Endpoint::Integration::UK::EastSussex' => 'eastsussex_salesforce',
+    'Open311::Endpoint::Integration::UK::Enfield' => 'enfield_verint',
     'Open311::Endpoint::Integration::UK::Gloucester' => 'gloucester_alloy',
     'Open311::Endpoint::Integration::UK::Gloucestershire' => 'gloucestershire_confirm',
     'Open311::Endpoint::Integration::UK::Hampshire' => 'hampshire_confirm',
@@ -18,7 +20,6 @@ test_multi(0, 'Open311::Endpoint::Integration::UK',
     'Open311::Endpoint::Integration::UK::Kingston' => 'kingston_echo',
     'Open311::Endpoint::Integration::UK::Lincolnshire' => 'lincolnshire_confirm',
     'Open311::Endpoint::Integration::UK::NorthumberlandAlloy' => 'northumberland_alloy',
-    'Open311::Endpoint::Integration::UK::Rutland' => 'rutland',
     'Open311::Endpoint::Integration::UK::Shropshire' => 'shropshire_confirm',
     'Open311::Endpoint::Integration::UK::Southwark' => 'southwark_confirm',
     'Open311::Endpoint::Integration::UK::Surrey' => 'surrey_boomi',
@@ -74,10 +75,11 @@ test_multi(1, 'Open311::Endpoint::Integration::UK::Hackney',
 test_multi(1, 'Open311::Endpoint::Integration::UK::Buckinghamshire',
     'Open311::Endpoint::Integration::UK::Buckinghamshire::Alloy' => 'buckinghamshire_alloy',
     'Open311::Endpoint::Integration::UK::Buckinghamshire::Abavus' => 'buckinghamshire_abavus',
+    'Open311::Endpoint::Integration::UK::Buckinghamshire::Cams' => 'buckinghamshire_cams',
 );
 
 test_multi(1, 'Open311::Endpoint::Integration::UK::CentralBedfordshire',
-    'Open311::Endpoint::Integration::UK::CentralBedfordshire::Symology' => 'centralbedfordshire_symology',
+    'Open311::Endpoint::Integration::UK::CentralBedfordshire::Aurora' => 'centralbedfordshire_aurora',
     'Open311::Endpoint::Integration::UK::CentralBedfordshire::Jadu' => 'centralbedfordshire_jadu',
 );
 
@@ -90,6 +92,12 @@ test_multi(0, 'Open311::Endpoint::Integration::UK::BANES',
     'Open311::Endpoint::Integration::UK::BANES::Confirm' => 'banes_confirm',
     #'Open311::Endpoint::Integration::UK::Bristol::Passthrough' => 'www.banes.gov.uk',
 );
+
+test_multi(1, 'Open311::Endpoint::Integration::UK::Rutland',
+    'Open311::Endpoint::Integration::UK::Rutland::SalesForce' => 'rutland_salesforce',
+    'Open311::Endpoint::Integration::UK::Rutland::Confirm' => 'rutland_confirm',
+);
+
 
 done_testing;
 

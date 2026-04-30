@@ -3,7 +3,7 @@ package Open311::Endpoint::Integration::UK;
 use Moo;
 extends 'Open311::Endpoint';
 with 'Open311::Endpoint::Role::mySociety';
-with 'Open311::Endpoint::Role::CompletionPhotos';
+with 'Open311::Endpoint::Role::Photos';
 
 use Types::Standard ':all';
 use Module::Pluggable
@@ -140,6 +140,22 @@ sub confirm_upload {
                 }
             }
         }
+    }
+}
+
+sub alloy_deferred_work {
+    my $self = shift;
+
+    my @plugins;
+    foreach ($self->plugins) {
+        push @plugins, $_;
+        if ($_->isa('Open311::Endpoint::Integration::Multi')) {
+            push @plugins, $_->plugins;
+        }
+    }
+    foreach (@plugins) {
+        next unless $_->isa('Open311::Endpoint::Integration::AlloyV2');
+        $_->process_deferred_work;
     }
 }
 

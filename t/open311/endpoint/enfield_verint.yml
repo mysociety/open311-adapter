@@ -1,0 +1,43 @@
+"create_endpoint_url": "https://dummy.example.org"
+"fl_endpoint_url": "https://dummy2.example.org"
+"username": 'fms_user'
+"password": 'fms_password'
+"service_whitelist":
+  'bench_or_seat_problem':
+    'name': 'Bench or seat on the pavement'
+    'group': 'Benches'
+    'form_name': 'lle_benches_form'
+    'typekey': 'bench_or_seat_problem'
+    'lob_system': 'EXOR'
+  lbe_scaffolding:
+    name: Scaffolding
+    form_name: lbe_scaffolding
+    typekey: dangerous_scaffolding
+    lob_system: EXOR
+  abandoned_vehicle:
+    name: 'Abandoned vehicle'
+    form_name: 'lle_abandoned_vehicle'
+    typekey: 'abandoned_vehicle'
+    lob_system: 'M3'
+    attributes:
+      - type: notice
+        code: emergency
+        description: 'Ring us'
+      - type: yn
+        code: pca
+        description: 'Park?'
+  fetch_is_empty:
+    name: Fetch empty
+    form_name: fetch_is_empty
+    typekey: fetch_is_empty
+    lob_system: EXOR
+
+customer_address:
+  uprn: "10001234567"
+  street_number: "1"
+  street_name: "Example Street"
+  town: "Enfield"
+  postcode: "EN1 1AA"
+
+status_mapping:
+  'Case Resolved': 'fixed'

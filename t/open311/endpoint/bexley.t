@@ -51,9 +51,16 @@ $uniform->mock(services => sub {
     return ( new_service('DFOUL'), new_service('RUBB') );
 });
 my $whitespace = Test::MockModule->new('Open311::Endpoint::Integration::UK::Bexley::Whitespace');
-$whitespace->mock(services => sub {
-    return ( new_service('WS1'), new_service('WS2') );
-});
+$whitespace->mock(
+    services => sub {
+        return (
+            new_service('WS1'),
+            new_service('WS2'),
+            new_service('bulky_collection'),
+            new_service('sharps_collection'),
+        );
+    }
+);
 
 use_ok('Open311::Endpoint::Integration::UK::Bexley');
 
@@ -165,6 +172,24 @@ subtest "GET Service List" => sub {
     <service_name>WS2</service_name>
     <type>realtime</type>
   </service>
+  <service>
+    <description>bulky_collection</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>false</metadata>
+    <service_code>Whitespace-bulky_collection</service_code>
+    <service_name>bulky_collection</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
+    <description>sharps_collection</description>
+    <group></group>
+    <keywords></keywords>
+    <metadata>false</metadata>
+    <service_code>Whitespace-sharps_collection</service_code>
+    <service_name>sharps_collection</service_name>
+    <type>realtime</type>
+  </service>
 </services>
 CONTENT
 };
@@ -241,8 +266,8 @@ subtest "Whitespace worksheets use Bexley's custom message" => sub {
     my $ws = Test::MockModule->new('Integrations::Whitespace');
     $ws->mock(CreateWorksheet => sub {
         my ($self, $args) = @_;
-        is $args->{quantity}, 1;
-        is $args->{worksheet_message}, "Assisted collection? Yes\n\nLocation of containers: location of containers\n";
+        is $args->{attributes}{quantity}, 1;
+        is $args->{worksheet_message}, "Assisted collection? Yes\n\nLocation of containers: location of containers";
         return 1001;
     });
     my $res = $endpoint->run_test_request(
@@ -269,13 +294,100 @@ subtest "Whitespace worksheets use Bexley's custom message" => sub {
         } ], 'correct json returned';
 };
 
+subtest "Bulky specific Whitespace worksheet message" => sub {
+    my $ws = Test::MockModule->new('Integrations::Whitespace');
+    $ws->mock(CreateWorksheet => sub {
+        my ($self, $args) = @_;
+        is $args->{attributes}{quantity}, 1;
+        is $args->{worksheet_message}, q{Booking reference: 2000234
+
+Collection date: 08/08/2025
+
+Location of items: Front garden or driveway
+
+Parking restrictions: Yes - Single Yellow Lines
+
+No they don't want to meet other singles in their area};
+        return 1001;
+    });
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'Whitespace-bulky_collection',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 10008,
+        'attribute[fixmystreet_id]' => 2000234,
+        'attribute[pension]' => 'No',
+        'attribute[disability]' => 'No',
+        'attribute[collection_date]' => '2025-08-08',
+        'attribute[bulky_location]' => 'Front garden or driveway',
+        'attribute[bulky_parking]' => "Yes - Single Yellow Lines\n\nNo they don't want to meet other singles in their area",
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => "Whitespace-1001"
+        } ], 'correct json returned';
+};
+
+subtest "Sharps-specific Whitespace worksheet message" => sub {
+    my $ws = Test::MockModule->new('Integrations::Whitespace');
+    $ws->mock(CreateWorksheet => sub {
+        my ($self, $args) = @_;
+        is $args->{attributes}{quantity}, 1;
+        is $args->{worksheet_message}, q{Booking reference: 2000234
+
+Collection date: 08/08/2025
+
+Location of items: On the doorstep
+
+Delivery for glucose monitoring device(s): Yes};
+        return 1001;
+    });
+
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'Whitespace-sharps_collection',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[uprn]' => 10008,
+        'attribute[fixmystreet_id]' => 2000234,
+        'attribute[collection_date]' => '2025-08-08',
+        'attribute[round_instance_id]' => 2,
+        'attribute[collect_location]' => 'On the doorstep',
+        'attribute[sharps_collect_small_quantity]' => 1,
+        'attribute[sharps_collect_large_quantity]' => 2,
+        'attribute[sharps_deliver_glucose_monitor]' => 'Yes',
+        'attribute[sharps_deliver_size]' => '5-litre',
+        'attribute[sharps_deliver_quantity]' => 3,
+    );
+
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => "Whitespace-1001"
+        } ], 'correct json returned';
+};
+
 subtest "Whitespace worksheet, no location, with quantity" => sub {
     my $ws = Test::MockModule->new('Integrations::Whitespace');
     $ws->mock(CreateWorksheet => sub {
         my ($self, $args) = @_;
-        is $args->{quantity}, 3;
-        is $args->{location_of_containers}, '';
-        is $args->{worksheet_message}, "Assisted collection? No\n\nLocation of containers: \n";
+        is $args->{attributes}{quantity}, 3;
+        is $args->{attributes}{location_of_containers}, undef;
+        is $args->{worksheet_message}, "Assisted collection? No";
         return 1002;
     });
     my $res = $endpoint->run_test_request(

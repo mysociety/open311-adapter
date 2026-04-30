@@ -62,7 +62,7 @@ has flytipping_service => (
     default => sub {
         Open311::Endpoint::Service::UKCouncil::CentralBedfordshireFlytipping->new(
             service_name => "Fly Tipping",
-            group => "Flytipping, Bins and Graffiti",
+            group => "Flytipping and Bins",
             service_code => "fly-tipping",
             description => "Fly Tipping",
         );
@@ -545,6 +545,12 @@ Reads updates from C<update_storage_file>.
 
 sub get_service_request_updates {
     my ($self, $args) = @_;
+
+    # Do not pull in updates as we mark reports in Jadu category (i.e.
+    # Fly Tipping) as closed automatically; pulling in updates reopens them
+    # with 'investigating' status
+    return () if $self->endpoint_config->{ignore_updates_from_jadu};
+
     my $w3c = DateTime::Format::W3CDTF->new;
     my $start_time = $w3c->parse_datetime($args->{start_date})->epoch;
     my $end_time = $w3c->parse_datetime($args->{end_date})->epoch;

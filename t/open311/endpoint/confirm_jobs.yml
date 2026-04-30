@@ -1,5 +1,5 @@
-endpoint_url: "http://example.org/endpoint"
-web_url: "http://example.org/web/api"
+endpoint_url: "http://confirm/endpoint"
+web_url: "http://confirm/web/api"
 username: "username"
 password: "pw"
 tenant_id: "123"
@@ -35,3 +35,12 @@ job_reverse_status_mapping:
   FIXED: fixed
 job_priority_blacklist:
   EOFY: End Of Financial Year
+defect_attributes:
+  priority:
+    name: "Priority"
+    values:
+      high: "High"
+      medium: "Medium"
+  severity:
+    name: "Severity"
+    numeric: true
