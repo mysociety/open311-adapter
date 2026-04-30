@@ -85,6 +85,18 @@ has handle_jobs => (
     }
 );
 
+=head2 sync_category
+
+Whether when fetching updates we include the Confirm category/group/service code
+in the update to potentially update FixMyStreet. Requires graphql to be in use.
+
+=cut
+
+has sync_category => (
+    is => 'ro',
+    default => 0,
+);
+
 =head2 job_service_whitelist
 
 Controls the mapping of Confirm job service/subject codes to Open311 services
@@ -694,7 +706,7 @@ GRAPHQL
             my $extras = {};
             my $service_code = $status_log->{centralEnquiry}->{serviceCode} . "_" . $status_log->{centralEnquiry}->{subjectCode};
             my $service = $services{$service_code} || $self->_find_wrapping_service($service_code, \%services);
-            if ( $service ) {
+            if ( $service && $self->sync_category) {
                 $extras = {
                     category => $service->service_name,
                     group => @{$service->groups} ? $service->groups->[0] : $service->group,
