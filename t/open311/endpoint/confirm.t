@@ -1414,7 +1414,9 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
-    <extras></extras>
+    <extras>
+      <group>Flooding</group>
+    </extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1452,7 +1454,9 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
-    <extras></extras>
+    <extras>
+      <group>Flooding &amp; Drainage</group>
+    </extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1490,7 +1494,9 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
-    <extras></extras>
+    <extras>
+      <group>Flooding &amp; Drainage</group>
+    </extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1552,7 +1558,9 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
-    <extras></extras>
+    <extras>
+      <group>Flooding &amp; Drainage</group>
+    </extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1600,7 +1608,10 @@ my $expected = <<XML;
     <address></address>
     <address_id></address_id>
     <description>this is a report from confirm</description>
-    <extras></extras>
+    <extras>
+      <group>Road/Footpath Problems</group>
+      <original_service_code>ABC_DEF</original_service_code>
+    </extras>
     <lat>100</lat>
     <long>100</long>
     <media_url></media_url>
@@ -1775,7 +1786,7 @@ subtest 'GET jobs alongside enquiries' => sub {
                 {   address            => undef,
                     address_id         => undef,
                     description        => 'this is a report from confirm',
-                    extras             => undef,
+                    extras             => { group => 'Flooding & Drainage' },
                     lat                => '100',
                     long               => '100',
                     media_url          => undef,
@@ -1987,7 +1998,7 @@ subtest 'GET reports - external system number filtering' => sub {
                 {   address            => undef,
                     address_id         => undef,
                     description        => 'this is a report from confirm',
-                    extras             => undef,
+                    extras             => { group => 'Flooding & Drainage'},
                     lat                => '100',
                     long               => '100',
                     media_url          => undef,
@@ -2002,7 +2013,7 @@ subtest 'GET reports - external system number filtering' => sub {
                 {   address            => undef,
                     address_id         => undef,
                     description        => 'this is a report from another system',
-                    extras             => undef,
+                    extras             => { group => 'Flooding & Drainage'},
                     lat                => '200',
                     long               => '200',
                     media_url          => undef,

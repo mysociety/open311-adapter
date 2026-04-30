@@ -1357,6 +1357,9 @@ sub _parse_enquiry {
 
     my %args = (
         service => $service,
+        extras => {
+            group => @{$service->groups} ? $service->groups->[0] : $service->group,
+        },
         service_request_id => $enquiry->{EnquiryNumber},
         description => $enquiry->{EnquiryDescription},
         address => $enquiry->{EnquiryLocation} || '',
@@ -1366,6 +1369,9 @@ sub _parse_enquiry {
         latlong => [ $enquiry->{EnquiryY}, $enquiry->{EnquiryX} ],
         status => $status,
     );
+    if ($service->service_code !~ /^$code/) { # If it's wrapped
+        $args{extras}{original_service_code} = $code;
+    }
 
     if ( $self->fetch_reports_private || $private_services->{$code} ) {
         $args{non_public} = 1;
