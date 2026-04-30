@@ -768,11 +768,13 @@ sub _get_service_request_updates_for_jobs {
     my $status_logs = $integ->GetJobStatusLogs(
         start_date => $args->{start_date},
         end_date   => $args->{end_date},
+        jobs_status_filter => $self->jobs_status_filter,
     );
 
     for my $log ( @{$status_logs} ) {
         my $status
             = $self->job_reverse_status_mapping->{ $log->{statusCode} };
+        next if $status && $status eq 'IGNORE';
 
         if (!$status) {
             # This shouldn't happen given that we filter by status code
@@ -1412,6 +1414,13 @@ and appends them to the $requests array as Open311 ServiceRequests.
 
 =cut
 
+sub jobs_extra_filter { "" }
+sub jobs_status_filter {
+    my $self = shift;
+    my $status_codes = join '","', sort keys %{ $self->job_reverse_status_mapping // () };
+    return "inList: [ \"$status_codes\" ]";
+}
+
 sub _get_service_requests_for_jobs {
     my ($self, $integ, $services, $args, $requests) = @_;
 
@@ -1420,6 +1429,8 @@ sub _get_service_requests_for_jobs {
     my $jobs = $integ->GetJobs(
         start_date => $args->{start_date},
         end_date   => $args->{end_date},
+        jobs_extra_filter => $self->jobs_extra_filter,
+        jobs_status_filter => $self->jobs_status_filter,
     );
 
     for my $job (@$jobs) {
@@ -1448,8 +1459,8 @@ sub _get_service_requests_for_jobs {
             next;
         }
 
-        my $last_status_log = $job->{statusLogs}[-1];
-        unless ($last_status_log) {
+        my $last_status_log = $job->{currentStatusLog};
+        unless ($last_status_log && %$last_status_log) {
             $self->logger->warn( "no status logs for job type code "
                     . $job->{jobType}{code}
                     . " for job $job_id" );
@@ -1458,6 +1469,7 @@ sub _get_service_requests_for_jobs {
 
         my $status = $self->job_reverse_status_mapping
             ->{ $last_status_log->{statusCode} };
+        next if $status && $status eq 'IGNORE';
         unless ($status) {
             # This shouldn't happen given that we filter by status code
             # in graphql. But just in case, default to open.

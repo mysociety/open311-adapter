@@ -318,12 +318,10 @@ $open311->mock( perform_request_graphql => sub {
                             code => 'ASAP',
                             name => 'ASAP',
                         },
-                        statusLogs => [
-                            {
-                                loggedDate => '2023-12-01T00:00:00',
-                                statusCode => 'OPEN',
-                            },
-                        ],
+                        currentStatusLog => {
+                            loggedDate => '2023-12-01T00:00:00',
+                            statusCode => 'OPEN',
+                        },
                     },
                     {
                         description => 'A completed job',
@@ -340,16 +338,10 @@ $open311->mock( perform_request_graphql => sub {
                             code => 'ASAP',
                             name => 'ASAP',
                         },
-                        statusLogs => [
-                            {
-                                loggedDate => '2023-12-01T00:00:00',
-                                statusCode => 'OPEN',
-                            },
-                            {
-                                loggedDate => '2024-01-01T00:00:00',
-                                statusCode => 'FIXED',
-                            },
-                        ],
+                        currentStatusLog => {
+                            loggedDate => '2024-01-01T00:00:00',
+                            statusCode => 'FIXED',
+                        },
                     },
 
                     # Filtered out
@@ -368,16 +360,10 @@ $open311->mock( perform_request_graphql => sub {
                             code => 'ASAP',
                             name => 'ASAP',
                         },
-                        statusLogs => [
-                            {
-                                loggedDate => '2023-12-01T00:00:00',
-                                statusCode => 'OPEN',
-                            },
-                            {
-                                loggedDate => '2023-12-01T01:00:00',
-                                statusCode => 'SHUT',
-                            },
-                        ],
+                        currentStatusLog => {
+                            loggedDate => '2023-12-01T01:00:00',
+                            statusCode => 'SHUT',
+                        },
                     },
                     {
                         description => 'A job with no status logs',
@@ -394,7 +380,7 @@ $open311->mock( perform_request_graphql => sub {
                             code => 'ASAP',
                             name => 'ASAP',
                         },
-                        statusLogs => [],
+                        currentStatusLog => {},
                     },
                     {
                         description => 'A job with EOFY priority',
@@ -411,7 +397,7 @@ $open311->mock( perform_request_graphql => sub {
                             code => 'EOFY',
                             name => 'End Of Financial Year',
                         },
-                        statusLogs => [],
+                        currentStatusLog => {},
                     },
                 ],
             },
