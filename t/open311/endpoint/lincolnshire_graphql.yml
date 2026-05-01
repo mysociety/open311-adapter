@@ -1,0 +1,17 @@
+endpoint_url: "http://confirm/endpoint"
+username: "username"
+password: "pw"
+tenant_id: "123"
+server_timezone: Europe/London
+default_site_code: 999999
+graphql_key: "graphql-api-key"
+service_whitelist:
+  Flooding & Drainage:
+    ABC_DEF: Flooding
+reverse_status_mapping:
+  INP: in_progress
+  FIX: fixed
+enquiry_update_job_photo_statuses:
+  - FIX
+base_url: http://confirm/
+web_url: http://confirm/web/api

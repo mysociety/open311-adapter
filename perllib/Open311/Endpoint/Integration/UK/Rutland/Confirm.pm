@@ -12,17 +12,17 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
-=head2 filter_photos_graphql
+=head2 photo_filter
 
 Rutland want us to return photos with specific classification
 tag.
 
 =cut
 
-around filter_photos_graphql => sub {
-    my ($orig, $self, @photos) = @_;
-    my @filtered = $self->$orig(@photos);
-    return grep { $_->{ClassificationCode} && $_->{ClassificationCode} =~ /^DT[12]0$/ } @filtered;
+around photo_filter => sub {
+    my ($orig, $self, $doc) = @_;
+    return 0 unless $doc->{ClassificationCode} && $doc->{ClassificationCode} =~ /^DT[12]0$/;
+    return $self->$orig($doc);
 };
 
 around _parse_enquiry_status_log => sub {

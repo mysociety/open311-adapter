@@ -8,6 +8,7 @@ around BUILDARGS => sub {
     my ($orig, $class, %args) = @_;
     $args{jurisdiction_id} = 'confirm_wrapped';
     $args{config_data} = '
+sync_category: 1
 service_whitelist:
    Everything:
      HM_PHS: Small pothole

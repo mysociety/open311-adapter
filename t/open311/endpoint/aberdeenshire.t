@@ -45,7 +45,7 @@ subtest "Only uses the first photo" => sub {
             Date => DateTime->now->subtract(days => 3),
         },
     );
-    my @filtered = $endpoint->filter_photos_graphql(@photos);
+    my @filtered = $endpoint->filter_photos(@photos);
 
     is @filtered, 1;
     is $filtered[0]->{URL}, 3;
