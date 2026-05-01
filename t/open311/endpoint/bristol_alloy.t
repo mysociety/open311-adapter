@@ -466,4 +466,80 @@ subtest "check fetch updates" => sub {
 
 
 
+subtest "check fetch updates includes media_url for fixed status" => sub {
+    $integration->mock('search', sub {
+        my ($self, $body) = @_;
+        if ($body->{properties}{dodiCode} eq 'designs_files') {
+            return [
+                {
+                    itemId => '63e0f01cdce34826965f3039',
+                    createdDate => '2023-02-16T13:50:00.000Z',
+                    attributes => [
+                        { attributeCode => 'attributes_filesOriginalName', value => 'photo.jpg' }, # BCC inspector photo
+                    ],
+                },
+                {
+                    itemId => '631cdce34826965f3039e0f0',
+                    createdDate => '2023-02-16T13:50:00.000Z',
+                    attributes => [
+                        { attributeCode => 'attributes_filesOriginalName', value => '123456.0.full.jpeg' }, # FMS report photo
+                    ],
+                },
+            ];
+        }
+        return [
+            { # update in fixed state but with FMS photo as well as inspector photo
+                itemId => '63ee34826965f30390f01cdc',
+                designCode => 'designs_bWCSCStreetCleansingDefect_5e21a98bca315003e0983035',
+                attributes => [
+                    { attributeCode => 'attributes_defectsStatus', value => ['5c8bdfc88ae862230019dc22'] },
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => ['63e0f01cdce34826965f3039', '631cdce34826965f3039e0f0'] },
+                ],
+            },
+            { # update in action scheduled state with inspector photo
+                itemId => '63ee34826965f30390f01cda',
+                designCode => 'designs_bWCSCStreetCleansingDefect_5e21a98bca315003e0983035',
+                attributes => [
+                    { attributeCode => 'attributes_defectsStatus', value => ['5c8bdfb58ae862230019dc1f'] },
+                    { attributeCode => 'attributes_filesAttachableAttachments', value => ['63e0f01cdce34826965f3039'] },
+                ],
+            },
+        ];
+    });
+
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?jurisdiction_id=dummy&start_date=2023-02-16T07:43:46Z&end_date=2023-02-16T19:43:46Z',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+    my $updates = decode_json($res->content);
+
+    is_deeply $updates, [
+        {
+            description => '',
+            extras => {
+                latest_data_only => 1
+            },
+            media_url => 'http://localhost/photos?jurisdiction_id=bristol_alloy&item=63e0f01cdce34826965f3039', # FMS photo is not included
+            service_request_id => '63ee34826965f30390f01cdc',
+            status => 'fixed',
+            update_id => '63ee34826965f30390f01cdc_20230216135008792',
+            updated_datetime => '2023-02-16T13:50:08Z',
+        },
+        {
+            description => '',
+            extras => {
+                latest_data_only => 1
+            },
+            media_url => '', # no photos for action scheduled update
+            service_request_id => '63ee34826965f30390f01cda',
+            status => 'action_scheduled',
+            update_id => '63ee34826965f30390f01cda_20230216135008792',
+            updated_datetime => '2023-02-16T13:50:08Z',
+        }
+    ];
+
+    $integration->unmock('search');
+};
+
 done_testing;
