@@ -54,6 +54,8 @@ inspection_attribute_mapping:
   triage_priority: attributes_triagePriority
   extra_attributes:
     priority: root.attributes_serviceEnquiryHWYPriority_652e86d3737fc1d2c84c720b.attributes_itemsTitle
+    responsibility:
+      66e81123d77d63bb1e210d26: 'Scottish Water'
 
 # Mapping from incoming Open311 update parameters to inspection attributes
 update_to_inspection_attribute_mapping:

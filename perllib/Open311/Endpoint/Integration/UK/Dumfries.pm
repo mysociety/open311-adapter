@@ -272,6 +272,10 @@ sub _get_inspection_updates_design {
                     if ($completion_time) {
                         $completion_time = $completion_time->[0] if ref $completion_time eq 'ARRAY';
                         $update->{extras}{latest_inspection_time} = $completion_time;
+                        if ($inspection_attrs->{attributes_hWY3rdPartyResponsibility3rdPartyResponsibility_66fd22ffb71c1e373fa7e487}) {
+                            $update->{extras}{responsibility} =
+                              $mapping->{extra_attributes}{responsibility}{$inspection_attrs->{attributes_hWY3rdPartyResponsibility3rdPartyResponsibility_66fd22ffb71c1e373fa7e487}};
+                        };
                     } else {
                         $update->{extras}{latest_inspection_time} = 'NOT COMPLETE';
                     }
