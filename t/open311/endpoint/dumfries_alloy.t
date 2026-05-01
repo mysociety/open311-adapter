@@ -30,6 +30,7 @@ use JSON::MaybeXS;
 use Path::Tiny;
 use YAML::XS qw(LoadFile);
 use Data::Dumper;
+use DateTime;
 
 BEGIN { $ENV{TEST_MODE} = 1; }
 
@@ -432,6 +433,16 @@ subtest 'priority pulled through' => sub {
       "description" => "",
       "service_request_id" => "63ee34826965f30390f01cda"
     }, 'Inspection update has correct data with priority';
+};
+
+subtest 'extras set on updates' => sub {
+    my $dumfries = Open311::Endpoint::Integration::UK::Dummy->new;
+    my $update = Open311::Endpoint::Service::Request::Update::mySociety->new('service_request_id' => '63ee34826965f30390f01cda', 'external_status_code' => '1212aad:1234ade:987ffa', 'description' => '', 'updated_datetime' =>  DateTime->today(), 'update_id' => 'test_id', 'status' => 'not_councils_responsibility');
+    my $latest_report = { 'attributes' =>  [ { "attributeCode" => "attributes_hWY3rdPartyResponsibility", "value" => [ "66e81123d77d63bb1e210d26" ] } ] };
+
+    $dumfries->_set_extras_on_fetched_updates($latest_report, $update);
+    is $update->extras->{responsibility}, 'Scottish Water', '3rd party added to responsibility';
+    is $update->extras->{latest_inspection_time}, 'NOT COMPLETE', 'latest_inspection_time set';
 };
 
 subtest 'defect updates include priority from extra_attributes' => sub {
