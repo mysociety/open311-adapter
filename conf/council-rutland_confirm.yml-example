@@ -3,9 +3,6 @@
 "logfile": ""
 "min_log_level": ""
 "cutoff_enquiry_date": ""
-"service_whitelist": {}
-"forward_status_mapping": {}
-"reverse_status_mapping": {}
 
 # Confirm settings
 
@@ -15,23 +12,31 @@
 "username": ""
 "password": ""
 "tenant_id": ""
+# Required for handling photos
+"web_url": ""
+"uploads_dir": ""
 
 # Usually Europe/London
 # Required
 "server_timezone": ""
 
-# For further features such as fetching photos with reports
-# need to add graphql and have set directory for storing photos
-# Required for extra features
+# If we're fetching jobs and defects
+# then required, but also
+# adds a speed boost for other
+# fetching of enquiries and photos
 "graphql_pass": ""
-"web_url": ""
-"uploads_dir": ""
 
 # These may be optional depending on
 # Confirm setup but documented in
 # wiki how to fetch them if not
 # supplied
-# Maybe required
 "enquiry_method_code": ""
 "point_of_contact_code": ""
 "customer_type_code": ""
+
+
+# Other required for most
+# integrations
+"service_whitelist": {}
+"forward_status_mapping": {}
+"reverse_status_mapping": {}
