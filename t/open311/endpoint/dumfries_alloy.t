@@ -428,7 +428,15 @@ subtest 'priority pulled through' => sub {
       "update_id" => "63ee34826965f30390f01cda_20251225120000",
       "extras" => {
          "latest_data_only" => 1,
-         "priority" => "Critical Risk"
+         "priority" => "Critical Risk",
+         "detailed_information" => <<HERE,
+Inspector's Description:
+Pothole in large category
+
+Inspection Outcome Notes:
+Fixed after a delay due to flooding of road
+
+HERE
       },
       "description" => "",
       "service_request_id" => "63ee34826965f30390f01cda"
@@ -459,6 +467,15 @@ subtest 'defect updates include priority from extra_attributes' => sub {
     is $defect_update->{status}, 'planned', 'Defect status is planned';
     is $defect_update->{extras}{priority}, '3 - 60 Working Days', 'Defect update includes priority from extra_attributes';
     is $defect_update->{extras}{latest_data_only}, 1, 'latest_data_only flag present';
+    is $defect_update->{extras}{detailed_information},
+"Inspector's Description:
+A large pothole
+
+Inspection Outcome Notes:
+Fixed after a delay due to hot weather
+
+",
+    'detailed_information added';
 };
 
 # See also t/open311/endpoint/alloy_deferred_work.t for async inspection upload tests.

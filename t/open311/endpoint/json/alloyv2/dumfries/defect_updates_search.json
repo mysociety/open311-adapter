@@ -41,6 +41,14 @@
                 {
                     "attributeCode": "attributes_defectsReportedDate",
                     "value": "2025-12-25T10:00:00.000Z"
+                },
+                {
+                    "attributeCode": "attributes_defectsDescription",
+                    "value": "A large pothole"
+                },
+                {
+                    "attributeCode": "attributes_defectsOutcomeNotes",
+                    "value": "Fixed after a delay due to hot weather"
                 }
             ],
             "signature": "sig123"

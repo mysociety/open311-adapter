@@ -832,12 +832,11 @@ sub _get_inspection_updates_design {
             };
 
             $args{extras} = { %{$args{extras}}, %$assigned_to_user } if $assigned_to_user;
-
-            if ( my $extra_details_code = $mapping->{extra_details} ) {
-                $args{extras}{detailed_information}
-                    = $attributes->{$extra_details_code} // '';
-            }
         }
+
+        $self->_add_extra_details(
+            $mapping->{extra_details}, $attributes, $args{extras}
+        ) if $mapping->{extra_details};
 
         $self->_apply_extra_attributes($mapping->{extra_attributes}, $attributes, $args{extras});
 
@@ -846,6 +845,36 @@ sub _get_inspection_updates_design {
     }
 
     return (\@updates, \%items_by_id);
+}
+
+=head2 _add_extra_details
+
+Adds a 'detailed_information' key to the 'extra' hash of an update which
+will be passed to FMS for the value to be added to the
+detailed_information on the report for staff only visiblility
+
+=cut
+
+sub _add_extra_details {
+    my ($self, $extra_details_config, $attributes, $extras) = @_;
+
+    my @fields;
+    if ( ref $extra_details_config eq 'HASH' ) {
+        $extras->{detailed_information} = '';
+
+        for ( sort keys %$extra_details_config ) {
+            $extras->{detailed_information}
+                .= $extra_details_config->{$_}
+                    . ":\n"
+                    . $attributes->{$_}
+                    . "\n\n"
+                if $attributes->{$_};
+        }
+
+    } else {
+        $extras->{detailed_information} = $attributes->{$extra_details_config}
+            // '';
+    }
 }
 
 sub _skip_inspection_update { }
@@ -976,6 +1005,7 @@ sub _get_defect_updates_resource {
             extras => { latest_data_only => 1 },
         );
 
+        $self->_add_extra_details($mapping->{extra_details}, $attributes, $args{extras}) if $mapping->{extra_details};
         $self->_apply_extra_attributes($extra_mapping, $attributes, $args{extras});
 
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
