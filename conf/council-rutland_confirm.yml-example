@@ -1,18 +1,42 @@
+# General for integrations
+
 "logfile": ""
 "min_log_level": ""
+"cutoff_enquiry_date": ""
 
+# Confirm settings
+
+# For sending/fetching reports/updates
+# Required
 "endpoint_url": ""
 "username": ""
 "password": ""
 "tenant_id": ""
+# Required for handling photos
+"web_url": ""
+"uploads_dir": ""
 
-"cutoff_enquiry_date": ""
-"enquiry_method_code": ""
-"point_of_contact_code": ""
+# Usually Europe/London
+# Required
 "server_timezone": ""
 
+# If we're fetching jobs and defects
+# then required, but also
+# adds a speed boost for other
+# fetching of enquiries and photos
+"graphql_pass": ""
+
+# These may be optional depending on
+# Confirm setup but documented in
+# wiki how to fetch them if not
+# supplied
+"enquiry_method_code": ""
+"point_of_contact_code": ""
+"customer_type_code": ""
+
+
+# Other required for most
+# integrations
 "service_whitelist": {}
-
 "forward_status_mapping": {}
-
 "reverse_status_mapping": {}
