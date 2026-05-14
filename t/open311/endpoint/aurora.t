@@ -235,7 +235,7 @@ subtest "Filter get updates by date" => sub {
         GET => '/servicerequestupdates.json?start_date=2025-12-02T08:41:00Z',
     );
     ok $res->is_success, 'valid request' or diag $res->content;
-    is @{decode_json($res->content)}, 3, 'Filtered to updates after start date';
+    is @{decode_json($res->content)}, 4, 'Filtered to updates after start date';
 
     $res = $endpoint->run_test_request(
         GET => '/servicerequestupdates.json?end_date=2025-12-02T09:45:00Z',
@@ -304,6 +304,15 @@ subtest "Get updates mapping" => sub {
     <update_id>FMS-04_11</update_id>
     <updated_datetime>2025-12-02T09:40:00Z</updated_datetime>
   </request_update>
+  <request_update>
+    <description></description>
+    <external_status_code>CS_MAINTENANCE_COMPLETED</external_status_code>
+    <media_url></media_url>
+    <service_request_id>FMS-05</service_request_id>
+    <status>fixed</status>
+    <update_id>FMS-05_10</update_id>
+    <updated_datetime>2025-12-02T09:39:54Z</updated_datetime>
+  </request_update>
 </service_request_updates>
 ';
 };
@@ -324,6 +333,10 @@ sub _edit_update_file {
         $file->{Message}->{CaseNumber} = 'FMS-04';
         $file->{Message}->{ClearanceReasonCode} = 'RANDOM';
         splice(@{$file->{Message}->{CaseEventHistory}}, -3);
+    } elsif ($url =~ /CS_MAINTENANCE_COMPLETED/) {
+        $file->{Message}->{CaseNumber} = 'FMS-05';
+        $file->{Message}->{ClearanceReasonCode} = '';
+        splice(@{$file->{Message}->{CaseEventHistory}}, -4);
     };
 
     return encode_json($file);
