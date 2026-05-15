@@ -115,6 +115,9 @@ $integration->mock('api_call', sub {
         } elsif ( $call =~ m{design/designs_seReportedIssueList} ) {
             # Getting service list design
             $content = '{ "design": { "code": "designs_seReportedIssueList" } }';
+        } elsif ( $call =~ m{design/Defect} ) {
+            # Getting parent design
+            $content = '{ "design": { "attributes": [{ "name": "Defects", "code": "design_parent"}] } }';
         } elsif ( $call =~ 'item-log/item/(.*)$' ) {
             $content = path(__FILE__)->sibling("json/alloyv2/dumfries/item_log_$1.json")->slurp;
         } elsif ( $call =~ m{item/defect_item_1/parents} ) {
@@ -172,11 +175,12 @@ subtest 'check services use Alloy IDs as service codes' => sub {
         'Same subcategory name in different groups gets different service codes';
 };
 
-subtest 'send new report to Alloy with contact and service_code' => sub {
+subtest 'send new report to Alloy with contact and service_code and asset_resource_id' => sub {
     set_fixed_time('2025-12-03T12:00:00Z');
 
     @sent = ();
 
+    $item_data{112112112112} = { designCode => 'Defect', attributes => [ { attributeCode => 'attributes_itemsTitle', value => 'High Road' } ]};
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
         jurisdiction_id => 'dumfries_alloy',
@@ -198,6 +202,7 @@ subtest 'send new report to Alloy with contact and service_code' => sub {
         'attribute[fixmystreet_id]' => 123,
         'attribute[easting]' => 300000,
         'attribute[northing]' => 600000,
+        'attribute[asset_resource_id]' => 112112112112
     );
 
     ok $res->is_success, 'valid request'
@@ -242,6 +247,14 @@ subtest 'send new report to Alloy with contact and service_code' => sub {
     ok $customer_desc_attr, 'customer_description attribute present';
     is_deeply $customer_desc_attr->{value}, "Category: Roads/Pothole\nSummary: Pothole on High Street\nDescription: There is a large pothole",
         'customer_description attribute contains formatted category/summary/description';
+
+    # Find the street or asset name attribute
+    my ($road_title_attr) = grep {
+        $_->{attributeCode} eq 'attributes_serviceEnquiryStreetOrAssetName'
+    } @{$report_sent->{attributes}};
+
+    ok $road_title_attr, 'road title attribute present';
+    is_deeply $road_title_attr->{value}, "High Road";
 
     is_deeply decode_json($res->content),
         [ { service_request_id => 'report_456' } ],
