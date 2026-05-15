@@ -84,6 +84,11 @@ has config => (
     default => sub { $_[0]->alloy->config }
 );
 
+has api_cache => (
+    is => 'lazy',
+    default => sub { {} }
+);
+
 sub get_integration {
     return $_[0]->alloy;
 }
@@ -456,10 +461,12 @@ sub set_parent_attribute {
 
     my $parent_attribute_id;
     if ( $resource_id ) {
-        ## get the attribute id for the parents so alloy checks in the right place for the asset id
-        my $resource_type = $self->alloy->api_call(
+        # Store the asset layer item for later use
+        $self->api_cache->{$resource_id} = $self->alloy->api_call(
             call => "item/$resource_id"
-        )->{item}->{designCode};
+        );
+        ## get the attribute id for the parents so alloy checks in the right place for the asset id
+        my $resource_type = $self->api_cache->{$resource_id}->{item}->{designCode};
         $parent_attribute_id = $self->alloy->get_parent_attributes($resource_type);
 
         unless ( $parent_attribute_id ) {

@@ -28,6 +28,22 @@ sub process_attributes {
     my ($self, $args) = @_;
 
     my $attributes = $self->SUPER::process_attributes($args);
+    #If there is an asset_resource_id will have cached the call
+    # for the item in set_parent_attribute
+    my $asset_attributes = $args->{attributes}->{asset_resource_id}
+      ? $self->api_cache->{ $args->{attributes}->{asset_resource_id} }
+      : '';
+    if (!($asset_attributes && $asset_attributes->{item})) {
+        $args->{attributes}->{asset_resource_id}
+          ? $self->logger->warn("Failed to fetch highway item " . $args->{attributes}->{asset_resource_id})
+          : $self->logger->warn("No asset_resource_id in report");
+    } else {
+        $asset_attributes = $self->alloy->attributes_to_hash($asset_attributes->{item});
+        push @$attributes, {
+            attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{customer_enquiry_location_field},
+            value => $asset_attributes->{ 'attributes_itemsTitle' },
+        };
+    }
 
     my $contact_resource_id = $self->_find_or_create_contact($args);
     push @$attributes, {
