@@ -234,6 +234,11 @@ subtest 'GET service' => sub {
                 description          => 'Denotes a renewal that is being made as a new subscription due to new (unverified) user',
                 order                => 16,
             },
+            {   %defaults,
+                code                 => 'verified_by',
+                description          => 'Verification method used',
+                order                => 17,
+            },
         ],
     }, 'correct json returned';
 };

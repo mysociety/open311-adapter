@@ -130,6 +130,13 @@ sub _build_attributes {
             required => 0,
             automated => 'hidden_field',
         ),
+        Open311::Endpoint::Service::Attribute->new(
+            code => 'verified_by',
+            description => 'Verification method used',
+            datatype => 'string',
+            required => 0,
+            automated => 'hidden_field',
+        ),
 
     );
 
