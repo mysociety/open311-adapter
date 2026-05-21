@@ -282,21 +282,44 @@ sub _get_inspection_updates_design {
             if ($mapping && $mapping->{extra_attributes} && $mapping->{extra_attributes}{latest_inspection_time}) {
                 my $latest_inspection = $self->_find_latest_inspection($report);
                 if ($latest_inspection) {
-                    my $inspection_attrs = $self->alloy->attributes_to_hash($latest_inspection);
-                    my $completion_time = $inspection_attrs->{attributes_tasksCompletionTime};
-
-                    if ($completion_time) {
-                        $completion_time = $completion_time->[0] if ref $completion_time eq 'ARRAY';
-                        $update->{extras}{latest_inspection_time} = $completion_time;
-                    } else {
-                        $update->{extras}{latest_inspection_time} = 'NOT COMPLETE';
-                    }
+                    $self->_set_extras_on_fetched_updates($latest_inspection, $update);
                 }
             }
         }
     }
 
     return (\@updates, $items_by_id);
+}
+
+=head2 _set_extras_on_fetched_updates
+
+Use the latest inspection to add 'extras' to an update so that we can
+carry forward extra information to be shown on FMS
+
+=cut
+
+
+sub _set_extras_on_fetched_updates {
+    my ($self, $latest_inspection, $update) = @_;
+
+    my $inspection_attrs = $self->alloy->attributes_to_hash($latest_inspection);
+    my $completion_time = $inspection_attrs->{attributes_tasksCompletionTime};
+
+    if ($completion_time) {
+        $completion_time = $completion_time->[0] if ref $completion_time eq 'ARRAY';
+        $update->{extras}{latest_inspection_time} = $completion_time;
+    } else {
+        $update->{extras}{latest_inspection_time} = 'NOT COMPLETE';
+    }
+
+    my $mapping = $self->config->{other_responsibility_mapping};
+    if (
+        $mapping && (my $responsibility = $inspection_attrs->{ $mapping->{'highway'} } || $inspection_attrs->{ $mapping->{'streetlight'} })
+       )
+    {
+        $responsibility = $responsibility->[0] if ref $responsibility eq 'ARRAY';
+        $update->{extras}{responsibility} = $mapping->{'fields'}{$responsibility} || '';
+    };
 }
 
 =head2 _append_attachments_to_defect
