@@ -353,10 +353,14 @@ sub add_note_to_case {
 
 Queries for filenames in the 'return path updates' Azure storage container.
 
+An optional C<$prefix> restricts the listing to blobs whose names begin with it,
+which can be used to fetch within a specific date range as filenames lead with
+a timestamp.
+
 =cut
 
 sub fetch_update_filenames {
-    my ($self) = @_;
+    my ($self, $prefix) = @_;
 
     my @blobs;
     my $marker = '';
@@ -364,6 +368,7 @@ sub fetch_update_filenames {
         my $url = $self->updates_azure_container_base_url . '?'
             . $self->updates_azure_container_url_arguments
             . '&comp=list&restype=container';
+        $url .= '&prefix=' . uri_escape($prefix) if defined $prefix && length $prefix;
         $url .= '&marker=' . uri_escape($marker) if length $marker;
 
         my $request = GET($url);

@@ -383,4 +383,30 @@ XML
     ], 'Blobs from every page returned';
 };
 
+subtest "Scope update files by date prefix" => sub {
+    my @requested_uris;
+    my $mock_ua = Test::MockModule->new('LWP::UserAgent');
+    $mock_ua->mock('request', sub {
+        my $uri = $_[1]->uri;
+        if ($uri =~ /restype/) {
+            push @requested_uris, $uri;
+            return HTTP::Response->new(200, 'OK', [], $updates_list);
+        }
+        return HTTP::Response->new(200, 'OK', [], $update_file);
+    });
+
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?start_date=2025-12-02T09:39:00Z&end_date=2025-12-02T09:41:00Z',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+    like $requested_uris[0], qr/[?&]prefix=20251202_09(?:&|$)/, 'Date prefix applied';
+
+    @requested_uris = ();
+    $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?end_date=2025-12-02T09:45:00Z',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+    unlike $requested_uris[0], qr/[?&]prefix=/, 'No prefix sent without a start date';
+};
+
 done_testing;

@@ -212,7 +212,7 @@ sub get_service_request_updates {
         $end = DateTime::Format::W3CDTF->parse_datetime($args->{end_date});
     };
 
-    my @update_files = $self->aurora->fetch_update_filenames;
+    my @update_files = $self->aurora->fetch_update_filenames(_date_prefix($start, $end));
     my @updates = ();
     for (@update_files) {
         next if _skip_update_file($start, $end, $_->{Name});
@@ -285,6 +285,27 @@ sub _skip_update_file {
 
     return 0;
 };
+
+sub _date_prefix {
+    my ($start, $end) = @_;
+
+    return '' unless $start;
+    $end ||= DateTime->now(time_zone => 'Europe/London');
+
+    # Filenames use UK local time prefixes.
+    my $start_str = $start->clone->set_time_zone('Europe/London')->strftime('%Y%m%d_%H%M%S');
+    my $end_str = $end->clone->set_time_zone('Europe/London')->strftime('%Y%m%d_%H%M%S');
+
+    return _common_prefix($start_str, $end_str);
+};
+
+sub _common_prefix {
+    my ($a, $b) = @_;
+    my $i = 0;
+    my $max = length($a) < length($b) ? length($a) : length($b);
+    $i++ while $i < $max && substr($a, $i, 1) eq substr($b, $i, 1);
+    return substr($a, 0, $i);
+}
 
 
 # NOTE: Aurora silently fails if we upload an attachment to a case without a name.
