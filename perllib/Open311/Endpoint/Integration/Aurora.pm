@@ -268,6 +268,7 @@ sub _skip_update_file {
     return unless $start || $end;
 
     my ($year, $month, $day, $hour, $min, $sec) = $file_name =~ /^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})/;
+    # Aurora names files using UK local time.
     my $file_date = DateTime->new(
         year => $year,
         month => $month,
@@ -275,6 +276,7 @@ sub _skip_update_file {
         hour => $hour,
         minute => $min,
         second => $sec,
+        time_zone => 'Europe/London',
     );
 
     if ($start && $file_date < $start) {
