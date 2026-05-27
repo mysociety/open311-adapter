@@ -342,4 +342,45 @@ sub _edit_update_file {
     return encode_json($file);
 }
 
+subtest "Handle update filenames query pagination" => sub {
+    my $page1 = <<'XML';
+<?xml version="1.0" encoding="utf-8"?>
+<EnumerationResults ServiceEndpoint="https://my_api.example.com/" ContainerName="azure-container">
+    <Blobs>
+        <Blob><Name>20251202_08402699_9664_CS_RE_QUEUE.json</Name></Blob>
+        <Blob><Name>20251202_09402699_9664_CS_CLEAR_CASE.json</Name></Blob>
+    </Blobs>
+    <NextMarker>page-2-token</NextMarker>
+</EnumerationResults>
+XML
+    my $page2 = <<'XML';
+<?xml version="1.0" encoding="utf-8"?>
+<EnumerationResults ServiceEndpoint="https://my_api.example.com/" ContainerName="azure-container">
+    <Blobs>
+        <Blob><Name>20251203_09402699_9664_CS_INSPECTION_PROMPTED.json</Name></Blob>
+    </Blobs>
+    <NextMarker />
+</EnumerationResults>
+XML
+
+    my @requested_uris;
+    my $mock_ua = Test::MockModule->new('LWP::UserAgent');
+    $mock_ua->mock('request', sub {
+        my $uri =  $_[1]->uri;
+        push @requested_uris, $uri;
+        my $body = $uri =~ /marker=page-2-token/ ? $page2 : $page1;
+        return HTTP::Response->new(200, 'OK', [], $body);
+    });
+
+    my @files = $endpoint->aurora->fetch_update_filenames;
+
+    is scalar(@requested_uris), 2, 'Followed NextMarker onto a second page';
+    like $requested_uris[1], qr/[?&]marker=page-2-token(?:&|$)/, 'Second request passed the marker';
+    is_deeply [ map { $_->{Name} } @files ], [
+        '20251202_08402699_9664_CS_RE_QUEUE.json',
+        '20251202_09402699_9664_CS_CLEAR_CASE.json',
+        '20251203_09402699_9664_CS_INSPECTION_PROMPTED.json',
+    ], 'Blobs from every page returned';
+};
+
 done_testing;
