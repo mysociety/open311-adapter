@@ -602,7 +602,9 @@ sub post_service_request_update {
         $args->{description} .= "\n\n[ This update contains a photo, see: " . $args->{media_url}->[0] . " ]";
     }
 
-    if (my $status_code = $self->forward_status_mapping->{$args->{status}}) {
+    if (my $status_code = $args->{override_status_code}) {
+        $args->{status_code} = $status_code;
+    } elsif ($status_code = $self->forward_status_mapping->{$args->{status}}) {
         $args->{status_code} = $status_code;
     }
 
