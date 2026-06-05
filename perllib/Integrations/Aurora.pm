@@ -353,22 +353,47 @@ sub add_note_to_case {
 
 Queries for filenames in the 'return path updates' Azure storage container.
 
+An optional C<$prefix> restricts the listing to blobs whose names begin with it,
+which can be used to fetch within a specific date range as filenames lead with
+a timestamp.
+
 =cut
 
 sub fetch_update_filenames {
-    my ($self) = @_;
+    my ($self, $prefix) = @_;
 
-    my $request = GET($self->updates_azure_container_base_url . '?' . $self->updates_azure_container_url_arguments . '&comp=list&restype=container');
-    my $response = $self->ua->request($request);
-    if (!$response->is_success) {
-        $self->_fail("Failed to fetch update filenames", $request, $response);
+    my @blobs;
+    my $marker = '';
+    while (1) {
+        my $url = $self->updates_azure_container_base_url . '?'
+            . $self->updates_azure_container_url_arguments
+            . '&comp=list&restype=container';
+        $url .= '&prefix=' . uri_escape($prefix) if defined $prefix && length $prefix;
+        $url .= '&marker=' . uri_escape($marker) if length $marker;
+
+        my $request = GET($url);
+        my $response = $self->ua->request($request);
+        if (!$response->is_success) {
+            $self->_fail("Failed to fetch update filenames", $request, $response);
+        }
+
+        my $data = try {
+            XML::Simple->new->XMLin($response->content, ForceArray => ['Blob']);
+        } catch {
+            $self->_fail("Failed to parse fetched update filenames as XML", $request, $response);
+        };
+
+        push @blobs, @{ $data->{Blobs}->{Blob} }
+            if ref $data->{Blobs} eq 'HASH' && $data->{Blobs}->{Blob};
+
+        # An empty <NextMarker/> (parsed as a hashref) means the listing is done,
+        # otherwise it's the token to use for the next page.
+        my $next_marker = $data->{NextMarker};
+        last if !defined $next_marker || ref $next_marker || $next_marker eq '';
+        $marker = $next_marker;
     }
-    try {
-        my $data = XML::Simple->new->XMLin($response->content)->{Blobs}->{Blob};
-        return @$data;
-    } catch {
-        $self->_fail("Failed to parsed fetched update filenames as XML", $request, $response);
-    };
+
+    return @blobs;
 };
 
 =head2 fetch_update_file
