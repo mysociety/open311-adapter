@@ -47,6 +47,7 @@ sub parse_w3c_datetime {
 
     my $w3c = DateTime::Format::W3CDTF->new;
     my $dt = $w3c->parse_datetime($dt_string);
+    $dt->set_time_zone('Europe/London');
 
     return $dt;
 }
