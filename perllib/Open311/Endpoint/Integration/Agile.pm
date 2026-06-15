@@ -248,13 +248,12 @@ sub _garden_subscription_amend {
 
     # We have to call a different Agile API method depending on whether
     # containers are being added or taken away.
-    my $current_bins = int( $args->{attributes}{current_containers} );
     my $adjust_bins = int( $args->{attributes}{new_containers} );
     if ( $adjust_bins > 0 ) {
         my $res = $integration->AddBin( {
             CustomerExternalReference => $args->{attributes}{customer_external_ref},
             ServiceContractUPRN       => $args->{attributes}{uprn},
-            AlreadyHasBinQuantity     => $current_bins,
+            AlreadyHasBinQuantity     => 0,
             QuantityToAdd             => $adjust_bins,
         } );
 
@@ -288,7 +287,7 @@ sub _garden_subscription_amend {
     } else {
         die 'Amendment for UPRN '
             . $args->{attributes}{uprn}
-            . " does not seem to change number of bins?! Current: $current_bins Adjust: $adjust_bins";
+            . " does not seem to change number of bins?! Adjust: $adjust_bins";
     }
 }
 1;
