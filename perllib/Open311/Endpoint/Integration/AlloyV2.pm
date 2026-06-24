@@ -832,9 +832,11 @@ sub _get_inspection_updates_design {
             };
 
             $args{extras} = { %{$args{extras}}, %$assigned_to_user } if $assigned_to_user;
-
-            $self->_add_extra_details($mapping->{extra_details}, $attributes, $args{extras}) if $mapping->{extra_details};
         }
+
+        $self->_add_extra_details(
+            $mapping->{extra_details}, $attributes, $args{extras}
+        ) if $mapping->{extra_details};
 
         $self->_apply_extra_attributes($mapping->{extra_attributes}, $attributes, $args{extras});
 
@@ -854,24 +856,24 @@ detailed_information on the report for staff only visiblility
 =cut
 
 sub _add_extra_details {
-    my ($self, $extra_details_code, $attributes, $extras) = @_;
+    my ($self, $extra_details_config, $attributes, $extras) = @_;
 
     my @fields;
-    if (ref $extra_details_code eq 'ARRAY') {
-        @fields = @{$extra_details_code};
-    } else {
-        push @fields, $extra_details_code;
-    }
+    if ( ref $extra_details_config eq 'HASH' ) {
+        $extras->{detailed_information} = '';
 
-    $extras->{detailed_information} = '';
-    my $loop;
-    for my $field (@fields) {
-        if ($loop && $attributes->{$field}) {
-            $extras->{detailed_information} .= "\n" . $attributes->{$field};
-        } elsif ($attributes->{$field}) {
-            $extras->{detailed_information} = $attributes->{$field};
-        };
-        $loop++;
+        for ( sort keys %$extra_details_config ) {
+            $extras->{detailed_information}
+                .= $extra_details_config->{$_}
+                    . ":\n"
+                    . $attributes->{$_}
+                    . "\n\n"
+                if $attributes->{$_};
+        }
+
+    } else {
+        $extras->{detailed_information} = $attributes->{$extra_details_config}
+            // '';
     }
 }
 
