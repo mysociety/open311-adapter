@@ -43,12 +43,12 @@
                     "value": "2025-12-25T10:00:00.000Z"
                 },
                 {
-                    "attributeCode": "attributes_defectsInspectorsNotes",
-                    "value": "Inspector notes pothole in large category"
+                    "attributeCode": "attributes_defectsDescription",
+                    "value": "A large pothole"
                 },
                 {
                     "attributeCode": "attributes_defectsOutcomeNotes",
-                    "value": "Outcome notes fixed after a delay due to flooding of road"
+                    "value": "Fixed after a delay due to hot weather"
                 }
             ],
             "signature": "sig123"
