@@ -456,7 +456,15 @@ subtest 'defect updates include priority from extra_attributes' => sub {
     is $defect_update->{status}, 'planned', 'Defect status is planned';
     is $defect_update->{extras}{priority}, '3 - 60 Working Days', 'Defect update includes priority from extra_attributes';
     is $defect_update->{extras}{latest_data_only}, 1, 'latest_data_only flag present';
-    is $defect_update->{extras}{detailed_information}, undef;
+    is $defect_update->{extras}{detailed_information},
+"Inspector's Description:
+A large pothole
+
+Inspection Outcome Notes:
+Fixed after a delay due to hot weather
+
+",
+    'detailed_information added';
 };
 
 # See also t/open311/endpoint/alloy_deferred_work.t for async inspection upload tests.
