@@ -170,6 +170,9 @@ defect_resource_name:
 defect_attribute_mapping:
   requested_datetime: attributes_defectsReportedDate
   status: attributes_defectsStatus
+  extra_details:
+    attributes_defectsDescription: Inspector's Description
+    attributes_defectsOutcomeNotes: Inspection Outcome Notes
   extra_attributes:
     priority:
       - root.attributes_defectTriagePriority.attributes_itemsTitle
