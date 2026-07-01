@@ -832,11 +832,11 @@ sub _get_inspection_updates_design {
             };
 
             $args{extras} = { %{$args{extras}}, %$assigned_to_user } if $assigned_to_user;
+        }
 
-            if ( my $extra_details_code = $mapping->{extra_details} ) {
-                $args{extras}{detailed_information}
-                    = $attributes->{$extra_details_code} // '';
-            }
+        if ( my $extra_details_code = $mapping->{extra_details} ) {
+            $args{extras}{detailed_information}
+                = $attributes->{$extra_details_code} // '';
         }
 
         $self->_apply_extra_attributes($mapping->{extra_attributes}, $attributes, $args{extras});
