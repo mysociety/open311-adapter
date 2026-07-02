@@ -183,8 +183,9 @@ sub services {
     my @services = ();
     for my $group (sort keys %{ $self->service_list }) {
         my $servicelist = $self->service_list->{$group};
-        for my $subcategory (sort keys %{ $servicelist }) {
-            my $code = $subcategory;
+        for my $code (sort keys %$servicelist) {
+            my $abavus_code = $code;
+            $abavus_code =~ s/_[0-9]$//;
             my $name = $servicelist->{$code};
             my %service = (
                 service_name => $name,
@@ -194,7 +195,7 @@ sub services {
             );
             my $o311_service = $self->service_class->new(%service);
 
-            my $data = $self->service_extra_data->{$code};
+            my $data = $self->service_extra_data->{$abavus_code};
             foreach (@$data) {
                 my $attr = { %$_ };
                 if ($_->{values}) {
@@ -224,6 +225,8 @@ sub post_service_request {
 
     my @address = split /\r?\n/, ($args->{attributes}{closest_address} || '');
 
+    my $code = $args->{service_code};
+    $code =~ s/_[0-9]$//;
     my $serviceRequest = {
         'serviceRequest' => {
             'personNumber' => $self->anonymous_user,
@@ -246,7 +249,7 @@ sub post_service_request {
                 postcode => $address[4] || '',
             },
             'form' => {
-                'code' => $args->{service_code}
+                'code' => $code,
             },
         }
     };
@@ -299,7 +302,9 @@ sub add_attachment {
 sub add_question_responses {
     my ($self, $report_id, $args) = @_;
 
-    my $fields = $self->service_code_fields->{$args->{service_code}};
+    my $code = $args->{service_code};
+    $code =~ s/_[0-9]$//;
+    my $fields = $self->service_code_fields->{$code};
     for my $field (keys %$fields) {
         next unless $args->{$field};
         my $response = $self->abavus->api_call(
@@ -310,7 +315,7 @@ sub add_question_responses {
         );
     };
 
-    my $extra_fields = $self->service_extra_data->{$args->{service_code}};
+    my $extra_fields = $self->service_extra_data->{$code};
 
     for (@$extra_fields) {
         if ($args->{attributes}->{$_->{code}}) {
