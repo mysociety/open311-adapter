@@ -212,6 +212,7 @@ subtest "create basic problem" => sub {
         service_code => 'Damaged_/_Missing_/_Facing_Wrong_Way',
         'attribute[category]' => 'Damaged / Missing / Facing Wrong Way',
         'attribute[group]' => 'Street Lighting',
+        'attribute[Q1]' => 'Yes',
     );
     restore_time();
 
@@ -227,6 +228,7 @@ subtest "create basic problem" => sub {
             { attributeCode => 'attributes_customerRequestFMSSummary_63862bd505cb250393c204d7', value => "title" },
             { attributeCode => 'attributes_customerRequestFixMyStreetID_63862c38bafbd20397883f72', value => 123 },
             { attributeCode => 'attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb', value => undef },
+            { attributeCode => 'attributes_customerRequestQuestion1_69931b1e554d8210415970e4', value => [ 'Yes' ]},
             { attributeCode => 'attributes_customerRequestReporter_63f4c227dabda80390d2f0ab', value => [ '6420576dac3acd036a974043' ]},
             { attributeCode => 'attributes_customerRequestRequestCategory_63862851fb3d97038c4e1cfc', value => [ '61fb016c4c5c56015448093f' ]},
             { attributeCode => 'attributes_customerRequestRequestGroup_638627f005cb250393c1705a', value => [ '61fafee3e3b879015205f7cb' ]},
@@ -378,6 +380,7 @@ subtest "create problem on groupless category" => sub {
             { attributeCode => 'attributes_customerRequestFMSSummary_63862bd505cb250393c204d7', value => "title" },
             { attributeCode => 'attributes_customerRequestFixMyStreetID_63862c38bafbd20397883f72', value => 123 },
             { attributeCode => 'attributes_customerRequestMainFMSStatus_63fcb297c9ec9c036ec35dfb', value => undef },
+            { attributeCode => 'attributes_customerRequestQuestion1_69931b1e554d8210415970e4', value => [ undef ]},
             { attributeCode => 'attributes_customerRequestReporter_63f4c227dabda80390d2f0ab', value => [ '6420576dac3acd036a974043' ]},
             { attributeCode => 'attributes_customerRequestRequestCategory_63862851fb3d97038c4e1cfc', value => [ '61fb016c4c5c56015448093f' ]},
             { attributeCode => 'attributes_customerRequestRequestGroup_638627f005cb250393c1705a', value => [ '61fafee3e3b879015205f7cb' ]},

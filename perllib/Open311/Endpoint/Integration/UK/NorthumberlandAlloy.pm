@@ -47,6 +47,7 @@ In addition to the default new request processing, this function:
 * Gets category and group codes from the provided data.
 * Looks up the category via C<category_list_code> and C<category_title_attribute>, adding this item under the 'category' attribute specified in C<request_to_resource_attribute_manual_mapping>.
 * Looks up the category via C<group_list_code> and C<group_title_attribute>, adding this item the 'group' attribute specified in C<request_to_resource_attribute_manual_mapping>.
+* Looks up attributes for extra questions for specific categories in C<request_to_resource_attribute_manual_mapping> and maps answers to the Alloy attributes
 
 =cut
 
@@ -59,6 +60,16 @@ sub process_attributes {
     push @$attributes, {
         attributeCode => $self->config->{contact}->{attribute_id},
         value => [ $contact_resource_id ],
+    };
+
+    if (my $mapping = $self->config->{request_to_resource_attribute_manual_mapping}{ $args->{service_code_alloy} }) {
+        for my $key ( keys %$mapping ) {
+            push @$attributes,
+              {
+               attributeCode => $mapping->{$key},
+               value => [ $args->{attributes}->{$key} ],
+              }
+          };
     };
 
     $self->_populate_category_and_group_attr(
