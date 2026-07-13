@@ -22,6 +22,7 @@ with 'Role::Logger';
 
 use Integrations::Symology;
 use Open311::Endpoint::Service::Attribute;
+use Open311::Endpoint::Service::Request::ExtendedStatus;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 use Open311::Endpoint::Service::UKCouncil::Symology;
 
@@ -458,7 +459,7 @@ sub _process_request_history {
         }
         $date->set(hour => $time->hour, minute => $time->minute, second => $time->second);
         $date->set_time_zone("Europe/London");
-        next unless $date >= $self->start_time && $date <= $self->end_time;
+        next unless !$self->start_time || !$self->end_time || ($date >= $self->start_time && $date <= $self->end_time);
 
         my $update_id = $crno . '_' . $event->{LineNo};
         my $update = $self->_create_update_object($event, $crno, $date, $update_id);
@@ -508,6 +509,50 @@ sub _update_status {
 
 sub event_action_event_type {
     return $_[0]->endpoint_config->{event_action_event_type};
+}
+
+=head2 get_service_requests
+
+Fetches a list of requests from the backend, really for updates.
+
+=cut
+
+sub service_request_content {
+    '/open311/service_request_extended'
+}
+
+sub get_service_requests {
+    my ($self, $args) = @_;
+    my @requests;
+
+    # If specific service_request_ids were requested, fetch each one
+    # directly by ID rather than doing a date-range search, and assume
+    # we are actually looking for updates...
+    if ($args->{service_request_id} && @{$args->{service_request_id}}) {
+        for my $crno (@{$args->{service_request_id}}) {
+            my $response = $self->get_integration->get_request("SERV", $crno);
+            next if ($response->{StatusCode}//-1) != 0; # Skip if error
+            my @updates = @{ $self->_process_request_history($response, 'full') };
+            foreach (@updates) {
+                my $request = Open311::Endpoint::Service::Request::ExtendedStatus->new(
+                    # Hardcoded for now
+                    service => Open311::Endpoint::Service->new(
+                        service_name => 'Potholes',
+                        service_code => 'Potholes',
+                    ),
+                    service_request_id => $_->service_request_id,
+                    status => $_->status,
+                    requested_datetime => $_->updated_datetime,
+                    updated_datetime => $_->updated_datetime,
+                    account_id => $_->update_id,
+                    status_notes => $_->description,
+                );
+                push @requests, $request;
+            }
+        }
+    }
+
+    return @requests;
 }
 
 1;
