@@ -419,6 +419,7 @@ sub learn_additional_types {
                 non_public => '//str',
                 contact_name => '//str',
                 contact_email => '//str',
+                account_id => '//str',
                 extras => {
                     type => '//map',
                     values => '//str',

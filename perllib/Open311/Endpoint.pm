@@ -859,6 +859,7 @@ sub format_service_requests {
                             description
                             agency_responsible
                             service_notice
+                            account_id
                             /
                     ),
                     (
