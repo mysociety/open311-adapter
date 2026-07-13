@@ -212,13 +212,23 @@ subtest "GET service" => sub {
                     "order" => 7,
                 },
                 {
+                    "code" => "report_url",
+                    "datatype" => "string",
+                    "datatype_description" => "",
+                    "description" => "Report URL",
+                    "required" => "false",
+                    "variable" => "true",
+                    "automated" => "server_set",
+                    "order" => 8,
+                },
+                {
                     "code" => "issue",
                     "datatype" => "singlevaluelist",
                     "datatype_description" => "",
                     "description" => "What is the issue?",
                     "required" => "true",
                     "variable" => "true",
-                    "order" => 8,
+                    "order" => 9,
                     "values" => [
                         {
                             "key" => "Pothole in the pavement",
