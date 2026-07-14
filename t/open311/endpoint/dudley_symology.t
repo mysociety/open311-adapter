@@ -56,7 +56,7 @@ $soap_lite->mock(call => sub {
         is $request[REPORT_EASTING]->value, EASTING;
         my @photo_descs = map { "\n\n[ This report contains a photo, see: http://example.org/photo/$_.jpeg ]" } 1..3;
         my $photo_descs = join '', @photo_descs;
-        is $request[REPORT_DESC]->value, "This is the details$photo_descs\n\nWhat is the issue?: Pothole in the road";
+        is $request[REPORT_DESC]->value, "This is the details$photo_descs";
         is $fields[0][FIELDS_FIELDLINE]->value, 10;
         is $fields[0][FIELDS_VALUETYPE]->value, 8;
         is $fields[0][FIELDS_VALUE]->value, "http://example.org/photo/1.jpeg";
@@ -90,6 +90,30 @@ $soap_lite->mock(call => sub {
                 }
             }
         };
+    } elsif ($args[0] eq 'GetRequestAdditionalGroup') {
+        my $service_code = $args[1]->value;
+        is $service_code, 'SERV';
+        my $id = $args[2]->value;
+        like $id, qr/^[12]$/;
+        return unless $id == 1;
+        return {
+            StatusCode => 0,
+            Request => {
+            OutCRNo => "789951",
+                EventHistory => {
+                    EventHistoryGet => [ {
+                        "LineNo" => "1",
+                        "HistoryDate" => "2020-11-01T00:00:00",
+                        "HistoryTime" => "2020-11-25T08:04:00",
+                        "HistoryEventType" => "",
+                        "HistoryAction" => "",
+                        "HistoryEvent" => "Inspection scheduled",
+                        "HistoryDescription" => "",
+                        "HistoryType" => "21",
+                    } ],
+                },
+            },
+        };
     } else {
         is $args[0], '';
     }
@@ -102,14 +126,14 @@ $symology_integ->mock(config => sub {
     }
 });
 
-my $camden = Test::MockModule->new('Open311::Endpoint::Integration::UK::Camden::Symology');
-$camden->mock('_build_config_file', sub {
-    path(__FILE__)->sibling('camden_symology.yml');
+my $dudley = Test::MockModule->new('Open311::Endpoint::Integration::UK::Dudley');
+$dudley->mock('_build_config_file', sub {
+    path(__FILE__)->sibling('dudley_symology.yml');
 });
 
-use_ok 'Open311::Endpoint::Integration::UK::Camden::Symology';
+use_ok 'Open311::Endpoint::Integration::UK::Dudley';
 
-my $endpoint = Open311::Endpoint::Integration::UK::Camden::Symology->new;
+my $endpoint = Open311::Endpoint::Integration::UK::Dudley->new;
 
 subtest "GET services" => sub {
     my $res = $endpoint->run_test_request(
@@ -124,7 +148,7 @@ subtest "GET services" => sub {
           "service_name" => "Potholes",
           "description" => "Potholes",
           "metadata" => "true",
-          "group" => "Roads And Pavements",
+          "group" => "",
           "keywords" => "",
           "type" => "realtime"
        } ], 'correct json returned';
@@ -221,25 +245,6 @@ subtest "GET service" => sub {
                     "automated" => "server_set",
                     "order" => 8,
                 },
-                {
-                    "code" => "issue",
-                    "datatype" => "singlevaluelist",
-                    "datatype_description" => "",
-                    "description" => "What is the issue?",
-                    "required" => "true",
-                    "variable" => "true",
-                    "order" => 9,
-                    "values" => [
-                        {
-                            "key" => "Pothole in the pavement",
-                            "name" => "Pothole in the pavement",
-                        },
-                        {
-                            "key" => "Pothole in the road",
-                            "name" => "Pothole in the road",
-                        },
-                    ]
-                },
             ],
         }, 'correct json returned';
 };
@@ -261,7 +266,6 @@ subtest "POST Potholes in road OK" => sub {
         'attribute[easting]' => EASTING,
         'attribute[northing]' => NORTHING,
         'attribute[fixmystreet_id]' => 123,
-        'attribute[issue]' => "Pothole in the road",
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
@@ -297,8 +301,28 @@ subtest "POST update OK" => sub {
 };
 
 subtest "GET updates OK" => sub {
-    # TODO: Implement fetching updates from XML-on-SFTP
-    ok 1;
+    my $res = $endpoint->run_test_request(
+        GET => '/requests.json?service_request_id=1,2',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            service_request_id => 789951,
+            updated_datetime => '2020-11-01T08:04:00+00:00',
+            requested_datetime => '2020-11-01T08:04:00+00:00',
+            zipcode => '',
+            lat => 0,
+            long => 0,
+            status => 'investigating',
+            media_url => '',
+            address_id => '',
+            address => '',
+            service_code => 'Potholes',
+            service_name => 'Potholes',
+
+        } ], 'correct json returned';
 };
 
 done_testing;
