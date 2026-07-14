@@ -20,7 +20,7 @@ reverse_status_mapping:
 
 service_list:
   Abandoned vehicles:
-    ABANDONED_17821_C: 'Abandoned vehicles'
+    ABANDONED_17821_C_1: 'Abandoned vehicles'
   Bus stop/shelter issue:
     DISPLAY_ISSUE_17821_C: 'Electric info display broken/incorrect'
     DAMAGED_STOP_17821_C: 'Damage to a bus stop'
