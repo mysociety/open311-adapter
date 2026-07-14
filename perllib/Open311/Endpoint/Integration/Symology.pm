@@ -528,9 +528,10 @@ sub get_service_requests {
     # If specific service_request_ids were requested, fetch each one
     # directly by ID rather than doing a date-range search, and assume
     # we are actually looking for updates...
+    my $sym_service_code = $self->request_defaults->{ServiceCode};
     if ($args->{service_request_id} && @{$args->{service_request_id}}) {
         for my $crno (@{$args->{service_request_id}}) {
-            my $response = $self->get_integration->get_request("SERV", $crno);
+            my $response = $self->get_integration->get_request($sym_service_code, $crno);
             next if ($response->{StatusCode}//-1) != 0; # Skip if error
             my @updates = @{ $self->_process_request_history($response, 'full') };
             foreach (@updates) {

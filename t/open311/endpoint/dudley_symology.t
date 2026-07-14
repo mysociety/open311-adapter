@@ -92,7 +92,7 @@ $soap_lite->mock(call => sub {
         };
     } elsif ($args[0] eq 'GetRequestAdditionalGroup') {
         my $service_code = $args[1]->value;
-        is $service_code, 'SERV';
+        is $service_code, 'CUST';
         my $id = $args[2]->value;
         like $id, qr/^[12]$/;
         return unless $id == 1;

@@ -2,6 +2,8 @@ username: FMS
 customer_defaults:
   CustomerType: ""
   ContactType: ""
+request_defaults:
+  ServiceCode: CUST
 field_defaults:
   PhotoStart: 10
   PhotoEnd: 12
