@@ -64,6 +64,7 @@ sub process_attributes {
 
     if (my $mapping = $self->config->{request_to_resource_attribute_manual_mapping}{ $args->{service_code_alloy} }) {
         for my $key ( keys %$mapping ) {
+            next unless $args->{attributes}->{$key};
             push @$attributes,
               {
                attributeCode => $mapping->{$key},
