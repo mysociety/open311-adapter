@@ -12,4 +12,22 @@ has jurisdiction_id => (
     default => 'dudley_symology',
 );
 
+=head2 process_service_request_args
+
+Maps the FixMyStreet report title to Symology's Location field, removing it
+before shared processing so it is not also appended to the description.
+
+=cut
+
+sub process_service_request_args {
+    my ($self, $request_args) = @_;
+
+    my $location = delete $request_args->{attributes}->{title} || '';
+    my ($request, @rest) =
+        $self->SUPER::process_service_request_args($request_args);
+    $request->{Location} = $location;
+
+    return ($request, @rest);
+}
+
 1;

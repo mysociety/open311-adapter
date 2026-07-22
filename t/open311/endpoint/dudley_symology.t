@@ -54,6 +54,7 @@ $soap_lite->mock(call => sub {
         is $request[REPORT_NEXTACTION]->value, undef;
         is $request[REPORT_NORTHING]->value, NORTHING;
         is $request[REPORT_EASTING]->value, EASTING;
+        is $request[REPORT_LOCATION]->value, 'Report title';
         my @photo_descs = map { "\n\n[ This report contains a photo, see: http://example.org/photo/$_.jpeg ]" } 1..3;
         my $photo_descs = join '', @photo_descs;
         is $request[REPORT_DESC]->value, "This is the details$photo_descs";
@@ -266,6 +267,7 @@ subtest "POST Potholes in road OK" => sub {
         'attribute[easting]' => EASTING,
         'attribute[northing]' => NORTHING,
         'attribute[fixmystreet_id]' => 123,
+        'attribute[title]' => 'Report title',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;
