@@ -319,6 +319,7 @@ subtest "GET updates OK" => sub {
             long => 0,
             status => 'investigating',
             media_url => '',
+            account_id => '789951_1',
             address_id => '',
             address => '',
             service_code => 'Potholes',
