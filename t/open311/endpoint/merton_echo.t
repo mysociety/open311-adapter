@@ -91,10 +91,10 @@ $soap_lite->mock(call => sub {
                 is $amount[1]->value->value, '34.56';
             } elsif ($params[0]->value eq '123amend') {
                 my @data = ${$params[1]->value}->value->value;
-                if (@data == 3) { # Removal
+                if (@data == 5) { # Removal
                     my @loc = ${$data[0]->value}->value;
                     is $loc[0]->value, 57224;
-                    is $loc[1]->value, 'New location';
+                    is $loc[1]->value->value, 'New location';
                     for (1..2) {
                         my ($guid, $item, $datatypeid) = ${$data[$_]->value}->value;
                         is $guid->name, 'Guid';
@@ -107,6 +107,12 @@ $soap_lite->mock(call => sub {
                         is $q[1]->value, 57232;
                         is $q[2]->value, 0;
                     }
+                    @loc = ${$data[3]->value}->value;
+                    is $loc[0]->value, 57237;
+                    is $loc[1]->value->value, '37.00, 37.00';
+                    @loc = ${$data[4]->value}->value;
+                    is $loc[0]->value, 57236;
+                    is $loc[1]->value->value, 'ABC123';
                 } elsif (@data == 2) { # Adding
                     for (0..1) {
                         my ($item, $datatypeid) = ${$data[$_]->value}->value;
@@ -142,19 +148,20 @@ $soap_lite->mock(call => sub {
                 { DatatypeId => 57229, DatatypeName => 'TEM - Bulky Collection',
                     Guid => 'item_1_parent', Value => '',
                     ChildData => { ExtensibleDatum => [
-                        { Guid => 'item_1_id', DatatypeId => 57230, DatatypeName => 'Item', value => 1865 },
-                        { Guid => 'item_1_num', DatatypeId => 57232, DatatypeName => 'Quantity', value => 1 },
-                        { Guid => 'item_1_desc', DatatypeId => 57231, DatatypeName => 'Description', value => 'description' },
+                        { Guid => 'item_1_id', DatatypeId => 57230, DatatypeName => 'Item', Value => 1865 },
+                        { Guid => 'item_1_num', DatatypeId => 57232, DatatypeName => 'Quantity', Value => 1 },
+                        { Guid => 'item_1_desc', DatatypeId => 57231, DatatypeName => 'Description', Value => 'description' },
                     ] },
                 },
                 { DatatypeId => 57229, DatatypeName => 'TEM - Bulky Collection',
                     Guid => 'item_2_parent', Value => '',
                     ChildData => { ExtensibleDatum => [
-                        { Guid => 'item_2_id', DatatypeId => 57230, DatatypeName => 'Item', value => 1866 },
-                        { Guid => 'item_2_num', DatatypeId => 57232, DatatypeName => 'Quantity', value => 1 },
-                        { Guid => 'item_2_desc', DatatypeId => 57231, DatatypeName => 'Description', value => 'description' },
+                        { Guid => 'item_2_id', DatatypeId => 57230, DatatypeName => 'Item', Value => 1866 },
+                        { Guid => 'item_2_num', DatatypeId => 57232, DatatypeName => 'Quantity', Value => 1 },
+                        { Guid => 'item_2_desc', DatatypeId => 57231, DatatypeName => 'Description', Value => 'description' },
                     ] },
                 },
+                { DatatypeId => 57237, DatatypeName => 'Payment Amount', Value => '37.00' },
             ] },
         });
     } elsif ($method eq 'GetEventType') {
@@ -330,6 +337,8 @@ subtest "POST an amendment" => sub {
         'attribute[amend_notes]' => 'Notes::',
         'attribute[amend_images]' => 'image.jpeg',
         'attribute[amend_location]' => 'New location',
+        'attribute[amend_payment_ref]' => 'ABC123',
+        'attribute[amend_payment_amount]' => '37.00',
         first_name => 'Bob',
         last_name => 'Mould',
     );
