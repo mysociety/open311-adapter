@@ -548,20 +548,35 @@ sub amend_booking {
     $integ->UpdateEvent({ id => $event->{Id}, data => $add_data });
 }
 
-# Removing involves setting the quantity of the original items to 0, removing images, updating the location
+# Removing involves setting the quantity of the original items to 0, removing
+# images, updating the location, appending any new payment details
 sub _amend_booking_remove_step {
     my ($self, $event, $args) = @_;
-    my $location = $args->{attributes}{amend_location};
-    my $updated_location = 0;
+
+    my %updated;
+    my %overwrite = ( 57224 => 1 );
+    my %to_update = (
+        57224 => $args->{attributes}{amend_location} || '', # Exact Location
+        57236 => $args->{attributes}{amend_payment_ref} || '', # Payment Reference Number
+        57237 => $args->{attributes}{amend_payment_amount} || '', # Payment Amount
+    );
+    $to_update{57237} =~ s/£//;
+
     my $data = [];
     foreach (@{$event->{Data}{ExtensibleDatum}}) {
-        if ($location && $_->{DatatypeId} == 57224) {
-            $updated_location = 1;
-            push @$data, {
-                id => $_->{DatatypeId},
-                existing_id => $_->{Guid},
-                value => $location,
-            };
+        foreach my $id (sort keys %to_update) {
+            if ($to_update{$id} && $_->{DatatypeId} == $id) {
+                $updated{$id} = 1;
+                my $value = $to_update{$id};
+                if (!$overwrite{$id}) {
+                    $value = $_->{Value} . ', ' . $value;
+                }
+                push @$data, {
+                    id => $_->{DatatypeId},
+                    existing_id => $_->{Guid},
+                    value => SOAP::Data->value($value)->type('string'),
+                };
+            }
         }
         if ($_->{DatatypeId} == 57228) {
             push @$data, {
@@ -583,8 +598,11 @@ sub _amend_booking_remove_step {
         }
     }
 
-    if (!$updated_location && $location) {
-        push @$data, { id => 57224, value => $location, };
+    foreach my $id (sort keys %to_update) {
+        if (!$updated{$id} && $to_update{$id}) {
+            my $value = SOAP::Data->value($to_update{$id})->type('string');
+            push @$data, { id => $id, value => $value };
+        }
     }
 
     return $data;
