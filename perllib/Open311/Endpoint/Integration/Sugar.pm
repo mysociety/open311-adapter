@@ -4,7 +4,8 @@ Open311::Endpoint::Integration::Sugar - An integration with the Sugar CRM system
 
 =head1 SYNOPSIS
 
-This integration lets us populate categories
+This integration lets us populate categories, send reports to the Sugar CRM system
+#, fetch updates on cases, send updates to cases and fetch reports
 
 =cut
 
@@ -95,6 +96,15 @@ has access_token => (
     is => 'rw',
 );
 
+has headers => (
+                is => 'lazy',
+                default => sub {{
+                    'accept' => 'application/json',
+                    'Authorization' => 'Bearer ' . $_[0]->access_token,
+                    'Content-Type' => 'application/json',
+                }},
+);
+
 =head2 service_list
 
 This is a mapping of Sugar services to use for categories populating FMS.
@@ -115,7 +125,6 @@ will have an  asset_id and some have extra questions
 has service_extra_data => (
     is => 'ro',
 );
-
 
 =head2 service_class
 
@@ -191,5 +200,135 @@ sub _do_login {
 
     $self->access_token($user_details->{access_token});
 };
+
+=head2 post_service_request
+
+Authorise with the login so we can get an authorisation token
+for posting the report.
+
+There are two postings to Sugar - one an Incident and one a
+Case.
+
+We also need to find/create a user id to go with the Case
+
+=cut
+
+sub post_service_request {
+    my ($self, $service, $args) = @_;
+
+    my ($group, @category_parts) = split('_', $args->{service_code});
+    my $category = join(' ', @category_parts);
+    $group =~ s/-/ /g;
+
+    $args->{attributes}{group} = $group;
+    $args->{attributes}{category} = $category;
+
+    $self->_do_login;
+    my $incident_id = $self->_create_incident($args);
+    my $case_id = $self->_create_case($args, $incident_id);
+
+    return $self->new_request(
+                              service_request_id => $case_id,
+                             );
+};
+
+sub _create_incident {
+    my ($self, $args) = @_;
+
+    my %defaults = (
+                    resolution => 'Accepted',
+                    type => 'Administration',
+                    status => 'New',
+                    resolution => 'Accepted',
+                    priority => '',
+                   );
+
+    my $serviceRequest = {
+                          %defaults,
+                          fms_category => $args->{attributes}{group},
+                          fms_subcategory => $args->{attributes}{category},
+                          location_description => $args->{attributes}->{description}, #Maybe I didn't want to say we would do this - should be nearest_address
+                          name => $args->{attributes}->{title},
+                          description => $args->{attributes}->{description},
+                          latitude => $args->{lat}, # as float
+                          longitude => $args->{long}, # as float
+                          original_fms_id => $args->{attributes}->{fixmystreet_id},
+                          latest_fms_id => $args->{attributes}->{fixmystreet_id},
+                          fms_public_url => $args->{attributes}->{report_url},
+                          media_url => $args->{media_url}->[0] ? join(',', @{ $args->{media_url} }) : '',
+                         };
+
+    my $response = $self->rest->api_call(
+                                          call => $self->api_calls->{incidents},
+                                          headers => $self->headers,
+                                          body => $serviceRequest,
+                                         );
+
+    return $response->{id};
+}
+
+sub _create_case {
+    my ($self, $args, $incident_id) = @_;
+
+    my $primary_contact_id = $self->_get_user(
+                                              first_name => $args->{first_name},
+                                              last_name => $args->{last_name},
+                                              email => $args->{email},
+                                             );
+    my %defaults = (
+                    'type' => 'General Query',
+                    'crt_l1_contact_purpose_c' => 'operational_issue_reporting',
+                    'crt_l2_reason_c' => 'navigation_asset',
+                    'source' => 'FixMyStreet',
+                    priority => '',
+                    );
+
+    my $serviceRequest = {
+                          %defaults,
+                          name => $args->{attributes}->{title},
+                          description => $args->{attributes}->{description},
+                          primary_contact_id => $primary_contact_id,
+                          crt_location_description_c => '', #nearest_address?
+                         };
+
+    my $call = $self->api_calls->{case};
+    $call =~ s/{incident ID}/$incident_id/;
+
+    my $response = $self->rest->api_call(
+                                         call => $call,
+                                         headers => $self->headers,
+                                         body => $serviceRequest,
+                                         );
+    return $response->{id};
+}
+
+=head2 _get_user
+
+We need a primary contact id from Sugar to log a case.
+
+If there are multiple users returned, it's an error but contains required data,
+so we need to deal with an error response.
+
+=cut
+
+sub _get_user {
+    my ($self, %args) = @_;
+    $self->rest->return_json_error(1);
+    my $response = $self->rest->api_call(
+                                         call => $self->api_calls->{contact},
+                                         headers => $self->headers,
+                                         body => {
+                                                  first_name => $args{first_name},
+                                                  last_name => $args{last_name},
+                                                  email1 => $args{email},
+                                                 },
+                                        );
+    $self->rest->return_json_error(0);
+    return $response->{id} if $response->{id};
+    return shift(@{$response->{contacts}}) if $response->{contacts};
+
+    $self->rest->logger->error('Managed contact error');
+    $self->rest->logger->error($response);
+}
 
 1;

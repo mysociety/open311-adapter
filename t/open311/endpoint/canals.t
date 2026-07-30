@@ -14,6 +14,15 @@ $lwp->mock(request => sub {
     if ($req->uri =~ /Token/) {
         like $req->uri, qr/example\.com\/api\//, 'api url read from config';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'access_token' => 'OpenSesame' }));
+    } elsif ($req->uri =~ /Incidents$/) {
+        is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
+        return HTTP::Response->new(200, 'OK', [], encode_json({ 'id' => 'incident-12345' }));
+    } elsif ($req->uri =~ /Contacts/) {
+        is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
+        return HTTP::Response->new(200, 'OK', [], encode_json({ 'id' => 'user-236' }));
+    } elsif ($req->uri =~ /Incidents\/incident-12345\/incidents_case/) {
+        is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
+        return HTTP::Response->new(200, 'OK', [], encode_json({ 'id' => 'case-3456' }));
     }
 });
 
@@ -60,5 +69,31 @@ subtest "Check user login" => sub {
     ok $canals_endpoint->access_token, 'OpenSesame';
 };
 
+subtest "POST report" => sub {
+    my $res = $canals_endpoint->run_test_request(
+        POST => '/requests.json',
+        jurisdiction_id => 'canals',
+        api_key => 'api-key',
+        media_url => [],
+        service_code => 'Aqueduct_Access_Issues',
+        address_string => '22 Acacia Avenue',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email => 'test@example.com',
+        description => 'Aqueduct is blocked by tree',
+        lat => '50',
+        long => '0.1',
+        'attribute[description]' => 'Aqueduct is blocked by tree',
+        'attribute[title]' => 'Aqueduct by Potters Bridge is blocked',
+        'attribute[report_url]' => 'http://localhost/1',
+        'attribute[easting]' => 1,
+        'attribute[northing]' => 2,
+        'attribute[category]' => 'Access Issues (Aqueduct)',
+        'attribute[fixmystreet_id]' => 1,
+    );
+
+    is $res->code, 200, 'Report submitted ok';
+    is_deeply decode_json($res->content), [ { service_request_id => 'case-3456' } ], 'Id from the Case record';
+};
 
 done_testing;

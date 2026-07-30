@@ -6,6 +6,10 @@ api_url: 'https://example.com/api/'
 
 api_calls:
   login: 'Token'
+  cases: 'Cases'
+  contact: 'Contacts'
+  case: 'Incidents/{incident ID}/incidents_case'
+  incidents: 'Incidents'
 
 service_list:
   Aqueduct:
