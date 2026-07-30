@@ -1,3 +1,12 @@
+client_id: 'id'
+username: 'Sugar'
+password: 'SecretWord'
+
+api_url: 'https://example.com/api/'
+
+api_calls:
+  login: 'Token'
+
 service_list:
   Aqueduct:
     Access Issues: 
