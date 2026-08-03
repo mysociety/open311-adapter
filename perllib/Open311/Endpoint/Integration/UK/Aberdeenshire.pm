@@ -87,7 +87,7 @@ sub _defect_attributes_description {
 
 =head2 filter_photos
 
-Aberdeenshire want us to return the first photo only.
+Aberdeenshire want us to return the latest photo only.
 
 =cut
 
@@ -95,7 +95,7 @@ around filter_photos => sub {
     my ($orig, $class, @photos) = @_;
     my @filtered = $class->$orig(@photos);
     return @filtered unless scalar @filtered > 1;
-    return (reduce { $a->{Date} < $b->{Date} ? $a : $b } @filtered);
+    return (reduce { $a->{Date} > $b->{Date} ? $a : $b } @filtered);
 };
 
 =head2 Extra attributes
