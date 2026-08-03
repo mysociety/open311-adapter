@@ -27,7 +27,7 @@ BEGIN { $ENV{TEST_MODE} = 1; }
 
 my $endpoint = Open311::Endpoint::Integration::UK::AberdeenshireDummy->new;
 
-subtest "Only uses the first photo" => sub {
+subtest "Only uses the last photo" => sub {
     my @photos = (
         {
             URL => '1',
@@ -48,7 +48,7 @@ subtest "Only uses the first photo" => sub {
     my @filtered = $endpoint->filter_photos(@photos);
 
     is @filtered, 1;
-    is $filtered[0]->{URL}, 3;
+    is $filtered[0]->{URL}, 1;
 };
 
 done_testing;
