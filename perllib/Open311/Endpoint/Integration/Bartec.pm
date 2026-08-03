@@ -493,13 +493,14 @@ sub get_service_request_updates {
 
         for my $entry ( @$entries ) {
             my ($status, $external_status) = $self->_get_update_status($entry);
+            my $description = $self->_get_update_description($entry) || '';
             next unless $status; # No status, nothing to do
             my %args = (
                 status => $status,
                 $external_status ? ( external_status_code => $external_status ) : (),
                 update_id => $entry->{id},
                 service_request_id => $entry->{ServiceCode},
-                description => '',
+                description => $description,
                 updated_datetime => $w3c->parse_datetime( $entry->{DateChanged} )->truncate( to => 'second')->set_time_zone('Europe/London'),
             );
 
@@ -525,6 +526,15 @@ sub _get_update_status {
     }
 
     return ($status, $code);
+}
+
+# Check for a closing comment with a specific prefix
+sub _get_update_description {
+    my ($self, $update) = @_;
+    my $comments = $update->{ClosingComments} || '';
+    if ($comments =~ s/^\s*NON STANDARD\s*//) {
+        return $comments;
+    }
 }
 
 sub get_service_requests {

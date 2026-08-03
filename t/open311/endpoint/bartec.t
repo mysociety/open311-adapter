@@ -1283,6 +1283,14 @@ subtest 'fetch updates' => sub {
             description => '',
             media_url => '',
         },
+        {
+            update_id => 228029,
+            service_request_id => 'SR00051624',
+            status => 'in_progress',
+            updated_datetime => '2020-06-18T09:59:26+01:00',
+            description => 'closure comment',
+            media_url => '',
+        },
     ], 'only updates for allowed services with valid JobReference returned';
 };
 
