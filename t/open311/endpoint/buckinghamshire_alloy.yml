@@ -5,16 +5,15 @@
   "resource_attachment_attribute_id": "attributes_filesAttachableAttachments",
 
   "category_list_code": "designs_subCategoryList_62d6a1ade83074015715dab2",
-  "category_title_attribute": "attributes_itemsTitle",
   "category_group_attribute": "attributes_subCategoryListCategory_62d6a1ae4fb4be015570baed",
 
   "parent_attribute_name": "Defects",
 
   "service_whitelist": {
     "Drainage": {
-      "Blocked Ditch": 1,
-      "Damaged Gully": 1,
-      "Highways Cover - Missing": 1
+      "635138684d1475016745070f": "Blocked Ditch",
+      "635138684d14750167450719": "Damaged Gully",
+      "635138684d14750167450721": "Highways Cover - Missing"
     }
   },
 

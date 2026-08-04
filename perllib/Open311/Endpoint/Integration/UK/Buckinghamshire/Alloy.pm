@@ -44,7 +44,8 @@ sub process_attributes {
         value => [ $contact_resource_id ],
     };
 
-    my ($cat_code, $group_code) = $self->_find_category_and_group_codes($args->{service_code_alloy});
+    my $cat_code = $args->{service_code};
+    my $group_code = $self->_find_group_code($cat_code);
     $group_code = $group_code->[0] if ref $group_code eq 'ARRAY';
     push @$attributes, {
        attributeCode => $self->config->{request_to_resource_attribute_manual_mapping}->{group},
@@ -58,25 +59,23 @@ sub process_attributes {
     return $attributes;
 }
 
-=head2 _find_category_and_group_codes
+=head2 _find_group_code
 
-This looks up the C<category_list_code> design in Alloy, and finds the entry
-with a C<category_title_attribute> attribute that matches the provided
-category.
+This looks up the C<category_list_code> design in Alloy, and finds
+the entry with the provided ID.
 
-It returns the entry's C<itemId> and the value of its
-C<category_group_attribute> attribute, the latter of which is required when
-creating new defects in Bucks Alloy.
+It returns the value of its C<category_group_attribute> attribute,
+which is required when creating new defects in Bucks Alloy.
 
 =cut
 
-sub _find_category_and_group_codes {
-    my ($self, $category) = @_;
+sub _find_group_code {
+    my ($self, $code) = @_;
 
     my $results = $self->_search_for_code($self->config->{category_list_code});
     for my $cat ( @{ $results } ) {
-        if ( $cat->{attributes}{$self->config->{category_title_attribute}} eq $category ) {
-            return ($cat->{itemId}, $cat->{attributes}{$self->config->{category_group_attribute}});
+        if ( $cat->{itemId} eq $code ) {
+            return $cat->{attributes}{$self->config->{category_group_attribute}};
         }
     }
 }
