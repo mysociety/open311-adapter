@@ -3,6 +3,7 @@ username: 'Sugar'
 password: 'SecretWord'
 
 api_url: 'https://example.com/api/'
+crm_user_id: 'crm-user-id-example'
 
 api_calls:
   login: 'Token'
@@ -11,15 +12,22 @@ api_calls:
   case: 'Incidents/{incident ID}/incidents_case'
   incidents: 'Incidents'
 
+reverse_status_mapping:
+  New: 'open'
+  
 service_list:
-  Aqueduct:
-    Access Issues: 
-      priority: P1
-      service_extra_data:
-        - datatype_description: 'This is the question'
-          code: Q1
-          values:
-            Yes: Yes
-            No: No
+  AccessIssues:
+    name: 'Access issues'
+    group: 'Aqueduct'
+    service_extra_data:
+      - datatype_description: 'This is the question'
+        code: Q1
+        values:
+          Yes: Yes
+          No: No
+  FallenTrees:
+    name: 'Fallen trees'
+    group: 'Blocked towpath'
+
         
   
