@@ -17,6 +17,9 @@ $lwp->mock(request => sub {
     } elsif ($req->uri =~ /Incidents$/) {
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'id' => 'incident-12345' }));
+    } elsif ($req->uri =~ /Incidents\?filter/) {
+        is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
+        return HTTP::Response->new(200, 'OK', [], path(__FILE__)->sibling("/json/sugar/canals_incident.json")->slurp);
     } elsif ($req->uri =~ /Contacts/) {
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'id' => 'user-236' }));
@@ -62,6 +65,28 @@ my $canals_endpoint = Open311::Endpoint::Integration::Sugar::Dummy->new(
 subtest "GET Service List" => sub {
     my $res = $canals_endpoint->run_test_request( GET => '/services.xml' );
     ok $res->is_success, 'xml success';
+    is $res->content, '<?xml version="1.0" encoding="utf-8"?>
+<services>
+  <service>
+    <description>Access issues</description>
+    <group>Aqueduct</group>
+    <keywords></keywords>
+    <metadata>true</metadata>
+    <service_code>AccessIssues</service_code>
+    <service_name>Access issues (CRT: Aqueduct)</service_name>
+    <type>realtime</type>
+  </service>
+  <service>
+    <description>Fallen trees</description>
+    <group>Blocked towpath</group>
+    <keywords></keywords>
+    <metadata>true</metadata>
+    <service_code>FallenTrees</service_code>
+    <service_name>Fallen trees (CRT: Blocked towpath)</service_name>
+    <type>realtime</type>
+  </service>
+</services>
+', 'Categories fetched';
 };
 
 subtest "Check user login" => sub {
@@ -75,7 +100,7 @@ subtest "POST report" => sub {
         jurisdiction_id => 'canals',
         api_key => 'api-key',
         media_url => [],
-        service_code => 'Aqueduct_Access_Issues',
+        service_code => 'AccessIssues',
         address_string => '22 Acacia Avenue',
         first_name => 'Bob',
         last_name => 'Mould',
@@ -91,9 +116,42 @@ subtest "POST report" => sub {
         'attribute[category]' => 'Access Issues (CRT: Aqueduct)',
         'attribute[fixmystreet_id]' => 1,
     );
-
     is $res->code, 200, 'Report submitted ok';
     is_deeply decode_json($res->content), [ { service_request_id => 'incident-12345--case-3456' } ], 'Id from the Case record';
+};
+
+subtest "GET report" => sub {
+    my $res = $canals_endpoint->run_test_request
+      (
+       GET => 'requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
+      );
+    is $res->code, 200, 'Report created for FMS';
+    is_deeply decode_json($res->content), [
+                                           {
+                                            "zipcode" => "",
+                                            "status" => "open",
+                                            "service_code" => "FallenTrees",
+                                            "address_id" => "",
+                                            "service_request_id" => "2354556-8ccc-1111-b0e9-a0d3d106b144",
+                                            "lat" => 10,
+                                            "address" => "",
+                                            "updated_datetime" => "2026-07-31T15:28:45+01:00",
+                                            "long" => -1,
+                                            "description" => "Tree fallen over towpath",
+                                            "media_url" => "",
+                                            "service_name" => "Fallen trees (CRT: Blocked towpath)",
+                                            "requested_datetime" =>"2026-07-31T15:28:45+01:00"
+                                           }
+                                          ], 'Id from the Case record';
+};
+
+subtest "GET report updates" => sub {
+
+    my $res = $canals_endpoint->run_test_request
+      (
+       GET => 'servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
+      );
+    is $res->code, 200, 'Updates fetched for FMS';
 };
 
 done_testing;

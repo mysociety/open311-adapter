@@ -18,6 +18,9 @@ with 'Open311::Endpoint::Role::mySociety';
 with 'Open311::Endpoint::Role::ConfigFile';
 
 use Integrations::Rest;
+use DateTime::Format::W3CDTF;
+use Open311::Endpoint::Service::Request::ExtendedStatus;
+use Open311::Endpoint::Service::Request::Update::mySociety;
 
 =head2 jurisdiction_id
 
@@ -96,6 +99,16 @@ has access_token => (
     is => 'rw',
 );
 
+=head2 crm_user_id
+
+Owner id of incidents created by FMS
+
+=cut
+
+has crm_user_id => (
+    is => 'ro',
+);
+
 has headers => (
     is => 'lazy',
     default => sub {{
@@ -126,6 +139,21 @@ has service_extra_data => (
     is => 'ro',
 );
 
+has '+request_class' => (
+    is => 'ro',
+    default => 'Open311::Endpoint::Service::Request::ExtendedStatus',
+);
+
+=head2 reverse_status_mapping
+
+This is a mapping of statuses from Sugar to FMS
+
+=cut
+
+has reverse_status_mapping => (
+  is => 'ro',
+);
+
 =head2 service_class
 
 Subclasses can override this to provide their own custom Service class, e.g.
@@ -152,27 +180,22 @@ sub services {
     my $self = shift;
 
     my @services = ();
-    for my $group (sort keys %{ $self->service_list }) {
-        my $categories = $self->service_list->{$group};
-        my $service_code;
-        (my $format_group = $group) =~ s/\s+/-/g;
-        for my $category (sort keys %{ $categories }) {
-            ($service_code = $category) =~ s/\s+/_/g;
-            my %service = (
-                service_name => $category . ' (CRT: ' . $group . ')',
-                description => $category,
-                service_code => $format_group . '_' . $service_code,
+    for my $service_code (sort keys %{ $self->service_list }) {
+        my $name = $self->service_list->{$service_code}{name};
+        my $group = $self->service_list->{$service_code}{group};
+        my %service = (
+                service_name => $name . ' (CRT: ' . $group . ')',
+                description => $name,
+                service_code => $service_code,
                 group => $group,
             );
-            my $o311_service = $self->service_class->new(%service);
-            my $extra = $self->service_list->{$group}{$category}{service_extra_data};
-            foreach (@$extra) {
-                $_->{datatype} = 'singlevaluelist';
-                push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(%$_);
-            }
-
-            push @services, $o311_service;
+        my $o311_service = $self->service_class->new(%service);
+        my $extra = $self->service_list->{$service_code}{service_extra_data};
+        foreach (@$extra) {
+            $_->{datatype} = 'singlevaluelist';
+            push @{$o311_service->attributes}, Open311::Endpoint::Service::Attribute->new(%$_);
         }
+        push @services, $o311_service;
     }
     return @services;
 }
@@ -325,6 +348,117 @@ sub _get_user {
     # Revisit and make the error logging a part of Rest.pm
     $self->rest->logger->error('Caught error');
     $self->rest->logger->error($response);
+}
+
+sub get_service_requests {
+    my ($self, $args) = @_;
+
+    if (!$args->{start_date}) {
+        $args->{start_date} = DateTime->now->set_time_zone('Europe/London') - DateTime::Duration->new( days => 1 );
+    };
+
+    if (!$args->{end_date}) {
+        $args->{end_date} = DateTime->now->set_time_zone('Europe/London');
+    }
+
+    $self->_do_login;
+    my $filter = _generate_filter(
+                  '[modified_user_id][$not_equals]=' . $self->{crm_user_id},
+                  '[date_modified][$gte]=' . (DateTime::Format::W3CDTF->parse_datetime($args->{start_date})),
+                  '[date_modified][$lte]=' . (DateTime::Format::W3CDTF->parse_datetime($args->{end_date})),
+                  '[publish_on_fms_c][$equals]=' . 1,
+                 );
+
+    my $response = $self->rest->api_call(
+                                         call => $self->api_calls->{incidents} . $filter,
+                                         headers => $self->headers,
+                                        );
+
+    my @reports;
+    for my $incident (@{ $response->{records} }) {
+        my $date = DateTime::Format::W3CDTF->parse_datetime($incident->{date_entered});
+        my $service_code = $self->_lookup_service_code($incident->{fms_category}, $incident->{fms_subcategory});
+
+        push @reports, $self->new_request(
+                                          service => $self->service($service_code),
+                                          status => $self->reverse_status_mapping->{ $incident->{status} },
+                                          service_request_id => $incident->{id},
+                                          title => $incident->{name},
+                                          description => $incident->{description},
+                                          updated_datetime => $date,
+                                          requested_datetime => $date,
+                                          latlong => [$incident->{latitude}, $incident->{longitude}],
+                                         );
+
+    }
+
+    return @reports;
+}
+
+sub get_service_request_updates {
+    my ($self, $args) = @_;
+
+    if (!$args->{start_date}) {
+        $args->{start_date} = DateTime->now->set_time_zone('Europe/London') - DateTime::Duration->new( days => 1 );
+    };
+
+    if (!$args->{end_date}) {
+        $args->{end_date} = DateTime->now->set_time_zone('Europe/London');
+    }
+
+    $self->_do_login;
+    my $filter = _generate_filter
+      (
+       '[last_sync_date][$gte]=' . (DateTime::Format::W3CDTF->parse_datetime($args->{start_date})),
+       '[last_sync_date][$lte]=' . (DateTime::Format::W3CDTF->parse_datetime($args->{end_date})),
+      );
+
+    my $response = $self->rest->api_call
+      (
+       call => $self->api_calls->{incidents} . $filter,
+       headers => $self->headers,
+      );
+
+    my @updates;
+    foreach my $update (@{ $response->{records} }) {
+        my $date = DateTime::Format::W3CDTF->parse_datetime($update->{last_sync_date});
+        (my $update_id_formatted = $date) =~ s/://g;
+        my $service_code = $self->_lookup_service_code($update->{fms_category}, $update->{fms_subcategory});
+
+        my %args = (
+            status => $self->reverse_status_mapping->{ $update->{status} },
+            external_status_code => $update->{status},
+            fixmystreet_id => $update->{original_fms_id},
+            update_id => $update_id_formatted,
+            service_request_id => $service_code,
+            description => "",
+            updated_datetime => $date,
+                   );
+        push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
+    }
+    return @updates;
+}
+
+sub _lookup_service_code {
+    my ($self, $category, $group) = @_;
+
+    my ($service) = grep { $_->description eq $category && $_->group eq $group } $self->services;
+
+    return $service->service_code;
+}
+
+sub _generate_filter {
+    my @filter = @_;
+
+    my $filter = '?';
+    my $count = 0;
+    for my $arg (@filter) {
+        $filter .= 'filter[' . $count . ']' . $arg . "&";
+        $count++;
+    };
+    chop $filter;
+
+    return $filter;
 }
 
 1;
