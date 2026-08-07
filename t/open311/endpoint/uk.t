@@ -7,6 +7,7 @@ BEGIN { $ENV{TEST_MODE} = 1; }
 
 test_multi(0, 'Open311::Endpoint::Integration::UK',
     'Open311::Endpoint::Integration::UK::Aberdeenshire' => 'aberdeenshire_confirm',
+    'Open311::Endpoint::Integration::UK::Canals' => 'canals_sugar',
     'Open311::Endpoint::Integration::UK::CheshireEast' => 'cheshireeast_confirm',
     'Open311::Endpoint::Integration::UK::Dumfries' => 'dumfries_alloy',
     'Open311::Endpoint::Integration::UK::EastSussex' => 'eastsussex_salesforce',

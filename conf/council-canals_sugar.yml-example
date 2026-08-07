@@ -1,0 +1,21 @@
+logfile: ''
+min_log_level: ''
+
+client_id: ''
+username: ''
+password: ''
+
+api_url: ''
+
+api_calls:
+  login: ''
+  cases: ''
+  contact: ''
+  case: ''
+  incidents: ''
+
+service_list:
+  group:
+   category:
+
+reverse_status_mapping:
