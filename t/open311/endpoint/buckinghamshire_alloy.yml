@@ -12,6 +12,7 @@
   "service_whitelist": {
     "Drainage": {
       "635138684d1475016745070f": "Blocked Ditch",
+      "635138684d1475016745070f_1": "Blocked Gully",
       "635138684d14750167450719": "Damaged Gully",
       "635138684d14750167450721": "Highways Cover - Missing"
     }

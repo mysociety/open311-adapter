@@ -86,58 +86,63 @@ $integration->mock('api_call', sub {
     return $result;
 });
 
-subtest "create basic problem" => sub {
-    set_fixed_time('2023-02-21T13:37:00Z');
-    my $res = $endpoint->run_test_request(
-        POST => '/requests.json',
-        jurisdiction_id => 'dummy',
-        api_key => 'test',
-        service_code => '635138684d14750167450719',
-        address_string => '22 Acacia Avenue',
-        first_name => 'Bob',
-        last_name => 'Mould',
-        email => 'test@example.com',
-        description => 'description',
-        lat => '50',
-        long => '0.1',
-        'attribute[description]' => 'description',
-        'attribute[title]' => 'title',
-        'attribute[report_url]' => 'http://localhost/123',
-        'attribute[asset_resource_id]' => 'abcdef',
-        'attribute[category]' => 'Damaged_Gully',
-        'attribute[fixmystreet_id]' => 123,
-        'attribute[easting]' => 1,
-        'attribute[northing]' => 2,
-    );
-    restore_time();
+foreach my $test (
+    { service_code => '635138684d14750167450719', service_code_sent => '635138684d14750167450719', category => 'Damaged Gully' },
+    { service_code => '635138684d1475016745070f_1', service_code_sent => '635138684d1475016745070f', category => 'Blocked Ditch' },
+) {
+    subtest "create basic problem" => sub {
+        set_fixed_time('2023-02-21T13:37:00Z');
+        my $res = $endpoint->run_test_request(
+            POST => '/requests.json',
+            jurisdiction_id => 'dummy',
+            api_key => 'test',
+            service_code => $test->{service_code},
+            address_string => '22 Acacia Avenue',
+            first_name => 'Bob',
+            last_name => 'Mould',
+            email => 'test@example.com',
+            description => 'description',
+            lat => '50',
+            long => '0.1',
+            'attribute[description]' => 'description',
+            'attribute[title]' => 'title',
+            'attribute[report_url]' => 'http://localhost/123',
+            'attribute[asset_resource_id]' => 'abcdef',
+            'attribute[category]' => $test->{category},
+            'attribute[fixmystreet_id]' => 123,
+            'attribute[easting]' => 1,
+            'attribute[northing]' => 2,
+        );
+        restore_time();
 
-    my $sent = pop @sent;
-    ok $res->is_success, 'valid request'
-        or diag $res->content;
+        my $sent = pop @sent;
+        ok $res->is_success, 'valid request'
+            or diag $res->content;
 
-    # order these so comparison works
-    $sent->{attributes} = [ sort { $a->{attributeCode} cmp $b->{attributeCode} } @{ $sent->{attributes} } ];
-    is_deeply $sent, {
-        attributes => [
-            { attributeCode => 'attributes_customerReportDefectCRMReference_62e43eea0d2c1a0153b1c561', value => 123 },
-            { attributeCode => 'attributes_customerReportDefectCategory_62e43eec5039cb015e3287fb', value => ["636b76649446c50391d4205b"] },
-            { attributeCode => 'attributes_customerReportDefectCustomerStatus_63690956d76320038c423af5', value => undef },
-            { attributeCode => 'attributes_customerReportDefectReportedIssueText_636b830bd1026a0394a10de1', value => "description" },
-            { attributeCode => 'attributes_customerReportDefectSubCategory_62e43eed0d2c1a0153b1c56e', value => ["635138684d14750167450719"] },
-            { attributeCode => 'attributes_defectsDescription', value => "title" },
-            { attributeCode => 'attributes_defectsReportedDate', value => "2023-02-21T13:37:00Z" },
-            { attributeCode => 'attributes_defectsReporters', 'value' => [ 12345 ] },
-            { attributeCode => 'attributes_itemsGeometry', value => { coordinates => [ 0.1, 50 ], type => "Point" } },
-        ],
-        designCode => 'designs_customerReportDefect_62e43ee75039cb015e3287e9',
-        parents => { "attributes_defectsAssignableDefects" => [ 'abcdef' ] },
-    }, 'correct json sent';
+        # order these so comparison works
+        $sent->{attributes} = [ sort { $a->{attributeCode} cmp $b->{attributeCode} } @{ $sent->{attributes} } ];
+        is_deeply $sent, {
+            attributes => [
+                { attributeCode => 'attributes_customerReportDefectCRMReference_62e43eea0d2c1a0153b1c561', value => 123 },
+                { attributeCode => 'attributes_customerReportDefectCategory_62e43eec5039cb015e3287fb', value => ["636b76649446c50391d4205b"] },
+                { attributeCode => 'attributes_customerReportDefectCustomerStatus_63690956d76320038c423af5', value => undef },
+                { attributeCode => 'attributes_customerReportDefectReportedIssueText_636b830bd1026a0394a10de1', value => "description" },
+                { attributeCode => 'attributes_customerReportDefectSubCategory_62e43eed0d2c1a0153b1c56e', value => [$test->{service_code_sent}] },
+                { attributeCode => 'attributes_defectsDescription', value => "title" },
+                { attributeCode => 'attributes_defectsReportedDate', value => "2023-02-21T13:37:00Z" },
+                { attributeCode => 'attributes_defectsReporters', 'value' => [ 12345 ] },
+                { attributeCode => 'attributes_itemsGeometry', value => { coordinates => [ 0.1, 50 ], type => "Point" } },
+            ],
+            designCode => 'designs_customerReportDefect_62e43ee75039cb015e3287e9',
+            parents => { "attributes_defectsAssignableDefects" => [ 'abcdef' ] },
+        }, 'correct json sent';
 
-    is_deeply decode_json($res->content),
-        [ {
-            "service_request_id" => 12345
-        } ], 'correct json returned';
-};
+        is_deeply decode_json($res->content),
+            [ {
+                "service_request_id" => 12345
+            } ], 'correct json returned';
+    };
+}
 
 subtest "check fetch updates" => sub {
     my $res = $endpoint->run_test_request(

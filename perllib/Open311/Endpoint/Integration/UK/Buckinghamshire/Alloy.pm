@@ -44,7 +44,7 @@ sub process_attributes {
         value => [ $contact_resource_id ],
     };
 
-    my $cat_code = $args->{service_code};
+    my $cat_code = $args->{service_code_alloy};
     my $group_code = $self->_find_group_code($cat_code);
     $group_code = $group_code->[0] if ref $group_code eq 'ARRAY';
     push @$attributes, {
