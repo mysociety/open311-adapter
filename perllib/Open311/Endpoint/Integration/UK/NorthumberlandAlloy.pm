@@ -68,7 +68,7 @@ sub process_attributes {
             push @$attributes,
               {
                attributeCode => $mapping->{$key},
-               value => [ $args->{attributes}->{$key} ],
+               value => $args->{attributes}->{$key},
               }
           };
     };
