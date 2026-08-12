@@ -21,6 +21,7 @@ use Integrations::Rest;
 use DateTime::Format::W3CDTF;
 use Open311::Endpoint::Service::Request::ExtendedStatus;
 use Open311::Endpoint::Service::Request::Update::mySociety;
+use Open311::Endpoint::Service::UKCouncil::Canals;
 
 =head2 jurisdiction_id
 
@@ -163,7 +164,7 @@ if they want to have extra attributes on all services.
 
 has service_class  => (
     is => 'ro',
-    default => 'Open311::Endpoint::Service::UKCouncil',
+    default => 'Open311::Endpoint::Service::UKCouncil::Canals',
 );
 
 =head2 get_integration
