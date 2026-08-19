@@ -44,6 +44,18 @@ has json => (
     default => sub { JSON->new->utf8->allow_nonref($_[0]->allow_nonref) },
 );
 
+=head2 return_json_error
+
+If the code using this wants the json returned to handle it on
+error
+
+=cut
+
+has return_json_error => (
+    is => 'rw',
+    default => 0,
+);
+
 =head2 api_call
 
 api calls are either GET or POSTING JSON data.
@@ -98,7 +110,7 @@ sub api_call {
 
     my $request = $method->($uri, $form ? ($form) : (), %$headers);
     my $response = $ua->request($request);
-    if ($response->is_success) {
+    if ($response->is_success || $self->return_json_error) {
         $self->logger->debug($response->content);
         return $self->json->decode($response->content);
     } else {

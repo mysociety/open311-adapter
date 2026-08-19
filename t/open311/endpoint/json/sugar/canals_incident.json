@@ -1,0 +1,28 @@
+{
+    "records": [
+        {
+            "name": "Towpath blocked",
+            "description": "Tree fallen over towpath",
+            "date_entered": "2026-07-31T15:28:45+01:00",
+            "modified_user_id": "fms-user-id",
+            "created_by": "fms-user-id",
+            "type": "Administration",
+            "status": "New",
+            "priority": "P1",
+            "resolution": "Accepted",
+            "original_fms_id": "12",
+            "latest_fms_id": "",
+            "fms_category": "Fallen trees",
+            "fms_subcategory": "Blocked towpath",
+            "latitude": 10,
+            "longitude": -1,
+            "location_description": "",
+            "media_url": "",
+            "fms_public_url": "",
+            "publish_on_fms_c": "1",
+            "sync_status": "unsynced",
+            "last_sync_date": "2026-08-03T15:28:45+01:00",
+            "id": "2354556-8ccc-1111-b0e9-a0d3d106b144"
+        }
+    ]
+}

@@ -1,0 +1,33 @@
+client_id: 'id'
+username: 'Sugar'
+password: 'SecretWord'
+
+api_url: 'https://example.com/api/'
+crm_user_id: 'crm-user-id-example'
+
+api_calls:
+  login: 'Token'
+  cases: 'Cases'
+  contact: 'Contacts'
+  case: 'Incidents/{incident ID}/incidents_case'
+  incidents: 'Incidents'
+
+reverse_status_mapping:
+  New: 'open'
+  
+service_list:
+  AccessIssues:
+    name: 'Access issues'
+    group: 'Aqueduct'
+    service_extra_data:
+      - datatype_description: 'This is the question'
+        code: Q1
+        values:
+          Yes: Yes
+          No: No
+  FallenTrees:
+    name: 'Fallen trees'
+    group: 'Blocked towpath'
+
+        
+  
