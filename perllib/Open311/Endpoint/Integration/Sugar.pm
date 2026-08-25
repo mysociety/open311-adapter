@@ -261,14 +261,20 @@ sub _create_incident {
                     status => 'New',
                     priority => '',
                    );
-
+    my $description = $args->{attributes}->{description};
+    my $extra_list = $self->service_list->{ $args->{service_code} }->{service_extra_data} || [];
+    for my $question (@$extra_list) {
+        if ( $args->{attributes}->{ $question->{code} } ) {
+            $description .= "\n\n" . $question->{datatype_description} . ': ' . $args->{attributes}->{ $question->{code} };
+        }
+    };
     my $serviceRequest = {
                           %defaults,
                           fms_category => $args->{attributes}{group},
                           fms_subcategory => $args->{attributes}{category},
                           location_description => $args->{attributes}->{nearest_address},
                           name => $args->{attributes}->{title},
-                          description => $args->{attributes}->{description},
+                          description => $description,
                           latitude => $args->{lat}, # as float
                           longitude => $args->{long}, # as float
                           original_fms_id => $args->{attributes}->{fixmystreet_id},
