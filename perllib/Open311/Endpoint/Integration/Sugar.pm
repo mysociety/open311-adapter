@@ -145,6 +145,17 @@ has '+request_class' => (
     default => 'Open311::Endpoint::Service::Request::ExtendedStatus',
 );
 
+=head2 category_mapping
+
+This is a mapping of the FMS category or group
+to the Sugar CRM value for the category
+
+=cut
+
+has 'category_mapping' => (
+    is => 'ro',
+);
+
 =head2 reverse_status_mapping
 
 This is a mapping of statuses from Sugar to FMS
@@ -240,8 +251,8 @@ We also need to find/create a user id to go with the Case
 sub post_service_request {
     my ($self, $service, $args) = @_;
 
-    $args->{attributes}{group} = $service->group;
-    $args->{attributes}{category} = $service->description;
+    $args->{attributes}{group} = $self->category_mapping->{$service->group};
+    $args->{attributes}{category} = $self->category_mapping->{$service->description};
 
     $self->_do_login;
     my $incident_id = $self->_create_incident($args);

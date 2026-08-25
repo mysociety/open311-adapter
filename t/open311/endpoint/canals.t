@@ -15,6 +15,26 @@ $lwp->mock(request => sub {
         like $req->uri, qr/example\.com\/api\//, 'api url read from config';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'access_token' => 'OpenSesame' }));
     } elsif ($req->uri =~ /Incidents$/) {
+        is_deeply decode_json($req->content), {
+          'longitude' => '0.1',
+          'fms_category' => 'aqueduct',
+          'type' => 'Administration',
+          'status' => 'New',
+          'location_description' => '12',
+          'region_c' => 'Wales and North East',
+          'original_fms_id' => '1',
+          'description' => 'Aqueduct is blocked by tree
+
+This is the question: Yes',
+          'name' => 'Aqueduct by Potters Bridge is blocked',
+          'fms_subcategory' => 'access_issues',
+          'priority' => '',
+          'resolution' => 'Accepted',
+          'media_url' => '',
+          'fms_public_url' => 'http://localhost/1',
+          'latitude' => '50',
+          'latest_fms_id' => '1',
+        };
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'id' => 'incident-12345' }));
     } elsif ($req->uri =~ /Incidents\?filter/) {
@@ -115,6 +135,9 @@ subtest "POST report" => sub {
         'attribute[northing]' => 2,
         'attribute[category]' => 'Access Issues (CRT: Aqueduct)',
         'attribute[fixmystreet_id]' => 1,
+        'attribute[location_description]' => '12',
+        'attribute[region_c]' => 'Wales and North East',
+        'attribute[Q1]' => 'Yes',
     );
     is $res->code, 200, 'Report submitted ok';
     is_deeply decode_json($res->content), [ { service_request_id => 'incident-12345--case-3456' } ], 'Id from the Case record';
