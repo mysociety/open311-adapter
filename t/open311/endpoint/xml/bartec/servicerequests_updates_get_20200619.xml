@@ -26,7 +26,7 @@
           <JobReference>843</JobReference>
           <ServiceCategory>General</ServiceCategory>
           <ServiceClass>STREET CLEANSING</ServiceClass>
-          <ServiceType>LEAF REMOVAL</ServiceType>
+          <ServiceType>TREE REMOVAL</ServiceType>
           <DateAdded>0001-01-01T00:00:00</DateAdded>
           <DateChanged>2020-06-19T15:04:56.317</DateChanged>
         </ServiceRequest_Updates>

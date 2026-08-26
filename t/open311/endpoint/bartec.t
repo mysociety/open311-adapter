@@ -1259,7 +1259,7 @@ subtest 'fetch updates' => sub {
 
     is_deeply $sent_updates->body->{ServiceRequests_Updates_Get}, {
         token => 'ABC=',
-        LastUpdated => '2020-06-19T10:00:00Z',
+        LastUpdated => '2020-06-19T11:00:00+01:00',
     }, 'correct fetch updates request sent';
 
     # Only the entry with an allowed service (LEAF REMOVAL) AND a valid 7+ digit
@@ -1320,7 +1320,7 @@ subtest 'fetch_requests' => sub {
 
     is_deeply $sent_updates->body->{ServiceRequests_Updates_Get}, {
         token => 'ABC=',
-        LastUpdated => '2020-06-20T10:00:00Z',
+        LastUpdated => '2020-06-20T11:00:00+01:00',
     }, 'correct fetch updates request sent';
 
     is_deeply $sent_get->body->{ServiceRequests_Get}, {
