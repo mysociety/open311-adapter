@@ -283,7 +283,8 @@ sub _create_incident {
                           %defaults,
                           fms_category => $args->{attributes}{group},
                           fms_subcategory => $args->{attributes}{category},
-                          location_description => $args->{attributes}->{nearest_address},
+                          location_description => $args->{attributes}->{location_description} || '',
+                          region_c => $args->{attributes}->{region_c} || '',
                           name => $args->{attributes}->{title},
                           description => $description,
                           latitude => $args->{lat}, # as float
@@ -324,7 +325,7 @@ sub _create_case {
                           name => $args->{attributes}->{title},
                           description => $args->{attributes}->{description},
                           primary_contact_id => $primary_contact_id,
-                          crt_location_description_c => '', #nearest_address?
+                          crt_location_description_c => $args->{attributes}->{location_description},
                          };
 
     my $call = $self->api_calls->{case};
