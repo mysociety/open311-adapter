@@ -472,9 +472,6 @@ sub get_service_request_updates {
     my @updates;
     my $updates = $self->get_integration->_coerce_to_array( $response, 'ServiceRequest_Updates' );
     for my $update ( @$updates ) {
-        my $ref = $update->{JobReference} // ''; # JobReference is the external (to Bartec) ID, i.e. FMS report ID
-        next unless $ref =~ /^\d{7,}$/; # skip ServiceRequest if its job ref doesn't look like an FMS ID
-
         # Skip updates for ServiceRequests whose services we're not responsible for
         my $service = {
             Description => $update->{ServiceType},
