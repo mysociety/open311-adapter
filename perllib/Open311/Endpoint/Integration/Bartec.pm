@@ -451,7 +451,10 @@ sub get_service_request_updates {
 
     my $w3c = DateTime::Format::W3CDTF->new;
 
-    my $response = $self->get_integration->ServiceRequests_Updates_Get($args->{start_date});
+    my $start = $w3c->parse_datetime($args->{start_date});
+    $start->set_time_zone('Europe/London');
+    $start = $w3c->format_datetime($start);
+    my $response = $self->get_integration->ServiceRequests_Updates_Get($start);
 
     # The `Date` parameter to `ServiceRequests_History_Get` has a bug. Instead
     # of returning history items that have changed since that date it either
@@ -538,7 +541,10 @@ sub get_service_requests {
     my $w3c = DateTime::Format::W3CDTF->new;
     my $conf = $self->get_integration->config;
 
-    my $response = $self->get_integration->ServiceRequests_Updates_Get($args->{start_date});
+    my $start = $w3c->parse_datetime($args->{start_date});
+    $start->set_time_zone('Europe/London');
+    $start = $w3c->format_datetime($start);
+    my $response = $self->get_integration->ServiceRequests_Updates_Get($start);
 
     my @requests;
 
