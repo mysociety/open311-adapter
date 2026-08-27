@@ -456,34 +456,19 @@ sub perform_request_graphql {
 sub job_status_logs_graphql_query {
     my ( $self, %args ) = @_;
 
-    my @job_type_codes
-        = keys %{ $self->config->{job_service_whitelist} // () };
-
-    my @status_codes
-        = keys %{ $self->config->{job_reverse_status_mapping} // () };
-
-    my (
-        $start_date,
-        $end_date,
-        $job_type_codes_str,
-        $status_codes_str,
-    ) = (
-        $args{start_date},
-        $args{end_date},
-        join( '","', @job_type_codes ),
-        join( '","', @status_codes ),
-    );
+    my $job_type_codes = join '","', sort keys %{ $self->config->{job_service_whitelist} // () };
+    my $status_filter = $args{jobs_status_filter} || "";
 
     return <<GRAPHQL;
 {
     jobStatusLogs(
         filter: {
             loggedDate: {
-                greaterThanEquals: "$start_date"
-                lessThanEquals: "$end_date"
+                greaterThanEquals: "$args{start_date}"
+                lessThanEquals: "$args{end_date}"
             }
             statusCode: {
-                inList: [ "$status_codes_str" ]
+                $status_filter
             }
         }
     ) {
@@ -496,7 +481,7 @@ sub job_status_logs_graphql_query {
             jobType(
                 filter: {
                     code: {
-                        inList: [ "$job_type_codes_str" ]
+                        inList: [ "$job_type_codes" ]
                     }
                 }
             ){
@@ -511,38 +496,25 @@ GRAPHQL
 sub jobs_graphql_query {
     my ( $self, %args ) = @_;
 
-    my @job_type_codes
-        = keys %{ $self->config->{job_service_whitelist} // () };
-
-    my @status_codes
-        = keys %{ $self->config->{job_reverse_status_mapping} // () };
-
-    my (
-        $start_date,
-        $end_date,
-        $job_type_codes_str,
-        $status_codes_str,
-    ) = (
-        $args{start_date},
-        $args{end_date},
-        join( '","', @job_type_codes ),
-        join( '","', @status_codes ),
-    );
+    my $job_type_codes = join '","', sort keys %{ $self->config->{job_service_whitelist} // () };
+    my $jobs_extra_filter = $args{jobs_extra_filter} || "";
+    my $status_filter = $args{jobs_status_filter} || "";
 
     return <<"GRAPHQL"
 {
     jobs (
         filter: {
             entryDate: {
-                greaterThanEquals: "$start_date"
-                lessThanEquals: "$end_date"
+                greaterThanEquals: "$args{start_date}"
+                lessThanEquals: "$args{end_date}"
             }
+            $jobs_extra_filter
         }
     ){
         jobType(
             filter: {
                 code: {
-                    inList: [ "$job_type_codes_str" ]
+                    inList: [ "$job_type_codes" ]
                 }
             }
         ){
@@ -550,10 +522,10 @@ sub jobs_graphql_query {
             name
         }
 
-        statusLogs (
+        currentStatusLog (
             filter: {
                 statusCode: {
-                    inList: [ "$status_codes_str" ]
+                    $status_filter
                 }
             }
         ) {
