@@ -68,7 +68,7 @@ $open311->mock(perform_request => sub {
     } elsif ( $op->name && $op->name eq 'GetEnquiry' ) {
         return { OperationResponse => [
           { GetEnquiryResponse => { Enquiry => {
-            ServiceCode => 'ABC', SubjectCode => 'DEF', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z'
+            ServiceCode => 'ABC', SubjectCode => 'DEF', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z', EnquiryClassCode => 3
           } } },
         ] };
     }
@@ -266,25 +266,29 @@ subtest 'cope with defaults of fetched enquiries' => sub {
         } elsif ( $op->name && $op->name eq 'GetEnquiry' ) {
             return { OperationResponse => [
               { GetEnquiryResponse => { Enquiry => {
-                ServiceCode => 'HMOB', SubjectCode => 'MO02', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z'
+                ServiceCode => 'HMOB', SubjectCode => 'MO02', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z', EnquiryClassCode => 3
               } } },
               { GetEnquiryResponse => { Enquiry => {
-                ServiceCode => 'HMOB', SubjectCode => 'MO05', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z'
+                ServiceCode => 'HMOB', SubjectCode => 'MO05', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z', EnquiryClassCode => 3
               } } },
               { GetEnquiryResponse => { Enquiry => {
-                ServiceCode => 'HMOB', SubjectCode => 'MO06', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z'
+                ServiceCode => 'HMOB', SubjectCode => 'MO06', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z', EnquiryClassCode => 3
               } } },
               { GetEnquiryResponse => { Enquiry => {
-                ServiceCode => 'HMOB', SubjectCode => 'MO10', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z'
+                ServiceCode => 'HMOB', SubjectCode => 'MO10', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z', EnquiryClassCode => 3
               } } },
               { GetEnquiryResponse => { Enquiry => {
-                ServiceCode => 'HMVG', SubjectCode => 'MV05', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z'
+                ServiceCode => 'HMVG', SubjectCode => 'MV05', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z', EnquiryClassCode => 3
               } } },
               { GetEnquiryResponse => { Enquiry => {
-                ServiceCode => 'PRWD', SubjectCode => 'RW41', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z'
+                ServiceCode => 'PRWD', SubjectCode => 'RW41', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z', EnquiryClassCode => 3
               } } },
               { GetEnquiryResponse => { Enquiry => {
-                ServiceCode => 'SD', SubjectCode => 'HSF9', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z'
+                ServiceCode => 'SD', SubjectCode => 'HSF9', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z', EnquiryClassCode => 3
+              } } },
+            # Same report, but different class code
+              { GetEnquiryResponse => { Enquiry => {
+                ServiceCode => 'SD', SubjectCode => 'HSF9', EnquiryStatusCode => 'INP', EnquiryDescription => 'this is a report from confirm', EnquiryNumber => '2003', EnquiryX => '100', EnquiryY => '100', EnquiryLogTime => '2018-04-17T12:34:56Z', LoggedTime => '2018-04-17T12:34:56Z', EnquiryClassCode => 4
               } } },
             ] };
         }
