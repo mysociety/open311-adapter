@@ -259,7 +259,7 @@ sub post_service_request {
     my $case_id = $self->_create_case($args, $incident_id);
 
     return $self->new_request(
-                              service_request_id => "$incident_id--$case_id",
+                              service_request_id => "$incident_id",
                              );
 };
 
@@ -444,14 +444,12 @@ sub get_service_request_updates {
     foreach my $update (@{ $response->{records} }) {
         my $date = DateTime::Format::W3CDTF->parse_datetime($update->{last_sync_date});
         (my $update_id_formatted = $date) =~ s/://g;
-        my $service_code = $self->_lookup_service_code($update->{fms_category}, $update->{fms_subcategory});
 
         my %args = (
             status => $self->reverse_status_mapping->{ $update->{status} },
             external_status_code => $update->{status},
-            fixmystreet_id => $update->{original_fms_id},
             update_id => $update_id_formatted,
-            service_request_id => $service_code,
+            service_request_id => $update->{id},
             description => "",
             updated_datetime => $date,
                    );
