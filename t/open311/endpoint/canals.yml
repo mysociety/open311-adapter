@@ -29,5 +29,8 @@ service_list:
     name: 'Fallen trees'
     group: 'Blocked towpath'
 
-        
+category_mapping:
+  'Access issues': 'access_issues'
+  'Aqueduct': 'aqueduct'
+
   

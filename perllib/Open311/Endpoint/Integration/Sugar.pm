@@ -21,6 +21,7 @@ use Integrations::Rest;
 use DateTime::Format::W3CDTF;
 use Open311::Endpoint::Service::Request::ExtendedStatus;
 use Open311::Endpoint::Service::Request::Update::mySociety;
+use Open311::Endpoint::Service::UKCouncil::Canals;
 
 =head2 jurisdiction_id
 
@@ -144,6 +145,17 @@ has '+request_class' => (
     default => 'Open311::Endpoint::Service::Request::ExtendedStatus',
 );
 
+=head2 category_mapping
+
+This is a mapping of the FMS category or group
+to the Sugar CRM value for the category
+
+=cut
+
+has 'category_mapping' => (
+    is => 'ro',
+);
+
 =head2 reverse_status_mapping
 
 This is a mapping of statuses from Sugar to FMS
@@ -163,7 +175,7 @@ if they want to have extra attributes on all services.
 
 has service_class  => (
     is => 'ro',
-    default => 'Open311::Endpoint::Service::UKCouncil',
+    default => 'Open311::Endpoint::Service::UKCouncil::Canals',
 );
 
 =head2 get_integration
@@ -239,8 +251,8 @@ We also need to find/create a user id to go with the Case
 sub post_service_request {
     my ($self, $service, $args) = @_;
 
-    $args->{attributes}{group} = $service->group;
-    $args->{attributes}{category} = $service->description;
+    $args->{attributes}{group} = $self->category_mapping->{$service->group};
+    $args->{attributes}{category} = $self->category_mapping->{$service->description};
 
     $self->_do_login;
     my $incident_id = $self->_create_incident($args);
@@ -261,13 +273,22 @@ sub _create_incident {
                     priority => '',
                    );
 
+    my $description = $args->{attributes}->{description};
+    my $extra_list = $self->service_list->{ $args->{service_code} }->{service_extra_data} || [];
+    for my $question (@$extra_list) {
+        if ( $args->{attributes}->{ $question->{code} } ) {
+            $description .= "\n\n" . $question->{datatype_description} . ': ' . $args->{attributes}->{ $question->{code} };
+        }
+    };
+
     my $serviceRequest = {
                           %defaults,
                           fms_category => $args->{attributes}{group},
                           fms_subcategory => $args->{attributes}{category},
-                          location_description => $args->{attributes}->{nearest_address},
+                          location_description => $args->{attributes}->{location_description} || '',
+                          region_c => $args->{attributes}->{region_c} || '',
                           name => $args->{attributes}->{title},
-                          description => $args->{attributes}->{description},
+                          description => $description,
                           latitude => $args->{lat}, # as float
                           longitude => $args->{long}, # as float
                           original_fms_id => $args->{attributes}->{fixmystreet_id},
@@ -306,7 +327,7 @@ sub _create_case {
                           name => $args->{attributes}->{title},
                           description => $args->{attributes}->{description},
                           primary_contact_id => $primary_contact_id,
-                          crt_location_description_c => '', #nearest_address?
+                          crt_location_description_c => $args->{attributes}->{location_description},
                          };
 
     my $call = $self->api_calls->{case};
@@ -317,7 +338,7 @@ sub _create_case {
                                           headers => $self->headers,
                                           body => $serviceRequest,
                                          );
-    return $response->{id};
+    return $response->{related_record}->{id};
 }
 
 =head2 _get_user
