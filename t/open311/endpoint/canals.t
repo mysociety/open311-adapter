@@ -175,6 +175,17 @@ subtest "GET report updates" => sub {
        GET => 'servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
       );
     is $res->code, 200, 'Updates fetched for FMS';
+    is_deeply decode_json($res->content), [
+          {
+            'external_status_code' => 'New',
+            'status' => 'open',
+            'update_id' => '2026-08-03T152845',
+            'updated_datetime' => '2026-08-03T15:28:45+01:00',
+            'description' => '',
+            'media_url' => '',
+            'service_request_id' => '2354556-8ccc-1111-b0e9-a0d3d106b144'
+          }
+        ];
 };
 
 done_testing;
