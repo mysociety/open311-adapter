@@ -140,7 +140,7 @@ subtest "POST report" => sub {
         'attribute[Q1]' => 'Yes',
     );
     is $res->code, 200, 'Report submitted ok';
-    is_deeply decode_json($res->content), [ { service_request_id => 'incident-12345--case-3456' } ], 'Id from the Case record';
+    is_deeply decode_json($res->content), [ { service_request_id => 'incident-12345' } ], 'Id from the Incident';
 };
 
 subtest "GET report" => sub {

@@ -259,7 +259,7 @@ sub post_service_request {
     my $case_id = $self->_create_case($args, $incident_id);
 
     return $self->new_request(
-                              service_request_id => "$incident_id--$case_id",
+                              service_request_id => "$incident_id",
                              );
 };
 
