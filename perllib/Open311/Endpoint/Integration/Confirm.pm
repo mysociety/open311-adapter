@@ -1286,14 +1286,16 @@ $filter_json    }
     emailAddress
     address
     externalSystemNumber
+    classificationCode
   }
 }
 GRAPHQL
-        my $results =$integ->perform_request_graphql(query => $query)->{data}->{centralEnquiries};
+        my $results = $integ->perform_request_graphql(query => $query)->{data}->{centralEnquiries};
 
         for my $result ( @$results ) {
             # remap from GraphQL key names
             my $enquiry = {
+                EnquiryClassCode => $result->{classificationCode},
                 ServiceCode => $result->{serviceCode},
                 SubjectCode => $result->{subjectCode},
                 EnquiryStatusCode => $result->{statusCode},

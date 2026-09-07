@@ -60,4 +60,13 @@ sub munge_new_request {
     }
 }
 
+around _parse_enquiry => sub {
+    my ($orig, $self, $enquiry, @args) = @_;
+
+    my $class = $enquiry->{EnquiryClassCode} || 0;
+    return unless $class == 3; # Fault
+
+    return $self->$orig($enquiry, @args);
+};
+
 1;
