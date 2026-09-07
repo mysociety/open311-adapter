@@ -162,6 +162,9 @@
   "request_to_resource_attribute_manual_mapping": {
     "category": "attributes_customerRequestRequestCategory_63862851fb3d97038c4e1cfc",
     "group": "attributes_customerRequestRequestGroup_638627f005cb250393c1705a",
+    "Damaged / Missing / Facing Wrong Way": {
+      "Q1": "attributes_customerRequestQuestion1_69931b1e554d8210415970e4",
+    },
   },
 
   "inspection_attribute_mapping": {
