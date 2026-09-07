@@ -3,6 +3,8 @@
 use strict;
 use warnings;
 use v5.14;
+use lib '/usr/lib/nagios/plugins';
+use utils qw(%ERRORS);
 
 BEGIN {
     use File::Basename qw(dirname);
@@ -21,4 +23,25 @@ GetOptions (
 
 my $uk = Open311::Endpoint::Integration::UK->new;
 
-$uk->check_endpoints($verbose);
+my @expiring = $uk->check_endpoints($verbose);
+
+if (@expiring) {
+    if ($verbose) {
+        # We've got everything, let's just check if anything is expiring.
+        my $ret = "OK";
+        foreach (@expiring) {
+            next if $_ =~ /will not expire/;
+            $ret = "WARNING";
+        }
+        print "${ret}: verbose flag passed - printing all:\n";
+        print join('\n', @expiring), "\n";
+        exit $ERRORS{$ret};
+    } else {
+        print "WARNING: Certificates expiring within the next week:\n";
+        print join('\n', @expiring), "\n";
+        exit $ERRORS{WARNING};
+    }
+}
+
+print "OK: no endpoint certificates due to expire in the next week.\n";
+exit $ERRORS{OK};
