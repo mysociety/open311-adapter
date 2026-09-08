@@ -6,6 +6,7 @@ use Integrations::Verint;
 use Digest::MD5 qw(md5_hex);
 use Path::Tiny;
 use Tie::IxHash;
+use Try::Tiny;
 use URI::Split qw(uri_split);
 use Open311::Endpoint::Service::UKCouncil;
 use Open311::Endpoint::Service::Request::Update::mySociety;
@@ -134,12 +135,14 @@ sub update_case_title {
     my ($self, $ref, $id) = @_;
 
     my $integ = $self->get_integration;
-    my $result = $integ->searchAndRetrieveCaseDetails(
-        ixhash(
-            'flt:CaseReference' => $ref,
-        ),
-        'all',
-    );
+    my $result = try {
+        $integ->searchAndRetrieveCaseDetails(
+            ixhash(
+                'flt:CaseReference' => $ref,
+            ),
+            'all',
+        );
+    };
     if ($result) {
         $result = $result->result;
         my $case = $result->{CoreDetails}{CaseReference};

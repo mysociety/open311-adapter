@@ -13,6 +13,7 @@ requires 'Cache::Memcached';
 requires 'Carp';
 requires 'Crypt::JWT';
 requires 'Data::Dumper';
+requires 'Data::Printer';
 requires 'Data::Rx';
 requires 'DateTime', '1.38';
 requires 'DateTime::Format::ISO8601';
