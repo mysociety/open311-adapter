@@ -33,3 +33,11 @@ category_mapping:
   'Access issues': 'access_issues'
   'Aqueduct': 'aqueduct'
   
+
+region_mapping:
+  'East Midlands': 'east_midlands'
+  'London & South East': 'london_and_south_east'
+  'North West': 'north_west'
+  'Wales & South West': 'wales_south_west'
+  'West Midlands': 'west_midlands'
+  'Yorkshire & North East': 'yorkshire_and_north_east'
