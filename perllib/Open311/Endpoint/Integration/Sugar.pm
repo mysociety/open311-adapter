@@ -156,6 +156,18 @@ has 'category_mapping' => (
     is => 'ro',
 );
 
+=head2 region_mapping
+
+This is a mapping of the 'region' attribute on the canals asset layer to the
+item names of Sugar's crt_regional_preference_list dropdown, which backs the
+region_c field on an Incident.
+
+=cut
+
+has 'region_mapping' => (
+    is => 'ro',
+);
+
 =head2 reverse_status_mapping
 
 This is a mapping of statuses from Sugar to FMS
@@ -263,6 +275,19 @@ sub post_service_request {
                              );
 };
 
+sub _map_region {
+    my ($self, $region) = @_;
+
+    return '' unless $region;
+
+    my $mapped = ($self->region_mapping || {})->{$region};
+    unless (defined $mapped) {
+        $self->rest->logger->warn("Sugar: no region_mapping for '$region', sending blank");
+        return '';
+    }
+    return $mapped;
+}
+
 sub _create_incident {
     my ($self, $args) = @_;
 
@@ -273,6 +298,7 @@ sub _create_incident {
                     priority => '',
                    );
     my $description = $args->{attributes}->{description};
+    my $region = $self->_map_region($args->{attributes}->{region_c});
     my $extra_list = $self->service_list->{ $args->{service_code} }->{service_extra_data} || [];
     for my $question (@$extra_list) {
         if ( $args->{attributes}->{ $question->{code} } ) {
@@ -284,7 +310,7 @@ sub _create_incident {
                           fms_category => $args->{attributes}{group},
                           fms_subcategory => $args->{attributes}{category},
                           location_description => $args->{attributes}->{location_description} || '',
-                          region_c => $args->{attributes}->{region_c} || '',
+                          region_c => $region,
                           name => $args->{attributes}->{title},
                           description => $description,
                           latitude => $args->{lat}, # as float
