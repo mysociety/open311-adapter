@@ -30,21 +30,30 @@ my %methods = (
     ], # end parameters
   }, # end AttachFile
 
-'searchAndRetrieveCaseDetails' => {
-    soapaction => 'http://www.lagan.com/wsdl/FLService',
-    namespace => 'http://www.lagan.com/wsdl/FLService',
+'FWTCaseSearch' => {
+    soapaction => 'http://www.lagan.com/wsdl/FLTypes',
+    namespace => 'http://www.lagan.com/wsdl/FLTypes',
     parameters => [
       SOAP::Data->new(name => 'flt:FWTCaseSearch', type => 'flt:FWTCaseSearch', attr => {}),
       SOAP::Data->new(name => 'Option', type => 'xs:string', attr => {}),
     ], # end parameters
-  }, # end searchAndRetrieveCaseDetails
+  },
 
-'updateCase' => {
-    soapaction => 'http://www.lagan.com/wsdl/FLService',
-    namespace => 'http://www.lagan.com/wsdl/FLService',
+'FWTCaseFullDetailsRequest' => {
+    soapaction => 'http://www.lagan.com/wsdl/FLTypes',
+    namespace => 'http://www.lagan.com/wsdl/FLTypes',
     parameters => [
       SOAP::Data->new(name => 'flt:CaseReference', type => 'sch:nonEmptyString', attr => {}),
-      SOAP::Data->new(name => 'Title', type => 'sch:nonEmptyString', attr => {}),
+      SOAP::Data->new(name => 'Option', type => 'xs:string', attr => {}),
+    ], # end parameters
+  },
+
+'FWTCaseUpdate' => {
+    soapaction => 'http://www.lagan.com/wsdl/FLTypes',
+    namespace => 'http://www.lagan.com/wsdl/FLTypes',
+    parameters => [
+      SOAP::Data->new(name => 'flt:CaseReference', type => 'sch:nonEmptyString', attr => {}),
+      SOAP::Data->new(name => 'flt:Title', type => 'sch:nonEmptyString', attr => {}),
     ], # end parameters
   },
 );
@@ -94,12 +103,62 @@ sub _call {
     $self->serializer->register_ns("http://kana.com/dforms","sch");
     $self->serializer->register_ns("http://www.lagan.com/wsdl/FLTypes","flt");
 
-    my $som = $self->SUPER::call($method => @parameters);
+    SOAP::Lite->soapversion(1.1);
+    my $som;
+    if ($method eq 'FWTCaseSearch') {
+        # We have two top-level Body children for this call now, which SOAP::Lite call() does not do
+        $som = $self->call_with_freeform($method => @parameters);
+    } else {
+        $som = $self->SUPER::call($method => @parameters);
+    }
     if ($self->want_som) {
         return $som;
     }
 
     UNIVERSAL::isa($som => 'SOAP::SOM') ? wantarray ? $som->paramsall : $som->result : $som;
+}
+
+# Copy of much of SOAP::Lite::call() so we can call "freeform" for direct Body children
+sub call_with_freeform {
+    my $self = shift;
+
+    my $method = shift; # Not used because the parameters are the direct children
+
+    $self->init_context();
+
+    my $serializer = $self->serializer;
+    $serializer->on_nonserialized($self->on_nonserialized);
+
+    my $response = $self->transport->send_receive(
+        context  => $self, # this is provided for context
+        endpoint => $self->endpoint,
+        action   => scalar($self->on_action->($serializer->uriformethod($_[0]))),
+        envelope => $serializer->envelope(freeform => @_), # freeform, not method
+        encoding => $serializer->encoding,
+        parts    => @{$self->packager->parts} ? $self->packager->parts : undef,
+    );
+
+    return $response if $self->outputxml;
+
+    my $result = eval { $self->deserializer->deserialize($response) }
+        if $response;
+
+    if (!$self->transport->is_success || # transport fault
+        $@ ||                            # not deserializible
+        # fault message even if transport OK
+        # or no transport error (for example, fo TCP, POP3, IO implementations)
+        UNIVERSAL::isa($result => 'SOAP::SOM') && $result->fault) {
+        return ($self->on_fault->($self, $@
+            ? $@ . ($response || '')
+            : $result)
+                || $result
+        );
+        # ? # trick editors
+    }
+    # this might be trouble for connection close...
+    return unless $response; # nothing to do for one-ways
+
+    return $result;
 }
 
 sub SOAP::Serializer::as_nonEmptyString {
