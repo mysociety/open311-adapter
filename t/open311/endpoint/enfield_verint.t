@@ -103,17 +103,50 @@ $soap_lite->mock(call => sub {
 
         my $id = $form_name eq 'fetch_is_empty' ? 12346 : 12345;
         return SOAP::Result->new(method => { status => 'success', ref => $id });
-    } elsif ($call eq 'searchAndRetrieveCaseDetails') {
+    } elsif ($call eq 'FWTCaseFullDetailsRequest') {
+        is $args[0]->name, 'CaseReference';
+        is $args[1]->name, 'Option';
+        is $args[1]->value, 'core';
+        my $v = $args[0]->value;
+        like $v, qr/2345[67]/;
+        if ($v == 23456) {
+            return SOAP::Result->new(result => {
+                CaseReference => 23456,
+                ExternalReferences => { ExternalReference => 1 },
+                caseCloseureReason => '',
+            });
+        } elsif ($v == 23457) {
+            return SOAP::Result->new(result => {
+                CaseReference => 23457,
+                Closed => '2025-11-18T09:00:00Z',
+                ExternalReferences => { ExternalReference => [ 2, '46/W' ] },
+                caseCloseureReason => 'Case Resolved (some text)',
+            });
+        }
+    } elsif ($call eq 'FWTCaseUpdate') {
+        is $args[0]->value, 'CaseRef';
+        is $args[1]->value, 'Title - FMS ID: 1';
+    } else {
+        die "Unknown call $call made";
+    }
+});
+
+my $verint = Test::MockModule->new('Integrations::Verint');
+
+$verint->mock(call_with_freeform => sub {
+    my ($cls, @args) = @_;
+
+    my $call = shift @args;
+
+    if ($call eq 'FWTCaseSearch') {
         my @data = ${$args[0]->value}->value;
         if ($data[0]->name eq 'CaseReference') {
             my $v = $data[0]->value;
             like $v, qr/1234[56]/;
             if ($v == 12345) {
                 return SOAP::Result->new(result => {
-                    CoreDetails => {
-                        CaseReference => 'CaseRef',
-                        Title => "Title",
-                    },
+                    CaseReference => 'CaseRef',
+                    Title => "Title",
                 });
             } elsif ($v == 12346) {
                 return SOAP::Result->new(result => {});
@@ -123,22 +156,12 @@ $soap_lite->mock(call => sub {
             is $data[1]->value, '2025-11-18T12:00:00Z';
             is $data[2]->value, '2025-11-18T13:00:00Z';
             is $args[1]->value, 'all';
-            return SOAP::Result->new(method => { FWTCaseFullDetails => [ {
-                CoreDetails => {
-                    ExternalReferences => { ExternalReference => 1 },
-                    caseCloseureReason => '',
-                },
+            return SOAP::Result->new(method => { CaseBriefDetails => [ {
+                CaseReference => 23456,
             }, {
-                CoreDetails => {
-                    Closed => '2025-11-18T09:00:00Z',
-                    ExternalReferences => { ExternalReference => [ 2, '46/W' ] },
-                    caseCloseureReason => 'Case Resolved (some text)',
-                },
+                CaseReference => 23457,
             } ] });
         }
-    } elsif ($call eq 'updateCase') {
-        is $args[0]->value, 'CaseRef';
-        is $args[1]->value, 'Title - FMS ID: 1';
     } else {
         die "Unknown call $call made";
     }
