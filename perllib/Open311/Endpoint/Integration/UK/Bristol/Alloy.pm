@@ -81,6 +81,13 @@ sub process_attributes {
 
     my $road = $args->{attributes}->{road_alloy} || $self->_get_road($args);
     my $locality_name = $road->{attributes}->{ $self->config->{locality_attribute_field} };
+
+    # Fix manually a couple missing a locality
+    my $usrn = $args->{attributes}{usrn} || 0;
+    if (($usrn == 4514587 || $usrn == 4513432) && !$locality_name) {
+           $locality_name = 'Westbury';
+    }
+
     my $locality = $self->_search_for_code_by_argument(
         {
             'dodi_code' => $self->config->{locality_list_details}->{code},

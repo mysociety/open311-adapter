@@ -136,7 +136,7 @@ sub update_case_title {
 
     my $integ = $self->get_integration;
     my $result = try {
-        $integ->searchAndRetrieveCaseDetails(
+        $integ->FWTCaseSearch(
             ixhash(
                 'flt:CaseReference' => $ref,
             ),
@@ -145,11 +145,11 @@ sub update_case_title {
     };
     if ($result) {
         $result = $result->result;
-        my $case = $result->{CoreDetails}{CaseReference};
-        my $title = $result->{CoreDetails}{Title};
+        my $case = $result->{CaseReference};
+        my $title = $result->{Title};
         if ($case) {
             $title .= " - FMS ID: $id";
-            $integ->updateCase($case, $title);
+            $integ->FWTCaseUpdate($case, $title);
         }
     }
 }
@@ -160,7 +160,7 @@ sub get_service_request_updates {
     my $integ = $self->get_integration;
     my $mapping = $self->endpoint_config->{status_mapping};
 
-    my $result = $integ->searchAndRetrieveCaseDetails(
+    my $result = $integ->FWTCaseSearch(
         ixhash(
             RaisedByUser => { UserID => 'service_fixmystreet' },
             'LastModifiedDateFrom' => $args->{start_date},
@@ -172,11 +172,13 @@ sub get_service_request_updates {
     $result = $result->method;
     return unless $result;
 
-    my $requests = $result->{FWTCaseFullDetails};
+    my $requests = $result->{CaseBriefDetails};
     $requests = [ $requests ] unless ref $requests eq 'ARRAY';
     my @updates;
     foreach (@$requests) {
-        my $core = $_->{CoreDetails};
+        my $case = $_->{CaseReference};
+        $case = $integ->FWTCaseFullDetailsRequest($case, 'core');
+        my $core = $case->result;
         my $closed = $core->{Closed};
         next unless $closed;
         my $reason = $core->{caseCloseureReason};
@@ -200,7 +202,7 @@ sub get_service_request_updates {
                 update_id => $update_id,
                 service_request_id => $ref,
                 description => '',
-                updated_datetime => DateTime::Format::W3CDTF->parse_datetime($closed),
+                updated_datetime => DateTime::Format::W3CDTF->parse_datetime($closed)->set_nanosecond(0),
                 extra => { latest_data_only => 1 },
             );
         }
