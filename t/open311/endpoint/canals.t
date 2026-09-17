@@ -7,6 +7,9 @@ use JSON::MaybeXS qw(encode_json decode_json);
 
 extends 'Integrations::Rest';
 
+# The incident body most recently POSTed, for subtests to assert against.
+my $posted_incident;
+
 my $lwp = Test::MockModule->new('LWP::UserAgent');
 
 $lwp->mock(request => sub {
@@ -15,26 +18,7 @@ $lwp->mock(request => sub {
         like $req->uri, qr/example\.com\/api\//, 'api url read from config';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'access_token' => 'OpenSesame' }));
     } elsif ($req->uri =~ /Incidents$/) {
-        is_deeply decode_json($req->content), {
-          'longitude' => '0.1',
-          'fms_category' => 'aqueduct',
-          'type' => 'Administration',
-          'status' => 'New',
-          'location_description' => '12',
-          'region_c' => 'Wales and North East',
-          'original_fms_id' => '1',
-          'description' => 'Aqueduct is blocked by tree
-
-This is the question: Yes',
-          'name' => 'Aqueduct by Potters Bridge is blocked',
-          'fms_subcategory' => 'access_issues',
-          'priority' => '',
-          'resolution' => 'Accepted',
-          'media_url' => '',
-          'fms_public_url' => 'http://localhost/1',
-          'latitude' => '50',
-          'latest_fms_id' => '1',
-        };
+        $posted_incident = decode_json($req->content);
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'id' => 'incident-12345' }));
     } elsif ($req->uri =~ /Incidents\?filter/) {
@@ -114,9 +98,9 @@ subtest "Check user login" => sub {
     ok $canals_endpoint->access_token, 'OpenSesame';
 };
 
-subtest "POST report" => sub {
-    my $res = $canals_endpoint->run_test_request(
-        POST => '/requests.json',
+sub post_report {
+    my %overrides = @_;
+    my %params = (
         jurisdiction_id => 'canals',
         api_key => 'api-key',
         media_url => [],
@@ -136,11 +120,43 @@ subtest "POST report" => sub {
         'attribute[category]' => 'Access Issues (CRT: Aqueduct)',
         'attribute[fixmystreet_id]' => 1,
         'attribute[location_description]' => '12',
-        'attribute[region_c]' => 'Wales and North East',
+        'attribute[region_c]' => 'Wales & South West',
         'attribute[Q1]' => 'Yes',
+        %overrides,
     );
+    return $canals_endpoint->run_test_request( POST => '/requests.json', %params );
+}
+
+subtest "POST report" => sub {
+    my $res = post_report();
     is $res->code, 200, 'Report submitted ok';
     is_deeply decode_json($res->content), [ { service_request_id => 'incident-12345' } ], 'Id from the Incident';
+    is_deeply $posted_incident, {
+      'longitude' => '0.1',
+      'fms_category' => 'aqueduct',
+      'type' => 'Administration',
+      'status' => 'New',
+      'location_description' => '12',
+      'region_c' => 'wales_south_west',
+      'original_fms_id' => '1',
+      'description' => 'Aqueduct is blocked by tree
+
+This is the question: Yes',
+      'name' => 'Aqueduct by Potters Bridge is blocked',
+      'fms_subcategory' => 'access_issues',
+      'priority' => '',
+      'resolution' => 'Accepted',
+      'media_url' => '',
+      'fms_public_url' => 'http://localhost/1',
+      'latitude' => '50',
+      'latest_fms_id' => '1',
+    }, 'Incident posted to Sugar, with the region mapped to its dropdown value';
+};
+
+subtest "POST report with a region that isn't in the mapping" => sub {
+    my $res = post_report('attribute[region_c]' => 'Atlantis');
+    is $res->code, 200, 'Report submitted ok';
+    is $posted_incident->{region_c}, '', 'Unmapped region sent as blank';
 };
 
 subtest "GET report" => sub {

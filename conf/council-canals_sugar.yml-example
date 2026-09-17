@@ -19,3 +19,13 @@ service_list:
    category:
 
 reverse_status_mapping:
+
+# Maps the 'region' attribute on the canals asset layer to the item names of
+# Sugar's crt_regional_preference_list dropdown.
+region_mapping:
+  'East Midlands': 'east_midlands'
+  'London & South East': 'london_and_south_east'
+  'North West': 'north_west'
+  'Wales & South West': 'wales_south_west'
+  'West Midlands': 'west_midlands'
+  'Yorkshire & North East': 'yorkshire_and_north_east'
