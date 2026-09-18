@@ -340,8 +340,6 @@ sub _create_case {
                                              );
     my %defaults = (
                      'type' => 'General Query',
-                     'crt_l1_contact_purpose_c' => 'operational_issue_reporting',
-                     'crt_l2_reason_c' => 'navigation_asset',
                      'source' => 'FixMyStreet',
                      'priority' => '',
                     );
