@@ -7,8 +7,8 @@ use JSON::MaybeXS qw(encode_json decode_json);
 
 extends 'Integrations::Rest';
 
-# The incident body most recently POSTed, for subtests to assert against.
-my $posted_incident;
+# The bodies most recently POSTed, for subtests to assert against.
+my ($posted_incident, $posted_case);
 
 my $lwp = Test::MockModule->new('LWP::UserAgent');
 
@@ -28,6 +28,7 @@ $lwp->mock(request => sub {
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'id' => 'user-236' }));
     } elsif ($req->uri =~ /Incidents\/incident-12345\/incidents_case/) {
+        $posted_case = decode_json($req->content);
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'related_record' => { 'id' => 'case-3456' } }));
     }
@@ -151,6 +152,17 @@ This is the question: Yes',
       'latitude' => '50',
       'latest_fms_id' => '1',
     }, 'Incident posted to Sugar, with the region mapped to its dropdown value';
+    is_deeply $posted_case, {
+      'type' => 'General Query',
+      'source' => 'FixMyStreet',
+      'priority' => '',
+      'name' => 'Aqueduct by Potters Bridge is blocked',
+      'description' => 'Aqueduct is blocked by tree',
+      'primary_contact_id' => 'user-236',
+      'crt_location_description_c' => '12',
+      'crt_fms_category_c' => 'aqueduct',
+      'crt_fms_subcategory_c' => 'access_issues',
+    }, 'Case posted to Sugar';
 };
 
 subtest "POST report with a region that isn't in the mapping" => sub {
