@@ -160,6 +160,8 @@ This is the question: Yes',
       'description' => 'Aqueduct is blocked by tree',
       'primary_contact_id' => 'user-236',
       'crt_location_description_c' => '12',
+      'crt_fms_category_c' => 'aqueduct',
+      'crt_fms_subcategory_c' => 'access_issues',
     }, 'Case posted to Sugar';
 };
 

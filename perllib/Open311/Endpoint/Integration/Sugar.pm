@@ -350,6 +350,8 @@ sub _create_case {
                           description => $args->{attributes}->{description},
                           primary_contact_id => $primary_contact_id,
                           crt_location_description_c => $args->{attributes}->{location_description},
+                          crt_fms_category_c => $args->{attributes}{group},
+                          crt_fms_subcategory_c => $args->{attributes}{category},
                          };
 
     my $call = $self->api_calls->{case};
