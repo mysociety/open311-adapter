@@ -416,7 +416,8 @@ subtest "GET service" => sub {
           { code => 'fixmystreet_id', order => 4, required => 'true', variable => 'false', datatype => 'string', datatype_description => '', automated => 'server_set', description => 'external system ID' },
           { code => 'Container_Type', order => 5, required => 'true', variable => 'true', datatype => 'singlevaluelist', datatype_description => '', description => 'Type of container', values => $container_values} ,
           { code => 'Exact_Location', order => 6, required => 'true', variable => 'true', datatype => 'text', datatype_description => '', description => 'Exact location of containers' },
-          { code => 'staff_form', order => 7, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'staff_form' },
+          { code => 'Image', order => 7, required => 'false', variable => 'true', datatype => 'text', datatype_description => '', description => 'Image (optional)' },
+          { code => 'staff_form', order => 8, required => 'false', variable => 'true', datatype => 'string', datatype_description => '', automated => 'hidden_field', description => 'staff_form' },
       ],
     }, 'correct json returned';
 };

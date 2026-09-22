@@ -24,6 +24,9 @@ service_extra_data:
   2149-add:
     staff_form: 1
     Exact_Location: Exact location of containers
+    Image:
+      description: Image (optional)
+      required: 0
     Container_Type:
       description: Type of container
       choices:
