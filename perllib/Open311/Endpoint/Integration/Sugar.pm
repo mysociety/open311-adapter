@@ -160,7 +160,8 @@ has 'category_mapping' => (
 
 This is a mapping of the 'region' attribute on the canals asset layer to the
 item names of Sugar's crt_regional_preference_list dropdown, which backs the
-region_c field on an Incident.
+region_c field on an Incident. The mapped values are also sent to region_c
+on a Case.
 
 =cut
 
@@ -352,6 +353,9 @@ sub _create_case {
                           crt_location_description_c => $args->{attributes}->{location_description},
                           crt_fms_category_c => $args->{attributes}{group},
                           crt_fms_subcategory_c => $args->{attributes}{category},
+                          latitude_c => $args->{lat},
+                          longitude_c => $args->{long},
+                          region_c => $self->_map_region($args->{attributes}->{region_c}),
                          };
 
     my $call = $self->api_calls->{case};

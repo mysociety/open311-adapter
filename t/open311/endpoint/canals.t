@@ -162,6 +162,9 @@ This is the question: Yes',
       'crt_location_description_c' => '12',
       'crt_fms_category_c' => 'aqueduct',
       'crt_fms_subcategory_c' => 'access_issues',
+      'latitude_c' => '50',
+      'longitude_c' => '0.1',
+      'region_c' => 'wales_south_west',
     }, 'Case posted to Sugar';
 };
 
@@ -169,6 +172,14 @@ subtest "POST report with a region that isn't in the mapping" => sub {
     my $res = post_report('attribute[region_c]' => 'Atlantis');
     is $res->code, 200, 'Report submitted ok';
     is $posted_incident->{region_c}, '', 'Unmapped region sent as blank';
+    is $posted_case->{region_c}, '', 'Unmapped case region sent as blank';
+};
+
+subtest "POST report without a region" => sub {
+    my $res = post_report('attribute[region_c]' => '');
+    is $res->code, 200, 'Report submitted ok';
+    is $posted_incident->{region_c}, '', 'Missing incident region sent as blank';
+    is $posted_case->{region_c}, '', 'Missing case region sent as blank';
 };
 
 subtest "GET report" => sub {
