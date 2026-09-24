@@ -210,13 +210,22 @@ sub services {
                         automated => 'hidden_field',
                     );
                 } elsif (ref $data->{$_} eq 'HASH') {
-                    %params = (
-                        code => $_,
-                        description => $data->{$_}{description},
-                        required => 1,
-                        datatype => 'singlevaluelist',
-                        values => $data->{$_}{choices}
-                    );
+                    if ($data->{$_}{choices}) {
+                        %params = (
+                            code => $_,
+                            description => $data->{$_}{description},
+                            required => 1,
+                            datatype => 'singlevaluelist',
+                            values => $data->{$_}{choices}
+                        );
+                    } else {
+                        %params = (
+                            code => $_,
+                            description => $data->{$_}{description},
+                            required => $data->{$_}{required} // 1,
+                            datatype => 'text',
+                        );
+                    }
                 } else {
                     %params = (
                         code => $_,
