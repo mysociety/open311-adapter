@@ -182,6 +182,31 @@ subtest "POST report without a region" => sub {
     is $posted_case->{region_c}, '', 'Missing case region sent as blank';
 };
 
+subtest "Look up services using Sugar category and subcategory values" => sub {
+    my $endpoint = Open311::Endpoint::Integration::Sugar::Dummy->new(
+        jurisdiction_id => 'canals_sugar',
+        config_file => path(__FILE__)->sibling("canals.yml")->stringify,
+        service_list => {
+            AqueductOther => { name => 'Other', group => 'Aqueduct' },
+            BridgeOther => { name => 'Other', group => 'Bridge' },
+            AqueductGraffiti => { name => 'Graffiti', group => 'Aqueduct' },
+        },
+        category_mapping => {
+            Aqueduct => 'aquaduct',
+            Bridge => 'bridge',
+            Other => 'other',
+            Graffiti => 'graffiti',
+        },
+    );
+
+    is $endpoint->_lookup_service_code('aquaduct', 'other'), 'AqueductOther',
+        'Sugar enum values resolve to the configured service';
+    is $endpoint->_lookup_service_code('bridge', 'other'), 'BridgeOther',
+        'The same subcategory in another group resolves to its own service';
+    is $endpoint->_lookup_service_code('aquaduct', 'graffiti'), 'AqueductGraffiti',
+        'Another subcategory in the same group resolves to its own service';
+};
+
 subtest "GET report" => sub {
     my $res = $canals_endpoint->run_test_request
       (
