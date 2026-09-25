@@ -254,6 +254,8 @@ sub _do_login {
             }
     );
 
+    die "Authentication returned no access token\n"
+        unless ref $user_details eq 'HASH' && $user_details->{access_token};
     $self->access_token($user_details->{access_token});
 };
 

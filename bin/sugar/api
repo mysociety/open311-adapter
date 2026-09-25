@@ -1,0 +1,52 @@
+#!/usr/bin/env perl
+
+=head1 NAME
+
+api - Make authenticated requests to the Sugar API
+
+=head1 SYNOPSIS
+
+    bin/sugar/api <config_filename> <method> <path> [body_json]
+
+=head1 DESCRIPTION
+
+Logs in using the Sugar credentials in conf/council-<config_filename>.yml, makes
+a single request to <path> (relative to the configured api_url) and prints the
+JSON response.
+
+=head1 EXAMPLES
+
+    bin/sugar/api canals_sugar GET metadata/Cases/fields
+    bin/sugar/api canals_sugar GET 'Cases?fields=id,name&max_num=5'
+    bin/sugar/api canals_sugar PUT Cases/CASE_ID '{"latitude_c":51.5}'
+
+=cut
+
+use strict;
+use warnings;
+
+BEGIN {
+    use File::Basename qw(dirname);
+    use File::Spec;
+    my $d = dirname(File::Spec->rel2abs($0));
+    require "$d/../../setenv.pl";
+}
+
+use JSON::MaybeXS;
+use Open311::Endpoint::Integration::Sugar;
+
+my ($config, $method, $path, $body) = @ARGV;
+die "Usage: $0 <config_filename> <method> <path> [body_json]\n" unless $config && $method && $path;
+$path =~ s{^/}{};
+
+my $sugar = Open311::Endpoint::Integration::Sugar->new(jurisdiction_id => $config);
+$sugar->_do_login;
+
+my $result = $sugar->rest->api_call(
+    call => $path,
+    method => uc $method,
+    headers => $sugar->headers,
+    $body ? (body => decode_json($body)) : (),
+);
+
+print JSON::MaybeXS->new(utf8 => 1, pretty => 1, canonical => 1)->encode($result);
