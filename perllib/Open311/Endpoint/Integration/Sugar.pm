@@ -295,8 +295,11 @@ sub _create_incident {
     my %defaults = (
                     resolution => 'Accepted',
                     type => 'Administration',
-                    status => 'New',
+                    status => 'open',
                     priority => '',
+                    publish_on_fms_c => '1',
+                    sync_status => 'synced',
+                    last_sync_date => DateTime->now->set_time_zone('Europe/London')->ymd,
                    );
     my $description = $args->{attributes}->{description};
     my $region = $self->_map_region($args->{attributes}->{region_c});

@@ -56,6 +56,7 @@ use strict; use warnings;
 use utf8;
 
 use Test::More;
+use Test::MockTime ':all';
 use Path::Tiny;
 use Open311::Endpoint::Service::UKCouncil;
 use JSON::MaybeXS qw(encode_json decode_json);
@@ -129,6 +130,8 @@ sub post_report {
 }
 
 subtest "POST report" => sub {
+    set_fixed_time('2026-07-29T12:00:00Z');
+
     my $res = post_report();
     is $res->code, 200, 'Report submitted ok';
     is_deeply decode_json($res->content), [ { service_request_id => 'incident-12345' } ], 'Id from the Incident';
@@ -136,7 +139,7 @@ subtest "POST report" => sub {
       'longitude' => '0.1',
       'fms_category' => 'aqueduct',
       'type' => 'Administration',
-      'status' => 'New',
+      'status' => 'open',
       'location_description' => '12',
       'region_c' => 'wales_south_west',
       'original_fms_id' => '1',
@@ -151,6 +154,9 @@ This is the question: Yes',
       'fms_public_url' => 'http://localhost/1',
       'latitude' => '50',
       'latest_fms_id' => '1',
+      'publish_on_fms_c' => '1',
+      'sync_status' => 'synced',
+      'last_sync_date' => '2026-07-29',
     }, 'Incident posted to Sugar, with the region mapped to its dropdown value';
     is_deeply $posted_case, {
       'type' => 'General Query',
@@ -166,6 +172,7 @@ This is the question: Yes',
       'longitude_c' => '0.1',
       'region_c' => 'wales_south_west',
     }, 'Case posted to Sugar';
+    restore_time();
 };
 
 subtest "POST report with a region that isn't in the mapping" => sub {
