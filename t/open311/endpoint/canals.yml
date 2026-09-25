@@ -32,6 +32,8 @@ service_list:
 category_mapping:
   'Access issues': 'access_issues'
   'Aqueduct': 'aqueduct'
+  'Fallen trees': 'fallen_tree'
+  'Blocked towpath': 'towpath'
   
 
 region_mapping:

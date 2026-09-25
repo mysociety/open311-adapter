@@ -487,9 +487,12 @@ sub get_service_request_updates {
 }
 
 sub _lookup_service_code {
-    my ($self, $category, $group) = @_;
+    my ($self, $category, $subcategory) = @_;
 
-    my ($service) = grep { $_->description eq $category && $_->group eq $group } $self->services;
+    my $mapping = $self->category_mapping;
+    my ($service) = grep {
+        $mapping->{$_->group} eq $category && $mapping->{$_->description} eq $subcategory
+    } $self->services;
 
     return $service->service_code;
 }
