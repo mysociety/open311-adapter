@@ -242,6 +242,28 @@ subtest "GET report" => sub {
                                           ], 'Id from the Case record, incident with unmapped status skipped';
 };
 
+subtest "GET reports skips incidents that don't match a service" => sub {
+    my $sugar = Test::MockModule->new('Open311::Endpoint::Integration::Sugar');
+    my %incident = (
+        status => 'open',
+        date_entered => '2026-07-31T15:28:45+01:00',
+        latitude => 10,
+        longitude => -1,
+    );
+    $sugar->mock(_get_modified_incidents => sub { { records => [
+        { %incident, id => 'no-category', fms_category => '', fms_subcategory => '' },
+        { %incident, id => 'no-subcategory', fms_category => 'towpath', fms_subcategory => '' },
+        { %incident, id => 'matched', fms_category => 'towpath', fms_subcategory => 'fallen_tree' },
+    ] } });
+
+    my $res = $canals_endpoint->run_test_request(
+        GET => 'requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
+    );
+    is $res->code, 200, 'Reports fetched for FMS';
+    is_deeply [ map { $_->{service_request_id} } @{ decode_json($res->content) } ], [ 'matched' ],
+        'Incidents without a matching service skipped';
+};
+
 subtest "GET report updates" => sub {
 
     my $res = $canals_endpoint->run_test_request
