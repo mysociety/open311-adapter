@@ -9,6 +9,8 @@ extends 'Integrations::Rest';
 
 # The bodies most recently POSTed, for subtests to assert against.
 my ($posted_incident, $posted_case);
+# The most recent incident search, for subtests to check its filter.
+my $incident_search_uri;
 
 my $lwp = Test::MockModule->new('LWP::UserAgent');
 
@@ -22,6 +24,7 @@ $lwp->mock(request => sub {
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'id' => 'incident-12345' }));
     } elsif ($req->uri =~ /Incidents\?filter/) {
+        $incident_search_uri = URI->new($req->uri);
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
         return HTTP::Response->new(200, 'OK', [], path(__FILE__)->sibling("/json/sugar/canals_incident.json")->slurp);
     } elsif ($req->uri =~ /Contacts/) {
@@ -243,17 +246,24 @@ subtest "GET report updates" => sub {
 
     my $res = $canals_endpoint->run_test_request
       (
-       GET => 'servicerequestupdates.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
+       GET => 'servicerequestupdates.json?jurisdiction_id=dummy&start_date=2026-08-03T13:00:00Z&end_date=2026-08-03T15:00:00Z',
       );
     is $res->code, 200, 'Updates fetched for FMS';
+    is_deeply [ $incident_search_uri->query_form ], [
+        'filter[0][modified_user_id][$not_equals]' => 'crm-user-id-example',
+        'filter[1][date_modified][$gte]' => '2026-08-03T13:00:00Z',
+        'filter[2][date_modified][$lte]' => '2026-08-03T15:00:00Z',
+        'filter[3][publish_on_fms_c][$equals]' => '1',
+    ], 'Incidents filtered on date modified in UTC, excluding FMS edits';
     is_deeply decode_json($res->content), [
           {
             'external_status_code' => 'open',
             'status' => 'open',
-            'update_id' => '2026-08-03T152845',
-            'updated_datetime' => '2026-08-03T15:28:45+01:00',
+            'update_id' => '2026-08-03T142845',
+            'updated_datetime' => '2026-08-03T14:28:45+01:00',
             'description' => '',
             'media_url' => '',
+            'extras' => { 'latest_data_only' => 1 },
             'service_request_id' => '2354556-8ccc-1111-b0e9-a0d3d106b144'
           }
         ], 'Update fetched, incident with unmapped status skipped';

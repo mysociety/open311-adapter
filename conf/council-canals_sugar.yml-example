@@ -7,6 +7,10 @@ password: ''
 
 api_url: ''
 
+# Sugar user id of the FixMyStreet API user, so its own edits aren't fetched
+# back as updates.
+crm_user_id: ''
+
 api_calls:
   login: ''
   cases: ''

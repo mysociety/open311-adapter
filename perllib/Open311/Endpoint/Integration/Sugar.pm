@@ -413,18 +413,7 @@ sub get_service_requests {
         $args->{end_date} = DateTime->now->set_time_zone('Europe/London');
     }
 
-    $self->_do_login;
-    my $filter = _generate_filter(
-                  '[modified_user_id][$not_equals]=' . $self->{crm_user_id},
-                  '[date_modified][$gte]=' . (DateTime::Format::W3CDTF->parse_datetime($args->{start_date})),
-                  '[date_modified][$lte]=' . (DateTime::Format::W3CDTF->parse_datetime($args->{end_date})),
-                  '[publish_on_fms_c][$equals]=' . 1,
-                 );
-
-    my $response = $self->rest->api_call(
-                                         call => $self->api_calls->{incidents} . $filter,
-                                         headers => $self->headers,
-                                        );
+    my $response = $self->_get_modified_incidents($args);
 
     my @reports;
     for my $incident (@{ $response->{records} }) {
@@ -459,23 +448,12 @@ sub get_service_request_updates {
         $args->{end_date} = DateTime->now->set_time_zone('Europe/London');
     }
 
-    $self->_do_login;
-    my $filter = _generate_filter
-      (
-       '[last_sync_date][$gte]=' . (DateTime::Format::W3CDTF->parse_datetime($args->{start_date})),
-       '[last_sync_date][$lte]=' . (DateTime::Format::W3CDTF->parse_datetime($args->{end_date})),
-      );
-
-    my $response = $self->rest->api_call
-      (
-       call => $self->api_calls->{incidents} . $filter,
-       headers => $self->headers,
-      );
+    my $response = $self->_get_modified_incidents($args);
 
     my @updates;
     foreach my $update (@{ $response->{records} }) {
         my $status = $self->_map_status($update) or next;
-        my $date = DateTime::Format::W3CDTF->parse_datetime($update->{last_sync_date});
+        my $date = DateTime::Format::W3CDTF->parse_datetime($update->{date_modified});
         (my $update_id_formatted = $date) =~ s/://g;
 
         my %args = (
@@ -485,10 +463,46 @@ sub get_service_request_updates {
             service_request_id => $update->{id},
             description => "",
             updated_datetime => $date,
+            # Any edit bumps date_modified, so let FMS drop repeats of its latest update
+            extras => { latest_data_only => 1 },
                    );
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
     return @updates;
+}
+
+=head2 _get_modified_incidents
+
+Fetch incidents published to FMS that were modified between start_date and
+end_date by someone other than the FMS user.
+
+Sugar treats a datetime without an offset as Europe/London local time, so
+dates are always sent in UTC with an explicit Z.
+
+=cut
+
+sub _get_modified_incidents {
+    my ($self, $args) = @_;
+
+    $self->_do_login;
+    my $filter = _generate_filter(
+                  '[modified_user_id][$not_equals]=' . $self->crm_user_id,
+                  '[date_modified][$gte]=' . _format_date($args->{start_date}),
+                  '[date_modified][$lte]=' . _format_date($args->{end_date}),
+                  '[publish_on_fms_c][$equals]=1',
+                 );
+
+    return $self->rest->api_call(
+                                 call => $self->api_calls->{incidents} . $filter,
+                                 headers => $self->headers,
+                                );
+}
+
+sub _format_date {
+    my $date = shift;
+
+    $date = DateTime::Format::W3CDTF->parse_datetime($date) unless ref $date;
+    return DateTime::Format::W3CDTF->format_datetime($date->clone->set_time_zone('UTC'));
 }
 
 =head2 _map_status
