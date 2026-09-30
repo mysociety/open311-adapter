@@ -110,14 +110,22 @@ has crm_user_id => (
     is => 'ro',
 );
 
-has headers => (
-    is => 'lazy',
-    default => sub {{
+=head2 headers
+
+Headers for authorised API calls, built on each call so they carry the token
+from the latest login.
+
+=cut
+
+sub headers {
+    my $self = shift;
+
+    return {
         'accept' => 'application/json',
-        'Authorization' => 'Bearer ' . $_[0]->access_token,
+        'Authorization' => 'Bearer ' . $self->access_token,
         'Content-Type' => 'application/json',
-    }},
-);
+    };
+}
 
 =head2 service_list
 
@@ -418,8 +426,12 @@ sub get_service_requests {
     my @reports;
     for my $incident (@{ $response->{records} }) {
         my $status = $self->_map_status($incident) or next;
-        my $date = DateTime::Format::W3CDTF->parse_datetime($incident->{date_entered});
         my $service_code = $self->_lookup_service_code($incident->{fms_category}, $incident->{fms_subcategory});
+        unless ($service_code) {
+            $self->rest->logger->warn("Sugar: no service for category '$incident->{fms_category}' and subcategory '$incident->{fms_subcategory}' on incident $incident->{id}, skipping");
+            next;
+        }
+        my $date = DateTime::Format::W3CDTF->parse_datetime($incident->{date_entered});
 
         push @reports, $self->new_request(
                                           service => $self->service($service_code),
@@ -531,6 +543,7 @@ sub _lookup_service_code {
         $mapping->{$_->group} eq $category && $mapping->{$_->description} eq $subcategory
     } $self->services;
 
+    return unless $service;
     return $service->service_code;
 }
 

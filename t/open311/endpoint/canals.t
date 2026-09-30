@@ -11,14 +11,21 @@ extends 'Integrations::Rest';
 my ($posted_incident, $posted_case);
 # The most recent incident search, for subtests to check its filter.
 my $incident_search_uri;
+# The token Sugar hands out on login, for subtests to change.
+my $access_token = 'OpenSesame';
 
 my $lwp = Test::MockModule->new('LWP::UserAgent');
 
 $lwp->mock(request => sub {
     my ($ua, $req) = @_;
-    if ($req->uri =~ /Token/) {
+    if (($req->header('Authorization') // '') eq 'Bearer Expired') {
+        return HTTP::Response->new(401, 'Unauthorized', [], encode_json({
+            error => 'invalid_grant',
+            error_message => 'The access token provided is invalid.',
+        }));
+    } elsif ($req->uri =~ /Token/) {
         like $req->uri, qr/example\.com\/api\//, 'api url read from config';
-        return HTTP::Response->new(200, 'OK', [], encode_json({ 'access_token' => 'OpenSesame' }));
+        return HTTP::Response->new(200, 'OK', [], encode_json({ 'access_token' => $access_token }));
     } elsif ($req->uri =~ /Incidents$/) {
         $posted_incident = decode_json($req->content);
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
@@ -101,6 +108,20 @@ subtest "GET Service List" => sub {
 subtest "Check user login" => sub {
     my $res = $canals_endpoint->_do_login('Test', 'User', 'test@example.com');
     ok $canals_endpoint->access_token, 'OpenSesame';
+};
+
+subtest "Headers use the access token from the latest login" => sub {
+    my $endpoint = Open311::Endpoint::Integration::Sugar::Dummy->new(
+        jurisdiction_id => 'canals_sugar',
+        config_file => path(__FILE__)->sibling("canals.yml")->stringify,
+    );
+    $endpoint->_do_login;
+    is $endpoint->headers->{Authorization}, 'Bearer OpenSesame', 'First token used';
+
+    $access_token = 'NewSesame';
+    $endpoint->_do_login;
+    is $endpoint->headers->{Authorization}, 'Bearer NewSesame', 'Token from the new login used';
+    $access_token = 'OpenSesame';
 };
 
 sub post_report {
@@ -242,6 +263,28 @@ subtest "GET report" => sub {
                                           ], 'Id from the Case record, incident with unmapped status skipped';
 };
 
+subtest "GET reports skips incidents that don't match a service" => sub {
+    my $sugar = Test::MockModule->new('Open311::Endpoint::Integration::Sugar');
+    my %incident = (
+        status => 'open',
+        date_entered => '2026-07-31T15:28:45+01:00',
+        latitude => 10,
+        longitude => -1,
+    );
+    $sugar->mock(_get_modified_incidents => sub { { records => [
+        { %incident, id => 'no-category', fms_category => '', fms_subcategory => '' },
+        { %incident, id => 'no-subcategory', fms_category => 'towpath', fms_subcategory => '' },
+        { %incident, id => 'matched', fms_category => 'towpath', fms_subcategory => 'fallen_tree' },
+    ] } });
+
+    my $res = $canals_endpoint->run_test_request(
+        GET => 'requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
+    );
+    is $res->code, 200, 'Reports fetched for FMS';
+    is_deeply [ map { $_->{service_request_id} } @{ decode_json($res->content) } ], [ 'matched' ],
+        'Incidents without a matching service skipped';
+};
+
 subtest "GET report updates" => sub {
 
     my $res = $canals_endpoint->run_test_request
@@ -267,6 +310,18 @@ subtest "GET report updates" => sub {
             'service_request_id' => '2354556-8ccc-1111-b0e9-a0d3d106b144'
           }
         ], 'Update fetched, incident with unmapped status skipped';
+};
+
+subtest "Sugar's error details returned when a call fails" => sub {
+    $access_token = 'Expired';
+    my $res = $canals_endpoint->run_test_request(
+        GET => 'servicerequestupdates.json?jurisdiction_id=dummy&start_date=2026-08-03T13:00:00Z&end_date=2026-08-03T15:00:00Z',
+    );
+    is $res->code, 500, 'Fetch failed';
+    like $res->content, qr/Sugar call failed: \[invalid_grant\] The access token provided is invalid\./,
+        'Error and message from Sugar included';
+
+    $access_token = 'OpenSesame';
 };
 
 done_testing;
