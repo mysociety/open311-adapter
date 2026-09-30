@@ -18,7 +18,12 @@ my $lwp = Test::MockModule->new('LWP::UserAgent');
 
 $lwp->mock(request => sub {
     my ($ua, $req) = @_;
-    if ($req->uri =~ /Token/) {
+    if (($req->header('Authorization') // '') eq 'Bearer Expired') {
+        return HTTP::Response->new(401, 'Unauthorized', [], encode_json({
+            error => 'invalid_grant',
+            error_message => 'The access token provided is invalid.',
+        }));
+    } elsif ($req->uri =~ /Token/) {
         like $req->uri, qr/example\.com\/api\//, 'api url read from config';
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'access_token' => $access_token }));
     } elsif ($req->uri =~ /Incidents$/) {
@@ -305,6 +310,18 @@ subtest "GET report updates" => sub {
             'service_request_id' => '2354556-8ccc-1111-b0e9-a0d3d106b144'
           }
         ], 'Update fetched, incident with unmapped status skipped';
+};
+
+subtest "Sugar's error details returned when a call fails" => sub {
+    $access_token = 'Expired';
+    my $res = $canals_endpoint->run_test_request(
+        GET => 'servicerequestupdates.json?jurisdiction_id=dummy&start_date=2026-08-03T13:00:00Z&end_date=2026-08-03T15:00:00Z',
+    );
+    is $res->code, 500, 'Fetch failed';
+    like $res->content, qr/Sugar call failed: \[invalid_grant\] The access token provided is invalid\./,
+        'Error and message from Sugar included';
+
+    $access_token = 'OpenSesame';
 };
 
 done_testing;

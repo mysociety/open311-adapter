@@ -119,8 +119,9 @@ sub api_call {
         $self->logger->error($response->content);
         try {
             my $json_response = $self->json->decode($response->content);
-            my $code = $json_response->{code} || "";
-            my $msg = $json_response->{message} || "";
+            # Sugar uses error and error_message
+            my $code = $json_response->{code} || $json_response->{error} || "";
+            my $msg = $json_response->{message} || $json_response->{error_message} || "";
             die $self->caller . " call failed: [$code] $msg";
         } catch {
             die $response->content;
