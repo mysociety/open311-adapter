@@ -110,14 +110,22 @@ has crm_user_id => (
     is => 'ro',
 );
 
-has headers => (
-    is => 'lazy',
-    default => sub {{
+=head2 headers
+
+Headers for authorised API calls, built on each call so they carry the token
+from the latest login.
+
+=cut
+
+sub headers {
+    my $self = shift;
+
+    return {
         'accept' => 'application/json',
-        'Authorization' => 'Bearer ' . $_[0]->access_token,
+        'Authorization' => 'Bearer ' . $self->access_token,
         'Content-Type' => 'application/json',
-    }},
-);
+    };
+}
 
 =head2 service_list
 

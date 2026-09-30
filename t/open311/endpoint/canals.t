@@ -11,6 +11,8 @@ extends 'Integrations::Rest';
 my ($posted_incident, $posted_case);
 # The most recent incident search, for subtests to check its filter.
 my $incident_search_uri;
+# The token Sugar hands out on login, for subtests to change.
+my $access_token = 'OpenSesame';
 
 my $lwp = Test::MockModule->new('LWP::UserAgent');
 
@@ -18,7 +20,7 @@ $lwp->mock(request => sub {
     my ($ua, $req) = @_;
     if ($req->uri =~ /Token/) {
         like $req->uri, qr/example\.com\/api\//, 'api url read from config';
-        return HTTP::Response->new(200, 'OK', [], encode_json({ 'access_token' => 'OpenSesame' }));
+        return HTTP::Response->new(200, 'OK', [], encode_json({ 'access_token' => $access_token }));
     } elsif ($req->uri =~ /Incidents$/) {
         $posted_incident = decode_json($req->content);
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
@@ -101,6 +103,20 @@ subtest "GET Service List" => sub {
 subtest "Check user login" => sub {
     my $res = $canals_endpoint->_do_login('Test', 'User', 'test@example.com');
     ok $canals_endpoint->access_token, 'OpenSesame';
+};
+
+subtest "Headers use the access token from the latest login" => sub {
+    my $endpoint = Open311::Endpoint::Integration::Sugar::Dummy->new(
+        jurisdiction_id => 'canals_sugar',
+        config_file => path(__FILE__)->sibling("canals.yml")->stringify,
+    );
+    $endpoint->_do_login;
+    is $endpoint->headers->{Authorization}, 'Bearer OpenSesame', 'First token used';
+
+    $access_token = 'NewSesame';
+    $endpoint->_do_login;
+    is $endpoint->headers->{Authorization}, 'Bearer NewSesame', 'Token from the new login used';
+    $access_token = 'OpenSesame';
 };
 
 sub post_report {
