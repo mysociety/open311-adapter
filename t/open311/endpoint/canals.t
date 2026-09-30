@@ -236,7 +236,7 @@ subtest "GET report" => sub {
                                             "service_name" => "Fallen trees (CRT: Blocked towpath)",
                                             "requested_datetime" =>"2026-07-31T15:28:45+01:00"
                                            }
-                                          ], 'Id from the Case record';
+                                          ], 'Id from the Case record, incident with unmapped status skipped';
 };
 
 subtest "GET report updates" => sub {
@@ -248,7 +248,7 @@ subtest "GET report updates" => sub {
     is $res->code, 200, 'Updates fetched for FMS';
     is_deeply decode_json($res->content), [
           {
-            'external_status_code' => 'New',
+            'external_status_code' => 'open',
             'status' => 'open',
             'update_id' => '2026-08-03T152845',
             'updated_datetime' => '2026-08-03T15:28:45+01:00',
@@ -256,7 +256,7 @@ subtest "GET report updates" => sub {
             'media_url' => '',
             'service_request_id' => '2354556-8ccc-1111-b0e9-a0d3d106b144'
           }
-        ];
+        ], 'Update fetched, incident with unmapped status skipped';
 };
 
 done_testing;

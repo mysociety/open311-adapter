@@ -18,7 +18,14 @@ service_list:
   group:
    category:
 
+# Maps the item names of Sugar's crt_incidents_status_dom dropdown to Open311
+# statuses.
 reverse_status_mapping:
+  open: open
+  in_progress: in_progress
+  under_review: investigating
+  resolved: fixed
+  closed: closed
 
 # Maps the 'region' attribute on the canals asset layer to the item names of
 # Sugar's crt_regional_preference_list dropdown.

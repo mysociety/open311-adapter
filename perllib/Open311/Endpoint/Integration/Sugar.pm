@@ -428,12 +428,13 @@ sub get_service_requests {
 
     my @reports;
     for my $incident (@{ $response->{records} }) {
+        my $status = $self->_map_status($incident) or next;
         my $date = DateTime::Format::W3CDTF->parse_datetime($incident->{date_entered});
         my $service_code = $self->_lookup_service_code($incident->{fms_category}, $incident->{fms_subcategory});
 
         push @reports, $self->new_request(
                                           service => $self->service($service_code),
-                                          status => $self->reverse_status_mapping->{ $incident->{status} },
+                                          status => $status,
                                           service_request_id => $incident->{id},
                                           title => $incident->{name},
                                           description => $incident->{description},
@@ -473,11 +474,12 @@ sub get_service_request_updates {
 
     my @updates;
     foreach my $update (@{ $response->{records} }) {
+        my $status = $self->_map_status($update) or next;
         my $date = DateTime::Format::W3CDTF->parse_datetime($update->{last_sync_date});
         (my $update_id_formatted = $date) =~ s/://g;
 
         my %args = (
-            status => $self->reverse_status_mapping->{ $update->{status} },
+            status => $status,
             external_status_code => $update->{status},
             update_id => $update_id_formatted,
             service_request_id => $update->{id},
@@ -487,6 +489,24 @@ sub get_service_request_updates {
         push @updates, Open311::Endpoint::Service::Request::Update::mySociety->new( %args );
     }
     return @updates;
+}
+
+=head2 _map_status
+
+Map an incident's Sugar status to an Open311 status via reverse_status_mapping,
+logging and returning nothing for an unmapped status so the incident can be
+skipped rather than breaking the whole fetch.
+
+=cut
+
+sub _map_status {
+    my ($self, $incident) = @_;
+
+    my $status = $self->reverse_status_mapping->{ $incident->{status} // '' };
+    unless ($status) {
+        $self->rest->logger->warn("Sugar: no reverse_status_mapping for status '" . ($incident->{status} // '') . "' on incident $incident->{id}, skipping");
+    }
+    return $status;
 }
 
 sub _lookup_service_code {
