@@ -13,7 +13,11 @@ api_calls:
   incidents: 'Incidents'
 
 reverse_status_mapping:
-  New: 'open'
+  open: 'open'
+  in_progress: 'in_progress'
+  under_review: 'investigating'
+  resolved: 'fixed'
+  closed: 'closed'
   
 service_list:
   AccessIssues:
