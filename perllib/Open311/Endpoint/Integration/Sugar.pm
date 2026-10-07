@@ -473,7 +473,7 @@ sub get_service_request_updates {
             external_status_code => $update->{status},
             update_id => $update_id_formatted,
             service_request_id => $update->{id},
-            description => "",
+            description => $update->{public_description_c} // "",
             updated_datetime => $date,
             # Any edit bumps date_modified, so let FMS drop repeats of its latest update
             extras => { latest_data_only => 1 },

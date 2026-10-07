@@ -304,7 +304,7 @@ subtest "GET report updates" => sub {
             'status' => 'open',
             'update_id' => '2026-08-03T142845',
             'updated_datetime' => '2026-08-03T14:28:45+01:00',
-            'description' => '',
+            'description' => 'Tree has been cleared from the towpath',
             'media_url' => '',
             'extras' => { 'latest_data_only' => 1 },
             'service_request_id' => '2354556-8ccc-1111-b0e9-a0d3d106b144'
