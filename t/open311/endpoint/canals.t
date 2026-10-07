@@ -253,7 +253,7 @@ subtest "GET report" => sub {
                                             "service_request_id" => "2354556-8ccc-1111-b0e9-a0d3d106b144",
                                             "lat" => 10,
                                             "address" => "",
-                                            "updated_datetime" => "2026-07-31T15:28:45+01:00",
+                                            "updated_datetime" => "2026-08-03T14:28:45+01:00",
                                             "long" => -1,
                                             "description" => "Tree fallen over towpath",
                                             "media_url" => "",
@@ -268,6 +268,7 @@ subtest "GET reports skips incidents that don't match a service" => sub {
     my %incident = (
         status => 'open',
         date_entered => '2026-07-31T15:28:45+01:00',
+        date_modified => '2026-08-03T14:28:45+01:00',
         latitude => 10,
         longitude => -1,
     );

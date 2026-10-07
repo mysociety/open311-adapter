@@ -433,16 +433,16 @@ sub get_service_requests {
             $self->rest->logger->warn("Sugar: no service for category '$incident->{fms_category}' and subcategory '$incident->{fms_subcategory}' on incident $incident->{id}, skipping");
             next;
         }
-        my $date = DateTime::Format::W3CDTF->parse_datetime($incident->{date_entered});
-
         push @reports, $self->new_request(
                                           service => $self->service($service_code),
                                           status => $status,
                                           service_request_id => $incident->{id},
                                           title => $incident->{name},
                                           description => $incident->{description},
-                                          updated_datetime => $date,
-                                          requested_datetime => $date,
+                                          # FMS skips reports updated outside its fetch window,
+                                          # so this must be when the incident was last modified
+                                          updated_datetime => DateTime::Format::W3CDTF->parse_datetime($incident->{date_modified}),
+                                          requested_datetime => DateTime::Format::W3CDTF->parse_datetime($incident->{date_entered}),
                                           latlong => [$incident->{latitude}, $incident->{longitude}],
                                          );
 
