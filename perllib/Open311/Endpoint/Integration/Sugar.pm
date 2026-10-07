@@ -412,6 +412,10 @@ sub _get_user {
     $self->rest->logger->error($response);
 }
 
+sub service_request_content {
+    '/open311/service_request_extended'
+}
+
 sub get_service_requests {
     my ($self, $args) = @_;
 

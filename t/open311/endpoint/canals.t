@@ -286,6 +286,30 @@ subtest "GET reports skips incidents that don't match a service" => sub {
         'Incidents without a matching service skipped';
 };
 
+subtest "GET reports with statuses beyond open and closed" => sub {
+    my $sugar = Test::MockModule->new('Open311::Endpoint::Integration::Sugar');
+    $sugar->mock(_get_modified_incidents => sub { { records => [
+        map { {
+            id => $_,
+            status => $_,
+            fms_category => 'towpath',
+            fms_subcategory => 'fallen_tree',
+            date_entered => '2026-07-31T15:28:45+01:00',
+            date_modified => '2026-08-03T14:28:45+01:00',
+            latitude => 10,
+            longitude => -1,
+        } } qw(in_progress under_review resolved)
+    ] } });
+
+    my $res = $canals_endpoint->run_test_request(
+        GET => 'requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
+    );
+    is $res->code, 200, 'Reports fetched for FMS';
+    is_deeply { map { $_->{service_request_id} => $_->{status} } @{ decode_json($res->content) } },
+        { in_progress => 'in_progress', under_review => 'investigating', resolved => 'fixed' },
+        'Sugar statuses mapped to extended Open311 statuses';
+};
+
 subtest "GET report updates" => sub {
 
     my $res = $canals_endpoint->run_test_request
