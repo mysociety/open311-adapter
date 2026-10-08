@@ -19,7 +19,7 @@ with 'Open311::Endpoint::Role::ConfigFile';
 
 use Integrations::Rest;
 use DateTime::Format::W3CDTF;
-use Open311::Endpoint::Service::Request::ExtendedStatus;
+use Open311::Endpoint::Service::Request::Sugar;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 use Open311::Endpoint::Service::UKCouncil::Canals;
 
@@ -110,6 +110,18 @@ has crm_user_id => (
     is => 'ro',
 );
 
+=head2 page_size
+
+Number of incidents to fetch from Sugar per request when fetching reports and
+updates
+
+=cut
+
+has page_size => (
+    is => 'ro',
+    default => 100,
+);
+
 =head2 headers
 
 Headers for authorised API calls, built on each call so they carry the token
@@ -150,7 +162,7 @@ has service_extra_data => (
 
 has '+request_class' => (
     is => 'ro',
-    default => 'Open311::Endpoint::Service::Request::ExtendedStatus',
+    default => 'Open311::Endpoint::Service::Request::Sugar',
 );
 
 =head2 category_mapping
@@ -412,6 +424,10 @@ sub _get_user {
     $self->rest->logger->error($response);
 }
 
+sub service_request_content {
+    '/open311/service_request_extended'
+}
+
 sub get_service_requests {
     my ($self, $args) = @_;
 
@@ -433,16 +449,16 @@ sub get_service_requests {
             $self->rest->logger->warn("Sugar: no service for category '$incident->{fms_category}' and subcategory '$incident->{fms_subcategory}' on incident $incident->{id}, skipping");
             next;
         }
-        my $date = DateTime::Format::W3CDTF->parse_datetime($incident->{date_entered});
-
         push @reports, $self->new_request(
                                           service => $self->service($service_code),
                                           status => $status,
                                           service_request_id => $incident->{id},
                                           title => $incident->{name},
                                           description => $incident->{description},
-                                          updated_datetime => $date,
-                                          requested_datetime => $date,
+                                          # FMS skips reports updated outside its fetch window,
+                                          # so this must be when the incident was last modified
+                                          updated_datetime => DateTime::Format::W3CDTF->parse_datetime($incident->{date_modified}),
+                                          requested_datetime => DateTime::Format::W3CDTF->parse_datetime($incident->{date_entered}),
                                           latlong => [$incident->{latitude}, $incident->{longitude}],
                                          );
 
@@ -506,10 +522,22 @@ sub _get_modified_incidents {
                   '[publish_on_fms_c][$equals]=1',
                  );
 
-    return $self->rest->api_call(
-                                 call => $self->api_calls->{incidents} . $filter,
-                                 headers => $self->headers,
-                                );
+    # Sugar sets next_offset to -1 on the last page
+    my @records;
+    my $offset = 0;
+    while (1) {
+        my $response = $self->rest->api_call(
+            call => $self->api_calls->{incidents} . $filter
+                . '&max_num=' . $self->page_size . "&offset=$offset",
+            headers => $self->headers,
+        );
+        push @records, @{ $response->{records} || [] };
+        my $next_offset = $response->{next_offset} // -1;
+        last unless $next_offset > $offset;
+        $offset = $next_offset;
+    }
+
+    return { records => \@records };
 }
 
 sub _format_date {
