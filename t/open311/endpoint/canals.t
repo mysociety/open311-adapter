@@ -255,6 +255,7 @@ subtest "GET report" => sub {
                                             "address" => "",
                                             "updated_datetime" => "2026-08-03T14:28:45+01:00",
                                             "long" => -1,
+                                            "title" => "Towpath blocked",
                                             "description" => "Tree fallen over towpath",
                                             "media_url" => "",
                                             "service_name" => "Fallen trees (CRT: Blocked towpath)",

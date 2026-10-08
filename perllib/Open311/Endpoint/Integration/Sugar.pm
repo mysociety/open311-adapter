@@ -19,7 +19,7 @@ with 'Open311::Endpoint::Role::ConfigFile';
 
 use Integrations::Rest;
 use DateTime::Format::W3CDTF;
-use Open311::Endpoint::Service::Request::ExtendedStatus;
+use Open311::Endpoint::Service::Request::Sugar;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 use Open311::Endpoint::Service::UKCouncil::Canals;
 
@@ -150,7 +150,7 @@ has service_extra_data => (
 
 has '+request_class' => (
     is => 'ro',
-    default => 'Open311::Endpoint::Service::Request::ExtendedStatus',
+    default => 'Open311::Endpoint::Service::Request::Sugar',
 );
 
 =head2 category_mapping
