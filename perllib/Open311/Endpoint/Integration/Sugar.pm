@@ -110,6 +110,18 @@ has crm_user_id => (
     is => 'ro',
 );
 
+=head2 page_size
+
+Number of incidents to fetch from Sugar per request when fetching reports and
+updates
+
+=cut
+
+has page_size => (
+    is => 'ro',
+    default => 100,
+);
+
 =head2 headers
 
 Headers for authorised API calls, built on each call so they carry the token
@@ -510,10 +522,22 @@ sub _get_modified_incidents {
                   '[publish_on_fms_c][$equals]=1',
                  );
 
-    return $self->rest->api_call(
-                                 call => $self->api_calls->{incidents} . $filter,
-                                 headers => $self->headers,
-                                );
+    # Sugar sets next_offset to -1 on the last page
+    my @records;
+    my $offset = 0;
+    while (1) {
+        my $response = $self->rest->api_call(
+            call => $self->api_calls->{incidents} . $filter
+                . '&max_num=' . $self->page_size . "&offset=$offset",
+            headers => $self->headers,
+        );
+        push @records, @{ $response->{records} || [] };
+        my $next_offset = $response->{next_offset} // -1;
+        last unless $next_offset > $offset;
+        $offset = $next_offset;
+    }
+
+    return { records => \@records };
 }
 
 sub _format_date {
