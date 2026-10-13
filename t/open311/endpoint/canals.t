@@ -11,6 +11,8 @@ extends 'Integrations::Rest';
 my ($posted_incident, $posted_case);
 # The most recent incident search, for subtests to check its filter.
 my $incident_search_uri;
+# Pages of incident search results keyed by offset, for subtests to set.
+my $incident_pages;
 # The token Sugar hands out on login, for subtests to change.
 my $access_token = 'OpenSesame';
 
@@ -33,6 +35,10 @@ $lwp->mock(request => sub {
     } elsif ($req->uri =~ /Incidents\?filter/) {
         $incident_search_uri = URI->new($req->uri);
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
+        if ($incident_pages) {
+            my %query = $incident_search_uri->query_form;
+            return HTTP::Response->new(200, 'OK', [], encode_json($incident_pages->{ $query{offset} }));
+        }
         return HTTP::Response->new(200, 'OK', [], path(__FILE__)->sibling("/json/sugar/canals_incident.json")->slurp);
     } elsif ($req->uri =~ /Contacts/) {
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
@@ -253,8 +259,9 @@ subtest "GET report" => sub {
                                             "service_request_id" => "2354556-8ccc-1111-b0e9-a0d3d106b144",
                                             "lat" => 10,
                                             "address" => "",
-                                            "updated_datetime" => "2026-07-31T15:28:45+01:00",
+                                            "updated_datetime" => "2026-08-03T14:28:45+01:00",
                                             "long" => -1,
+                                            "title" => "Towpath blocked",
                                             "description" => "Tree fallen over towpath",
                                             "media_url" => "",
                                             "service_name" => "Fallen trees (CRT: Blocked towpath)",
@@ -268,6 +275,7 @@ subtest "GET reports skips incidents that don't match a service" => sub {
     my %incident = (
         status => 'open',
         date_entered => '2026-07-31T15:28:45+01:00',
+        date_modified => '2026-08-03T14:28:45+01:00',
         latitude => 10,
         longitude => -1,
     );
@@ -285,6 +293,30 @@ subtest "GET reports skips incidents that don't match a service" => sub {
         'Incidents without a matching service skipped';
 };
 
+subtest "GET reports with statuses beyond open and closed" => sub {
+    my $sugar = Test::MockModule->new('Open311::Endpoint::Integration::Sugar');
+    $sugar->mock(_get_modified_incidents => sub { { records => [
+        map { {
+            id => $_,
+            status => $_,
+            fms_category => 'towpath',
+            fms_subcategory => 'fallen_tree',
+            date_entered => '2026-07-31T15:28:45+01:00',
+            date_modified => '2026-08-03T14:28:45+01:00',
+            latitude => 10,
+            longitude => -1,
+        } } qw(in_progress under_review resolved)
+    ] } });
+
+    my $res = $canals_endpoint->run_test_request(
+        GET => 'requests.json?jurisdiction_id=dummy&start_date=2019-01-02T00:00:00Z&end_date=2019-01-01T02:00:00Z',
+    );
+    is $res->code, 200, 'Reports fetched for FMS';
+    is_deeply { map { $_->{service_request_id} => $_->{status} } @{ decode_json($res->content) } },
+        { in_progress => 'in_progress', under_review => 'investigating', resolved => 'fixed' },
+        'Sugar statuses mapped to extended Open311 statuses';
+};
+
 subtest "GET report updates" => sub {
 
     my $res = $canals_endpoint->run_test_request
@@ -297,6 +329,8 @@ subtest "GET report updates" => sub {
         'filter[1][date_modified][$gte]' => '2026-08-03T13:00:00Z',
         'filter[2][date_modified][$lte]' => '2026-08-03T15:00:00Z',
         'filter[3][publish_on_fms_c][$equals]' => '1',
+        'max_num' => 100,
+        'offset' => 0,
     ], 'Incidents filtered on date modified in UTC, excluding FMS edits';
     is_deeply decode_json($res->content), [
           {
@@ -310,6 +344,27 @@ subtest "GET report updates" => sub {
             'service_request_id' => '2354556-8ccc-1111-b0e9-a0d3d106b144'
           }
         ], 'Update fetched, incident with unmapped status skipped';
+};
+
+subtest "GET report updates across several pages" => sub {
+    my $incident = sub { {
+        id => $_[0],
+        status => 'open',
+        date_modified => '2026-08-03T14:28:45+01:00',
+    } };
+    $incident_pages = {
+        0 => { next_offset => 2, records => [ $incident->('first'), $incident->('second') ] },
+        2 => { next_offset => -1, records => [ $incident->('third') ] },
+    };
+
+    my $res = $canals_endpoint->run_test_request(
+        GET => 'servicerequestupdates.json?jurisdiction_id=dummy&start_date=2026-08-03T13:00:00Z&end_date=2026-08-03T15:00:00Z',
+    );
+    is $res->code, 200, 'Updates fetched for FMS';
+    is_deeply [ map { $_->{service_request_id} } @{ decode_json($res->content) } ], [ 'first', 'second', 'third' ],
+        'Incidents from every page fetched';
+
+    $incident_pages = undef;
 };
 
 subtest "Sugar's error details returned when a call fails" => sub {
