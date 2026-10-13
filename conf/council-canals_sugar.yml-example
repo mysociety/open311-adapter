@@ -14,7 +14,8 @@ crm_user_id: ''
 api_calls:
   login: ''
   cases: ''
-  contact: ''
+  contacts_match: ''
+  contacts: ''
   case: ''
   incidents: ''
 
