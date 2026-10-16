@@ -15,6 +15,12 @@ my $incident_search_uri;
 my $incident_pages;
 # The token Sugar hands out on login, for subtests to change.
 my $access_token = 'OpenSesame';
+# The contact ids Sugar's match returns as duplicates, for subtests to set.
+my @duplicate_contacts;
+# The contacts created and flagged for merging, for subtests to check.
+my (@created_contacts, %flagged_contacts);
+# A contact id whose flagging fails, for subtests to set.
+my $unflaggable_contact = '';
 
 my $lwp = Test::MockModule->new('LWP::UserAgent');
 
@@ -40,9 +46,26 @@ $lwp->mock(request => sub {
             return HTTP::Response->new(200, 'OK', [], encode_json($incident_pages->{ $query{offset} }));
         }
         return HTTP::Response->new(200, 'OK', [], path(__FILE__)->sibling("/json/sugar/canals_incident.json")->slurp);
-    } elsif ($req->uri =~ /Contacts/) {
+    } elsif ($req->uri =~ /Contacts\/match$/) {
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
+        return HTTP::Response->new(400, 'Bad Request', [], encode_json({
+            error => 'unknown_exception',
+            error_message => 'Multiple contacts found with supplied email address and name',
+            contacts => [ @duplicate_contacts ],
+        })) if @duplicate_contacts;
         return HTTP::Response->new(200, 'OK', [], encode_json({ 'id' => 'user-236' }));
+    } elsif ($req->method eq 'POST' && $req->uri =~ /Contacts$/) {
+        is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
+        push @created_contacts, decode_json($req->content);
+        return HTTP::Response->new(200, 'OK', [], path(__FILE__)->sibling("/json/sugar/canals_contact.json")->slurp);
+    } elsif ($req->method eq 'PUT' && $req->uri =~ /Contacts\/([^\/]+)$/) {
+        is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
+        return HTTP::Response->new(500, 'Internal Server Error', [], encode_json({
+            error => 'unknown_exception',
+            error_message => 'Something went wrong',
+        })) if $1 eq $unflaggable_contact;
+        $flagged_contacts{$1} = decode_json($req->content);
+        return HTTP::Response->new(200, 'OK', [], encode_json({ 'id' => $1 }));
     } elsif ($req->uri =~ /Incidents\/incident-12345\/incidents_case/) {
         $posted_case = decode_json($req->content);
         is $req->header('Authorization'),'Bearer OpenSesame', 'Authorisation header set';
@@ -217,6 +240,48 @@ subtest "POST report without a region" => sub {
     is $res->code, 200, 'Report submitted ok';
     is $posted_incident->{region_c}, '', 'Missing incident region sent as blank';
     is $posted_case->{region_c}, '', 'Missing case region sent as blank';
+};
+
+subtest "POST report from a user with duplicate contacts" => sub {
+    @duplicate_contacts = ('738b2c0c-51d0-11f0-bf51-a0d3c106b134', 'dfe725c2-63e5-11f1-a2fb-a0d3c106b134');
+
+    my $res = post_report();
+    is $res->code, 200, 'Report submitted ok';
+    is_deeply \@created_contacts, [ {
+        first_name => 'Bob',
+        last_name => 'Mould',
+        email1 => 'test@example.com',
+    } ], 'New contact created with the details used for matching';
+    is $posted_case->{primary_contact_id}, '4c1e9a2e-c62c-11f1-9656-a0d3c106b134', 'Case uses the new contact';
+    is_deeply [ sort keys %flagged_contacts ], [
+        '4c1e9a2e-c62c-11f1-9656-a0d3c106b134',
+        '738b2c0c-51d0-11f0-bf51-a0d3c106b134',
+        'dfe725c2-63e5-11f1-a2fb-a0d3c106b134',
+    ], 'Duplicates and new contact flagged';
+    ok $flagged_contacts{'4c1e9a2e-c62c-11f1-9656-a0d3c106b134'}{needs_review_c}, 'Flagged as needing review';
+    is $flagged_contacts{'4c1e9a2e-c62c-11f1-9656-a0d3c106b134'}{con_needs_review_reason_c}, 'Merge', 'Review reason is a merge';
+
+    @duplicate_contacts = ();
+    @created_contacts = ();
+    %flagged_contacts = ();
+};
+
+subtest "POST report still succeeds if flagging a duplicate contact fails" => sub {
+    @duplicate_contacts = ('738b2c0c-51d0-11f0-bf51-a0d3c106b134', 'dfe725c2-63e5-11f1-a2fb-a0d3c106b134');
+    $unflaggable_contact = '738b2c0c-51d0-11f0-bf51-a0d3c106b134';
+
+    my $res = post_report();
+    is $res->code, 200, 'Report submitted ok';
+    is $posted_case->{primary_contact_id}, '4c1e9a2e-c62c-11f1-9656-a0d3c106b134', 'Case uses the new contact';
+    is_deeply [ sort keys %flagged_contacts ], [
+        '4c1e9a2e-c62c-11f1-9656-a0d3c106b134',
+        'dfe725c2-63e5-11f1-a2fb-a0d3c106b134',
+    ], 'Other contacts still flagged';
+
+    @duplicate_contacts = ();
+    @created_contacts = ();
+    %flagged_contacts = ();
+    $unflaggable_contact = '';
 };
 
 subtest "Look up services using Sugar category and subcategory values" => sub {

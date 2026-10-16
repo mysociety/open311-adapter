@@ -19,6 +19,8 @@ with 'Open311::Endpoint::Role::ConfigFile';
 
 use Integrations::Rest;
 use DateTime::Format::W3CDTF;
+use JSON::MaybeXS;
+use Try::Tiny;
 use Open311::Endpoint::Service::Request::Sugar;
 use Open311::Endpoint::Service::Request::Update::mySociety;
 use Open311::Endpoint::Service::UKCouncil::Canals;
@@ -400,26 +402,38 @@ sub _create_case {
 
 We need a primary contact id from Sugar to log a case.
 
-If there are multiple users returned, it's an error but contains required data,
-so we need to deal with an error response.
+If there are multiple users returned, it's an error but contains the ids of the
+duplicates, so we need to deal with an error response. In that case we create a
+new contact and flag it and the duplicates for review, so the Trust can merge
+them.
 
 =cut
 
 sub _get_user {
     my ($self, %args) = @_;
+    my $contact = {
+        first_name => $args{first_name},
+        last_name => $args{last_name},
+        email1 => $args{email},
+    };
     $self->rest->return_json_error(1);
     my $response = $self->rest->api_call(
-                                          call => $self->api_calls->{contact},
+                                          call => $self->api_calls->{contacts_match},
                                           headers => $self->headers,
-                                          body => {
-                                                   first_name => $args{first_name},
-                                                   last_name => $args{last_name},
-                                                   email1 => $args{email},
-                                                  },
+                                          body => $contact,
                                         );
     $self->rest->return_json_error(0);
     return $response->{id} if $response->{id};
-    return shift(@{$response->{contacts}}) if $response->{contacts}; # Actually, this is just ids I think
+
+    if (my $duplicates = $response->{contacts}) {
+        my $new_contact = $self->rest->api_call(
+                                                 call => $self->api_calls->{contacts},
+                                                 headers => $self->headers,
+                                                 body => $contact,
+                                                );
+        $self->_flag_contact_for_merge($_) for @$duplicates, $new_contact->{id};
+        return $new_contact->{id};
+    }
 
     # Revisit and make the error logging a part of Rest.pm
     $self->rest->logger->error('Caught error');
@@ -428,6 +442,32 @@ sub _get_user {
 
 sub service_request_content {
     '/open311/service_request_extended'
+}
+
+=head2 _flag_contact_for_merge
+
+Flag a contact for the Trust to review and merge. A failure is only logged, as
+the incident has already been created and failing the request would make FMS
+resend it, creating a duplicate incident.
+
+=cut
+
+sub _flag_contact_for_merge {
+    my ($self, $contact_id) = @_;
+
+    try {
+        $self->rest->api_call(
+                              call => $self->api_calls->{contacts} . "/$contact_id",
+                              method => 'PUT',
+                              headers => $self->headers,
+                              body => {
+                                       needs_review_c => JSON->true,
+                                       con_needs_review_reason_c => 'Merge',
+                                      },
+                             );
+    } catch {
+        $self->rest->logger->error("Sugar: failed to flag contact $contact_id for merging: $_");
+    };
 }
 
 sub get_service_requests {

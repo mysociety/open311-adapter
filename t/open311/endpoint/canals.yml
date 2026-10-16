@@ -8,7 +8,8 @@ crm_user_id: 'crm-user-id-example'
 api_calls:
   login: 'Token'
   cases: 'Cases'
-  contact: 'Contacts'
+  contacts_match: 'Contacts/match'
+  contacts: 'Contacts'
   case: 'Incidents/{incident ID}/incidents_case'
   incidents: 'Incidents'
 
