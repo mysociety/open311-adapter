@@ -641,10 +641,12 @@ sub get_service_request_updates {
             _normalise_service_code($_->{service_code}) => $_
         } reverse @services;
 
+        my $enquiry_photos = @{ $integ->enquiry_update_enquiry_photo_statuses };
         my $job_photos = @{ $integ->enquiry_update_job_photo_statuses };
         my $defect_photos = @{ $integ->enquiry_update_defect_photo_statuses };
 
-        my $documents = 'documents { url documentName documentDate docTypeCode documentNotes}';
+        my $documents = 'documents { url documentName documentDate docTypeCode documentNotes }';
+        my $enquiry_documents = $enquiry_photos ? $documents : "";
         my $job_documents = $job_photos ? $documents : "";
         my $defect_documents = $defect_photos ? $documents : "";
 
@@ -668,6 +670,7 @@ sub get_service_request_updates {
     centralEnquiry {
       subjectCode
       serviceCode
+      $enquiry_documents
       enquiryLink {
         job {
           estimatedStartDate
@@ -688,6 +691,7 @@ GRAPHQL
         for my $status_log (@$results) {
             # remap from GraphQL key names
 
+            my @enquiry_documents = $self->_parse_graphql_docs( $status_log->{centralEnquiry}{documents} );
             my @job_documents = $self->_parse_graphql_docs($status_log->{centralEnquiry}{enquiryLink}{job}{documents});
             my @defect_documents = $self->_parse_graphql_docs($status_log->{centralEnquiry}{enquiryLink}{defect}{documents});
 
@@ -696,6 +700,7 @@ GRAPHQL
                 LoggedTime => $status_log->{loggedDate},
                 StatusLogNotes => $status_log->{notes},
                 EnquiryStatusCode => $status_log->{enquiryStatusCode},
+                EnquiryDocuments => \@enquiry_documents,
                 JobDocuments => \@job_documents,
                 DefectDocuments => \@defect_documents,
             };
@@ -976,6 +981,19 @@ sub photo_filter {
 sub filter_photos {
     my ($self, @docs) = @_;
     return grep { $self->photo_filter($_) } @docs;
+}
+
+sub enquiry_photo_urls_for_enquiry_update {
+    my ($self, $status_log) = @_;
+
+    if (defined $status_log->{EnquiryDocuments}) {
+        # We've already queried for the documents in GraphQL.
+        my @docs = $self->filter_photos(@{$status_log->{EnquiryDocuments}});
+        my @urls = map { $self->construct_photo_url_from_graphql_fetched_doc($_) } @docs;
+        return \@urls;
+    };
+
+    die "Fetching defect photos for an enquiry update when not using graphql is unimplemented.";
 }
 
 sub job_photo_urls_for_enquiry_update {
@@ -1408,6 +1426,7 @@ sub _parse_enquiry {
 sub _parse_enquiry_status_log {
     my ($self, $status_log, $enquiry_id, $integ, $extras) = @_;
 
+    my %statuses_for_enquiry_photos = map { $_ => 1 } @{ $integ->enquiry_update_enquiry_photo_statuses };
     my %statuses_for_job_photos = map { $_ => 1 } @{ $integ->enquiry_update_job_photo_statuses };
     my %statuses_for_defect_photos = map { $_ => 1 } @{ $integ->enquiry_update_defect_photo_statuses };
 
@@ -1425,6 +1444,9 @@ sub _parse_enquiry_status_log {
     }
 
     my @media_urls;
+    if ($statuses_for_enquiry_photos{$status_log->{EnquiryStatusCode}}) {
+        push @media_urls, @{$self->enquiry_photo_urls_for_enquiry_update($status_log)};
+    }
     if ($statuses_for_job_photos{$status_log->{EnquiryStatusCode}}) {
         push @media_urls, @{$self->job_photo_urls_for_enquiry_update($status_log, $enquiry_id)};
     }
