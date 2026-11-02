@@ -152,6 +152,19 @@ has 'server_timezone' => (
     default => sub { $_[0]->config->{server_timezone} }
 );
 
+=head2 enquiry_update_enquiry_photo_statuses
+
+A list of enquiry status codes that determine whether photos added to
+original enquiry (as opposed to linked job or defect) should be returned when
+fetching enquiry updates.
+
+=cut
+
+has enquiry_update_enquiry_photo_statuses => (
+    is => 'lazy',
+    default => sub { $_[0]->config->{enquiry_update_enquiry_photo_statuses} || [] }
+);
+
 
 =head2 enquiry_update_job_photo_statuses
 
