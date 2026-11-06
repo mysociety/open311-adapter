@@ -143,16 +143,43 @@ subtest "GET services" => sub {
     ok $res->is_success, 'valid request'
         or diag $res->content;
 
-    is_deeply decode_json($res->content),
-        [ {
-          "service_code" => "Potholes",
-          "service_name" => "Potholes",
-          "description" => "Potholes",
-          "metadata" => "true",
-          "group" => "",
-          "keywords" => "",
-          "type" => "realtime"
-       } ], 'correct json returned';
+    is_deeply [
+        sort { $a->{service_code} cmp $b->{service_code} }
+            @{ decode_json( $res->content ) }
+    ], [
+        {   "service_code" => "Footpath Damage",
+            "service_name" => "Footpath Damage",
+            "description"  => "Footpath Damage",
+            "metadata"     => "true",
+            "group"        => "",
+            "keywords"     => "",
+            "type"         => "realtime"
+        },
+        {   "service_code" => "Kerbstone Damage",
+            "service_name" => "Kerbstone Damage",
+            "description"  => "Kerbstone Damage",
+            "metadata"     => "true",
+            "group"        => "",
+            "keywords"     => "",
+            "type"         => "realtime"
+        },
+        {   "service_code" => "Potholes",
+            "service_name" => "Potholes",
+            "description"  => "Potholes",
+            "metadata"     => "true",
+            "group"        => "",
+            "keywords"     => "",
+            "type"         => "realtime"
+        },
+        {   "service_code" => "Road Damage",
+            "service_name" => "Road Damage",
+            "description"  => "Road Damage",
+            "metadata"     => "true",
+            "group"        => "",
+            "keywords"     => "",
+            "type"         => "realtime"
+        },
+    ], 'correct json returned';
 };
 
 subtest "GET service" => sub {

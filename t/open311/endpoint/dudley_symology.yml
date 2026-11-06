@@ -37,5 +37,67 @@ category_mapping:
     #   values:
     #   - Pothole in the pavement
     #   - Pothole in the road
+
+  Road Damage:
+    name: Road Damage
+    parameters:
+      RequestType: CWPH
+    logic:
+      - rules: [ $attr.damage_cause, { like: 'Deterioration|Traffic accident damage|Other' } ]
+        output:
+          AnalysisCode2: CWD
+      - rules: [ $attr.damage_cause, Tree root damage ]
+        output:
+          AnalysisCode2: ROOT
+    questions:
+      - code: contractors
+        description: If you are aware of any contractors working on site, please give details
+        required: false
+      - code: damage_cause
+        description: What has caused the damage?
+        values:
+          - Deterioration
+          - Tree root damage
+          - Traffic accident damage
+          - Other
+
+  Footpath Damage:
+    name: Footpath Damage
+    parameters:
+      RequestType: FWPH
+    logic:
+      - rules: [ $attr.damage_cause, { like: 'Deterioration|Traffic accident damage|Other' } ]
+        output:
+          AnalysisCode2: FWD
+      - rules: [ $attr.damage_cause, Tree root damage ]
+        output:
+          AnalysisCode2: ROOT
+    questions:
+      - code: contractors
+        description: If you are aware of any contractors working on site, please give details
+        required: false
+      - code: damage_cause
+        description: What has caused the damage?
+        values:
+          - Deterioration
+          - Tree root damage
+          - Traffic accident damage
+          - Other
+
+  Kerbstone Damage:
+    name: Kerbstone Damage
+    parameters:
+      RequestType: KDM
+      AnalysisCode2: DKER
+    questions:
+      - code: damage_type
+        description: What is the Kerbstone Damage?
+        values:
+          - Kerbstone dislodged in road
+          - Kerbstone dislodged in footpath
+          - Cracked
+          - Damaged by a vehicle
+          - Other
+
 event_status_mapping:
   21: investigating
