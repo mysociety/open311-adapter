@@ -110,7 +110,8 @@ sub services {
                 description => $_->{description},
             );
             if ($_->{variable} // 1) {
-                $attribute{required} = 1;
+                $attribute{required}
+                    = defined $_->{required} ? $_->{required} : 1;
             } else {
                 $attribute{variable} = 0;
                 $attribute{required} = 0;
@@ -118,6 +119,7 @@ sub services {
             if ($_->{values}) {
                 $attribute{datatype} = 'singlevaluelist';
                 $attribute{values} = { map { $_ => $_ } @{$_->{values}} };
+                $attribute{values_sorted} = $_->{values};
             } else {
                 $attribute{datatype} = 'string';
             }
