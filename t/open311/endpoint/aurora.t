@@ -171,6 +171,54 @@ subtest "post_service_request" => sub {
     $integration->unmock('create_case_and_get_number');
 };
 
+subtest "post_service_request does not modify category parameters" => sub {
+    $integration->mock('get_contact_id_for_email_address', sub { 'contact-id' });
+    my @payloads;
+    $integration->mock('create_case_and_get_number', sub {
+        push @payloads, $_[1];
+        return "case-number";
+    });
+
+    my @common = (
+        api_key => 'api_key',
+        service_code => 'potholes',
+        address_string => "address string",
+        email => 'test@example.com',
+        first_name => 'first',
+        last_name => 'last',
+        description => "description",
+        'attribute[title]' => 'title',
+        'attribute[description]' => 'description',
+        'attribute[easting]' => 100,
+        'attribute[northing]' => 101,
+    );
+    my $res = $endpoint->run_test_request(POST '/requests.json', [
+        @common,
+        'attribute[fixmystreet_id]' => 10,
+        'attribute[UnitID]' => 'asset-id',
+    ]);
+    ok $res->is_success, 'valid request' or diag $res->content;
+    $res = $endpoint->run_test_request(POST '/requests.json', [
+        @common,
+        'attribute[fixmystreet_id]' => 11,
+    ]);
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+    is $payloads[0]{internalAssetId}, 'asset-id';
+    is $payloads[0]{externalReference}, 'FMS10';
+    is $payloads[1]{internalAssetId}, undef;
+    is $payloads[1]{externalReference}, 'FMS11';
+    isnt $payloads[0], $payloads[1], 'each request gets its own payload';
+
+    is_deeply $endpoint->category_mapping->{potholes}{parameters}, {
+        caseTypeCode => 'P001',
+        assetTypeCode => 'A001',
+    }, 'configured parameters left untouched';
+
+    $integration->unmock('get_contact_id_for_email_address');
+    $integration->unmock('create_case_and_get_number');
+};
+
 subtest "post_service_request_update" => sub {
     $integration->mock('upload_attachment_from_file_and_get_id', sub {
         is length(path($_[1])->slurp), 160, 'correct file size';

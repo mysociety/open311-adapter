@@ -121,7 +121,7 @@ sub post_service_request {
 
     my $service_code = $args->{service_code};
     my $category = $self->category_mapping->{$service_code};
-    my $payload = $category->{parameters} || {};
+    my $payload = { %{ $category->{parameters} || {} } };
     $payload->{easting} = $args->{attributes}->{easting};
     $payload->{northing} = $args->{attributes}->{northing};
     $payload->{usrn} = $args->{attributes}->{NSGRef};
