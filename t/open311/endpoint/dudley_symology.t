@@ -50,23 +50,39 @@ $soap_lite->mock(call => sub {
     if ($args[0] eq 'SendRequestAdditionalGroup') {
         my @request = ${$args[2]->value}->value;
         my @fields = ${$args[4]->value}->value;
-        is $request[REPORT_NSGREF]->value, NSGREF;
-        is $request[REPORT_NEXTACTION]->value, undef;
-        is $request[REPORT_NORTHING]->value, NORTHING;
-        is $request[REPORT_EASTING]->value, EASTING;
-        is $request[REPORT_LOCATION]->value, 'Report title';
-        my @photo_descs = map { "\n\n[ This report contains a photo, see: http://example.org/photo/$_.jpeg ]" } 1..3;
-        my $photo_descs = join '', @photo_descs;
-        is $request[REPORT_DESC]->value, "This is the details$photo_descs";
-        is $fields[0][FIELDS_FIELDLINE]->value, 10;
-        is $fields[0][FIELDS_VALUETYPE]->value, 8;
-        is $fields[0][FIELDS_VALUE]->value, "http://example.org/photo/1.jpeg";
-        is $fields[1][FIELDS_FIELDLINE]->value, 11;
-        is $fields[1][FIELDS_VALUETYPE]->value, 8;
-        is $fields[1][FIELDS_VALUE]->value, "http://example.org/photo/2.jpeg";
-        is $fields[2][FIELDS_FIELDLINE]->value, 12;
-        is $fields[2][FIELDS_VALUETYPE]->value, 8;
-        is $fields[2][FIELDS_VALUE]->value, "http://example.org/photo/3.jpeg";
+
+        # Check that correct AnalysisCode2 is set for question responses
+        if ( $request[REPORT_NSGREF]->value eq '234/4567' ) {
+            is $request[REPORT_ACT2]->value, 'CWD';
+            is $request[REPORT_DESC]->value, 'This is the details
+
+What has caused the damage?: Deterioration';
+        } elsif ( $request[REPORT_NSGREF]->value eq '345/4567' ) {
+            is $request[REPORT_ACT2]->value, 'ROOT';
+            is $request[REPORT_DESC]->value, 'This is the details
+
+If you are aware of any contractors working on site, please give details: Yes
+
+What has caused the damage?: Tree root damage';
+        } else {
+            is $request[REPORT_NSGREF]->value, NSGREF;
+            is $request[REPORT_NEXTACTION]->value, undef;
+            is $request[REPORT_NORTHING]->value, NORTHING;
+            is $request[REPORT_EASTING]->value, EASTING;
+            is $request[REPORT_LOCATION]->value, 'Report title';
+            my @photo_descs = map { "\n\n[ This report contains a photo, see: http://example.org/photo/$_.jpeg ]" } 1..3;
+            my $photo_descs = join '', @photo_descs;
+            is $request[REPORT_DESC]->value, "This is the details$photo_descs";
+            is $fields[0][FIELDS_FIELDLINE]->value, 10;
+            is $fields[0][FIELDS_VALUETYPE]->value, 8;
+            is $fields[0][FIELDS_VALUE]->value, "http://example.org/photo/1.jpeg";
+            is $fields[1][FIELDS_FIELDLINE]->value, 11;
+            is $fields[1][FIELDS_VALUETYPE]->value, 8;
+            is $fields[1][FIELDS_VALUE]->value, "http://example.org/photo/2.jpeg";
+            is $fields[2][FIELDS_FIELDLINE]->value, 12;
+            is $fields[2][FIELDS_VALUETYPE]->value, 8;
+            is $fields[2][FIELDS_VALUE]->value, "http://example.org/photo/3.jpeg";
+        }
         return {
             StatusCode => 0,
             StatusMessage => 'Success',
@@ -147,7 +163,7 @@ subtest "GET services" => sub {
         sort { $a->{service_code} cmp $b->{service_code} }
             @{ decode_json( $res->content ) }
     ], [
-        {   "service_code" => "Footpath Damage",
+        {   "service_code" => "FootpathDamage",
             "service_name" => "Footpath Damage",
             "description"  => "Footpath Damage",
             "metadata"     => "true",
@@ -155,7 +171,7 @@ subtest "GET services" => sub {
             "keywords"     => "",
             "type"         => "realtime"
         },
-        {   "service_code" => "Kerbstone Damage",
+        {   "service_code" => "KerbstoneDamage",
             "service_name" => "Kerbstone Damage",
             "description"  => "Kerbstone Damage",
             "metadata"     => "true",
@@ -171,7 +187,7 @@ subtest "GET services" => sub {
             "keywords"     => "",
             "type"         => "realtime"
         },
-        {   "service_code" => "Road Damage",
+        {   "service_code" => "RoadDamage",
             "service_name" => "Road Damage",
             "description"  => "Road Damage",
             "metadata"     => "true",
@@ -182,7 +198,7 @@ subtest "GET services" => sub {
     ], 'correct json returned';
 };
 
-subtest "GET service" => sub {
+subtest "GET service - Potholes" => sub {
     my $res = $endpoint->run_test_request(
         GET => '/services/Potholes.json',
     );
@@ -277,6 +293,137 @@ subtest "GET service" => sub {
         }, 'correct json returned';
 };
 
+subtest "GET service - RoadDamage" => sub {
+    my $res = $endpoint->run_test_request(
+        GET => '/services/RoadDamage.json',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        {
+            "service_code" => "RoadDamage",
+            "attributes" => [
+                {
+                    "code" => "easting",
+                    "datatype" => "number",
+                    "datatype_description" => "",
+                    "description" => "easting",
+                    "required" => "true",
+                    "variable" => "false",
+                    "automated" => "server_set",
+                    "order" => 1,
+                },
+                {
+                    "code" => "northing",
+                    "datatype" => "number",
+                    "datatype_description" => "",
+                    "description" => "northing",
+                    "required" => "true",
+                    "variable" => "false",
+                    "automated" => "server_set",
+                    "order" => 2,
+                },
+                {
+                    "code" => "fixmystreet_id",
+                    "datatype" => "string",
+                    "datatype_description" => "",
+                    "description" => "external system ID",
+                    "required" => "true",
+                    "variable" => "false",
+                    "automated" => "server_set",
+                    "order" => 3,
+                },
+                {
+                    "code" => "UnitID",
+                    "datatype" => "string",
+                    "datatype_description" => "",
+                    "description" => "Unit ID",
+                    "required" => "false",
+                    "variable" => "true",
+                    "automated" => "hidden_field",
+                    "order" => 4,
+                },
+                {
+                    "code" => "NSGRef",
+                    "datatype" => "string",
+                    "datatype_description" => "",
+                    "description" => "NSG reference",
+                    "required" => "false",
+                    "variable" => "true",
+                    "automated" => "hidden_field",
+                    "order" => 5,
+                },
+                {
+                    "code" => "contributed_by",
+                    "datatype" => "string",
+                    "datatype_description" => "",
+                    "description" => "Contributed by",
+                    "required" => "false",
+                    "variable" => "true",
+                    "automated" => "server_set",
+                    "order" => 6,
+                },
+                {
+                    "code" => "area_code",
+                    "datatype" => "string",
+                    "datatype_description" => "",
+                    "description" => "Area code",
+                    "required" => "false",
+                    "variable" => "true",
+                    "automated" => "server_set",
+                    "order" => 7,
+                },
+                {
+                    "code" => "report_url",
+                    "datatype" => "string",
+                    "datatype_description" => "",
+                    "description" => "Report URL",
+                    "required" => "false",
+                    "variable" => "true",
+                    "automated" => "server_set",
+                    "order" => 8,
+                },
+                {
+                    'code' => 'contractors',
+                    'datatype' => 'string',
+                    'datatype_description' => '',
+                    'description' => 'If you are aware of any contractors working on site, please give details',
+                    'order' => 9,
+                    'required' => 'false',
+                    'variable' => 'true',
+                },
+                {
+                    'code' => 'damage_cause',
+                    'datatype' => 'singlevaluelist',
+                    'datatype_description' => '',
+                    'description' => 'What has caused the damage?',
+                    'order' => 10,
+                    'required' => 'true',
+                    'values' => [
+                        {
+                            'key' => 'Deterioration',
+                            'name' => 'Deterioration'
+                        },
+                        {
+                            'key' => 'Other',
+                            'name' => 'Other'
+                        },
+                        {
+                            'key' => 'Traffic accident damage',
+                            'name' => 'Traffic accident damage'
+                        },
+                        {
+                            'key' => 'Tree root damage',
+                            'name' => 'Tree root damage'
+                        }
+                    ],
+                    'variable' => 'true',
+                }
+            ],
+        }, 'correct json returned';
+};
+
 subtest "POST Potholes in road OK" => sub {
     my $res = $endpoint->run_test_request(
         POST => '/requests.json',
@@ -295,6 +442,61 @@ subtest "POST Potholes in road OK" => sub {
         'attribute[northing]' => NORTHING,
         'attribute[fixmystreet_id]' => 123,
         'attribute[title]' => 'Report title',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => 1001
+        } ], 'correct json returned';
+};
+
+subtest "POST RoadDamage OK - Deterioration" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'RoadDamage',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[NSGRef]' => '234/4567',
+        'attribute[easting]' => EASTING,
+        'attribute[northing]' => NORTHING,
+        'attribute[fixmystreet_id]' => 123,
+        'attribute[title]' => 'Report title',
+
+        'attribute[damage_cause]' => 'Deterioration',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => 1001
+        } ], 'correct json returned';
+};
+
+subtest "POST RoadDamage OK - Tree root damage" => sub {
+    my $res = $endpoint->run_test_request(
+        POST => '/requests.json',
+        api_key => 'test',
+        service_code => 'RoadDamage',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[NSGRef]' => '345/4567',
+        'attribute[easting]' => EASTING,
+        'attribute[northing]' => NORTHING,
+        'attribute[fixmystreet_id]' => 123,
+        'attribute[title]' => 'Report title',
+
+        'attribute[damage_cause]' => 'Tree root damage',
+        'attribute[contractors]' => 'Yes',
     );
     ok $res->is_success, 'valid request'
         or diag $res->content;

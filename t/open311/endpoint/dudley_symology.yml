@@ -38,7 +38,7 @@ category_mapping:
     #   - Pothole in the pavement
     #   - Pothole in the road
 
-  Road Damage:
+  RoadDamage:
     name: Road Damage
     parameters:
       RequestType: CWPH
@@ -61,7 +61,7 @@ category_mapping:
           - Traffic accident damage
           - Other
 
-  Footpath Damage:
+  FootpathDamage:
     name: Footpath Damage
     parameters:
       RequestType: FWPH
@@ -84,7 +84,7 @@ category_mapping:
           - Traffic accident damage
           - Other
 
-  Kerbstone Damage:
+  KerbstoneDamage:
     name: Kerbstone Damage
     parameters:
       RequestType: KDM
