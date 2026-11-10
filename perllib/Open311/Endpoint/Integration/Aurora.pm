@@ -112,7 +112,8 @@ Creates a contact if one doesn't already exist for the reporter's email, or phon
 Uploads media provided as uploads or URLs as attachments.
 Creates a case using these and also the default parameters set in
 the C<category_mapping>.
-Calls C<populate_description> for description text.
+The rest of the case is built by C<build_case_payload>, with the description
+text coming from C<build_case_description>.
 
 =cut
 
@@ -121,21 +122,7 @@ sub post_service_request {
 
     my $service_code = $args->{service_code};
     my $category = $self->category_mapping->{$service_code};
-    my $payload = { %{ $category->{parameters} || {} } };
-    $payload->{easting} = $args->{attributes}->{easting};
-    $payload->{northing} = $args->{attributes}->{northing};
-    $payload->{usrn} = $args->{attributes}->{NSGRef};
-    $payload->{internalAssetId} = $args->{attributes}->{UnitID};
-    $payload->{externalReference} = "FMS" . $args->{attributes}->{fixmystreet_id};
-    $payload->{locationText} = $args->{attributes}->{title};
-
-    $payload->{description} = $args->{attributes}->{title} . "\n\n" . $args->{attributes}->{description};
-    if ($args->{address_string}) {
-        $payload->{description} .= "\n\nLocation query entered: " . $args->{address_string};
-    }
-    if ($args->{attributes}->{report_url}) {
-        $payload->{description} .= "\n\nView report on FixMyStreet: $args->{attributes}->{report_url}";
-    }
+    my $payload = $self->build_case_payload($args, $category);
 
     my $contact_id;
     my $email = $args->{email};
@@ -161,6 +148,50 @@ sub post_service_request {
     return $self->new_request(
         service_request_id => $case_number
     );
+}
+
+=head2 build_case_payload
+
+Returns the case fields for a request, other than the contact and attachments,
+starting from the default parameters set in the C<category_mapping>.
+Subclasses can override this to change what is sent.
+
+=cut
+
+sub build_case_payload {
+    my ( $self, $args, $category ) = @_;
+
+    my $payload = { %{ $category->{parameters} || {} } };
+    $payload->{easting} = $args->{attributes}->{easting};
+    $payload->{northing} = $args->{attributes}->{northing};
+    $payload->{usrn} = $args->{attributes}->{NSGRef};
+    $payload->{internalAssetId} = $args->{attributes}->{UnitID};
+    $payload->{externalReference} = "FMS" . $args->{attributes}->{fixmystreet_id};
+    $payload->{locationText} = $args->{attributes}->{title};
+    $payload->{description} = $self->build_case_description($args);
+
+    return $payload;
+}
+
+=head2 build_case_description
+
+Returns the description text for a case: the report's title and description,
+followed by the location query and the report URL, if present.
+
+=cut
+
+sub build_case_description {
+    my ( $self, $args ) = @_;
+
+    my $description = $args->{attributes}->{title} . "\n\n" . $args->{attributes}->{description};
+    if ($args->{address_string}) {
+        $description .= "\n\nLocation query entered: " . $args->{address_string};
+    }
+    if ($args->{attributes}->{report_url}) {
+        $description .= "\n\nView report on FixMyStreet: $args->{attributes}->{report_url}";
+    }
+
+    return $description;
 }
 
 =head2 post_service_request_update
