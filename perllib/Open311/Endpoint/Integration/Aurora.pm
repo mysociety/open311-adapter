@@ -109,7 +109,8 @@ sub services {
 =head2 post_service_request
 
 Creates a contact if one doesn't already exist for the reporter's email, or phone number.
-Uploads media provided as uploads or URLs as attachments.
+Uploads media provided as uploads or URLs as attachments. Those provided as
+URLs also have that URL set as the attachment's C<externalUrl>.
 Creates a case using these and also the default parameters set in
 the C<category_mapping>.
 The rest of the case is built by C<build_case_payload>, with the description
@@ -353,6 +354,7 @@ sub _upload_media_as_attachments {
             push @$attachments, {
                 id => $self->aurora->upload_attachment_from_response_and_get_id($response),
                 name => $response->filename,
+                externalUrl => $_,
             };
         } else {
             $self->logger->warn("Unable to download media " . $_);

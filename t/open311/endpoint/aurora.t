@@ -219,6 +219,66 @@ subtest "post_service_request does not modify category parameters" => sub {
     $integration->unmock('create_case_and_get_number');
 };
 
+subtest "post_service_request with media URLs" => sub {
+    $integration->mock('get_contact_id_for_email_address', sub { 'contact-id' });
+    my $create_case_payload;
+    $integration->mock('create_case_and_get_number', sub {
+        $create_case_payload = $_[1];
+        return "case-number";
+    });
+    my @uploaded;
+    $integration->mock('upload_attachment_from_response_and_get_id', sub {
+        push @uploaded, $_[1]->content;
+        return 'attachment-id-' . scalar @uploaded;
+    });
+
+    my $mock_ua = Test::MockModule->new('LWP::UserAgent');
+    $mock_ua->mock('get', sub {
+        my $url = $_[1];
+        return HTTP::Response->new(404, 'Not Found') if $url =~ /missing/;
+        my $res = HTTP::Response->new(200, 'OK', [], "image data");
+        $res->request(GET $url);
+        return $res;
+    });
+
+    my $res = $endpoint->run_test_request(POST '/requests.json', [
+        api_key => 'api_key',
+        service_code => 'potholes',
+        address_string => 'address string',
+        email => 'test@example.com',
+        first_name => 'first',
+        last_name => 'last',
+        description => "description",
+        media_url => 'http://example.org/photo/1.jpeg',
+        media_url => 'http://example.org/photo/missing.jpeg',
+        media_url => 'http://example.org/photo/2.jpeg',
+        'attribute[title]' => 'title',
+        'attribute[description]' => 'description',
+        'attribute[easting]' => 100,
+        'attribute[northing]' => 101,
+        'attribute[fixmystreet_id]' => 10,
+    ]);
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+    is_deeply \@uploaded, [ 'image data', 'image data' ];
+    is_deeply $create_case_payload->{attachments}, [
+        {
+            id => 'attachment-id-1',
+            name => '1.jpeg',
+            externalUrl => 'http://example.org/photo/1.jpeg',
+        },
+        {
+            id => 'attachment-id-2',
+            name => '2.jpeg',
+            externalUrl => 'http://example.org/photo/2.jpeg',
+        },
+    ];
+
+    $integration->unmock('get_contact_id_for_email_address');
+    $integration->unmock('create_case_and_get_number');
+    $integration->unmock('upload_attachment_from_response_and_get_id');
+};
+
 subtest "post_service_request_update" => sub {
     $integration->mock('upload_attachment_from_file_and_get_id', sub {
         is length(path($_[1])->slurp), 160, 'correct file size';
