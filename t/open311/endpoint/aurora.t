@@ -450,6 +450,70 @@ sub _edit_update_file {
     return encode_json($file);
 }
 
+subtest "Get updates with configured trigger mapping" => sub {
+    my $mapped_endpoint = Open311::Endpoint::Integration::UK::Dummy->new(
+        trigger_status_mapping => {
+            CS_CHANGE_QUEUE => 'open',
+            CS_PROMPT_REACTIVE_MAINTENANCE => 'action_scheduled',
+            CS_INSPECTION_PROMPTED => 'investigating',
+            CS_MAINTENANCE_COMPLETED => 'fixed',
+        },
+    );
+
+    # Filename => [ case number, clearance code ]
+    my @files = (
+        [ '20251202_09000000_1_CS_CHANGE_QUEUE.json' => 'FMS-11', '' ],
+        [ '20251202_09010000_2_CS_PROMPT_REACTIVE_MAINTENANCE.json' => 'FMS-12', '' ],
+        # Has a clearance code, but that is only used for CS_CLEAR_CASE.
+        [ '20251202_09020000_3_CS_INSPECTION_PROMPTED.json' => 'FMS-13', 'GN10' ],
+        [ '20251202_09030000_4_CS_MAINTENANCE_COMPLETED.json' => 'FMS-14', '' ],
+        [ '20251202_09040000_5_CS_CLEAR_CASE.json' => 'FMS-15', 'GN09' ],
+        # Clearance code not in reverse_status_mapping.
+        [ '20251202_09050000_6_CS_CLEAR_CASE.json' => 'FMS-16', 'UNMAPPED' ],
+        # Triggers not in trigger_status_mapping, even though the first is one
+        # handled when there is no mapping and has a mapped clearance code.
+        [ '20251202_09060000_7_CS_RE_QUEUE.json' => 'FMS-17', 'GN10' ],
+        [ '20251202_09070000_8_CS_MAINTENANCE_STARTED.json' => 'FMS-18', '' ],
+    );
+    my $list = '<EnumerationResults><Blobs>'
+        . join('', map { "<Blob><Name>$_->[0]</Name></Blob>" } @files)
+        . '</Blobs><NextMarker /></EnumerationResults>';
+
+    my @fetched;
+    my $mock_ua = Test::MockModule->new('LWP::UserAgent');
+    $mock_ua->mock('request', sub {
+        my $uri = "" . $_[1]->uri;
+        return HTTP::Response->new(200, 'OK', [], $list) if $uri =~ /restype/;
+        my ($file) = grep { $uri =~ /\Q$_->[0]\E/ } @files;
+        push @fetched, $file->[1];
+        my $data = decode_json($update_file);
+        $data->{Message}->{CaseNumber} = $file->[1];
+        $data->{Message}->{ClearanceReasonCode} = $file->[2];
+        return HTTP::Response->new(200, 'OK', [], encode_json($data));
+    });
+
+    my $res = $mapped_endpoint->run_test_request(
+        GET => '/servicerequestupdates.json',
+    );
+    ok $res->is_success, 'valid request' or diag $res->content;
+
+    my @updates = map { {
+        id => $_->{service_request_id},
+        status => $_->{status},
+        code => $_->{external_status_code},
+        description => $_->{description},
+    } } @{ decode_json($res->content) };
+    is_deeply \@updates, [
+        { id => 'FMS-11', status => 'open', code => 'CS_CHANGE_QUEUE', description => '' },
+        { id => 'FMS-12', status => 'action_scheduled', code => 'CS_PROMPT_REACTIVE_MAINTENANCE', description => '' },
+        { id => 'FMS-13', status => 'investigating', code => 'CS_INSPECTION_PROMPTED', description => '' },
+        { id => 'FMS-14', status => 'fixed', code => 'CS_MAINTENANCE_COMPLETED', description => '' },
+        { id => 'FMS-15', status => 'internal_referral', code => 'GN09',
+          description => "Ignored unless CS_CLEAR_CASE\n(Also newlines unescaped)" },
+    ];
+    is_deeply \@fetched, [ map { "FMS-$_" } 11..16 ], 'files for unlisted triggers not fetched';
+};
+
 subtest "Handle update filenames query pagination" => sub {
     my $page1 = <<'XML';
 <?xml version="1.0" encoding="utf-8"?>

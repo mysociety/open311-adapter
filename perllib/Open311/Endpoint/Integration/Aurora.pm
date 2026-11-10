@@ -83,6 +83,25 @@ has reverse_status_mapping => (
     default => sub { $_[0]->endpoint_config->{reverse_status_mapping} }
 );
 
+=head2 trigger_status_mapping
+
+Optional table of the Aurora triggers to fetch updates for (besides
+C<CS_CLEAR_CASE>, which uses C<reverse_status_mapping>) and the FMS status
+each one maps to, e.g.
+
+  trigger_status_mapping:
+    CS_CHANGE_QUEUE: open
+    CS_MAINTENANCE_COMPLETED: fixed
+
+If not set, a fixed set of triggers is used; see C<get_service_request_updates>.
+
+=cut
+
+has trigger_status_mapping => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{trigger_status_mapping} }
+);
+
 =head1 BEHAVIOUR
 
 =head2 services
@@ -221,7 +240,15 @@ sub post_service_request_update {
 Fetches files from Aurora's 'return path update' Azure storage container which contains a
 snapshot of a case after one of the configured 'triggers' fires.
 
-The C<ClearanceReasonCode> is mapped to an update status via the
+If C<trigger_status_mapping> is configured, only files for the triggers listed
+there and for C<CS_CLEAR_CASE> are used. C<CS_CLEAR_CASE> updates have their
+C<ClearanceReasonCode> mapped to an update status via the
+C<reverse_status_mapping>, and are skipped if the code is not present there;
+the code is passed on as the update's external status code. Updates for the
+other triggers take their status from C<trigger_status_mapping> and have the
+trigger name as their external status code.
+
+Otherwise, the C<ClearanceReasonCode> is mapped to an update status via the
 C<reverse_status_mapping>, with the exception of updates via the
 C<CS_INSPECTION_PROMPTED> trigger which always map to 'investigating',
 C<CS_MAINTENANCE_COMPLETED> which map to fixed with a code, and
@@ -246,11 +273,15 @@ sub get_service_request_updates {
 
     my @update_files = $self->aurora->fetch_update_filenames(_date_prefix($start, $end));
     my @updates = ();
+    my $triggers = $self->_handled_triggers;
     for (@update_files) {
+        my ($trigger) = $_->{Name} =~ /_(CS_[A-Z_]+)\.json/;
+        next unless $trigger && $triggers->{$trigger};
         next if _skip_update_file($start, $end, $_->{Name});
         my $data = $self->aurora->fetch_update_file($_->{Name});
-        my $clearance_code = $data->{Message}->{ClearanceReasonCode};
-        next unless ($clearance_code && $self->reverse_status_mapping->{$clearance_code}) || $_->{Name} =~ /CS_INSPECTION_PROMPTED|CS_CHANGE_QUEUE|CS_MAINTENANCE_COMPLETED/;
+        my ($state, $external_status_code) = $self->_status_for_trigger(
+            $trigger, $data->{Message}->{ClearanceReasonCode});
+        next unless $state;
 
         my $id_no = @{$data->{Message}->{CaseEventHistory}};
         my $external_update = pop @{$data->{Message}->{CaseEventHistory}};
@@ -258,28 +289,14 @@ sub get_service_request_updates {
                             ->set_nanosecond(0)
                             ->set_time_zone('UTC');
 
-        my $desc = $_->{Name} =~ /CS_CLEAR_CASE/ ? ($data->{Message}->{ClearanceReasonPortalText} // '') : '';
+        my $desc = $trigger eq 'CS_CLEAR_CASE' ? ($data->{Message}->{ClearanceReasonPortalText} // '') : '';
         # The exported text from Aurora has newlines stripped so they have been escaped
         # - unescaping them here.
         $desc =~ s/\\n/\n/g;
 
-        my $state = do {
-            if ($_->{Name} =~ /CS_CHANGE_QUEUE/) {
-                $clearance_code = 'CS_CHANGE_QUEUE';
-                'unchanged';
-            } elsif ($_->{Name} =~ /CS_INSPECTION_PROMPTED/) {
-                'investigating';
-            } elsif ($_->{Name} =~ /CS_MAINTENANCE_COMPLETED/) {
-                $clearance_code = 'CS_MAINTENANCE_COMPLETED';
-                'fixed';
-            } else {
-                $self->reverse_status_mapping->{ $clearance_code };
-            }
-        };
-
         my %update_args = (
             status => $state,
-            external_status_code => $clearance_code,
+            external_status_code => $external_status_code,
             description => $desc,
             service_request_id => $data->{Message}->{CaseNumber},
             update_id => $data->{Message}->{CaseNumber} . '_' . $id_no,
@@ -292,10 +309,46 @@ sub get_service_request_updates {
     return @updates;
 }
 
+# The triggers whose update files we look at, as a lookup hash.
+sub _handled_triggers {
+    my $self = shift;
+
+    my @triggers = $self->trigger_status_mapping
+        ? ('CS_CLEAR_CASE', keys %{ $self->trigger_status_mapping })
+        : qw(
+            CS_INSPECTION_PROMPTED
+            CS_CLEAR_CASE
+            CS_RECORD_CONTACT_EVENT
+            CS_MAINTENANCE_COMPLETED
+            CS_CHANGE_QUEUE
+            CS_RE_QUEUE
+        );
+    return { map { $_ => 1 } @triggers };
+}
+
+# Returns the update status and external status code for an update file with
+# the given trigger and clearance code, or nothing if it should be skipped.
+sub _status_for_trigger {
+    my ($self, $trigger, $clearance_code) = @_;
+
+    my $cleared_state = $clearance_code && $self->reverse_status_mapping->{$clearance_code};
+
+    if (my $mapping = $self->trigger_status_mapping) {
+        return ($cleared_state, $clearance_code) if $trigger eq 'CS_CLEAR_CASE';
+        return ($mapping->{$trigger}, $trigger);
+    }
+
+    # No trigger_status_mapping configured, so the original fixed behaviour.
+    return ('unchanged', $trigger) if $trigger eq 'CS_CHANGE_QUEUE';
+    return ('fixed', $trigger) if $trigger eq 'CS_MAINTENANCE_COMPLETED';
+    # NB this one passes on whatever clearance code the case has, if any,
+    # rather than the trigger name.
+    return ('investigating', $clearance_code) if $trigger eq 'CS_INSPECTION_PROMPTED';
+    return ($cleared_state, $clearance_code);
+}
+
 sub _skip_update_file {
     my ($start, $end, $file_name) = @_;
-
-    return 1 unless $file_name =~ /_(CS_INSPECTION_PROMPTED|CS_CLEAR_CASE|CS_RECORD_CONTACT_EVENT|CS_MAINTENANCE_COMPLETED|CS_CHANGE_QUEUE|CS_RE_QUEUE)\.json/;
 
     return unless $start || $end;
 

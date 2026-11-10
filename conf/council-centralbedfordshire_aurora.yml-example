@@ -14,6 +14,15 @@ reverse_status_mapping:
   DR01: in_progress
   DR02: closed
 
+# Optional. A map from the Aurora trigger an update file was written for to
+# update status. If set, only these triggers and CS_CLEAR_CASE (which always
+# uses reverse_status_mapping) produce updates, and the trigger name is sent
+# as the external status code. If not set, a fixed set of triggers is used.
+#trigger_status_mapping:
+#  CS_CHANGE_QUEUE: open
+#  CS_INSPECTION_PROMPTED: investigating
+#  CS_MAINTENANCE_COMPLETED: fixed
+
 # A map from service_code to:
 #
 #   name: The display name for the category
