@@ -7,7 +7,7 @@ Open311::Endpoint::Integration::Aurora - An integration with Symology's Aurora p
 This integration:
 * Creates cases for requests.
 * Makes updates on the relevant cases.
-* Fetches udpates on relevant cases.
+* Fetches updates on relevant cases.
 
 =cut
 
@@ -46,7 +46,7 @@ sub get_integration {
 
 =head2 service_class
 
-Uses the same service class as our Symology Insight integration.
+Uses the Aurora service class, which adds the attributes FMS sends for Aurora categories.
 
 =cut
 
