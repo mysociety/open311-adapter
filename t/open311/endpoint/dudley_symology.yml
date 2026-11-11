@@ -42,10 +42,8 @@ category_mapping:
     name: Road Damage
     parameters:
       RequestType: CWPH
+      AnalysisCode2: CWD
     logic:
-      - rules: [ $attr.damage_cause, { like: 'Deterioration|Traffic accident damage|Other' } ]
-        output:
-          AnalysisCode2: CWD
       - rules: [ $attr.damage_cause, Tree root damage ]
         output:
           AnalysisCode2: ROOT
@@ -65,10 +63,8 @@ category_mapping:
     name: Footpath Damage
     parameters:
       RequestType: FWPH
+      AnalysisCode2: FWD
     logic:
-      - rules: [ $attr.damage_cause, { like: 'Deterioration|Traffic accident damage|Other' } ]
-        output:
-          AnalysisCode2: FWD
       - rules: [ $attr.damage_cause, Tree root damage ]
         output:
           AnalysisCode2: ROOT
