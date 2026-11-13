@@ -102,6 +102,23 @@ has trigger_status_mapping => (
     default => sub { $_[0]->endpoint_config->{trigger_status_mapping} }
 );
 
+=head2 unmapped_clearance_status
+
+Optional status for C<CS_CLEAR_CASE> updates whose C<ClearanceReasonCode> is
+not in C<reverse_status_mapping>, e.g.
+
+  unmapped_clearance_status: unchanged
+
+so that their text is passed on without changing the report's state. Such
+updates are only produced if they have text. If not set, they are skipped.
+
+=cut
+
+has unmapped_clearance_status => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{unmapped_clearance_status} }
+);
+
 =head1 BEHAVIOUR
 
 =head2 services
@@ -243,8 +260,8 @@ snapshot of a case after one of the configured 'triggers' fires.
 If C<trigger_status_mapping> is configured, only files for the triggers listed
 there and for C<CS_CLEAR_CASE> are used. C<CS_CLEAR_CASE> updates have their
 C<ClearanceReasonCode> mapped to an update status via the
-C<reverse_status_mapping>, and are skipped if the code is not present there;
-the code is passed on as the update's external status code. Updates for the
+C<reverse_status_mapping>, and are skipped if the code is not present there
+(but see below); the code is passed on as the update's external status code. Updates for the
 other triggers take their status from C<trigger_status_mapping> and have the
 trigger name as their external status code.
 
@@ -256,6 +273,11 @@ C<CS_CHANGE_QUEUE> which send through a code but do not change state.
 
 Updates via the C<CS_CLEAR_CASE> trigger have their description populated from the
 C<ClearanceReasonPortalText> field, all others are blank.
+
+If C<unmapped_clearance_status> is configured, C<CS_CLEAR_CASE> updates with
+a C<ClearanceReasonCode> that is missing or not in C<reverse_status_mapping>
+are given that status rather than being skipped, provided they have a
+description.
 
 =cut
 
@@ -281,6 +303,15 @@ sub get_service_request_updates {
         my $data = $self->aurora->fetch_update_file($_->{Name});
         my ($state, $external_status_code) = $self->_status_for_trigger(
             $trigger, $data->{Message}->{ClearanceReasonCode});
+
+        my $desc = $trigger eq 'CS_CLEAR_CASE' ? ($data->{Message}->{ClearanceReasonPortalText} // '') : '';
+        # The exported text from Aurora has newlines stripped so they have been escaped
+        # - unescaping them here.
+        $desc =~ s/\\n/\n/g;
+
+        # A clearance we have no status for can still pass on its text.
+        $state ||= $self->unmapped_clearance_status
+            if $trigger eq 'CS_CLEAR_CASE' && $desc ne '';
         next unless $state;
 
         my $id_no = @{$data->{Message}->{CaseEventHistory}};
@@ -288,11 +319,6 @@ sub get_service_request_updates {
         my $update_date = DateTime::Format::W3CDTF->parse_datetime($external_update->{EventDateTime})
                             ->set_nanosecond(0)
                             ->set_time_zone('UTC');
-
-        my $desc = $trigger eq 'CS_CLEAR_CASE' ? ($data->{Message}->{ClearanceReasonPortalText} // '') : '';
-        # The exported text from Aurora has newlines stripped so they have been escaped
-        # - unescaping them here.
-        $desc =~ s/\\n/\n/g;
 
         my %update_args = (
             status => $state,

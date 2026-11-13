@@ -514,6 +514,56 @@ subtest "Get updates with configured trigger mapping" => sub {
     is_deeply \@fetched, [ map { "FMS-$_" } 11..16 ], 'files for unlisted triggers not fetched';
 };
 
+subtest "Get updates with unmapped clearance codes" => sub {
+    my $unmapped_endpoint = Open311::Endpoint::Integration::UK::Dummy->new(
+        unmapped_clearance_status => 'unchanged',
+    );
+
+    # Filename => [ case number, clearance code, clearance text ]
+    my @files = (
+        [ '20251202_09000000_1_CS_CLEAR_CASE.json' => 'FMS-21', 'GN09', 'Mapped' ],
+        [ '20251202_09010000_2_CS_CLEAR_CASE.json' => 'FMS-22', 'UNMAPPED', 'Unmapped\nwith text' ],
+        [ '20251202_09020000_3_CS_CLEAR_CASE.json' => 'FMS-23', '', 'No code' ],
+        # Nothing to pass on.
+        [ '20251202_09030000_4_CS_CLEAR_CASE.json' => 'FMS-24', 'UNMAPPED', '' ],
+        # Only applies to CS_CLEAR_CASE.
+        [ '20251202_09040000_5_CS_RE_QUEUE.json' => 'FMS-25', 'UNMAPPED', 'Requeued' ],
+    );
+    my $list = '<EnumerationResults><Blobs>'
+        . join('', map { "<Blob><Name>$_->[0]</Name></Blob>" } @files)
+        . '</Blobs><NextMarker /></EnumerationResults>';
+
+    my $mock_ua = Test::MockModule->new('LWP::UserAgent');
+    $mock_ua->mock('request', sub {
+        my $uri = "" . $_[1]->uri;
+        return HTTP::Response->new(200, 'OK', [], $list) if $uri =~ /restype/;
+        my ($file) = grep { $uri =~ /\Q$_->[0]\E/ } @files;
+        my $data = decode_json($update_file);
+        $data->{Message}->{CaseNumber} = $file->[1];
+        $data->{Message}->{ClearanceReasonCode} = $file->[2];
+        $data->{Message}->{ClearanceReasonPortalText} = $file->[3];
+        return HTTP::Response->new(200, 'OK', [], encode_json($data));
+    });
+
+    my $get_updates = sub {
+        my $res = $_[0]->run_test_request(GET => '/servicerequestupdates.json');
+        ok $res->is_success, 'valid request' or diag $res->content;
+        return [ map { [
+            @$_{qw(service_request_id status external_status_code description)}
+        ] } @{ decode_json($res->content) } ];
+    };
+
+    is_deeply $get_updates->($unmapped_endpoint), [
+        [ 'FMS-21', 'internal_referral', 'GN09', 'Mapped' ],
+        [ 'FMS-22', 'unchanged', 'UNMAPPED', "Unmapped\nwith text" ],
+        [ 'FMS-23', 'unchanged', undef, 'No code' ],
+    ], 'unmapped clearances with text use the configured status';
+
+    is_deeply $get_updates->($endpoint), [
+        [ 'FMS-21', 'internal_referral', 'GN09', 'Mapped' ],
+    ], 'unmapped clearances skipped when not configured';
+};
+
 subtest "Handle update filenames query pagination" => sub {
     my $page1 = <<'XML';
 <?xml version="1.0" encoding="utf-8"?>
