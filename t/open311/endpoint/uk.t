@@ -41,6 +41,7 @@ test_multi(1, 'Open311::Endpoint::Integration::UK::Brent',
     'Open311::Endpoint::Integration::UK::Brent::Symology' => 'brent_symology',
     'Open311::Endpoint::Integration::UK::Brent::Echo' => 'brent_echo',
     'Open311::Endpoint::Integration::UK::Brent::ATAK' => 'brent_atak',
+    'Open311::Endpoint::Integration::UK::Brent::Aurora' => 'brent_aurora',
 );
 
 test_multi(0, 'Open311::Endpoint::Integration::UK::Bromley',
