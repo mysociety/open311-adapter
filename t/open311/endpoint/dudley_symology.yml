@@ -55,8 +55,8 @@ category_mapping:
         description: What has caused the damage?
         values:
           - Deterioration
-          - Tree root damage
           - Traffic accident damage
+          - Tree root damage
           - Other
 
   FootpathDamage:
@@ -76,8 +76,8 @@ category_mapping:
         description: What has caused the damage?
         values:
           - Deterioration
-          - Tree root damage
           - Traffic accident damage
+          - Tree root damage
           - Other
 
   KerbstoneDamage:

@@ -309,7 +309,7 @@ subtest "GET service" => sub {
              "code" => "burnt",
              "description" => "Burnt out?",
              "variable" => "true",
-             "values" => [ { key => 'No', name => 'No', }, { key => 'Yes', name => 'Yes', } ],
+             "values" => [ { key => 'Yes', name => 'Yes', }, { key => 'No', name => 'No', } ],
              "datatype_description" => "",
           }
        ],

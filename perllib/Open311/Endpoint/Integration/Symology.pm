@@ -119,6 +119,7 @@ sub services {
             if ($_->{values}) {
                 $attribute{datatype} = 'singlevaluelist';
                 $attribute{values} = { map { $_ => $_ } @{$_->{values}} };
+                $attribute{values_sorted} = $_->{values};
             } else {
                 $attribute{datatype} = 'string';
             }

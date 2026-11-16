@@ -406,17 +406,17 @@ subtest "GET service - RoadDamage" => sub {
                             'name' => 'Deterioration'
                         },
                         {
-                            'key' => 'Other',
-                            'name' => 'Other'
-                        },
-                        {
                             'key' => 'Traffic accident damage',
                             'name' => 'Traffic accident damage'
                         },
                         {
                             'key' => 'Tree root damage',
                             'name' => 'Tree root damage'
-                        }
+                        },
+                        {
+                            'key' => 'Other',
+                            'name' => 'Other'
+                        },
                     ],
                     'variable' => 'true',
                 }
