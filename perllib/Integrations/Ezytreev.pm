@@ -20,6 +20,21 @@ has ua => (
     },
 );
 
+sub _request {
+    my ($self, $request) = @_;
+
+    $self->logger->debug("[Ezytreev] Request: " . $request->method . " " . $request->uri);
+    $self->logger->debug("[Ezytreev] Request content: " . $request->content)
+        if ($request->content_type || "") eq "application/json";
+
+    my $response = $self->ua->request($request);
+
+    $self->logger->debug("[Ezytreev] Response status: " . $response->status_line);
+    $self->logger->debug("[Ezytreev] Response content: " . $response->decoded_content);
+
+    return $response;
+}
+
 # Despite the name, this is also used for creating enquiries.
 sub update_enquiry {
     my ($self, $body) = @_;
@@ -30,7 +45,7 @@ sub update_enquiry {
         Accept => 'application/json',
         Content => encode_json($body);
 
-    return $self->ua->request($request);
+    return $self->_request($request);
 }
 
 sub upload_enquiry_document {
@@ -52,7 +67,7 @@ sub upload_enquiry_document {
         Accept => 'application/json',
         Content => encode_json($body);
 
-    return $self->ua->request($request);
+    return $self->_request($request);
 }
 
 sub get_enquiry_changes {
@@ -65,7 +80,7 @@ sub get_enquiry_changes {
 
     my $url = $self->config->{endpoint_url} . "Enquiries/Changes/$start_date/$end_date";
     my $request = GET $url, Accept => 'application/json';
-    return $self->ua->request($request);
+    return $self->_request($request);
 }
 
 1;
