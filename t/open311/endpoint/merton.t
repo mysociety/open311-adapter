@@ -10,6 +10,18 @@ around BUILDARGS => sub {
     return $class->$orig(%args);
 };
 
+# Override the original to provide a config_file
+package Open311::Endpoint::Integration::UK::Merton::Ezytreev;
+use Path::Tiny;
+use Moo;
+extends 'Open311::Endpoint::Integration::Ezytreev';
+around BUILDARGS => sub {
+    my ($orig, $class, %args) = @_;
+    $args{jurisdiction_id} = 'merton_ezytreev';
+    $args{config_file} = path(__FILE__)->sibling("merton_ezytreev.yml")->stringify;
+    return $class->$orig(%args);
+};
+
 package main;
 
 use strict;
@@ -81,12 +93,17 @@ subtest "Get service definition with no prefix" => sub {
         }, 'correct json returned';
 };
 
+subtest "Get Ezytreev service definition with prefix" => sub {
+    my $res = $endpoint->run_test_request( GET => '/services/Ezytreev-FallenTree.json' );
+    ok $res->is_success, 'valid request' or diag $res->content;
+};
+
 
 subtest "Get service definition with a group" => sub {
     my $res = $endpoint->run_test_request( GET => '/services.xml' );
     ok $res->is_success, 'valid request' or diag $res->content;
     my @codes = $res->content =~ /<service_code>(.*?)<\/service_code>/g;
-    is_deeply \@codes, [ '3129', '3130', '3145', '3159', '3200-add', 'GR' ];
+    is_deeply \@codes, [ '3129', '3130', '3145', '3159', '3200-add', 'Ezytreev-FallenTree', 'GR' ];
 
     $res = $endpoint->run_test_request( GET => '/services/TEST.json' );
     ok $res->is_success, 'valid request' or diag $res->content;

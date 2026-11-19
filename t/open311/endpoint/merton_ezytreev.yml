@@ -1,0 +1,6 @@
+url: http://merton.example.org/
+username: username
+password: password
+category_mapping:
+  FallenTree:
+    name: "Fallen/damaged tree or branch"
