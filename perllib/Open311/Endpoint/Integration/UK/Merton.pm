@@ -27,19 +27,37 @@ has jurisdiction_id => (
 
 =pod
 
-Merton's two endpoints do not overlap in IDs (one GUID, one not) or service
-codes, so there is no need to prefix them. This code overrides the default
-Multi code to not change anything, and cope accordingly.
+Merton has three endpoints; a passthrough, Echo and Ezytreev.
+
+This code overrides the default Multi code to only use prefixing
+where we need it.
+
+No prefixing is applied for request IDs:
+* GUIDs are always Echo.
+* Ezytreev ones are already prefixed with 'ezytreev'.
+* The rest we assume are passthrough.
+
+For service codes:
+* Numbers or the text 'missed' are Echo.
+* We prefix Ezytreev ones to start with 'Ezytreev-' like a normal endpoint behind multi.
+* The rest we assume are passthrough.
 
 =cut
 
 sub _map_with_new_id {
     my ($self, $attributes, @results) = @_;
-    @results = map {
-        my ($name, $result) = @$_;
-        $result;
+    $attributes = [$attributes] unless ref $attributes eq 'ARRAY';
+    return map {
+        my ($name, $result)  = @$_;
+        if ($name eq 'Ezytreev' && grep(/^service_code$/, @$attributes)) {
+            # Apply normal mapping to Ezytreev service codes.
+            my @updated_results = $self->SUPER::_map_with_new_id($attributes, $_);
+            $updated_results[0];
+        } else {
+            # Leave rest unchanged.
+            $result;
+        }
     } @results;
-    return @results;
 }
 
 my $guid_regex = qr/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -49,19 +67,25 @@ sub _map_from_new_id {
 
     my $integration;
     if ($type eq 'request') {
-        if ($code =~ /$guid_regex/) {
+        if ($code =~ /^Ezytreev-/) {
+            $integration = 'Ezytreev';
+            $code =~ s/^Ezytreev-//;
+        } elsif ($code =~ /$guid_regex/) {
             $integration = 'Echo';
         } else {
             $integration = 'Passthrough';
         }
     } elsif ($type eq 'service') {
-        if ($code =~ /^\d+/ || $code eq 'missed') {
+        if ($code =~ /^Ezytreev-/) {
+            $code =~ s/^Ezytreev-//;
+            $integration = 'Ezytreev';
+        } elsif ($code =~ /^\d+/ || $code eq 'missed') {
             $integration = 'Echo';
         } else {
             $integration = 'Passthrough';
         }
     } elsif ($type eq 'token') {
-        # Echo does not use tokens
+        # Echo and Ezytreev do not use tokens
         $integration = 'Passthrough';
     }
     return ($integration, $code);

@@ -1,0 +1,10 @@
+endpoint_url: ""
+username: ""
+password: ""
+reverse_status_mapping: {}
+statuses_to_show_notes_for: []
+category_mapping:
+  categoryA:
+    name: "Category A"
+  categoryB:
+    name: "Category B"

@@ -51,6 +51,7 @@ test_multi(0, 'Open311::Endpoint::Integration::UK::Bromley',
 
 test_multi(0, 'Open311::Endpoint::Integration::UK::Merton',
     'Open311::Endpoint::Integration::UK::Merton::Echo' => 'merton_echo',
+    'Open311::Endpoint::Integration::UK::Merton::Ezytreev' => 'merton_ezytreev',
     #'Open311::Endpoint::Integration::UK::Merton::Passthrough' => 'www.merton.gov.uk',
 );
 
