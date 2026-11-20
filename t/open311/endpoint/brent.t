@@ -111,6 +111,16 @@ $atak_int->mock(config => sub { return atak_config() });
 
 my $atak_endpoint = Open311::Endpoint::Integration::UK::Brent::ATAK->new(jurisdiction_id => 'test');
 
+my $aurora = Test::MockModule->new('Open311::Endpoint::Integration::UK::Brent::Aurora');
+$aurora->mock('_build_config_file', sub {
+    path(__FILE__)->sibling('brent_aurora.yml');
+});
+
+my $aurora_int = Test::MockModule->new('Integrations::Aurora');
+$aurora_int->mock('_build_config_file', sub {
+    path(__FILE__)->sibling('brent_aurora.yml');
+});
+
 use constant {
     REPORT_NSGREF => 0,
     REPORT_DATE => 1,
@@ -407,7 +417,8 @@ subtest "GET Service List" => sub {
     my $res = $endpoint->run_test_request( GET => '/services.json' );
     ok $res->is_success, 'valid request'
         or diag $res->content;
-    is_deeply decode_json($res->content),
+    my @services = sort { $a->{service_code} cmp $b->{service_code} } @{ decode_json($res->content) };
+    is_deeply \@services,
         [ {
           "service_code" => "ATAK-PARK_FLY_TIPPING",
           "service_name" => "Parks fly-tipping",
@@ -430,6 +441,30 @@ subtest "GET Service List" => sub {
           "description" => "Park litter bin needs emptying",
           "metadata" => "true",
           "group" => "Parks and open spaces",
+          "keywords" => "",
+          "type" => "realtime"
+        }, {
+          "service_code" => "Aurora-GullyBlockedFlooded",
+          "service_name" => "Gully - Blocked (Flooded)",
+          "description" => "Gully - Blocked (Flooded)",
+          "metadata" => "true",
+          "group" => "Roads & Pavements",
+          "keywords" => "",
+          "type" => "realtime"
+        }, {
+          "service_code" => "Aurora-GullyBlockedNotFlooded",
+          "service_name" => "Gully - Blocked (Not Flooded)",
+          "description" => "Gully - Blocked (Not Flooded)",
+          "metadata" => "true",
+          "group" => "Roads & Pavements",
+          "keywords" => "",
+          "type" => "realtime"
+        }, {
+          "service_code" => "Aurora-Pothole",
+          "service_name" => "Pothole or other road damage",
+          "description" => "Pothole or other road damage",
+          "metadata" => "true",
+          "group" => "Roads & Pavements",
           "keywords" => "",
           "type" => "realtime"
         }, {
@@ -749,6 +784,180 @@ for my $test (
         ], 'correct json returned' or diag $res->content;
     };
 }
+
+subtest "POST Aurora service request OK" => sub {
+    $aurora_int->mock('get_contact_id_for_email_address', sub { 'contact-id' });
+    my $create_case_payload;
+    $aurora_int->mock('create_case_and_get_number', sub {
+        $create_case_payload = $_[1];
+        return '1234';
+    });
+
+    my %params = (
+        api_key => 'test',
+        service_code => 'Aurora-Pothole',
+        email => 'test@example.com',
+        first_name => 'Bob',
+        last_name => 'Mould',
+        description => "This is the details",
+        lat => 51,
+        long => -1,
+        'attribute[report_url]' => 'http://example.org/report/123',
+        'attribute[NSGRef]' => NSGREF,
+        'attribute[easting]' => EASTING,
+        'attribute[northing]' => NORTHING,
+        'attribute[fixmystreet_id]' => 123,
+        'attribute[title]' => 'Report title; Nearest calculated address = 1 High Road',
+        'attribute[description]' => 'This is the details',
+    );
+    my $res = $endpoint->run_test_request(POST => '/requests.json', %params);
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply decode_json($res->content),
+        [ {
+            "service_request_id" => "Aurora-1234"
+        } ], 'correct json returned';
+
+    is_deeply $create_case_payload, {
+        caseTypeCode => 'HI005',
+        assetTypeCode => 'HWCW',
+        description => "This is the details\n\nView report on FixMyStreet: http://example.org/report/123",
+        externalReference => 'FMS123',
+        locationText => 'Report title; Nearest calculated address = 1 High Road',
+        usrn => NSGREF,
+        easting => EASTING,
+        northing => NORTHING,
+        contactId => 'contact-id',
+        attachments => undef,
+    }, 'correct case payload';
+
+    # A report on an asset, with a location query, in a category that shares
+    # its Aurora case type with another.
+    %params = (
+        %params,
+        service_code => 'Aurora-GullyBlockedNotFlooded',
+        address_string => 'High Road',
+        'attribute[UnitID]' => 'G1234',
+    );
+    $res = $endpoint->run_test_request(POST => '/requests.json', %params);
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    is_deeply $create_case_payload, {
+        caseTypeCode => 'DR005',
+        assetTypeCode => 'DRGY',
+        description => "This is the details\n\nAsset ID: G1234\n\nLocation query entered: High Road\n\nView report on FixMyStreet: http://example.org/report/123",
+        externalReference => 'FMS123',
+        locationText => 'Report title; Nearest calculated address = 1 High Road',
+        usrn => NSGREF,
+        easting => EASTING,
+        northing => NORTHING,
+        contactId => 'contact-id',
+        attachments => undef,
+    }, 'asset ID in description, not sent as internalAssetId';
+
+    $aurora_int->unmock('get_contact_id_for_email_address');
+    $aurora_int->unmock('create_case_and_get_number');
+};
+
+subtest "POST Aurora update OK" => sub {
+    my ($case_number, $payload);
+    $aurora_int->mock('add_note_to_case', sub {
+        (undef, $case_number, $payload) = @_;
+    });
+
+    my $res = $endpoint->run_test_request(
+        POST => '/servicerequestupdates.json',
+        api_key => 'test',
+        updated_datetime => '2026-11-01T12:00:00Z',
+        service_code => 'Aurora-Pothole',
+        service_request_id => 'Aurora-1234',
+        status => 'OPEN',
+        description => "This is the update",
+        first_name => 'Bob',
+        last_name => 'Mould',
+        update_id => 456,
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+    is_deeply decode_json($res->content), [ { update_id => 'Aurora-456' } ], 'correct json returned';
+    is $case_number, '1234', 'note added to the right case';
+    is $payload->{noteText}, 'This is the update';
+
+    $aurora_int->unmock('add_note_to_case');
+};
+
+subtest "GET Aurora updates OK" => sub {
+    # Filename => [ case number, clearance code ]
+    my @files = (
+        [ '20261101_09000000_1_CS_CHANGE_QUEUE.json' => 101, '' ],
+        [ '20261101_09010000_2_CS_PROMPT_REACTIVE_MAINTENANCE.json' => 102, '' ],
+        [ '20261101_09020000_3_CS_ASSIGN_OWNER.json' => 103, '' ],
+        [ '20261101_09030000_4_CS_MAINTENANCE_STARTED.json' => 104, '' ],
+        [ '20261101_09040000_5_CS_INSPECTION_PROMPTED.json' => 105, '' ],
+        [ '20261101_09050000_6_CS_CANCEL.json' => 106, '' ],
+        [ '20261101_09060000_7_CS_MAINTENANCE_COMPLETED.json' => 107, '' ],
+        [ '20261101_09070000_8_CS_CLEAR_CASE.json' => 108, 'C10' ],
+        [ '20261101_09080000_9_CS_CLEAR_CASE.json' => 109, 'C01' ],
+        [ '20261101_09090000_10_CS_CLEAR_CASE.json' => 110, 'C09' ],
+        [ '20261101_09100000_11_CS_CLEAR_CASE.json' => 111, 'C07' ],
+        # An unmapped clearance code: text only, no change of status.
+        [ '20261101_09110000_12_CS_CLEAR_CASE.json' => 112, 'C99' ],
+        # Not produced: triggers not listed.
+        [ '20261101_09120000_13_CS_RE_QUEUE.json' => 113, 'C10' ],
+        [ '20261101_09130000_14_CS_RECORD_CONTACT_EVENT.json' => 114, 'C10' ],
+    );
+    $aurora_int->mock('fetch_update_filenames', sub { map { { Name => $_->[0] } } @files });
+    $aurora_int->mock('fetch_update_file', sub {
+        my ($file) = grep { $_->[0] eq $_[1] } @files;
+        return { Message => {
+            CaseNumber => $file->[1],
+            ClearanceReasonCode => $file->[2],
+            ClearanceReasonPortalText => 'Text for the customer\nSecond line',
+            CaseEventHistory => [
+                { EventDateTime => '2026-11-01T08:00:00.123Z' },
+                { EventDateTime => '2026-11-01T09:00:00.123Z' },
+            ],
+        } };
+    });
+    # Other integrations' updates are not of interest here.
+    my $symology_ep = Test::MockModule->new('Open311::Endpoint::Integration::UK::Brent::Symology');
+    $symology_ep->mock('get_service_request_updates', sub { () });
+    my $echo_ep = Test::MockModule->new('Open311::Endpoint::Integration::UK::Brent::Echo');
+    $echo_ep->mock('get_service_request_updates', sub { () });
+    my $atak_ep = Test::MockModule->new('Open311::Endpoint::Integration::UK::Brent::ATAK');
+    $atak_ep->mock('get_service_request_updates', sub { () });
+
+    my $res = $endpoint->run_test_request(
+        GET => '/servicerequestupdates.json?start_date=2026-11-01T00:00:00Z&end_date=2026-11-02T00:00:00Z',
+    );
+    ok $res->is_success, 'valid request'
+        or diag $res->content;
+
+    my @updates = map { [
+        @$_{qw(service_request_id update_id status external_status_code description updated_datetime)}
+    ] } @{ decode_json($res->content) };
+    my $time = '2026-11-01T09:00:00Z';
+    my $text = "Text for the customer\nSecond line";
+    is_deeply \@updates, [
+        [ 'Aurora-101', 'Aurora-101_2', 'open', 'CS_CHANGE_QUEUE', '', $time ],
+        [ 'Aurora-102', 'Aurora-102_2', 'action_scheduled', 'CS_PROMPT_REACTIVE_MAINTENANCE', '', $time ],
+        [ 'Aurora-103', 'Aurora-103_2', 'for_triage', 'CS_ASSIGN_OWNER', '', $time ],
+        [ 'Aurora-104', 'Aurora-104_2', 'in_progress', 'CS_MAINTENANCE_STARTED', '', $time ],
+        [ 'Aurora-105', 'Aurora-105_2', 'investigating', 'CS_INSPECTION_PROMPTED', '', $time ],
+        [ 'Aurora-106', 'Aurora-106_2', 'cancelled', 'CS_CANCEL', '', $time ],
+        [ 'Aurora-107', 'Aurora-107_2', 'fixed', 'CS_MAINTENANCE_COMPLETED', '', $time ],
+        [ 'Aurora-108', 'Aurora-108_2', 'duplicate', 'C10', $text, $time ],
+        [ 'Aurora-109', 'Aurora-109_2', 'internal_referral', 'C01', $text, $time ],
+        [ 'Aurora-110', 'Aurora-110_2', 'no_further_action', 'C09', $text, $time ],
+        [ 'Aurora-111', 'Aurora-111_2', 'not_councils_responsibility', 'C07', $text, $time ],
+        [ 'Aurora-112', 'Aurora-112_2', 'unchanged', 'C99', $text, $time ],
+    ], 'updates for configured triggers and clearance codes';
+
+    $aurora_int->unmock('fetch_update_filenames');
+    $aurora_int->unmock('fetch_update_file');
+};
 
 subtest "POST Echo update OK" => sub {
     my $res = $endpoint->run_test_request(

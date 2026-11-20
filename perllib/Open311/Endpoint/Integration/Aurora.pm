@@ -7,7 +7,7 @@ Open311::Endpoint::Integration::Aurora - An integration with Symology's Aurora p
 This integration:
 * Creates cases for requests.
 * Makes updates on the relevant cases.
-* Fetches udpates on relevant cases.
+* Fetches updates on relevant cases.
 
 =cut
 
@@ -46,7 +46,7 @@ sub get_integration {
 
 =head2 service_class
 
-Uses the same service class as our Symology Insight integration.
+Uses the Aurora service class, which adds the attributes FMS sends for Aurora categories.
 
 =cut
 
@@ -83,6 +83,42 @@ has reverse_status_mapping => (
     default => sub { $_[0]->endpoint_config->{reverse_status_mapping} }
 );
 
+=head2 trigger_status_mapping
+
+Optional table of the Aurora triggers to fetch updates for (besides
+C<CS_CLEAR_CASE>, which uses C<reverse_status_mapping>) and the FMS status
+each one maps to, e.g.
+
+  trigger_status_mapping:
+    CS_CHANGE_QUEUE: open
+    CS_MAINTENANCE_COMPLETED: fixed
+
+If not set, a fixed set of triggers is used; see C<get_service_request_updates>.
+
+=cut
+
+has trigger_status_mapping => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{trigger_status_mapping} }
+);
+
+=head2 unmapped_clearance_status
+
+Optional status for C<CS_CLEAR_CASE> updates whose C<ClearanceReasonCode> is
+not in C<reverse_status_mapping>, e.g.
+
+  unmapped_clearance_status: unchanged
+
+so that their text is passed on without changing the report's state. Such
+updates are only produced if they have text. If not set, they are skipped.
+
+=cut
+
+has unmapped_clearance_status => (
+    is => 'lazy',
+    default => sub { $_[0]->endpoint_config->{unmapped_clearance_status} }
+);
+
 =head1 BEHAVIOUR
 
 =head2 services
@@ -109,10 +145,12 @@ sub services {
 =head2 post_service_request
 
 Creates a contact if one doesn't already exist for the reporter's email, or phone number.
-Uploads media provided as uploads or URLs as attachments.
+Uploads media provided as uploads or URLs as attachments. Those provided as
+URLs also have that URL set as the attachment's C<externalUrl>.
 Creates a case using these and also the default parameters set in
 the C<category_mapping>.
-Calls C<populate_description> for description text.
+The rest of the case is built by C<build_case_payload>, with the description
+text coming from C<build_case_description>.
 
 =cut
 
@@ -121,21 +159,7 @@ sub post_service_request {
 
     my $service_code = $args->{service_code};
     my $category = $self->category_mapping->{$service_code};
-    my $payload = $category->{parameters} || {};
-    $payload->{easting} = $args->{attributes}->{easting};
-    $payload->{northing} = $args->{attributes}->{northing};
-    $payload->{usrn} = $args->{attributes}->{NSGRef};
-    $payload->{internalAssetId} = $args->{attributes}->{UnitID};
-    $payload->{externalReference} = "FMS" . $args->{attributes}->{fixmystreet_id};
-    $payload->{locationText} = $args->{attributes}->{title};
-
-    $payload->{description} = $args->{attributes}->{title} . "\n\n" . $args->{attributes}->{description};
-    if ($args->{address_string}) {
-        $payload->{description} .= "\n\nLocation query entered: " . $args->{address_string};
-    }
-    if ($args->{attributes}->{report_url}) {
-        $payload->{description} .= "\n\nView report on FixMyStreet: $args->{attributes}->{report_url}";
-    }
+    my $payload = $self->build_case_payload($args, $category);
 
     my $contact_id;
     my $email = $args->{email};
@@ -161,6 +185,50 @@ sub post_service_request {
     return $self->new_request(
         service_request_id => $case_number
     );
+}
+
+=head2 build_case_payload
+
+Returns the case fields for a request, other than the contact and attachments,
+starting from the default parameters set in the C<category_mapping>.
+Subclasses can override this to change what is sent.
+
+=cut
+
+sub build_case_payload {
+    my ( $self, $args, $category ) = @_;
+
+    my $payload = { %{ $category->{parameters} || {} } };
+    $payload->{easting} = $args->{attributes}->{easting};
+    $payload->{northing} = $args->{attributes}->{northing};
+    $payload->{usrn} = $args->{attributes}->{NSGRef};
+    $payload->{internalAssetId} = $args->{attributes}->{UnitID};
+    $payload->{externalReference} = "FMS" . $args->{attributes}->{fixmystreet_id};
+    $payload->{locationText} = $args->{attributes}->{title};
+    $payload->{description} = $self->build_case_description($args);
+
+    return $payload;
+}
+
+=head2 build_case_description
+
+Returns the description text for a case: the report's title and description,
+followed by the location query and the report URL, if present.
+
+=cut
+
+sub build_case_description {
+    my ( $self, $args ) = @_;
+
+    my $description = $args->{attributes}->{title} . "\n\n" . $args->{attributes}->{description};
+    if ($args->{address_string}) {
+        $description .= "\n\nLocation query entered: " . $args->{address_string};
+    }
+    if ($args->{attributes}->{report_url}) {
+        $description .= "\n\nView report on FixMyStreet: $args->{attributes}->{report_url}";
+    }
+
+    return $description;
 }
 
 =head2 post_service_request_update
@@ -189,7 +257,15 @@ sub post_service_request_update {
 Fetches files from Aurora's 'return path update' Azure storage container which contains a
 snapshot of a case after one of the configured 'triggers' fires.
 
-The C<ClearanceReasonCode> is mapped to an update status via the
+If C<trigger_status_mapping> is configured, only files for the triggers listed
+there and for C<CS_CLEAR_CASE> are used. C<CS_CLEAR_CASE> updates have their
+C<ClearanceReasonCode> mapped to an update status via the
+C<reverse_status_mapping>, and are skipped if the code is not present there
+(but see below); the code is passed on as the update's external status code. Updates for the
+other triggers take their status from C<trigger_status_mapping> and have the
+trigger name as their external status code.
+
+Otherwise, the C<ClearanceReasonCode> is mapped to an update status via the
 C<reverse_status_mapping>, with the exception of updates via the
 C<CS_INSPECTION_PROMPTED> trigger which always map to 'investigating',
 C<CS_MAINTENANCE_COMPLETED> which map to fixed with a code, and
@@ -197,6 +273,11 @@ C<CS_CHANGE_QUEUE> which send through a code but do not change state.
 
 Updates via the C<CS_CLEAR_CASE> trigger have their description populated from the
 C<ClearanceReasonPortalText> field, all others are blank.
+
+If C<unmapped_clearance_status> is configured, C<CS_CLEAR_CASE> updates with
+a C<ClearanceReasonCode> that is missing or not in C<reverse_status_mapping>
+are given that status rather than being skipped, provided they have a
+description.
 
 =cut
 
@@ -214,11 +295,24 @@ sub get_service_request_updates {
 
     my @update_files = $self->aurora->fetch_update_filenames(_date_prefix($start, $end));
     my @updates = ();
+    my $triggers = $self->_handled_triggers;
     for (@update_files) {
+        my ($trigger) = $_->{Name} =~ /_(CS_[A-Z_]+)\.json/;
+        next unless $trigger && $triggers->{$trigger};
         next if _skip_update_file($start, $end, $_->{Name});
         my $data = $self->aurora->fetch_update_file($_->{Name});
-        my $clearance_code = $data->{Message}->{ClearanceReasonCode};
-        next unless ($clearance_code && $self->reverse_status_mapping->{$clearance_code}) || $_->{Name} =~ /CS_INSPECTION_PROMPTED|CS_CHANGE_QUEUE|CS_MAINTENANCE_COMPLETED/;
+        my ($state, $external_status_code) = $self->_status_for_trigger(
+            $trigger, $data->{Message}->{ClearanceReasonCode});
+
+        my $desc = $trigger eq 'CS_CLEAR_CASE' ? ($data->{Message}->{ClearanceReasonPortalText} // '') : '';
+        # The exported text from Aurora has newlines stripped so they have been escaped
+        # - unescaping them here.
+        $desc =~ s/\\n/\n/g;
+
+        # A clearance we have no status for can still pass on its text.
+        $state ||= $self->unmapped_clearance_status
+            if $trigger eq 'CS_CLEAR_CASE' && $desc ne '';
+        next unless $state;
 
         my $id_no = @{$data->{Message}->{CaseEventHistory}};
         my $external_update = pop @{$data->{Message}->{CaseEventHistory}};
@@ -226,28 +320,9 @@ sub get_service_request_updates {
                             ->set_nanosecond(0)
                             ->set_time_zone('UTC');
 
-        my $desc = $_->{Name} =~ /CS_CLEAR_CASE/ ? ($data->{Message}->{ClearanceReasonPortalText} // '') : '';
-        # The exported text from Aurora has newlines stripped so they have been escaped
-        # - unescaping them here.
-        $desc =~ s/\\n/\n/g;
-
-        my $state = do {
-            if ($_->{Name} =~ /CS_CHANGE_QUEUE/) {
-                $clearance_code = 'CS_CHANGE_QUEUE';
-                'unchanged';
-            } elsif ($_->{Name} =~ /CS_INSPECTION_PROMPTED/) {
-                'investigating';
-            } elsif ($_->{Name} =~ /CS_MAINTENANCE_COMPLETED/) {
-                $clearance_code = 'CS_MAINTENANCE_COMPLETED';
-                'fixed';
-            } else {
-                $self->reverse_status_mapping->{ $clearance_code };
-            }
-        };
-
         my %update_args = (
             status => $state,
-            external_status_code => $clearance_code,
+            external_status_code => $external_status_code,
             description => $desc,
             service_request_id => $data->{Message}->{CaseNumber},
             update_id => $data->{Message}->{CaseNumber} . '_' . $id_no,
@@ -260,10 +335,46 @@ sub get_service_request_updates {
     return @updates;
 }
 
+# The triggers whose update files we look at, as a lookup hash.
+sub _handled_triggers {
+    my $self = shift;
+
+    my @triggers = $self->trigger_status_mapping
+        ? ('CS_CLEAR_CASE', keys %{ $self->trigger_status_mapping })
+        : qw(
+            CS_INSPECTION_PROMPTED
+            CS_CLEAR_CASE
+            CS_RECORD_CONTACT_EVENT
+            CS_MAINTENANCE_COMPLETED
+            CS_CHANGE_QUEUE
+            CS_RE_QUEUE
+        );
+    return { map { $_ => 1 } @triggers };
+}
+
+# Returns the update status and external status code for an update file with
+# the given trigger and clearance code, or nothing if it should be skipped.
+sub _status_for_trigger {
+    my ($self, $trigger, $clearance_code) = @_;
+
+    my $cleared_state = $clearance_code && $self->reverse_status_mapping->{$clearance_code};
+
+    if (my $mapping = $self->trigger_status_mapping) {
+        return ($cleared_state, $clearance_code) if $trigger eq 'CS_CLEAR_CASE';
+        return ($mapping->{$trigger}, $trigger);
+    }
+
+    # No trigger_status_mapping configured, so the original fixed behaviour.
+    return ('unchanged', $trigger) if $trigger eq 'CS_CHANGE_QUEUE';
+    return ('fixed', $trigger) if $trigger eq 'CS_MAINTENANCE_COMPLETED';
+    # NB this one passes on whatever clearance code the case has, if any,
+    # rather than the trigger name.
+    return ('investigating', $clearance_code) if $trigger eq 'CS_INSPECTION_PROMPTED';
+    return ($cleared_state, $clearance_code);
+}
+
 sub _skip_update_file {
     my ($start, $end, $file_name) = @_;
-
-    return 1 unless $file_name =~ /_(CS_INSPECTION_PROMPTED|CS_CLEAR_CASE|CS_RECORD_CONTACT_EVENT|CS_MAINTENANCE_COMPLETED|CS_CHANGE_QUEUE|CS_RE_QUEUE)\.json/;
 
     return unless $start || $end;
 
@@ -322,6 +433,7 @@ sub _upload_media_as_attachments {
             push @$attachments, {
                 id => $self->aurora->upload_attachment_from_response_and_get_id($response),
                 name => $response->filename,
+                externalUrl => $_,
             };
         } else {
             $self->logger->warn("Unable to download media " . $_);

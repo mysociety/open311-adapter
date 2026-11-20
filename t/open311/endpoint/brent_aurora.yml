@@ -1,0 +1,47 @@
+oauth:
+  username: username
+  password: password
+  client_id: client_id
+  client_secret: secret
+  access_token_url: url
+
+cases_api_base_url: 'https://cases.example.com/v1.0/BRENTT/'
+updates_azure_container_base_url: 'https://my_api.example.com/azure-container'
+updates_azure_container_url_arguments: 'etc1=1&etc2=2'
+
+category_mapping:
+  GullyBlockedFlooded:
+    name: "Gully - Blocked (Flooded)"
+    group: "Roads & Pavements"
+    parameters:
+      caseTypeCode: DR005
+      assetTypeCode: DRGY
+  GullyBlockedNotFlooded:
+    name: "Gully - Blocked (Not Flooded)"
+    group: "Roads & Pavements"
+    parameters:
+      caseTypeCode: DR005
+      assetTypeCode: DRGY
+  Pothole:
+    name: "Pothole or other road damage"
+    group: "Roads & Pavements"
+    parameters:
+      caseTypeCode: HI005
+      assetTypeCode: HWCW
+
+reverse_status_mapping:
+  C10: duplicate
+  C01: internal_referral
+  C09: no_further_action
+  C07: not_councils_responsibility
+
+unmapped_clearance_status: unchanged
+
+trigger_status_mapping:
+  CS_CHANGE_QUEUE: open
+  CS_PROMPT_REACTIVE_MAINTENANCE: action_scheduled
+  CS_ASSIGN_OWNER: for_triage
+  CS_MAINTENANCE_STARTED: in_progress
+  CS_INSPECTION_PROMPTED: investigating
+  CS_CANCEL: cancelled
+  CS_MAINTENANCE_COMPLETED: fixed
