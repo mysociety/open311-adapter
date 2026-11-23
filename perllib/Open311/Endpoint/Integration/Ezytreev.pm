@@ -95,13 +95,10 @@ sub services {
     return @services;
 }
 
-sub post_service_request {
-    my ($self, $service, $args) = @_;
-    die "No such service" unless $service;
+sub process_service_request_args {
+    my ($self, $crm_xref, $service, $args) = @_;
 
-    my $crm_xref = "fms:" . $args->{attributes}->{fixmystreet_id};
-
-    my $response = $self->ezytreev->update_enquiry({
+    return {
         CRMXRef => $crm_xref,
         EnquiryDescription => $args->{description},
         Forename => $args->{first_name},
@@ -113,7 +110,16 @@ sub post_service_request {
         EnquiryOX => $args->{attributes}->{easting},
         EnquiryOY => $args->{attributes}->{northing},
         TreeCodes => $args->{attributes}->{tree_code},
-    });
+    };
+}
+
+sub post_service_request {
+    my ($self, $service, $args) = @_;
+    die "No such service" unless $service;
+
+    my $crm_xref = "fms:" . $args->{attributes}->{fixmystreet_id};
+    my $payload = $self->process_service_request_args($crm_xref, $service, $args);
+    my $response = $self->ezytreev->update_enquiry($payload);
 
     if (!$response->is_success) {
         my $msg = decode_json($response->content);
