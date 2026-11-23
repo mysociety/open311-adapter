@@ -67,9 +67,8 @@ sub _map_from_new_id {
 
     my $integration;
     if ($type eq 'request') {
-        if ($code =~ /^Ezytreev-/) {
+        if ($code =~ /^ezytreev-/) {
             $integration = 'Ezytreev';
-            $code =~ s/^Ezytreev-//;
         } elsif ($code =~ /$guid_regex/) {
             $integration = 'Echo';
         } else {
