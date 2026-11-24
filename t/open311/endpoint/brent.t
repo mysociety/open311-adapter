@@ -830,6 +830,10 @@ subtest "POST Aurora service request OK" => sub {
         northing => NORTHING,
         contactId => 'contact-id',
         attachments => undef,
+        userDefinedFields => [{
+           additionalFieldName => 'FMSL',
+           additionalFieldValue => "http://example.org/report/123",
+        }],
     }, 'correct case payload';
 
     # A report on an asset, with a location query, in a category that shares
@@ -855,6 +859,10 @@ subtest "POST Aurora service request OK" => sub {
         northing => NORTHING,
         contactId => 'contact-id',
         attachments => undef,
+        userDefinedFields => [{
+           additionalFieldName => 'FMSL',
+           additionalFieldValue => "http://example.org/report/123",
+        }],
     }, 'asset ID in description, not sent as internalAssetId';
 
     $aurora_int->unmock('get_contact_id_for_email_address');
