@@ -1,0 +1,48 @@
+oauth:
+  username: username
+  password: password
+  client_id: client_id
+  client_secret: secret
+  access_token_url: url
+
+cases_api_base_url: url
+updates_azure_container_base_url: url
+updates_azure_container_url_arguments: sas_token
+
+# A map from 'ClearanceReasonCode' to update status, used for updates with
+# the CS_CLEAR_CASE trigger.
+reverse_status_mapping:
+  C01: internal_referral
+  C02: no_further_action
+
+# The status for CS_CLEAR_CASE updates whose clearance code is not in
+# reverse_status_mapping, so their text is still passed on.
+unmapped_clearance_status: unchanged
+
+# A map from the trigger of an update to update status, for the triggers
+# (other than CS_CLEAR_CASE) to fetch updates for.
+trigger_status_mapping:
+  CS_CHANGE_QUEUE: open
+  CS_INSPECTION_PROMPTED: investigating
+  CS_MAINTENANCE_COMPLETED: fixed
+
+# A map from service_code to:
+#
+#   name: The display name for the category
+#   group: Optional category group
+#   parameters: dictionary of default parameters to use
+#
+# The service codes are used as the contact identifiers in FMS (prefixed
+# 'Aurora-') so must be unique and must not change.
+category_mapping:
+  categoryA:
+    name: "Category A"
+    group: "Group 1"
+    parameters:
+      caseTypeCode: Code
+      assetTypeCode: Code
+  categoryB:
+    name: "Category B"
+    parameters:
+      caseTypeCode: Code
+      assetTypeCode: Code

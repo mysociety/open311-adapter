@@ -161,7 +161,7 @@ sub get_contact_id_for_email_address {
         "Cases/Contact?emailAddress=" . uri_escape($email_address),
         Authorization => "Bearer $token",
     ;
-    my $response = $self->ua->request($request);
+    my $response = $self->_request($request);
     if (!$response->is_success) {
         $self->_fail("Failed to query contacts", $request, $response);
     }
@@ -199,7 +199,7 @@ sub get_contact_id_for_phone_number {
         "Cases/Contact" . $query_string,
         Authorization => "Bearer $token",
     ;
-    my $response = $self->ua->request($request);
+    my $response = $self->_request($request);
     if (!$response->is_success) {
         $self->_fail("Failed to query contacts", $request, $response);
     }
@@ -242,7 +242,7 @@ sub create_contact_and_get_id {
         "Content-Type" => "application/json",
         Content => encode_json($payload),
     );
-    my $response = $self->ua->request($request);
+    my $response = $self->_request($request);
     if (!$response->is_success) {
         $self->_fail("Failed to create contact", $request, $response);
     }
@@ -259,7 +259,7 @@ sub _upload_attachment_and_get_id {
         Content_Type => "form-data",
         Content => $content,
     );
-    my $response = $self->ua->request($request);
+    my $response = $self->_request($request);
     if (!$response->is_success) {
         $self->_fail("Failed to upload attachment", $request, $response);
     }
@@ -318,7 +318,7 @@ sub create_case_and_get_number {
         "Content-Type" => "application/json",
         Content => encode_json($payload),
     );
-    my $response = $self->ua->request($request);
+    my $response = $self->_request($request);
     if (!$response->is_success) {
         $self->_fail("Failed to create case ", $request, $response);
     }
@@ -342,7 +342,7 @@ sub add_note_to_case {
         "Content-Type" => "application/json",
         Content => encode_json($payload),
     );
-    my $response = $self->ua->request($request);
+    my $response = $self->_request($request);
     if (!$response->is_success) {
         $self->_fail("Failed to add note to case $case_number", $request, $response);
     }
@@ -372,7 +372,7 @@ sub fetch_update_filenames {
         $url .= '&marker=' . uri_escape($marker) if length $marker;
 
         my $request = GET($url);
-        my $response = $self->ua->request($request);
+        my $response = $self->_request($request);
         if (!$response->is_success) {
             $self->_fail("Failed to fetch update filenames", $request, $response);
         }
@@ -406,7 +406,7 @@ sub fetch_update_file {
     my ($self, $filename) = @_;
 
     my $request = GET($self->updates_azure_container_base_url . "/$filename" . '?' . $self->updates_azure_container_url_arguments);
-    my $response = $self->ua->request($request);
+    my $response = $self->_request($request);
     if (!$response->is_success) {
         $self->_fail("Failed to fetch update file", $request, $response);
     }
@@ -417,6 +417,30 @@ sub fetch_update_file {
         $self->_fail("Failed to parse fetched update file as JSON", $request, $response);
     };
 };
+
+=head2 _request
+
+Sends a request, logging it and its response at debug level. The SAS token
+signature is redacted, and only JSON request bodies are logged (so not
+uploaded files).
+
+=cut
+
+sub _request {
+    my ($self, $request) = @_;
+
+    (my $url = $request->uri) =~ s/(sig=)[^&\s]+/$1\[REDACTED\]/g;
+    $self->logger->debug("[Aurora] Request: " . $request->method . " $url");
+    $self->logger->debug("[Aurora] Request content: " . $request->content)
+        if ($request->content_type || "") eq "application/json";
+
+    my $response = $self->ua->request($request);
+
+    $self->logger->debug("[Aurora] Response status: " . $response->status_line);
+    $self->logger->debug("[Aurora] Response content: " . $response->decoded_content);
+
+    return $response;
+}
 
 sub _fail {
     my ($self, $message, $request, $response) = @_;
