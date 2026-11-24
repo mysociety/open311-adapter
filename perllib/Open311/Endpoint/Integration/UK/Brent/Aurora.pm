@@ -20,6 +20,9 @@ The asset a report is made against (C<UnitID>) is from a layer hosted by
 FMS, not an Aurora asset, so it is not sent as the C<internalAssetId>. It is
 included in the description instead.
 
+Additionally a user defined field 'FMSL' is set to the report URL to
+display a clickable link in the Aurora UI.
+
 =cut
 
 around build_case_payload => sub {
@@ -27,6 +30,14 @@ around build_case_payload => sub {
 
     my $payload = $self->$orig($args, $category);
     delete $payload->{internalAssetId};
+
+    my $attributes = $args->{attributes};
+    $payload->{userDefinedFields} = [
+        {
+           userDefinedFieldName => 'FMSL',
+           userDefinedFieldValue => $attributes->{report_url},
+        }
+    ];
 
     return $payload;
 };
