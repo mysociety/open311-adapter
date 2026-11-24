@@ -831,8 +831,8 @@ subtest "POST Aurora service request OK" => sub {
         contactId => 'contact-id',
         attachments => undef,
         userDefinedFields => [{
-           userDefinedFieldName => 'FMSL',
-           userDefinedFieldValue => "http://example.org/report/123",
+           additionalFieldName => 'FMSL',
+           additionalFieldValue => "http://example.org/report/123",
         }],
     }, 'correct case payload';
 
@@ -860,8 +860,8 @@ subtest "POST Aurora service request OK" => sub {
         contactId => 'contact-id',
         attachments => undef,
         userDefinedFields => [{
-           userDefinedFieldName => 'FMSL',
-           userDefinedFieldValue => "http://example.org/report/123",
+           additionalFieldName => 'FMSL',
+           additionalFieldValue => "http://example.org/report/123",
         }],
     }, 'asset ID in description, not sent as internalAssetId';
 

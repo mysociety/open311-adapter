@@ -34,8 +34,8 @@ around build_case_payload => sub {
     my $attributes = $args->{attributes};
     $payload->{userDefinedFields} = [
         {
-           userDefinedFieldName => 'FMSL',
-           userDefinedFieldValue => $attributes->{report_url},
+           additionalFieldName => 'FMSL',
+           additionalFieldValue => $attributes->{report_url},
         }
     ];
 
